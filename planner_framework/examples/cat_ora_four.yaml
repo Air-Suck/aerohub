@@ -1,0 +1,16 @@
+task:
+  name: cat_ora_four_smoke
+planner:
+  id: cat_ora
+  version: 4bc41f593eebde65dd74108a97e80430a145dfa0
+  parameters: {}
+vehicles: [drone0, drone1, drone2, drone3]
+targets:
+  drone0: {x: -2.0, y: -1.0, z: -3.0}
+  drone1: {x: 4.0, y: -1.0, z: -3.0}
+  drone2: {x: -2.0, y: 5.0, z: -3.0}
+  drone3: {x: 4.0, y: 5.0, z: -3.0}
+completion:
+  position_tolerance: 0.5
+  hold_duration: 1.0
+  task_timeout: 120.0

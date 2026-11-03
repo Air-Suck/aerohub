@@ -1,0 +1,92 @@
+name: uav-aerostack2-integration
+
+services:
+  as2:
+    image: uav/aerostack2-px4:humble-v1.17
+    container_name: planner-as2-seven
+    init: true
+    network_mode: host
+    environment:
+      ROS_DOMAIN_ID: "80"
+      VEHICLE_COUNT: "7"
+      XRCE_AGENT_PORT: "8889"
+      FASTDDS_BUILTIN_TRANSPORTS: UDPv4
+    volumes:
+      - ../..:/workspace
+    command: [bash, /workspace/deployment/platform/run_multi_as2.sh]
+    restart: unless-stopped
+
+  px4:
+    image: uav/px4-gazebo:v1.17.0-harmonic
+    container_name: planner-px4-seven
+    init: true
+    network_mode: host
+    depends_on: [as2]
+    environment:
+      HOME: /tmp
+      HEADLESS: "1"
+      ROS_DOMAIN_ID: "80"
+      VEHICLE_COUNT: "7"
+      PX4_INSTANCE_BASE: "10"
+      XRCE_AGENT_PORT: "8889"
+      PX4_GZ_PARTITION: as2_multi_80
+    volumes:
+      - ${PX4_SOURCE_DIR:-../../../swarm-formation-px4-gazebo/PX4-Autopilot}:/workspace/PX4-Autopilot
+      - ${PX4_SIM_CACHE_DIR:-../../../swarm-formation-px4-gazebo/.px4-sim-cache}:/tmp/.simulation-gazebo
+      - ../..:/integration
+    command: [bash, /integration/deployment/px4/run_multi_px4.sh]
+    restart: unless-stopped
+
+  runtime:
+    build:
+      context: ../..
+      dockerfile: deployment/runtime/Dockerfile
+    image: uav/aerostack2-planner-runtime:humble
+    container_name: planner-runtime
+    init: true
+    network_mode: host
+    depends_on: [as2, clock]
+    environment:
+      ROS_DOMAIN_ID: "80"
+      FASTDDS_BUILTIN_TRANSPORTS: UDPv4
+      GZ_PARTITION: as2_multi_80
+      GZ_IP: 127.0.0.1
+    volumes:
+      - ../../artifacts/resolved:/var/lib/uav-planner/resolved
+    restart: unless-stopped
+
+  clock:
+    image: uav/aerostack2-planner-runtime:humble
+    container_name: planner-clock
+    init: true
+    network_mode: host
+    depends_on: [px4]
+    environment:
+      ROS_DOMAIN_ID: "80"
+      FASTDDS_BUILTIN_TRANSPORTS: UDPv4
+    command: [bash, -lc, "source /opt/ros/humble/setup.bash; source /root/aerostack2_ws/install/setup.bash; source /opt/uav_planner_ws/install/setup.bash; exec ros2 run uav_planner_framework gazebo_clock_bridge_node"]
+    restart: unless-stopped
+
+  cat-ora:
+    build:
+      context: ../..
+      dockerfile: deployment/cat_ora_ros1/Dockerfile
+    image: uav/aerostack2-cat-ora:noetic
+    container_name: planner-cat-ora
+    init: true
+    network_mode: host
+    environment:
+      ROS_MASTER_PORT: "11321"
+      ROS_MASTER_URI: http://127.0.0.1:11321
+      ROS_IP: 127.0.0.1
+    restart: unless-stopped
+
+  swarm-formation:
+    build:
+      context: ../..
+      dockerfile: deployment/swarm_formation_ros1/Dockerfile
+    image: uav/aerostack2-swarm-formation:noetic
+    container_name: planner-swarm-formation
+    init: true
+    network_mode: host
+    restart: unless-stopped

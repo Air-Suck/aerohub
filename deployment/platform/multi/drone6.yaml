@@ -1,0 +1,8 @@
+/**:
+  ros__parameters:
+    use_sim_time: true
+    cmd_freq: 50.0
+    info_freq: 10.0
+    external_odom: false
+    fmu_prefix: "/px4_16"
+    target_system_id: 17

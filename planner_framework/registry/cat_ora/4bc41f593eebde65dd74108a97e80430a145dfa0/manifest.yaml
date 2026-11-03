@@ -1,0 +1,17 @@
+id: cat_ora
+version: 4bc41f593eebde65dd74108a97e80430a145dfa0
+runtime:
+  image: uav/aerostack2-cat-ora:noetic
+  adapter: cat_ora_adapter
+  command: [ros2, run, uav_cat_ora_adapter, cat_ora_adapter_node, --ros-args, -p, "resolved_config:={resolved_config}", -p, "use_sim_time:={use_sim_time}"]
+parameters:
+  defaults: defaults.yaml
+  schema: parameters.schema.yaml
+capabilities:
+  planning_mode: batch
+  min_vehicles: 1
+  max_vehicles: 16
+  required_inputs: [vehicle_state]
+output: {type: TimedTrajectorySegment, interface_version: 1}
+resources: {gpu_required: false}
+platforms: [linux/amd64]

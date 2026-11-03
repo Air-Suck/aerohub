@@ -1,0 +1,24 @@
+drone0:
+  px4_origin_in_fleet_ned: [-4.5, -12.0, 0.0]
+  namespace: /drone0
+  topics:
+    pose: /drone0/self_localization/pose
+    trajectory_setpoint: /drone0/planner/setpoint
+drone1:
+  px4_origin_in_fleet_ned: [-1.5, -12.0, 0.0]
+  namespace: /drone1
+  topics:
+    pose: /drone1/self_localization/pose
+    trajectory_setpoint: /drone1/planner/setpoint
+drone2:
+  px4_origin_in_fleet_ned: [1.5, -12.0, 0.0]
+  namespace: /drone2
+  topics:
+    pose: /drone2/self_localization/pose
+    trajectory_setpoint: /drone2/planner/setpoint
+drone3:
+  px4_origin_in_fleet_ned: [4.5, -12.0, 0.0]
+  namespace: /drone3
+  topics:
+    pose: /drone3/self_localization/pose
+    trajectory_setpoint: /drone3/planner/setpoint

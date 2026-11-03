@@ -1,0 +1,17 @@
+task:
+  name: cat_ora_trajectory_timeout
+planner:
+  id: cat_ora
+  version: 4bc41f593eebde65dd74108a97e80430a145dfa0
+  parameters:
+    trajectory_timeout: 2.0
+vehicles: [drone0, drone1, drone2, drone3]
+targets:
+  drone0: {x: -3.0, y: -4.0, z: -1.5}
+  drone1: {x: -3.0, y: -8.0, z: -1.5}
+  drone2: {x: 3.0, y: -8.0, z: -1.5}
+  drone3: {x: 3.0, y: -4.0, z: -1.5}
+completion:
+  position_tolerance: 0.5
+  hold_duration: 30.0
+  task_timeout: 30.0

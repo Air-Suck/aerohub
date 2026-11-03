@@ -1,0 +1,10 @@
+type: object
+additionalProperties: false
+required: [sample_dt, horizon, trajectory_timeout, update_period, valid_from_lead, max_start_distance]
+properties:
+  sample_dt: {type: number, exclusiveMinimum: 0}
+  horizon: {type: number, exclusiveMinimum: 0}
+  trajectory_timeout: {type: number, exclusiveMinimum: 0}
+  update_period: {type: number, exclusiveMinimum: 0}
+  valid_from_lead: {type: number, minimum: 0}
+  max_start_distance: {type: number, exclusiveMinimum: 0}

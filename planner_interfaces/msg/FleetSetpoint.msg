@@ -1,0 +1,3 @@
+string task_id
+builtin_interfaces/Time sampled_at
+uav_planner_interfaces/VehicleSetpoint[] setpoints

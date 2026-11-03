@@ -1,0 +1,17 @@
+id: swarm_formation
+version: 967a4bdfae949e994691f8ffc87dbb0147cbebb7
+runtime:
+  image: uav/aerostack2-swarm-formation:noetic
+  adapter: swarm_formation_adapter
+  command: [ros2, run, uav_swarm_formation_adapter, swarm_formation_adapter_node, --ros-args, -p, "resolved_config:={resolved_config}", -p, "use_sim_time:={use_sim_time}"]
+parameters:
+  defaults: defaults.yaml
+  schema: parameters.schema.yaml
+capabilities:
+  planning_mode: rolling
+  min_vehicles: 7
+  max_vehicles: 7
+  required_inputs: [vehicle_state, obstacle_map]
+output: {type: TimedTrajectorySegment, interface_version: 1}
+resources: {gpu_required: false}
+platforms: [linux/amd64]

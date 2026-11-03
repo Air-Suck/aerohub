@@ -1,0 +1,6 @@
+drone0:
+  px4_origin_in_fleet_ned: [0.0, 0.0, 0.0]
+  namespace: /drone0
+  topics:
+    pose: /drone0/self_localization/pose
+    trajectory_setpoint: /drone0/planner/setpoint

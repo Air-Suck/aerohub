@@ -1,0 +1,6 @@
+uint32 interface_version
+string task_id
+builtin_interfaces/Time generated_at
+builtin_interfaces/Time valid_from
+bool is_final
+uav_planner_interfaces/VehicleTrajectory[] vehicle_trajectories

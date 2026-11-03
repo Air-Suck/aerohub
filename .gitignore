@@ -1,0 +1,102 @@
+# Operating-system and editor-local files
+.DS_Store
+._*
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# Local environment and credentials; keep distributable templates
+.env
+.env.*
+!.env.example
+!.env.sample
+!.env.template
+.venv/
+venv/
+env/
+
+# Python caches, packaging and test output
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# ROS 2 / colcon / CMake build output
+build/
+install/
+log/
+dist/
+CMakeFiles/
+CMakeCache.txt
+Testing/
+compile_commands.json
+
+# Upstream checkouts recreated by deployment/prepare_sources.sh.
+# Keep upstream.repos and deployment/platform/patches/ versioned instead.
+/aerostack2/
+/as2_platform_pixhawk/
+/px4_msgs/
+
+# Historical patch workspaces and migrated local support data
+/.tmp_patch_audit/
+/.tmp_patch_original/
+/workspace-support/
+
+# Runtime logs, flight recordings and simulation caches
+*.log
+*.ulg
+*.bag
+*.bag.active
+*.mcap
+.ros/
+.gazebo/
+.gz/
+.px4-sim-cache/
+.simulation-gazebo/
+rosbag2_*/
+
+# Per-task resolved configs and logs are generated.
+# Retain the curated final verification report, configs and evidence logs.
+/artifacts/resolved/*
+!/artifacts/resolved/.gitkeep
+!/artifacts/resolved/*.md
+!/artifacts/resolved/final-cat-resolved.yaml
+!/artifacts/resolved/final-swarm-resolved.yaml
+!/artifacts/resolved/final-cat-planner.log
+!/artifacts/resolved/final-cat-takeoff.log
+!/artifacts/resolved/final-swarm-planner.log
+!/artifacts/resolved/final-swarm-takeoff.log
+!/artifacts/resolved/final-runtime-build.log
+
+# Demo recordings, browser profiles, captured frames and review output.
+# Keep scripts, source, scene/config files and the README.
+/tools/planner-demo/deliverables/
+/tools/planner-demo/downloaded/
+/tools/planner-demo/inspection/
+/tools/planner-demo/qa_*/
+/tools/planner-demo/review_*/
+/tools/planner-demo/.qa_*/
+/tools/planner-demo/.review_*/
+/tools/planner-demo/.frames_*/
+/tools/planner-demo/capture_gz_images
+/tools/planner-demo/**/*.mp4
+/tools/planner-demo/**/*.avi
+/tools/planner-demo/**/*.mov
+/tools/planner-demo/**/*.mkv
+/tools/planner-demo/**/*.ppm
+
+# Deliberately keep vendor/*.tar.gz: platform Dockerfile consumes and hashes them.
+# Keep project documentation, references, task YAML, manifests and test fixtures.
