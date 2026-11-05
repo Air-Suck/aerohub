@@ -76,13 +76,16 @@ def commands(mode, env):
         (['/opt/xrce/bin/MicroXRCEAgent', 'udp4', '-p', str(agent_port)], agent_env, None),
         (['/opt/px4-gazebo/bin/px4', '-i', str(instance), '-d', str(etc)], px4_env, str(runtime)),
     ]
+    if env.get('FLIGHT_BOARD_CAMERAS', '1') not in ('0', '1'):
+        raise ValueError('FLIGHT_BOARD_CAMERAS must be 0 or 1')
     if env.get('FLIGHT_BOARD_SENSORS', '1') not in ('0', '1'):
         raise ValueError('FLIGHT_BOARD_SENSORS must be 0 or 1')
     if env.get('FLIGHT_BOARD_SENSORS', '1') == '1':
         result.append(
         (['ros2', 'run', 'uav_as2_sensor_adapter', 'airsim_sensor_node'] + common +
          ['-p', f'settings_file:={config_path}', '-p', f'vehicle_namespace:={namespace}',
-          '-p', 'use_sim_time:=true'], env, None))
+          '-p', 'use_sim_time:=true', '-p',
+          'camera_enabled:=' + ('true' if env.get('FLIGHT_BOARD_CAMERAS', '1') == '1' else 'false')], env, None))
     return result
 
 

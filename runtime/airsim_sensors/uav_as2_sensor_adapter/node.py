@@ -14,6 +14,7 @@ from tf2_ros.static_transform_broadcaster import StaticTransformBroadcaster
 
 from .conversion import extrinsic, image_payload, lidar_payload
 from .rpc import Rpc
+from .worker import SensorWorker
 
 
 IMAGE_NAMES = {0: 'rgb', 1: 'depth_planar', 2: 'depth_perspective', 5: 'segmentation'}
@@ -34,6 +35,7 @@ class SensorNode(Node):
         self.declare_parameter('rpc_host', '127.0.0.1')
         self.declare_parameter('rpc_port', 41471)
         self.declare_parameter('camera_rate_hz', 5.0)
+        self.declare_parameter('camera_enabled', True)
         self.declare_parameter('lidar_rate_hz', 10.0)
         self.declare_parameter('rpc_timeout', 3.0)
         self.declare_parameter('source_color_order', 'rgb')
@@ -53,6 +55,7 @@ class SensorNode(Node):
         self.static_tf = StaticTransformBroadcaster(self)
         transforms = []
         self.streams = []
+        self.workers = []
         self.last_stamp = {}
         self.errors = {}
         for name, camera in vehicle.get('Cameras', {}).items():
@@ -61,6 +64,8 @@ class SensorNode(Node):
             config.update(camera)
             frame = ns + '/' + name + '_optical'
             transforms.append(self.transform(frame, config, optical=True))
+            if not self.get_parameter('camera_enabled').value:
+                continue
             requests, pubs, captures = [], [], []
             seen = set()
             for capture in config.get('CaptureSettings', []):
@@ -79,7 +84,7 @@ class SensorNode(Node):
                 captures.append(capture)
             if requests:
                 callback = partial(self.camera, name, frame, requests, pubs, captures)
-                self.timer('camera_rate_hz', callback)
+                self.timer('camera_rate_hz', callback, 'camera-' + name)
         for name, config in vehicle.get('Sensors', {}).items():
             if config.get('SensorType') != 6 or not config.get('Enabled', True):
                 continue
@@ -90,21 +95,37 @@ class SensorNode(Node):
                 raise ValueError('unsupported LiDAR DataFrame')
             transforms.append(self.transform(frame, config))
             pub = self.create_publisher(PointCloud2, self.prefix + '/' + name + '/points', qos_profile_sensor_data)
-            self.timer('lidar_rate_hz', partial(self.lidar, name, frame, data_frame, pub))
+            self.timer('lidar_rate_hz', partial(self.lidar, name, frame, data_frame, pub), 'lidar-' + name)
         self.static_tf.sendTransform(transforms)
         if not self.streams:
             raise ValueError('no supported cameras or LiDAR configured')
+        for worker in self.workers:
+            worker.start()
 
-    def timer(self, parameter, callback):
+    def timer(self, parameter, callback, name):
         rate = float(self.get_parameter(parameter).value)
         if not math.isfinite(rate) or rate <= 0:
             raise ValueError(parameter + ' must be positive and finite')
-        self.streams.append(self.create_timer(1.0 / rate, partial(self.guarded, callback)))
+        worker = SensorWorker(name, partial(self.guarded, callback))
+        self.workers.append(worker)
+        self.streams.append(self.create_timer(1.0 / rate, worker.request))
+
+    def destroy_node(self):
+        # Stop all producers before destroying publishers/clock used by their callbacks.
+        for timer in self.streams:
+            timer.cancel()
+        for worker in self.workers:
+            worker.stop()
+        for worker in self.workers:
+            worker.join()
+        return super().destroy_node()
 
     def guarded(self, callback):
         try:
             callback()
-        except (OSError, RuntimeError, ValueError, KeyError, TypeError) as exc:
+        except Exception as exc:
+            if not rclpy.ok(context=self.context):
+                return
             key = str(callback)
             now = self.get_clock().now().nanoseconds
             if now - self.errors.get(key, -10**30) > 5_000_000_000:

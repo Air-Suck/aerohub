@@ -1,0 +1,13 @@
+# Offline sensor-only upgrade; retain the validated PX4/Agent payload unchanged.
+ARG BASE_IMAGE=flight_board:airsim-px4-humble-20261105-43632de22490
+FROM ${BASE_IMAGE}
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+WORKDIR /opt/platform_sensors
+COPY runtime/airsim_sensors/ src/as2_sensor_adapter/
+RUN source /opt/ros/humble/setup.bash \
+    && colcon build --merge-install --packages-select uav_as2_sensor_adapter \
+    && ROS_DOMAIN_ID=175 ROS_LOCALHOST_ONLY=1 PYTHONPATH=src/as2_sensor_adapter:$PYTHONPATH \
+       python3 -m unittest discover -s src/as2_sensor_adapter/tests -v
+COPY deployment/flight_board/supervisor.py /opt/flight_board/supervisor.py
+LABEL org.aerohub.sensor-acquisition="per-sensor-thread"
+WORKDIR /var/lib/flight_board

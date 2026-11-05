@@ -6,9 +6,9 @@ Agent、Humble AirSim 传感器桥和全局时钟桥。镜像保留原 PX4 所�
 
 ## 使用固定镜像
 
-日常启动直接使用 `flight_board:airsim-px4-humble-20261105-43632de22490`，Compose
+日常启动直接使用 `flight_board:airsim-px4-humble-threaded-20261105`，Compose
 不执行 build，也不自动拉取镜像。该版本为 Linux amd64，镜像 ID：
-`sha256:43632de224903a6f283683cf539bebec3a3f34283b4b49b2a7e54f745fbf1757`。
+`sha256:8c33881fde6985fe5a43a894bde075471df85064e45ac8e5de28efebcc737cd2`。
 PX4、DDS Agent、传感器桥、supervisor 和默认 DDS 配置均已包含在镜像内。
 AirSim 场景与车辆配置仍由宿主机提供；RoboPi 的 DDS 网络配置仍按运行环境挂载。
 
@@ -22,12 +22,33 @@ bash deployment/flight_board/image.sh export
 将生成的 `.tar` 和 `.tar.sha256` 一起复制到另一台 amd64 机器，再执行：
 
 ```bash
-bash deployment/flight_board/image.sh load /path/to/flight_board-humble-20261105-amd64.tar
+bash deployment/flight_board/image.sh load /path/to/flight_board-humble-threaded-20261105-amd64.tar
 docker compose -f deployment/flight_board/compose.yaml up -d
 ```
 
 加载入口校验归档文件的 SHA256 及加载后的镜像 ID。无需源码编译或下载
 基础镜像。当前交付使用离线包，尚未推送镜像仓库。
+
+## 采集线程与相机开关
+
+正式采集始终采用每个物理传感器一个独立线程，不提供串行采集模式。
+同一相机的 RGB/深度合并 RPC；ROS 定时器只投递任务，慢采集最多保留一个待处理请求。
+线程、相机开关与退出回收由镜像构建中的 12 项测试验证。
+
+默认开启相机。仅需要 LiDAR 时，Compose 可设置 `FLIGHT_BOARD_CAMERAS=0`；
+传感器节点的对应参数是 `camera_enabled:=false`。这只关闭 ROS 侧相机采集，
+不修改 AirSim settings 中的相机模型。
+
+已有旧固定镜像时，可以只升级传感器层，不重建 PX4/Agent，也不访问网络：
+
+```bash
+docker build --network none --pull=false -f deployment/flight_board/Dockerfile.sensors \
+  -t flight_board:airsim-px4-humble-threaded-20261105 .
+```
+
+自建镜像 ID 不保证与本机交付 ID 一致；`image.sh check/load` 校验的是本次固定交付。
+原 43632de22490 镜像保留作为来源和历史飞行验收基线，不能将旧镜像的飞行验收
+自动视为新镜像的完整飞行验收。
 
 ## 镜像组成与来源
 

@@ -1,7 +1,7 @@
 name: aerohub-flight-board
 services:
   drone0:
-    image: "${FLIGHT_BOARD_IMAGE:-flight_board:airsim-px4-humble-20261105-43632de22490}"
+    image: "${FLIGHT_BOARD_IMAGE:-flight_board:airsim-px4-humble-threaded-20261105}"
     pull_policy: never
     init: true
     network_mode: host
@@ -9,6 +9,7 @@ services:
       ROS_DOMAIN_ID: "${ROS_DOMAIN_ID:-81}"
       VEHICLE_NAME: PX4
       VEHICLE_NAMESPACE: drone0
+      FLIGHT_BOARD_CAMERAS: "${FLIGHT_BOARD_CAMERAS:-1}"
       PX4_INSTANCE: "20"
       PX4_SYSTEM_ID: "21"
       XRCE_AGENT_PORT: "8891"
@@ -20,7 +21,7 @@ services:
     stop_grace_period: 10s
 
   clock:
-    image: "${FLIGHT_BOARD_IMAGE:-flight_board:airsim-px4-humble-20261105-43632de22490}"
+    image: "${FLIGHT_BOARD_IMAGE:-flight_board:airsim-px4-humble-threaded-20261105}"
     pull_policy: never
     init: true
     network_mode: host

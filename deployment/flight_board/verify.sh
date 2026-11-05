@@ -6,7 +6,7 @@ root=$(cd "$(dirname "$0")/../.." && pwd)
 out="${VERIFY_OUTPUT:-$root/artifacts/flight-board-verification}"
 source "$root/scripts/load_env.sh"
 mkdir -p "$out"
-image=${FLIGHT_BOARD_IMAGE:-flight_board:airsim-px4-humble-20261105-43632de22490}
+image=${FLIGHT_BOARD_IMAGE:-flight_board:airsim-px4-humble-threaded-20261105}
 image=$(docker image inspect "$image" --format '{{.Id}}')
 printf '%s\n' "$image" > "$out/flight-board-image.txt"
 names=(aerohub-fb-vehicle aerohub-fb-clock)
