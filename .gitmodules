@@ -4,3 +4,6 @@
 [submodule "thirdparty/as2_platform_pixhawk"]
 	path = thirdparty/as2_platform_pixhawk
 	url = https://github.com/Popc0rn7/as2_platform-aerohub.git
+[submodule "thirdparty/SUPER-sim"]
+	path = thirdparty/SUPER-sim
+	url = https://github.com/Popc0rn7/SUPER-sim.git
