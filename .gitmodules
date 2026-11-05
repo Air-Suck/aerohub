@@ -1,0 +1,6 @@
+[submodule "thirdparty/aerostack2"]
+	path = thirdparty/aerostack2
+	url = https://github.com/Popc0rn7/aerostack2-aerohub.git
+[submodule "thirdparty/as2_platform_pixhawk"]
+	path = thirdparty/as2_platform_pixhawk
+	url = https://github.com/Popc0rn7/as2_platform-aerohub.git

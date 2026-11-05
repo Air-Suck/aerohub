@@ -44,8 +44,8 @@ CMakeCache.txt
 Testing/
 compile_commands.json
 
-# Upstream checkouts recreated by deployment/prepare_sources.sh.
-# Keep upstream.repos and deployment/platform/patches/ versioned instead.
+# Unmanaged local source checkouts; old Gazebo deployment is retained in Git history.
+# Active AS2 forks are tracked submodules under thirdparty/.
 /aerostack2/
 /as2_platform_pixhawk/
 /px4_msgs/
@@ -98,5 +98,13 @@ rosbag2_*/
 /tools/planner-demo/**/*.mkv
 /tools/planner-demo/**/*.ppm
 
-# Deliberately keep vendor/*.tar.gz: platform Dockerfile consumes and hashes them.
+# vendor/ is optional local input for rebuilding the retained Dockerfile.
+# Runtime delivery uses the frozen flight_board tar; source archives are not shipped.
 # Keep project documentation, references, task YAML, manifests and test fixtures.
+
+artifacts/
+vendor/
+
+# Machine-specific AirSim launch profiles
+/config/airsim/*.local.json
+/config/resources.local.yaml

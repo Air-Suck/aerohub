@@ -1,5 +1,7 @@
 # Aerostack2 统一 Planner 第一阶段
 
+> 本文保留 Planner 设计与 main 历史集成参考。Gazebo 构建、启动和验收命令不属于当前分支；对应源码见[旧部署参考版本](history/README.md#旧部署参考版本)。当前运行入口见[部署导航](../deployment/README.md)。
+
 ## 当前任务
 
 在 `F:\UAV\aerostack2-integration` 中，将 CAT-ORA 和 Swarm-Formation 作为可替换的 Planner 模块接入 Aerostack2，并使用同一套任务配置、项目内 Planner 生命周期、轨迹契约、Output Gateway 和 AS2/PX4 执行链路完成多机仿真验收。

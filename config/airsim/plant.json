@@ -1,0 +1,12 @@
+{
+  "binary_resource": "racer_yolo_plant",
+  "project": "SuperGridStarterpack",
+  "settings": "settings/px4-two-lidar.json",
+  "args": [
+    "-RenderOffscreen",
+    "-vulkan",
+    "-nosound",
+    "-NoMouseCapture",
+    "-ini:Input:[/Script/Engine.InputSettings]:bCaptureMouseOnLaunch=False,DefaultViewportMouseCaptureMode=NoCapture,bDefaultViewportMouseLock=False,DefaultViewportMouseLockMode=DoNotLock"
+  ]
+}

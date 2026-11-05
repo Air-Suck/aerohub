@@ -1,0 +1,67 @@
+{
+  "SettingsVersion": 1.2,
+  "SimMode": "Multirotor",
+  "ClockType": "SteppableClock",
+  "ApiServerPort": 41471,
+  "Vehicles": {
+    "PX4": {
+      "VehicleType": "PX4Multirotor",
+      "UseSerial": false,
+      "UseTcp": true,
+      "LockStep": true,
+      "LocalHostIp": "127.0.0.1",
+      "TcpPort": 4580,
+      "ControlPortLocal": 14640,
+      "ControlPortRemote": 14680,
+      "Sensors": {
+        "Barometer": {
+          "SensorType": 1,
+          "Enabled": true,
+          "PressureFactorSigma": 0.0001825
+        },
+        "Lidar": {
+          "SensorType": 6,
+          "Enabled": true,
+          "NumberOfChannels": 16,
+          "Range": 25,
+          "RotationsPerSecond": 10,
+          "PointsPerSecond": 80000,
+          "HorizontalFOVStart": -180,
+          "HorizontalFOVEnd": 180,
+          "VerticalFOVUpper": 20,
+          "VerticalFOVLower": -25,
+          "X": 0,
+          "Y": 0,
+          "Z": 0,
+          "Roll": 0,
+          "Pitch": 0,
+          "Yaw": 0,
+          "DrawDebugPoints": false,
+          "DataFrame": "SensorLocalFrame"
+        },
+        "imu": {
+          "SensorType": 2,
+          "Enabled": true
+        },
+        "gps": {
+          "SensorType": 3,
+          "Enabled": true
+        },
+        "magnetometer": {
+          "SensorType": 4,
+          "Enabled": true
+        }
+      },
+      "ControlIp": "127.0.0.1",
+      "X": 0,
+      "Y": 0,
+      "Z": 0,
+      "Yaw": 0,
+      "EnableCollisions": true
+    }
+  },
+  "ClockSpeed": 1.0,
+  "ViewMode": "SpringArmChase",
+  "RpcEnabled": true,
+  "LocalHostIp": "127.0.0.1"
+}

@@ -1,0 +1,5 @@
+# Matches the single-aircraft flight_board Compose example.
+vehicles:
+  drone0:
+    fmu_prefix: /drone0
+    target_system_id: 21

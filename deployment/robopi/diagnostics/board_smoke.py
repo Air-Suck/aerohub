@@ -1,0 +1,14 @@
+import os,subprocess,time,signal
+root='/data/local/tmp/aerohub-as2/install'
+command=[root+'/as2_state_estimator/lib/as2_state_estimator/as2_state_estimator_node','--ros-args','-r','__ns:=/aerohub_probe','-p','plugin_name:=raw_odometry','-p','use_sim_time:=false','-p','use_gps:=false','-p','set_origin_on_start:=true']
+with open('/data/local/tmp/aerohub-as2/estimator-smoke.log','w') as stream:
+ p=subprocess.Popen(command,stdout=stream,stderr=subprocess.STDOUT,start_new_session=True)
+ try:
+  time.sleep(5)
+  if p.poll() is not None:raise RuntimeError('estimator exited '+str(p.returncode))
+  print('AS2 estimator alive after 5 seconds')
+ finally:
+  if p.poll() is None:os.killpg(p.pid,signal.SIGINT)
+  try:p.wait(timeout=5)
+  except subprocess.TimeoutExpired:os.killpg(p.pid,signal.SIGKILL);p.wait()
+print('process cleaned up',p.returncode)

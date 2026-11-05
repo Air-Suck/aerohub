@@ -1,5 +1,7 @@
 # Aerostack2 架构介绍
 
+> 本文保留 Planner 设计与 main 历史集成参考。Gazebo 构建、启动和验收命令不属于当前分支；对应源码见[旧部署参考版本](history/README.md#旧部署参考版本)。当前运行入口见[部署导航](../deployment/README.md)。
+
 本文介绍 Aerostack2 的核心分层，以及它在当前工程中的实际作用。实现核对日期：2026-11-03；以本项目锁定版本和启动配置为准，不代表所有 Aerostack2 版本的默认配置。
 
 配套阅读：[统一 Planner 框架集成设计与使用](统一Planner框架集成设计与使用.md)。
@@ -167,13 +169,13 @@ Aerostack2 的模块和插件边界为更换状态估计、控制器或平台适
 
 | 入口 | 阅读重点 |
 | --- | --- |
-| [AS2 多机启动](../deployment/platform/run_multi_as2.sh) | 每架飞机启动哪些组件 |
-| [AS2 通用配置](../deployment/platform/config.yaml) | 仿真时间、状态估计、运动 Behavior 插件 |
-| [控制器配置](../deployment/platform/pid_speed_controller.yaml) | 控制参数与 bypass 配置 |
-| [drone0 平台配置](../deployment/platform/multi/drone0.yaml) | PX4 前缀、system id 和频率 |
-| [Compose](../deployment/integration/compose.yaml) | 容器、网络与目录挂载 |
-| [AS2 输出 adapter](../as2_setpoint_adapter/uav_as2_setpoint_adapter/node.py) | 坐标转换、控制模式和运动参考 |
-| [PX4 v1.17 兼容补丁](../deployment/platform/patches/as2-platform-px4-v1.17.patch) | 锁定版本之间的消息兼容处理 |
-| [上游版本清单](../deployment/upstream.repos) | Aerostack2、Pixhawk platform、px4_msgs 锁版 |
+| AS2 多机启动（main: `deployment/platform/run_multi_as2.sh`） | 每架飞机启动哪些组件 |
+| AS2 通用配置（main: `deployment/platform/config.yaml`） | 仿真时间、状态估计、运动 Behavior 插件 |
+| [控制器配置](../config/as2/pid_speed_controller.yaml) | 控制参数与 bypass 配置 |
+| drone0 平台配置（main: `deployment/platform/multi/drone0.yaml`） | PX4 前缀、system id 和频率 |
+| Compose（main: `deployment/integration/compose.yaml`） | 容器、网络与目录挂载 |
+| [AS2 输出 adapter](../planner_framework/bridges/as2_setpoint/uav_as2_setpoint_adapter/node.py) | 坐标转换、控制模式和运动参考 |
+| PX4 v1.17 兼容补丁（main: `deployment/platform/patches/as2-platform-px4-v1.17.patch`） | 锁定版本之间的消息兼容处理 |
+| 上游版本清单（main: `deployment/upstream.repos`） | Aerostack2、Pixhawk platform、px4_msgs 锁版 |
 
 [返回文档导航](README.md)

@@ -1,0 +1,33 @@
+name: aerohub-flight-board
+services:
+  drone0:
+    image: "${FLIGHT_BOARD_IMAGE:-flight_board:airsim-px4-humble-20261105-43632de22490}"
+    pull_policy: never
+    init: true
+    network_mode: host
+    environment:
+      ROS_DOMAIN_ID: "${ROS_DOMAIN_ID:-81}"
+      VEHICLE_NAME: PX4
+      VEHICLE_NAMESPACE: drone0
+      PX4_INSTANCE: "20"
+      PX4_SYSTEM_ID: "21"
+      XRCE_AGENT_PORT: "8891"
+      AIRSIM_HOST: "127.0.0.1"
+      AIRSIM_RPC_PORT: "41471"
+    volumes:
+      - ../../config/airsim/settings/px4-sensors.json:/config/settings.json:ro
+    command: [vehicle]
+    stop_grace_period: 10s
+
+  clock:
+    image: "${FLIGHT_BOARD_IMAGE:-flight_board:airsim-px4-humble-20261105-43632de22490}"
+    pull_policy: never
+    init: true
+    network_mode: host
+    environment:
+      ROS_DOMAIN_ID: "${ROS_DOMAIN_ID:-81}"
+      VEHICLE_NAME: PX4
+      AIRSIM_HOST: "127.0.0.1"
+      AIRSIM_RPC_PORT: "41471"
+    command: [clock]
+    stop_grace_period: 10s

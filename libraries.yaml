@@ -1,0 +1,55 @@
+# 可复用算法能力注册表；路径相对于仓库根目录。
+# registered 表示源码已收录；可运行组合以 bindings 为准。
+schema_version: 1
+environments:
+  airsim_px4:
+    description: AirSim / PX4 1.18 / AS2；场景与单机平台已接入，Planner library 待接入
+    simulator: airsim
+    flight_controller: px4
+    lifecycle: development
+    setup: config/airsim/README.md
+    scene_profiles:
+      nh: config/airsim/nh.json
+      town05: config/airsim/town05.json
+      plant: config/airsim/plant.json
+libraries:
+  cat_ora:
+    name: CAT-ORA
+    description: 多机目标分配与轨迹规划；当前接入要求保持任务指定的逐机目标归属
+    kind: planner
+    status: registered
+    manifest: planner_framework/registry/cat_ora/4bc41f593eebde65dd74108a97e80430a145dfa0/manifest.yaml
+    implementation:
+      adapter: libraries/cat_ora/ros2_adapter
+      proxy: libraries/cat_ora/ros1_proxy/ros1_proxy.py
+    bindings:
+      airsim_px4:
+        validation: not_integrated
+        reason: 尚无对应的多机部署、任务启动与 Planner 闭环验证
+    docs: libraries/README.md
+    history:
+      ref: main
+      environment: gazebo_px4_1_17
+      validation: historical_pass
+      evidence: artifacts/resolved/FINAL_VERIFICATION.md
+      commit: c420169460e59c396f586320e0e06fc96e387f6e
+  swarm_formation:
+    name: Swarm-Formation
+    description: 七机编队滚动轨迹规划
+    kind: planner
+    status: registered
+    manifest: planner_framework/registry/swarm_formation/967a4bdfae949e994691f8ffc87dbb0147cbebb7/manifest.yaml
+    implementation:
+      adapter: libraries/swarm_formation/ros2_adapter
+      proxy: libraries/swarm_formation/ros1_proxy/ros1_proxy.py
+    bindings:
+      airsim_px4:
+        validation: not_integrated
+        reason: 尚无对应的七机部署、地图输入接线与 Planner 闭环验证
+    docs: libraries/README.md
+    history:
+      ref: main
+      environment: gazebo_px4_1_17
+      validation: historical_pass
+      evidence: artifacts/resolved/FINAL_VERIFICATION.md
+      commit: c420169460e59c396f586320e0e06fc96e387f6e

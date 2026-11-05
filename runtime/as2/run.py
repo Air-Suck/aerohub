@@ -1,0 +1,115 @@
+"""AS2-only multi-aircraft launcher; Agent and simulator live in flight_board."""
+import os
+from pathlib import Path
+import re
+import signal
+import subprocess
+import time
+import yaml
+
+
+def main():
+    # HDC children may inherit -1000. Keep this private runtime killable on OOM.
+    if os.environ.get('AS2_RESET_OOM_SCORE') == '1':
+        Path('/proc/self/oom_score_adj').write_text('0')
+    memory_limit = int(os.environ.get('AS2_MAX_RSS_MB', '0')) * 1024
+    config = os.environ.get('AS2_CONFIG_FILE', '/opt/companion_as2/config.yaml')
+    controller = os.environ.get('AS2_CONTROLLER_CONFIG_FILE', '/opt/companion_as2/pid_speed_controller.yaml')
+    fleet = yaml.safe_load(Path(os.environ.get('AS2_FLEET_FILE', '/opt/companion_as2/fleet.yaml')).read_text())
+    vehicles = fleet['vehicles']
+    if not vehicles:
+        raise ValueError('fleet must contain at least one aircraft')
+    commands = []
+    runtime = Path(os.environ.get('AS2_RUNTIME_DIR', '/tmp/companion_as2'))
+    runtime.mkdir(exist_ok=True)
+    for namespace, vehicle in vehicles.items():
+        if not re.fullmatch(r'[A-Za-z][A-Za-z0-9_]*', namespace):
+            raise ValueError('invalid vehicle namespace')
+        system_id = int(vehicle['target_system_id'])
+        if not 1 <= system_id <= 255:
+            raise ValueError('invalid target_system_id')
+        platform_config = runtime / (namespace + '.yaml')
+        platform_config.write_text(yaml.safe_dump({'/**': {'ros__parameters': {
+            'use_sim_time': True, 'cmd_freq': 50.0, 'info_freq': 10.0,
+            'external_odom': False, 'fmu_prefix': vehicle['fmu_prefix'],
+            'target_system_id': system_id}}}))
+        commands.extend([
+            ['ros2', 'launch', 'as2_platform_pixhawk', 'pixhawk_launch.py',
+             f'namespace:={namespace}', f'platform_config_file:={platform_config}'],
+            ['ros2', 'launch', 'as2_state_estimator', 'state_estimator_launch.py',
+             f'namespace:={namespace}', f'config_file:={config}', 'plugin_name:=raw_odometry',
+             f'plugin_config_file:={config}',
+             'use_sim_time:=true'],
+            ['ros2', 'launch', 'as2_motion_controller', 'controller_launch.py',
+             f'namespace:={namespace}', f'config_file:={config}', 'plugin_name:=pid_speed_controller',
+             f'plugin_config_file:={controller}', 'use_sim_time:=true'],
+            ['ros2', 'launch', 'as2_behaviors_motion', 'motion_behaviors_launch.py',
+             f'namespace:={namespace}', f'config_file:={config}', 'use_sim_time:=true'],
+        ])
+    children = []
+    stopping = False
+
+    def stop(*_):
+        nonlocal stopping
+        stopping = True
+
+    def terminate(child, sig):
+        try:
+            os.killpg(child.pid, sig)
+        except ProcessLookupError:
+            pass
+
+    signal.signal(signal.SIGTERM, stop)
+    signal.signal(signal.SIGINT, stop)
+    result = 0
+    next_memory_check = 0.0
+    try:
+        for command in commands:
+            print('Starting:', ' '.join(command), flush=True)
+            children.append(subprocess.Popen(command, start_new_session=True))
+        while not stopping:
+            for child in children:
+                if child.poll() is not None:
+                    print(f'AS2 child exited: {child.returncode}', flush=True)
+                    result = child.returncode or 1
+                    stopping = True
+            if memory_limit and time.monotonic() >= next_memory_check:
+                processes = {}
+                for status in Path('/proc').glob('[0-9]*/status'):
+                    try:
+                        fields = dict(line.split(':', 1) for line in status.read_text().splitlines()
+                                      if ':' in line)
+                        processes[int(status.parent.name)] = (
+                            int(fields['PPid']), int(fields.get('VmRSS', '0 kB').split()[0]))
+                    except (OSError, ValueError, KeyError):
+                        continue
+                owned = {os.getpid()}
+                while True:
+                    children_pids = {pid for pid, (parent, _) in processes.items() if parent in owned}
+                    if children_pids <= owned:
+                        break
+                    owned.update(children_pids)
+                rss = sum(processes[pid][1] for pid in owned if pid in processes)
+                print(f'AS2 process tree RSS: {rss // 1024} MiB', flush=True)
+                if rss > memory_limit:
+                    print('AS2 memory limit exceeded; stopping owned processes', flush=True)
+                    result = 1
+                    stopping = True
+                next_memory_check = time.monotonic() + 1
+            time.sleep(0.2)
+    finally:
+        for child in children:
+            if child.poll() is None:
+                terminate(child, signal.SIGTERM)
+        deadline = time.monotonic() + 5
+        for child in children:
+            try:
+                child.wait(timeout=max(0.01, deadline-time.monotonic()))
+            except subprocess.TimeoutExpired:
+                terminate(child, signal.SIGKILL)
+                child.wait()
+    return result
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())

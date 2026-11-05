@@ -1,0 +1,11 @@
+name: uav-aerostack2-swarm-formation
+
+services:
+  swarm-formation:
+    build:
+      context: ../../..
+      dockerfile: libraries/swarm_formation/deployment/Dockerfile
+    image: uav/aerostack2-swarm-formation:noetic
+    container_name: planner-swarm-formation
+    network_mode: host
+    restart: unless-stopped

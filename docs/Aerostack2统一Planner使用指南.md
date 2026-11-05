@@ -1,5 +1,7 @@
 # Aerostack2 统一 Planner 使用指南
 
+> 本文保留 Planner 设计与 main 历史集成参考。Gazebo 构建、启动和验收命令不属于当前分支；对应源码见[旧部署参考版本](history/README.md#旧部署参考版本)。当前运行入口见[部署导航](../deployment/README.md)。
+
 ## 1. 当前可用能力
 
 `aerostack2-integration` 已将 CAT-ORA 和 Swarm-Formation 接入同一套 Planner 运行框架。一次任务只运行一个 Planner，通过任务 YAML 选择算法。
@@ -51,7 +53,7 @@ uav/swarm-formation:noetic-px4
 
 ```bash
 cd /home/noah/code/UAV/aerostack2-integration
-bash ./deployment/prepare_sources.sh
+bash ./scripts/prepare_sources.sh
 ```
 
 该脚本只依赖 Bash 和 Git，不要求宿主安装 ROS 2 或 `vcstool`。它会准备并校验：

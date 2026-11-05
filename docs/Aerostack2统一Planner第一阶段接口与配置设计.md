@@ -1,5 +1,7 @@
 # Aerostack2 统一 Planner 第一阶段接口与配置设计
 
+> 本文保留 Planner 设计与 main 历史集成参考。Gazebo 构建、启动和验收命令不属于当前分支；对应源码见[旧部署参考版本](history/README.md#旧部署参考版本)。当前运行入口见[部署导航](../deployment/README.md)。
+
 ## 1. 目标
 
 第一阶段在同一套 Aerostack2 系统中接入 CAT-ORA 和 Swarm-Formation。两者都是 `planner` 类型模块，任务通过配置选择其中一个，每次只运行一个 Planner。

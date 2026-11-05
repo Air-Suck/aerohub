@@ -1,5 +1,7 @@
 # 统一 Planner 框架：集成设计与使用
 
+> 本文保留 Planner 设计与 main 历史集成参考。Gazebo 构建、启动和验收命令不属于当前分支；对应源码见[旧部署参考版本](history/README.md#旧部署参考版本)。当前运行入口见[部署导航](../deployment/README.md)。
+
 本文面向需要理解、运行或扩展当前工程的开发者。内容依据 2026-11-03 本地源码核对；历史动力学验收结果见[最终验证记录](../artifacts/resolved/FINAL_VERIFICATION.md)，本次文档编写没有重新执行仿真。
 
 Aerostack2 的分层与执行链介绍见 [Aerostack2 架构介绍](Aerostack2架构介绍.md)。
@@ -483,7 +485,7 @@ AS2 本地 ENU = (本地 NED.y, 本地 NED.x, -本地 NED.z)
 
 以下部署命令在 Linux 仿真主机、工程根目录执行。当前 macOS 文档工作区不是已验证的仿真运行环境。
 
-基础镜像 `uav/px4-gazebo:v1.17.0-harmonic`、`uav/catora:noetic-upstream`、`uav/swarm-formation:noetic-px4` 需按相邻复现工程准备：[CAT-ORA 工程](../../03-catora-px4-gazebo/README.md)、[Swarm 工程](../../04-swarm-formation-px4-gazebo/README.md)。
+基础镜像 `uav/px4-gazebo:v1.17.0-harmonic`、`uav/catora:noetic-upstream`、`uav/swarm-formation:noetic-px4` 需按相邻复现工程准备：CAT-ORA 工程（历史相邻工程：`../../03-catora-px4-gazebo/README.md`）、Swarm 工程（历史相邻工程：`../../04-swarm-formation-px4-gazebo/README.md`）。
 
 随后准备锁定上游源码、构建 AS2 平台及集成镜像：
 
@@ -639,10 +641,10 @@ python3 -m unittest discover -s planner_framework/tests -v
 - [ROS 节点与进程管理](../planner_framework/uav_planner_framework/ros_node.py)
 - [轨迹契约与 Output Gateway](../planner_framework/uav_planner_framework/trajectory.py)
 - [完成判定](../planner_framework/uav_planner_framework/completion.py)
-- [CAT-ORA adapter](../cat_ora_adapter/uav_cat_ora_adapter/node.py)、[ROS 1 proxy](../adapters/cat_ora/ros1_proxy.py)
-- [Swarm adapter](../swarm_formation_adapter/uav_swarm_formation_adapter/node.py)、[ROS 1 proxy](../adapters/swarm_formation/ros1_proxy.py)
-- [AS2 setpoint adapter](../as2_setpoint_adapter/uav_as2_setpoint_adapter/node.py)
-- [一键验收脚本](../deployment/integration/run_planner.sh)
+- [CAT-ORA adapter](../libraries/cat_ora/ros2_adapter/uav_cat_ora_adapter/node.py)、[ROS 1 proxy](../libraries/cat_ora/ros1_proxy/ros1_proxy.py)
+- [Swarm adapter](../libraries/swarm_formation/ros2_adapter/uav_swarm_formation_adapter/node.py)、[ROS 1 proxy](../libraries/swarm_formation/ros1_proxy/ros1_proxy.py)
+- [AS2 setpoint adapter](../planner_framework/bridges/as2_setpoint/uav_as2_setpoint_adapter/node.py)
+- 一键验收脚本（main: `deployment/integration/run_planner.sh`）
 - [详细接口设计](Aerostack2统一Planner第一阶段接口与配置设计.md)、[完整操作指南](Aerostack2统一Planner使用指南.md)
 
 [返回文档导航](README.md)
