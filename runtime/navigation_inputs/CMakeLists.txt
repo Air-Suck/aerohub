@@ -1,0 +1,26 @@
+cmake_minimum_required(VERSION 3.16)
+project(as2_navigation_inputs)
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(nav_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
+find_package(tf2_sensor_msgs REQUIRED)
+add_executable(navigation_inputs_node src/navigation_inputs.cpp)
+target_compile_features(navigation_inputs_node PUBLIC cxx_std_17)
+target_compile_options(navigation_inputs_node PRIVATE -Wall -Wextra -Wpedantic)
+ament_target_dependencies(navigation_inputs_node rclcpp nav_msgs sensor_msgs tf2_ros
+  tf2_geometry_msgs tf2_sensor_msgs)
+install(TARGETS navigation_inputs_node DESTINATION lib/${PROJECT_NAME})
+install(DIRECTORY config DESTINATION share/${PROJECT_NAME})
+include(CTest)
+if(BUILD_TESTING)
+  find_package(Python3 REQUIRED COMPONENTS Interpreter)
+  add_test(NAME navigation_input_contract COMMAND ${CMAKE_COMMAND} -E env
+    NAV_INPUT_EXECUTABLE=$<TARGET_FILE:navigation_inputs_node>
+    ROS_DOMAIN_ID=172 ROS_LOCALHOST_ONLY=1
+    ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/test/smoke_ros2.py)
+  set_tests_properties(navigation_input_contract PROPERTIES TIMEOUT 30)
+endif()
+ament_package()

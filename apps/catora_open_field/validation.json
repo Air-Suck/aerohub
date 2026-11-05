@@ -1,0 +1,26 @@
+{
+  "task_id": "53a555d0-ed93-4b00-976b-b90ff92ea378",
+  "planner_status": "SUCCEEDED",
+  "endpoint_error_m": {
+    "drone0": 0.04314160338198097,
+    "drone1": 0.14596969037727495,
+    "drone2": 0.17214705645187017,
+    "drone3": 0.16047031219949415
+  },
+  "airsim_truth_endpoint_error_m": {
+    "drone0": 0.07701956479965372,
+    "drone1": 0.11721371776993895,
+    "drone2": 0.08957587251859918,
+    "drone3": 0.043280750092050985
+  },
+  "min_truth_separation_m": 5.627236413693179,
+  "max_localization_disagreement_m": 0.3056607143476032,
+  "min_observed_separation_m": 5.646268924904954,
+  "max_sampled_tracking_error_m": 1.0245082755746289,
+  "planner_wall_seconds": 15.197720881998976,
+  "planning_collisions": false,
+  "landed_and_disarmed": true,
+  "validation_date": "2026-11-05",
+  "validation_scope": "PC AirSimNH four-vehicle CAT-ORA flight",
+  "raw_evidence_location": "artifacts/catora-open-field-final/result.json"
+}

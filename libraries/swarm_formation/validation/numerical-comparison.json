@@ -1,0 +1,34 @@
+{
+  "cases": 56,
+  "repetitions_per_case": 15,
+  "total_calls_per_version": 840,
+  "max_position_error_m": 4.679728452803087e-08,
+  "max_duration_error_s": 3.239904877716526e-08,
+  "success_ros1": 840,
+  "success_ros2": 840,
+  "timing": {
+    "0": {
+      "ros1": {
+        "median_ms": 0.1095895,
+        "p95_ms": 0.157312
+      },
+      "ros2": {
+        "median_ms": 0.061090000000000005,
+        "p95_ms": 0.091523
+      }
+    },
+    "1": {
+      "ros1": {
+        "median_ms": 0.5831535,
+        "p95_ms": 0.775615
+      },
+      "ros2": {
+        "median_ms": 0.511476,
+        "p95_ms": 0.700797
+      }
+    }
+  },
+  "validation_date": "2026-11-05",
+  "validation_scope": "Fixed-input Noetic/Humble optimizer comparison; timing includes build-environment differences",
+  "raw_evidence_location": "/tmp/aerohub-swarm-validation/comparison.json"
+}

@@ -1,6 +1,10 @@
-FROM uav/catora:noetic-upstream
+FROM osrf/ros:humble-desktop-full-jammy
 
-COPY libraries/cat_ora/ros1_proxy/ros1_proxy.py /usr/local/bin/cat_ora_ros1_proxy.py
-RUN chmod +x /usr/local/bin/cat_ora_ros1_proxy.py
+SHELL ["/bin/bash", "-c"]
+COPY libraries/cat_ora/humble /opt/catora_ws/src/mrs_formation_reshaping
+RUN source /opt/ros/humble/setup.bash && cd /opt/catora_ws && \
+    colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
+COPY libraries/cat_ora/deployment/start_humble.sh /usr/local/bin/start_catora_humble
+RUN chmod +x /usr/local/bin/start_catora_humble
 
-CMD ["bash", "-lc", "source /opt/catora_ws/devel/setup.bash; roslaunch -p ${ROS_MASTER_PORT:-11321} mrs_formation_reshaping catora.launch rviz:=false & planner=$!; trap 'kill $planner 2>/dev/null || true' EXIT INT TERM; python3 /usr/local/bin/cat_ora_ros1_proxy.py"]
+CMD ["/usr/local/bin/start_catora_humble"]

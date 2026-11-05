@@ -5,11 +5,10 @@ services:
     build:
       context: ../../..
       dockerfile: libraries/cat_ora/deployment/Dockerfile
-    image: uav/aerostack2-cat-ora:noetic
+    image: uav/aerostack2-cat-ora:humble
     container_name: aerostack2-cat-ora
     network_mode: host
     environment:
-      ROS_MASTER_PORT: "11321"
-      ROS_MASTER_URI: http://127.0.0.1:11321
-      ROS_IP: 127.0.0.1
+      ROS_DOMAIN_ID: "${ROS_DOMAIN_ID:-0}"
+      ROS_LOCALHOST_ONLY: "1"
     restart: unless-stopped

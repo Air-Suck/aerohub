@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>traj_opt</name><version>0.0.0</version>
+  <description>Swarm-Formation traj_opt port for ROS 2 Humble.</description>
+  <maintainer email="jane.doe@example.com">Jane Doe</maintainer>
+  <license>GPL-3.0</license>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>eigen</depend>
+  <depend>rclcpp</depend>
+  <depend>plan_env</depend>
+  <depend>path_searching</depend>
+  <depend>traj_utils</depend>
+  <depend>swarm_graph</depend>
+  <export><build_type>ament_cmake</build_type></export>
+</package>

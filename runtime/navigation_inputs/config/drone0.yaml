@@ -1,0 +1,10 @@
+/**:
+  ros__parameters:
+    use_sim_time: true
+    target_frame: drone0/odom
+    body_frame: drone0/base_link
+    odom_topic: sensor_measurements/odom
+    cloud_topic: sensor_measurements/Lidar/points
+    transform_wait: 0.25
+    max_input_age: 1.0
+    queue_size: 20

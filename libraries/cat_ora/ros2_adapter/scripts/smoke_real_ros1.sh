@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Historical filename; the JSON endpoint may be backed by ROS 1 or ROS 2.
 set -eo pipefail
 
 workspace=${1:-/workspace}
@@ -16,7 +17,7 @@ ros2 run uav_planner_framework planner_framework_node \
   -p registry_root:="$workspace/planner_framework/registry" \
   -p resolved_dir:="$resolved_dir" >/tmp/uav_cat_real_framework.log 2>&1 &
 framework_pid=$!
-trap 'kill "$framework_pid" "${adapter_pid:-}" "${trajectory_echo_pid:-}" "${setpoint_echo_pid:-}" 2>/dev/null || true' EXIT
+trap 'kill "$framework_pid" "${trajectory_echo_pid:-}" "${setpoint_echo_pid:-}" 2>/dev/null || true' EXIT
 
 for _ in {1..20}; do
   ros2 service list | grep -qx /planner/control && break
@@ -33,12 +34,7 @@ task_id=$(grep -oE "task_id='[^']+'" <<<"$response" | head -n1 | cut -d"'" -f2)
 resolved_config="$resolved_dir/$task_id.yaml"
 test -f "$resolved_config"
 
-ros2 run uav_cat_ora_adapter cat_ora_adapter_node \
-  --ros-args \
-  -p resolved_config:="$resolved_config" \
-  -p valid_from_lead:=0.5 >/tmp/uav_cat_real_adapter.log 2>&1 &
-adapter_pid=$!
-
+# START already launches the registered adapter through PlannerFramework.
 for _ in {1..20}; do
   ros2 node list | grep -qx /cat_ora_adapter && break
   sleep 0.25

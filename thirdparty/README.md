@@ -1,4 +1,21 @@
-# AS2 源码依赖
+# 第三方源码与归档
+
+## ROS 1 算法归档
+
+| 目录 | 原始版本 | 用途 |
+| --- | --- | --- |
+| `cat_ora_ros1/` | `ctu-mrs/catora` `4bc41f593eebde65dd74108a97e80430a145dfa0`，提取自 `uav/catora:noetic-upstream` | 完整原包快照、ROS 1 对照 |
+| `swarm_formation_ros1/` | `ZJU-FAST-Lab/Swarm-Formation` `967a4bdfae949e994691f8ffc87dbb0147cbebb7` | 六个规划依赖包快照、ROS 1 对照 |
+
+这两个目录是源码快照，不是 submodule；根目录的 `COLCON_IGNORE` 防止同名
+catkin 包参与 Humble 构建。`aerohub/` 额外保存本项目原有 ROS 1 代理与旧部署，
+旧 Dockerfile 的 COPY 路径、Compose 根构建上下文已随归档更新。归档不表示
+恢复 ROS 1 为当前运行后端；活动实现位于 `libraries/<name>/humble/`。
+
+CAT-ORA 包清单写 MIT、README 写 GPL-3.0，归档保留原文与作者；
+Swarm-Formation 保留原 LICENSE 和 README。新的 Humble 部署不运行这些旧代理。
+
+## 活动 AS2 源码依赖
 
 `aerostack2` 和 `as2_platform_pixhawk` 是个人 fork 的 Git submodule，URL 由
 根目录 `.gitmodules` 管理，版本由主仓库的 gitlink 提交锁定。

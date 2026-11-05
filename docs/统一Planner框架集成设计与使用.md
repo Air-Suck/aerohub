@@ -641,8 +641,8 @@ python3 -m unittest discover -s planner_framework/tests -v
 - [ROS 节点与进程管理](../planner_framework/uav_planner_framework/ros_node.py)
 - [轨迹契约与 Output Gateway](../planner_framework/uav_planner_framework/trajectory.py)
 - [完成判定](../planner_framework/uav_planner_framework/completion.py)
-- [CAT-ORA adapter](../libraries/cat_ora/ros2_adapter/uav_cat_ora_adapter/node.py)、[ROS 1 proxy](../libraries/cat_ora/ros1_proxy/ros1_proxy.py)
-- [Swarm adapter](../libraries/swarm_formation/ros2_adapter/uav_swarm_formation_adapter/node.py)、[ROS 1 proxy](../libraries/swarm_formation/ros1_proxy/ros1_proxy.py)
+- [CAT-ORA adapter](../libraries/cat_ora/ros2_adapter/uav_cat_ora_adapter/node.py)、[归档 ROS 1 proxy](../thirdparty/cat_ora_ros1/aerohub/ros1_proxy.py)
+- [Swarm adapter](../libraries/swarm_formation/ros2_adapter/uav_swarm_formation_adapter/node.py)、[归档 ROS 1 proxy](../thirdparty/swarm_formation_ros1/aerohub/ros1_proxy.py)
 - [AS2 setpoint adapter](../planner_framework/bridges/as2_setpoint/uav_as2_setpoint_adapter/node.py)
 - 一键验收脚本（main: `deployment/integration/run_planner.sh`）
 - [详细接口设计](Aerostack2统一Planner第一阶段接口与配置设计.md)、[完整操作指南](Aerostack2统一Planner使用指南.md)

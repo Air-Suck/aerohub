@@ -1,0 +1,176 @@
+{
+  "SettingsVersion": 1.2,
+  "SimMode": "Multirotor",
+  "ClockType": "SteppableClock",
+  "ApiServerPort": 42471,
+  "Vehicles": {
+    "Drone0": {
+      "VehicleType": "PX4Multirotor",
+      "UseSerial": false,
+      "UseTcp": true,
+      "LockStep": true,
+      "LocalHostIp": "127.0.0.1",
+      "TcpPort": 4680,
+      "ControlPortLocal": 14840,
+      "ControlPortRemote": 14980,
+      "Sensors": {
+        "Barometer": {
+          "SensorType": 1,
+          "Enabled": true,
+          "PressureFactorSigma": 0.0001825
+        },
+        "imu": {
+          "SensorType": 2,
+          "Enabled": true
+        },
+        "gps": {
+          "SensorType": 3,
+          "Enabled": true
+        },
+        "magnetometer": {
+          "SensorType": 4,
+          "Enabled": true
+        }
+      },
+      "ControlIp": "127.0.0.1",
+      "X": 0,
+      "Y": -3,
+      "Z": 0,
+      "Yaw": 0,
+      "EnableCollisions": true
+    },
+    "Drone1": {
+      "VehicleType": "PX4Multirotor",
+      "UseSerial": false,
+      "UseTcp": true,
+      "LockStep": true,
+      "LocalHostIp": "127.0.0.1",
+      "TcpPort": 4681,
+      "ControlPortLocal": 14841,
+      "ControlPortRemote": 14981,
+      "Sensors": {
+        "Barometer": {
+          "SensorType": 1,
+          "Enabled": true,
+          "PressureFactorSigma": 0.0001825
+        },
+        "imu": {
+          "SensorType": 2,
+          "Enabled": true
+        },
+        "gps": {
+          "SensorType": 3,
+          "Enabled": true
+        },
+        "magnetometer": {
+          "SensorType": 4,
+          "Enabled": true
+        }
+      },
+      "ControlIp": "127.0.0.1",
+      "X": 0,
+      "Y": 3,
+      "Z": 0,
+      "Yaw": 0,
+      "EnableCollisions": true
+    },
+    "Drone2": {
+      "VehicleType": "PX4Multirotor",
+      "UseSerial": false,
+      "UseTcp": true,
+      "LockStep": true,
+      "LocalHostIp": "127.0.0.1",
+      "TcpPort": 4682,
+      "ControlPortLocal": 14842,
+      "ControlPortRemote": 14982,
+      "Sensors": {
+        "Barometer": {
+          "SensorType": 1,
+          "Enabled": true,
+          "PressureFactorSigma": 0.0001825
+        },
+        "imu": {
+          "SensorType": 2,
+          "Enabled": true
+        },
+        "gps": {
+          "SensorType": 3,
+          "Enabled": true
+        },
+        "magnetometer": {
+          "SensorType": 4,
+          "Enabled": true
+        }
+      },
+      "ControlIp": "127.0.0.1",
+      "X": 6,
+      "Y": -3,
+      "Z": 0,
+      "Yaw": 0,
+      "EnableCollisions": true
+    },
+    "Drone3": {
+      "VehicleType": "PX4Multirotor",
+      "UseSerial": false,
+      "UseTcp": true,
+      "LockStep": true,
+      "LocalHostIp": "127.0.0.1",
+      "TcpPort": 4683,
+      "ControlPortLocal": 14843,
+      "ControlPortRemote": 14983,
+      "Sensors": {
+        "Barometer": {
+          "SensorType": 1,
+          "Enabled": true,
+          "PressureFactorSigma": 0.0001825
+        },
+        "imu": {
+          "SensorType": 2,
+          "Enabled": true
+        },
+        "gps": {
+          "SensorType": 3,
+          "Enabled": true
+        },
+        "magnetometer": {
+          "SensorType": 4,
+          "Enabled": true
+        }
+      },
+      "ControlIp": "127.0.0.1",
+      "X": 6,
+      "Y": 3,
+      "Z": 0,
+      "Yaw": 0,
+      "EnableCollisions": true
+    }
+  },
+  "ClockSpeed": 1.0,
+  "ViewMode": "SpringArmChase",
+  "RpcEnabled": true,
+  "LocalHostIp": "127.0.0.1",
+  "ExternalCameras": {
+    "survey": {
+      "X": 4.5,
+      "Y": 0,
+      "Z": -25,
+      "Pitch": -90,
+      "Roll": 0,
+      "Yaw": 0,
+      "CaptureSettings": [
+        {
+          "ImageType": 0,
+          "Width": 1024,
+          "Height": 1024,
+          "FOV_Degrees": 90
+        },
+        {
+          "ImageType": 1,
+          "Width": 256,
+          "Height": 256,
+          "FOV_Degrees": 90
+        }
+      ]
+    }
+  }
+}

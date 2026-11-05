@@ -1,0 +1,54 @@
+# Example origins from deployment_seven_px4.yaml, NOT measured navigation-frame origins.
+# Replace them with fixed, calibrated AS2 navigation-frame origins before use.
+map_frame: swarm_map
+input_timeout: 1.0
+vehicles:
+  drone0:
+    source_frame: drone0/odom
+    body_frame: drone0/base_link
+    origin_enu:
+    - -12.0
+    - -4.5
+    - -0.0
+  drone1:
+    source_frame: drone1/odom
+    body_frame: drone1/base_link
+    origin_enu:
+    - -12.0
+    - -1.5
+    - -0.0
+  drone2:
+    source_frame: drone2/odom
+    body_frame: drone2/base_link
+    origin_enu:
+    - -12.0
+    - 1.5
+    - -0.0
+  drone3:
+    source_frame: drone3/odom
+    body_frame: drone3/base_link
+    origin_enu:
+    - -12.0
+    - 4.5
+    - -0.0
+  drone4:
+    source_frame: drone4/odom
+    body_frame: drone4/base_link
+    origin_enu:
+    - -15.0
+    - -3.0
+    - -0.0
+  drone5:
+    source_frame: drone5/odom
+    body_frame: drone5/base_link
+    origin_enu:
+    - -15.0
+    - 0.0
+    - -0.0
+  drone6:
+    source_frame: drone6/odom
+    body_frame: drone6/base_link
+    origin_enu:
+    - -15.0
+    - 3.0
+    - -0.0

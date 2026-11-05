@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>mrs_formation_reshaping</name>
+  <version>0.1.0</version>
+  <description>CAT-ORA trajectory generation service ported to ROS 2 Humble.</description>
+  <maintainer email="noah@example.com">Aerohub</maintainer>
+  <author email="kratkvit@fel.cvut.cz">Vit Kratky</author>
+  <license>GPL-3.0-only</license>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>rosidl_default_generators</buildtool_depend>
+  <depend>rclcpp</depend>
+  <depend>geometry_msgs</depend>
+  <depend>eigen</depend>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>rosidl_default_runtime</exec_depend>
+  <member_of_group>rosidl_interface_packages</member_of_group>
+  <export><build_type>ament_cmake</build_type></export>
+</package>

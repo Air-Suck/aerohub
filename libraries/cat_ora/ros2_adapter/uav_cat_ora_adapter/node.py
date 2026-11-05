@@ -1,4 +1,4 @@
-"""Convert CAT-ORA ROS 1 service output into a shared timed trajectory segment."""
+"""Convert CAT-ORA service output into a shared timed trajectory segment."""
 
 from __future__ import annotations
 

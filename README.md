@@ -14,12 +14,14 @@
 - [RoboPi 运行](deployment/robopi/README.md)：配置、构建、部署、启动、验证与收尾。
 - [AirSim 场景](config/airsim/README.md)：binary 资源、场景 profile 与 settings。
 - [Library 注册表](libraries.yaml)：已收录算法与当前接入状态。
+- [CAT-ORA 空旷场地应用](apps/catora_open_field/README.md)：PC AirSimNH 四机起飞、队形变化、到点和降落。
 
 ## 分层与目录
 
 | 层 / 目录 | 职责 |
 | --- | --- |
 | 用户任务与 `scripts/` | 场景选择、任务编排及构建运行入口 |
+| `apps/` | 可重复运行的应用任务及对应场景、部署和验收记录 |
 | `libraries/` | CAT-ORA、Swarm-Formation 的算法专用适配、代理与部署 |
 | `planner_framework/`、`planner_interfaces/` | 公共规划契约、生命周期及 Library → AS2 输出桥 |
 | `runtime/` | 共用 AS2 启动器、AirSim 传感器与时钟接入 |
@@ -28,8 +30,8 @@
 | `deployment/` | flight_board 镜像说明、官方 OHOS builder 调用及 RoboPi 部署 |
 | `artifacts/` | 本机运行记录、构建缓存与目标产物，不进入交付镜像 |
 
-算法 Library 已保留实现和 manifest，但其 AirSim Planner 接入尚未完成。
-单机 AS2 闭环通过，不代表两个算法已在 RoboPi 上运行。
+CAT-ORA 已在 PC AirSimNH 的指定空旷路口通过四机 Planner 飞行应用验收。
+Swarm-Formation 实景接入仍待完成；PC 验收不代表算法已在 RoboPi 上运行。
 
 ## 源码与本机配置
 

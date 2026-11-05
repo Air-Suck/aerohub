@@ -1,0 +1,34 @@
+task:
+  name: catora_nh_open_field_four
+planner:
+  id: cat_ora
+  version: 4bc41f593eebde65dd74108a97e80430a145dfa0
+  parameters:
+    max_velocity: 0.8
+    max_acceleration: 0.5
+vehicles:
+- drone0
+- drone1
+- drone2
+- drone3
+targets:
+  drone0:
+    x: 3.0
+    y: -4
+    z: -3.0
+  drone1:
+    x: 3.0
+    y: 4
+    z: -3.0
+  drone2:
+    x: 9.0
+    y: -4
+    z: -3.0
+  drone3:
+    x: 9.0
+    y: 4
+    z: -3.0
+completion:
+  position_tolerance: 0.6
+  hold_duration: 2.0
+  task_timeout: 90.0

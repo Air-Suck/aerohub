@@ -3,7 +3,7 @@
 schema_version: 1
 environments:
   airsim_px4:
-    description: AirSim / PX4 1.18 / AS2；场景与单机平台已接入，Planner library 待接入
+    description: AirSim / PX4 1.18 / AS2；单机平台与 CAT-ORA NH 四机应用通过，其他组合按 binding 状态
     simulator: airsim
     flight_controller: px4
     lifecycle: development
@@ -21,11 +21,14 @@ libraries:
     manifest: planner_framework/registry/cat_ora/4bc41f593eebde65dd74108a97e80430a145dfa0/manifest.yaml
     implementation:
       adapter: libraries/cat_ora/ros2_adapter
-      proxy: libraries/cat_ora/ros1_proxy/ros1_proxy.py
+      proxy: libraries/cat_ora/humble/scripts/ros2_proxy.py
+      native: libraries/cat_ora/humble
     bindings:
       airsim_px4:
-        validation: not_integrated
-        reason: 尚无对应的多机部署、任务启动与 Planner 闭环验证
+        validation: scenario_pass
+        reason: PC AirSimNH 空旷路口四机起飞、原生 CAT-ORA 规划、到点保持、降落及实际位置验收通过；未覆盖其他场景或 RoboPi 多机
+        application: apps/catora_open_field/README.md
+        evidence: apps/catora_open_field/validation.json
     docs: libraries/README.md
     history:
       ref: main
@@ -41,11 +44,14 @@ libraries:
     manifest: planner_framework/registry/swarm_formation/967a4bdfae949e994691f8ffc87dbb0147cbebb7/manifest.yaml
     implementation:
       adapter: libraries/swarm_formation/ros2_adapter
-      proxy: libraries/swarm_formation/ros1_proxy/ros1_proxy.py
+      proxy: libraries/swarm_formation/humble/plan_manage/scripts/ros2_proxy.py
+      native: libraries/swarm_formation/humble
     bindings:
       airsim_px4:
         validation: not_integrated
-        reason: 尚无对应的七机部署、地图输入接线与 Planner 闭环验证
+        reason: 单机真实 AirSim LiDAR 到原生地图/ESDF 已通过；七机传感器并发、目标契约及飞行闭环仍待验收
+        point_cloud_validation: real_sensor_map_pass
+        point_cloud_evidence: libraries/swarm_formation/validation/real-point-cloud.json
     docs: libraries/README.md
     history:
       ref: main

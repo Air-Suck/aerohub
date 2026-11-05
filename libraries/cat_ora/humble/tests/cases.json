@@ -1,0 +1,7 @@
+[
+  {"name":"single", "starts_enu":[[0,0,1]], "goals_enu":[[2,0,1]], "trajectory_dt":0.1,"max_velocity":1.0,"max_acceleration":1.0},
+  {"name":"four", "starts_enu":[[0,0,1],[0,3,1],[0,6,1],[0,9,1]], "goals_enu":[[2,0,1],[2,3,1],[2,6,1],[2,9,1]], "trajectory_dt":0.1,"max_velocity":1.0,"max_acceleration":1.0},
+  {"name":"reassignment", "starts_enu":[[0,0,1],[4,0,1]], "goals_enu":[[4,2,1],[0,2,1]], "trajectory_dt":0.1,"max_velocity":1.0,"max_acceleration":1.0},
+  {"name":"stationary", "starts_enu":[[0,0,1]], "goals_enu":[[0,0,1]], "trajectory_dt":0.1,"max_velocity":1.0,"max_acceleration":1.0},
+  {"name":"unequal_constraints", "starts_enu":[[0,0,1]], "goals_enu":[[8,0,1]], "trajectory_dt":0.05,"max_velocity":2.0,"max_acceleration":0.5}
+]
