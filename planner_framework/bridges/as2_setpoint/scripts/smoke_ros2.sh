@@ -50,7 +50,8 @@ done
 ros2 node list | grep -qx /as2_setpoint_adapter
 
 for vehicle in drone0 drone1 drone2 drone3; do
-  timeout 10 ros2 topic echo --once "/$vehicle/motion_reference/pose" \
+  timeout 10 ros2 service call "/$vehicle/controller/set_control_mode" as2_msgs/srv/SetControlMode "{control_mode: {control_mode: 7, yaw_mode: 1}}" >/dev/null
+  timeout 10 ros2 topic echo --once "/$vehicle/motion_reference/trajectory" \
     >"/tmp/uav_as2_adapter_${vehicle}.log" &
   echo_pids+=("$!")
 done

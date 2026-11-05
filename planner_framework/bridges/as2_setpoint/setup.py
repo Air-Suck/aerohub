@@ -20,6 +20,8 @@ setup(
     entry_points={
         "console_scripts": [
             "as2_setpoint_adapter_node = uav_as2_setpoint_adapter.node:main",
+            "super_as2_adapter_node = uav_as2_setpoint_adapter.super_node:main",
+            "super_as2_mission = uav_as2_setpoint_adapter.super_mission:main",
         ],
     },
 )
