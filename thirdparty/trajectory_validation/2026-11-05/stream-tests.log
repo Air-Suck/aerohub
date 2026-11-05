@@ -1,0 +1,1 @@
+[{'input_hz': 20, 'output_count_in_1_2s': 60, 'failsafe_hover': True, 'auto_resume': False}, {'input_hz': 50, 'output_count_in_1_2s': 60, 'failsafe_hover': True, 'auto_resume': False}, {'input_hz': 100, 'output_count_in_1_2s': 60, 'failsafe_hover': True, 'auto_resume': False}]

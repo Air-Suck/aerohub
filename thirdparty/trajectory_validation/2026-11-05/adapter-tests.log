@@ -1,0 +1,13 @@
+not found: "/opt/catora_ws/install/local_setup.bash"
+test_ned_to_enu (test_conversion.ConversionTest) ... ok
+test_px4_yaw_to_enu (test_conversion.ConversionTest) ... ok
+test_fleet_position_only (test_trajectory.AdapterTest) ... ok
+test_no_automatic_super_resume (test_trajectory.AdapterTest) ... ok
+test_primary_backup_and_yaw (test_trajectory.AdapterTest) ... ok
+test_rejections (test_trajectory.AdapterTest) ... ok
+test_construct_local_odometry_consumers (test_trajectory.MissionStartupTest) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.056s
+
+OK

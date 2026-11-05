@@ -1,0 +1,2 @@
+# Preserve curated verification evidence; runtime logs remain ignored elsewhere.
+!*.log

@@ -1,0 +1,29 @@
+{
+  "references_captured": 549,
+  "actuator_messages_captured": 146,
+  "px4_full_pva_captured": 152,
+  "all_px4_pva_match_source": true,
+  "all_actuator_source_stamps_preserved": true,
+  "fixed_yaw_span_rad": 0.0,
+  "observed_actuator_median_interval_s": 0.02067909499965026,
+  "last_firmware_state": {
+    "topic": "/drone0/fmu/out/vehicle_control_mode",
+    "wall": 22846.980812327,
+    "sim": 1793886045.536612,
+    "armed": false,
+    "offboard": true
+  },
+  "capture_note": "Best-effort DDS observations; discovery and packet loss mean counts are not an execution-rate measurement.",
+  "max_reference_speed_m_s": 0.9540279691779354,
+  "goal_enu_m": [
+    1,
+    0,
+    1.5
+  ],
+  "position_at_hover_enu_m": [
+    0.8743436932563782,
+    -0.08679807186126709,
+    1.6491012573242188
+  ],
+  "goal_error_at_hover_m": 0.21343523054768573
+}

@@ -1,0 +1,19 @@
+{
+  "source": "controlled PositionCommand producer through the real SUPER adapter",
+  "reference_source_exit": {
+    "hover_after_loss": true,
+    "no_automatic_resume": true
+  },
+  "ADAPTER": {
+    "hover_after_loss": true,
+    "no_automatic_resume": true
+  },
+  "expired_reference": {
+    "rejected": true,
+    "hover": true
+  },
+  "cancel": {
+    "old_reference_stopped": true
+  },
+  "landed_and_disarmed": true
+}

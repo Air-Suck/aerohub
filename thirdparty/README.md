@@ -15,9 +15,9 @@ catkin 包参与 Humble 构建。`aerohub/` 额外保存本项目原有 ROS 1 �
 CAT-ORA 包清单写 MIT、README 写 GPL-3.0，归档保留原文与作者；
 Swarm-Formation 保留原 LICENSE 和 README。新的 Humble 部署不运行这些旧代理。
 
-## 活动 AS2 源码依赖
+## 活动 AS2 / SUPER 源码依赖
 
-`aerostack2` 和 `as2_platform_pixhawk` 是个人 fork 的 Git submodule，URL 由
+`aerostack2`、`as2_platform_pixhawk` 和 `SUPER-sim` 是个人 fork 的 Git submodule，URL 由
 根目录 `.gitmodules` 管理，版本由主仓库的 gitlink 提交锁定。
 
 ```bash
@@ -26,7 +26,7 @@ bash scripts/prepare_sources.sh
 
 `prepare_sources.sh` 默认仅初始化缺失的 submodule，不重置已有源码，不产生
 `.source-commit` 文件。构建直接使用 submodule 的当前工作区，因此本地修改无需
-先推送即可编译。记录和分享版本时，应先在两个子仓库中提交、推送，再在主仓库
+先推送即可编译。记录和分享版本时，应先在各子仓库中提交、推送，再在主仓库
 提交新的 submodule 指针；仅提交主仓库不能保存子仓库中的未提交修改。
 
 完成源码初始化后，OHOS 项目适配与编译见
@@ -50,3 +50,9 @@ bash scripts/prepare_sources.sh
 
 旧 Gazebo/PX4 1.17 源码与部署入口保留在 `main`，当前分支只初始化这里的活动
 fork。历史复现可从 `main` 查看，不再通过当前源码准备脚本恢复旧部署。
+
+## AS2 单点轨迹执行
+
+SUPER / 公共 Planner 的轨迹接入规则与本次 PC、OHOS、NH 闭环验证见
+[轨迹验证记录](trajectory_validation/README.md)。公共桥现在发布 `motion_reference/trajectory`，
+由任务显式建立轨迹模式，不再由输出桥自动申请控制权。
