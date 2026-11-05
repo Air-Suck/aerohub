@@ -1,0 +1,13 @@
+case: super
+scene_resource: airsim_nh
+px4_image: flight_board:local
+ros_image: uav-computer:local
+ros_domain_id: 23
+containers:
+  px4: leuav-super-flight-board
+  ros: leuav-super-computer
+output: ../artifacts/super/forest8
+install: ../artifacts/super/pc/install
+task: ../cases/super/config/task.forest8-ab.json
+planner: ../cases/super/config/planner/super.search150-forward250ms.yaml
+settings: settings/airsim-forest.json

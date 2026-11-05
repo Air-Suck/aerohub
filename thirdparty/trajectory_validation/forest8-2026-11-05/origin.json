@@ -1,0 +1,16 @@
+{
+  "task_to_odom_translation_m": [
+    -0.00018211569840786979,
+    -0.0016402003820985556,
+    0.6906089782714844
+  ],
+  "odom_frame": "drone0/odom",
+  "counts": {
+    "clock": 1168,
+    "odom": 1749,
+    "cloud": 162,
+    "mode": 34
+  },
+  "clock": 1793888300.8393881,
+  "cloud_points": 14792
+}

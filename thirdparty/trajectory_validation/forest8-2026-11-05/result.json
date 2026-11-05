@@ -1,0 +1,47 @@
+{
+  "task_source": "LeUAV profiles/super.forest8-ab.yaml",
+  "success": true,
+  "source_task_unmodified": true,
+  "task_to_odom_translation_m": [
+    -0.00018211569840786979,
+    -0.0016402003820985556,
+    0.6906089782714844
+  ],
+  "target_odom_m": [
+    -37.570182115698415,
+    231.75835979961792,
+    6.690608978271484
+  ],
+  "arrival_task_enu_m": [
+    -37.55474189553206,
+    231.70848834491335,
+    6.104503631591797
+  ],
+  "arrival_error_m": 0.11750433769694169,
+  "arrived": true,
+  "landed_and_disarmed": true,
+  "max_speed_m_s": 8.459816993902495,
+  "max_reference_speed_m_s": 8.00082634520076,
+  "super_trajectory_flags": {
+    "1": 6453
+  },
+  "counts": {
+    "odom": 6121,
+    "clock": 3894,
+    "cloud": 561,
+    "controller": 620,
+    "mode": 126,
+    "map": 165,
+    "inflated": 99,
+    "px4": 2503,
+    "super": 6453,
+    "reference": 5090,
+    "actuator": 1654
+  },
+  "bounds_observation_count": 12,
+  "final_task_enu_m": [
+    -37.94754508767073,
+    232.2183150050696,
+    3.874927520751953
+  ]
+}

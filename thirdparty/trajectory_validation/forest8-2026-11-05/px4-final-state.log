@@ -1,0 +1,23 @@
+INFO  [commander] Disarmed
+INFO  [commander] prearm safety: Off
+INFO  [commander] navigation mode: Hold
+INFO  [commander] user intended navigation mode: Hold
+INFO  [commander] in failsafe: no
+commander: cycle: 9940 events, 45001us elapsed, 4.53us avg, min 0us max 3001us 116.460us rms
+commander: preflight check: 1106 events, 12000us elapsed, 10.85us avg, min 0us max 3000us 180.170us rms
+
+TOPIC: vehicle_land_detected
+ vehicle_land_detected
+    timestamp: 1793888560866935 (0.147003 seconds ago)
+    freefall: False
+    ground_contact: True
+    maybe_landed: True
+    landed: True
+    in_ground_effect: True
+    in_descend: True
+    has_low_throttle: True
+    vertical_movement: False
+    horizontal_movement: False
+    rotational_movement: False
+    close_to_ground_or_skipped_check: True
+    at_rest: True

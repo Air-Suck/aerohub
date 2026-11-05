@@ -1,0 +1,68 @@
+not found: "/opt/catora_ws/install/local_setup.bash"
+PHASE arming_offboard
+PHASE takeoff
+{"phase": "takeoff", "task_enu": [-0.0002650347087183036, 0.0020073031773790717, 0.002574920654296875], "speed_m_s": 0.020893205993006835, "max_speed_m_s": 0.07945339926360162, "distance_m": 234.86000355915243, "failure": null}
+{"phase": "takeoff", "task_enu": [-0.02432936314289691, 0.001935151987709105, 1.5196800231933594], "speed_m_s": 0.5727006690709328, "max_speed_m_s": 0.6050026781113951, "distance_m": 234.82238239307898, "failure": null}
+PHASE hold_after_takeoff
+{"phase": "hold_after_takeoff", "task_enu": [0.008734385708521586, 0.00786926900036633, 2.028644561767578], "speed_m_s": 0.0064488000834393745, "max_speed_m_s": 0.6050026781113951, "distance_m": 234.81265519644967, "failure": null}
+PHASE route
+{"phase": "route", "task_enu": [-0.4232827785963309, 0.3585533497389406, 2.188396453857422], "speed_m_s": 2.774139856890106, "max_speed_m_s": 2.774139856890106, "distance_m": 234.39504353495514, "failure": null}
+{"phase": "route", "task_enu": [-9.165983236169268, 26.723825335269794, 8.043743133544922], "speed_m_s": 7.383940905403345, "max_speed_m_s": 8.389612012103889, "distance_m": 207.00434289034047, "failure": null}
+{"phase": "route", "task_enu": [-2.649027860497881, 52.68553912616335, 6.018611907958984], "speed_m_s": 7.726509514334462, "max_speed_m_s": 8.459816993902495, "distance_m": 182.44762859195035, "failure": null}
+{"phase": "route", "task_enu": [13.75770469870622, 76.240753054386, 5.531940460205078], "speed_m_s": 7.607441477265204, "max_speed_m_s": 8.459816993902495, "distance_m": 163.77114678691498, "failure": null}
+{"phase": "route", "task_enu": [17.863951646948408, 102.81014239764772, 4.002643585205078], "speed_m_s": 8.146692180229959, "max_speed_m_s": 8.459816993902495, "distance_m": 140.37442147168719, "failure": null}
+{"phase": "route", "task_enu": [8.734600984716963, 128.52977740741335, 5.576648712158203], "speed_m_s": 6.531730459823485, "max_speed_m_s": 8.459816993902495, "distance_m": 113.1405062529851, "failure": null}
+{"phase": "route", "task_enu": [-3.4744770887846244, 156.7308882472571, 7.757305145263672], "speed_m_s": 7.847448640354428, "max_speed_m_s": 8.459816993902495, "distance_m": 82.43154987241456, "failure": null}
+{"phase": "route", "task_enu": [-12.752212560510088, 185.50197589374147, 4.802539825439453], "speed_m_s": 8.076280463820172, "max_speed_m_s": 8.459816993902495, "distance_m": 52.508678125397125, "failure": null}
+{"phase": "route", "task_enu": [-29.096797025536944, 210.04921710467897, 7.406322479248047], "speed_m_s": 7.938652405240644, "max_speed_m_s": 8.459816993902495, "distance_m": 23.34804072057981, "failure": null}
+{"phase": "route", "task_enu": [-37.70065788063948, 232.29193866229616, 5.922267913818359], "speed_m_s": 0.2953765260137102, "max_speed_m_s": 8.459816993902495, "distance_m": 0.553238194126868, "failure": null}
+PHASE hover
+PHASE landing
+{
+  "task_source": "LeUAV profiles/super.forest8-ab.yaml",
+  "success": true,
+  "source_task_unmodified": true,
+  "task_to_odom_translation_m": [
+    -0.00018211569840786979,
+    -0.0016402003820985556,
+    0.6906089782714844
+  ],
+  "target_odom_m": [
+    -37.570182115698415,
+    231.75835979961792,
+    6.690608978271484
+  ],
+  "arrival_task_enu_m": [
+    -37.55474189553206,
+    231.70848834491335,
+    6.104503631591797
+  ],
+  "arrival_error_m": 0.11750433769694169,
+  "arrived": true,
+  "landed_and_disarmed": true,
+  "max_speed_m_s": 8.459816993902495,
+  "max_reference_speed_m_s": 8.00082634520076,
+  "super_trajectory_flags": {
+    "1": 6453
+  },
+  "counts": {
+    "odom": 6121,
+    "clock": 3894,
+    "cloud": 561,
+    "controller": 620,
+    "mode": 126,
+    "map": 165,
+    "inflated": 99,
+    "px4": 2503,
+    "super": 6453,
+    "reference": 5090,
+    "actuator": 1654
+  },
+  "bounds_observation_count": 12,
+  "final_task_enu_m": [
+    -37.94754508767073,
+    232.2183150050696,
+    3.874927520751953
+  ]
+}
+PHASE complete

@@ -1,0 +1,46 @@
+{
+  "success": true,
+  "arrival_error_m": 0.11750433769694169,
+  "max_speed_m_s": 8.459816993902495,
+  "max_reference_speed_m_s": 8.00082634520076,
+  "route_sim_seconds": 38.862828969955444,
+  "route_wall_seconds": 51.120099602001574,
+  "observed_path_length_m": 260.8047902672643,
+  "path_mean_speed_m_s": 6.710905952546339,
+  "net_progress_speed_m_s": 6.0410566128054155,
+  "no_new_flight_collision": true,
+  "landed_and_disarmed": true,
+  "super_trajectory_flags": {
+    "1": 6453
+  },
+  "bounds_policy": "observe",
+  "bounds_by_axis": {
+    "x": {
+      "min_m": -37.73864082131331,
+      "max_m": 20.44435020651872,
+      "violated_samples": 121
+    },
+    "y": {
+      "min_m": -0.007742469431832433,
+      "max_m": 232.32799518085085,
+      "violated_samples": 0
+    },
+    "z": {
+      "min_m": 1.9878425598144531,
+      "max_m": 8.527294158935547,
+      "violated_samples": 0
+    }
+  },
+  "bounds_violation_odom_samples": 121,
+  "bounds_violation_sim_interval": [
+    1793888467.1389358,
+    1793888468.3419616
+  ],
+  "captured_actuator_samples": 1654,
+  "captured_actuator_stamps_missing_from_source_capture": 0,
+  "raw_capture_note": "Best-effort DDS; unmatched captured samples may reflect discovery/packet loss, not stamp rewriting.",
+  "source_task_sha256": "47e6f2cda433ecf5d76d3db8eb23b585cc8c83321649a75bb7493f082cde2041",
+  "effective_planner_sha256": "e3355f7604b62ee29ec5093b456212fe49fb6153795b6c604dc1d8fc1eac74da",
+  "raw_run_directory": "/tmp/aerohub-forest8-as2-20261105T141215Z",
+  "max_reference_acceleration_m_s2": 7.956537222002291
+}
