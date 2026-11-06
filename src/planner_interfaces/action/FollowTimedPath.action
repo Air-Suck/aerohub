@@ -1,0 +1,13 @@
+# Companion interface of the extended native FollowPath component.
+# Original as2_msgs/FollowPath remains unchanged.
+uav_planner_interfaces/TimedPath path
+---
+bool success
+string reason
+uint64 revision
+---
+string task_id
+uint64 revision
+float64 elapsed
+float64 tracking_error
+bool waiting_for_start

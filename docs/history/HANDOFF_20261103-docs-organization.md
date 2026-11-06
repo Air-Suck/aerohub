@@ -6,6 +6,14 @@
 
 ## 已完成
 
+- 按用户要求将原生 AS2 架构文档重写为具体任务的连续执行流程，围绕起飞 1.5 米、向东飞 5 米、降落解释各层职责。核对上游三个运动插件，明确位置 GoTo 不自动调用避障规划，Land 速度插件使用高度/速度/持续时间判据；数值示例不作为实飞验收。
+
+- 按用户要求将统一 Planner 的设计逻辑、模块接口数据形式、配置、使用方式、验收结果和部署边界集中合并到 `Aerostack2统一Planner第一阶段接口与配置设计.md`。
+- 原三个独立 Planner 文档改为主文档入口，合并前原文保存于 `history/planner-before-consolidation/`，便于追溯；原生 Aerostack2 架构文档不混入 Planner 内容。
+
+- 按用户澄清重写 Aerostack2 架构介绍，聚焦原生框架；移除本项目特有的 Planner、Compose、机数和通信配置。核对固定提交的上游源码，补充原生行为树、Python API、规划/轨迹生成 Behavior、控制与估计插件及三类仿真路线。
+- 原生 Behavior 的实际代码采用 Action 加附加控制服务；旧上游 README 的全 service 描述未作为实现依据。原生 BehaviorStatus 为 IDLE/RUNNING/PAUSED，不套用本项目状态枚举。
+
 - 在统一 Planner 设计文档第 2 节补充模块间接口：配置文件、控制服务、位姿、两类 TCP/JSON 代理、ROS 1 原生接口、统一轨迹、FleetSetpoint、AS2 控制参考、失败与时钟格式；增加字段树及数据示例。
 - 根据源码明确 Swarm 固定队形校验、同 task_id 不重置 proxy 缓存、代理响应不携带采样时间等实际边界。
 

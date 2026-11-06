@@ -1,0 +1,8 @@
+sample_dt: 0.1
+horizon: 1.0
+trajectory_timeout: 5.0
+update_period: 0.2
+# Reserve transport/Action acknowledgement time for all seven vehicles.
+# The proxy samples this future instant; no output is retimestamped.
+valid_from_lead: 0.5
+max_start_distance: 1.5

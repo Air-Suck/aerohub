@@ -2,7 +2,7 @@ name: uav-aerostack2-integration
 
 services:
   as2:
-    image: uav/aerostack2-px4:humble-v1.17
+    image: uav/aerostack2-planner-runtime:humble
     container_name: planner-as2-seven
     init: true
     network_mode: host
@@ -31,8 +31,10 @@ services:
       XRCE_AGENT_PORT: "8889"
       PX4_GZ_PARTITION: as2_multi_80
     volumes:
-      - ${PX4_SOURCE_DIR:-../../../swarm-formation-px4-gazebo/PX4-Autopilot}:/workspace/PX4-Autopilot
-      - ${PX4_SIM_CACHE_DIR:-../../../swarm-formation-px4-gazebo/.px4-sim-cache}:/tmp/.simulation-gazebo
+      - ${PX4_SOURCE_DIR:-../../px4}:/workspace/PX4-Autopilot
+      - ${PX4_SIM_CACHE_DIR:-../../log/px4-sim-cache}:/tmp/.simulation-gazebo
+      - ../../log/px4-build:/workspace/PX4-Autopilot/build
+      - ../../log/px4-runtime:/tmp/as2-px4-multi
       - ../..:/integration
     command: [bash, /integration/deployment/px4/run_multi_px4.sh]
     restart: unless-stopped
@@ -52,7 +54,7 @@ services:
       GZ_PARTITION: as2_multi_80
       GZ_IP: 127.0.0.1
     volumes:
-      - ../../artifacts/resolved:/var/lib/uav-planner/resolved
+      - ../../log/resolved:/var/lib/uav-planner/resolved
     restart: unless-stopped
 
   clock:

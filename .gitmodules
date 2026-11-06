@@ -1,0 +1,21 @@
+[submodule "as2"]
+	path = as2/aerostack2
+	url = https://github.com/aerostack2/aerostack2.git
+[submodule "pixhawk"]
+	path = as2/as2_platform_pixhawk
+	url = https://github.com/aerostack2/as2_platform_pixhawk.git
+[submodule "px4"]
+	path = px4
+	url = https://github.com/PX4/PX4-Autopilot.git
+[submodule "gazebo"]
+	path = simulator/gazebo
+	url = https://github.com/aerostack2/project_gazebo.git
+[submodule "cat_ora"]
+	path = src/planners/cat_ora
+	url = https://github.com/ctu-mrs/catora.git
+[submodule "swarm_formation"]
+	path = src/planners/swarm_formation
+	url = https://github.com/ZJU-FAST-Lab/Swarm-Formation.git
+[submodule "px4_msgs"]
+	path = as2/px4_msgs
+	url = https://github.com/PX4/px4_msgs.git

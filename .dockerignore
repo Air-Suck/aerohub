@@ -5,3 +5,8 @@
 .tmp_patch_original
 artifacts/resolved/*.log
 
+
+log
+px4
+simulator
+workspace-support

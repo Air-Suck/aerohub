@@ -30,7 +30,10 @@
         reset_integral: false
         antiwindup_cte: 1.0
         alpha: 0.3
-        kp: {x: 0.4, y: 0.4, z: 0.4}
+        # External timed trajectories cannot slow their clock to wait for a
+        # weak position loop. This velocity-output PID does not add v_ref as
+        # feedforward; retain derivative references and tune tracking feedback.
+        kp: {x: 1.5, y: 1.5, z: 1.5}
         kd: {x: 0.0001, y: 0.0001, z: 0.0001}
         ki: {x: 0.0, y: 0.0, z: 0.0}
       yaw_control:

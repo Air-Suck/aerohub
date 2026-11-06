@@ -1,0 +1,42 @@
+name: uav-followpath-acceptance
+services:
+  as2:
+    extends:
+      file: ../../../deployment/integration/compose.yaml
+      service: as2
+    container_name: followpath-test-as2
+    image: ${FOLLOW_PATH_TEST_IMAGE:-uav/aerostack2-planner-runtime:humble}
+    restart: "no"
+  px4:
+    extends:
+      file: ../../../deployment/integration/compose.yaml
+      service: px4
+    container_name: followpath-test-px4
+    restart: "no"
+  runtime:
+    extends:
+      file: ../../../deployment/integration/compose.yaml
+      service: runtime
+    container_name: followpath-test-runtime
+    image: ${FOLLOW_PATH_TEST_IMAGE:-uav/aerostack2-planner-runtime:humble}
+    restart: "no"
+  clock:
+    extends:
+      file: ../../../deployment/integration/compose.yaml
+      service: clock
+    container_name: followpath-test-clock
+    image: ${FOLLOW_PATH_TEST_IMAGE:-uav/aerostack2-planner-runtime:humble}
+    restart: "no"
+  cat-ora:
+    extends:
+      file: ../../../deployment/integration/compose.yaml
+      service: cat-ora
+    container_name: followpath-test-cat-ora
+    restart: "no"
+  swarm-formation:
+    extends:
+      file: ../../../deployment/integration/compose.yaml
+      service: swarm-formation
+    container_name: followpath-test-swarm
+    image: ${FOLLOW_PATH_SWARM_TEST_IMAGE:-uav/aerostack2-swarm-formation:noetic}
+    restart: "no"

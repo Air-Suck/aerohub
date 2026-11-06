@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>uav_follow_path_execution</name>
+  <version>0.1.0</version>
+  <description>Backward-compatible extension of Aerostack2 FollowPath for external timed trajectories.</description>
+  <maintainer email="noah@example.com">noah</maintainer>
+  <license>Apache-2.0</license>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>as2_behaviors_motion</depend>
+  <depend>as2_behavior</depend>
+  <depend>as2_motion_reference_handlers</depend>
+  <depend>as2_core</depend>
+  <depend>as2_msgs</depend>
+  <depend>rclcpp</depend>
+  <depend>rclcpp_action</depend>
+  <depend>std_srvs</depend>
+  <depend>uav_planner_interfaces</depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>ament_index_python</exec_depend>
+  <export><build_type>ament_cmake</build_type></export>
+</package>

@@ -21,9 +21,9 @@ RUN apt-get update \
 
 RUN mkdir -p /root/aerostack2_ws/src
 WORKDIR /root/aerostack2_ws/src
-COPY aerostack2/ ./aerostack2/
-COPY px4_msgs/ ./px4_msgs/
-COPY as2_platform_pixhawk/ ./as2_platform_pixhawk/
+COPY as2/aerostack2/ ./aerostack2/
+COPY as2/px4_msgs/ ./px4_msgs/
+COPY as2/as2_platform_pixhawk/ ./as2_platform_pixhawk/
 COPY deployment/platform/patches/as2-platform-px4-v1.17.patch /tmp/
 RUN test "$(cat aerostack2/.source-commit)" = "${AEROSTACK2_COMMIT}" \
     && test "$(cat px4_msgs/.source-commit)" = "${PX4_MSGS_COMMIT}" \

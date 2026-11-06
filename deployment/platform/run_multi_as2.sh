@@ -3,6 +3,13 @@ set -eo pipefail
 
 source /opt/ros/humble/setup.bash
 source /root/aerostack2_ws/install/setup.bash
+motion_package=as2_behaviors_motion
+motion_launch=motion_behaviors_launch.py
+if [[ -f /opt/uav_planner_ws/install/setup.bash ]]; then
+  source /opt/uav_planner_ws/install/setup.bash
+  motion_package=uav_follow_path_execution
+  motion_launch=motion_behaviors.launch.py
+fi
 set -u
 
 # ROS 2 nodes run in separate Docker IPC namespaces. Fast DDS can discover
@@ -60,7 +67,7 @@ for ((i = 0; i < vehicle_count; ++i)); do
   start ros2 launch as2_motion_controller controller_launch.py \
     namespace:="$namespace" config_file:="$config" plugin_name:=pid_speed_controller \
     plugin_config_file:="$controller_config"
-  start ros2 launch as2_behaviors_motion motion_behaviors_launch.py \
+  start ros2 launch "$motion_package" "$motion_launch" \
     namespace:="$namespace" config_file:="$config"
 done
 

@@ -1,21 +1,51 @@
 # Aerostack2 统一 Planner 集成
 
+本项目是**基于开源 Aerostack2 的独立集成与扩展工程**，复用其飞行执行框架，并针对所选 PX4 版本应用兼容补丁。Aerostack2 原有架构、组件及上游代码归各自版权持有人所有；本项目不是 Aerostack2 官方发行版，也不表示获得上游作者的认可或背书。
+
 本工程把 CAT-ORA 和 Swarm-Formation 注册为同一类 `planner` 模块。任务配置每次选择一个 Planner，两者共用任务校验、项目内的 Planner 生命周期、`TimedTrajectorySegment`、Output Gateway、Aerostack2 和 PX4/Gazebo 执行链路。
 
-当前生命周期由 `/planner/control` 服务实现，语义与 Behavior 一致，但还不是 `as2_behavior::BehaviorServer`。Aerostack2 在本工程中负责 Pixhawk platform、状态估计、运动控制和 `motion_reference` 执行。
+任务生命周期由 `/planner/control` 管理；默认执行后端通过逐机 `FollowTimedPath` Actions 调用扩展的原生 `FollowPathBehavior`。扩展保留原生 FollowPath Action 和插件，新接口负责外部时间化轨迹；规划层不再直接发布运动参考。`execution_backend:=legacy_setpoint` 仅保留旧链路用于回归对照。
 
 第一阶段不包含 Planner 并行协作、在线热切换、自动选优、远程 Model Hub、真机或国产操作系统验收。
 
+## 上游来源、修改范围与许可
+
+本项目依赖并致谢以下上游项目：
+
+| 上游 | 本工程中的用途 | 锁定版本 |
+| --- | --- | --- |
+| [Aerostack2](https://github.com/aerostack2/aerostack2) | 状态估计、运动控制、运动 Behavior 及公共接口 | `19c397309c6a41b279e6b551818ec12605cfcecc` |
+| [as2_platform_pixhawk](https://github.com/aerostack2/as2_platform_pixhawk) | Aerostack2 与 PX4 的平台适配 | `fcba062219935acef69dfa009c8be376c707ee8a` |
+| [px4_msgs](https://github.com/PX4/px4_msgs) | PX4 的 ROS 2 消息定义 | `86d8239e962f6939e05c3737784f60c02fa884db` |
+
+Aerostack2 由 Universidad Politécnica de Madrid（UPM）的 Computer Vision and Aerial Robotics Group（CVAR）及其他贡献者开发。官方资料见 [Aerostack2 文档](https://aerostack2.github.io/)和[项目论文](https://arxiv.org/abs/2303.18237)。源码来源与版本由 [upstream.repos](deployment/upstream.repos) 和 [prepare_sources.sh](deployment/prepare_sources.sh)记录。
+
+本工程新增的集成层主要包括统一 Planner 消息与服务、本地 Registry、任务配置解析、项目级生命周期、Output Gateway、两个算法 adapter、AS2 setpoint adapter，以及多机部署与验收脚本。CAT-ORA、Swarm-Formation 的算法核心，以及 PX4、Gazebo 和通信依赖，均来自相应上游，不作为本项目原创成果声明。相关算法版本与复现来源见[统一 Planner 主文档](docs/Aerostack2统一Planner第一阶段接口与配置设计.md)。
+
+上游兼容修改集中保存在 [deployment/platform/patches/](deployment/platform/patches/)：
+
+- `as2-platform-px4-v1.17.patch`：适配 PX4 v1.17 的姿态、GPS、电池等消息字段。
+- `microxrce-fastdds-v2.12.2.patch`：适配 Micro XRCE-DDS Agent 与 Fast DDS 版本。
+
+这些补丁由构建流程应用；其存在不改变原代码的版权归属和许可证。
+
+**许可按组件分别适用。** 使用、修改或分发上游源码及构建产物时，应保留各组件要求的版权声明、许可证条件、免责声明及适用的 NOTICE。对于采用 BSD-3-Clause 的上游文件与组件，源码分发须保留相应声明，二进制分发须在附带文档或材料中重现要求的声明；未经许可不得用版权持有人或贡献者的名称为衍生产品背书。具体以所分发版本附带的许可证和文件头为准，不应将整个依赖集合一概视为同一许可证。
+
+当前自建 ROS 2 包的 `package.xml` 声明为 Apache-2.0，但仓库根目录尚未提供完整的项目 LICENSE 文本；该声明不能覆盖第三方代码，也不代表整个交付物已完成许可证核查。历史审计还记录了 CAT-ORA 不同位置的许可声明差异，公开发布源码、镜像或二进制前需核实实际纳入版本的授权条件。
+
+本节用于明确来源、贡献边界与许可责任；仅添加署名说明不能替代许可证要求，也不能单独保证不存在侵权。
+
 ## 目录
 
-- `planner_interfaces`：统一 ROS 2 消息与 `ControlPlanner` 服务
-- `planner_framework`：Registry、配置解析、生命周期、完成判定和 Output Gateway
-- `cat_ora_adapter`：CAT-ORA ROS 1 服务适配
-- `swarm_formation_adapter`：Swarm-Formation ROS 1 滚动轨迹适配
-- `as2_setpoint_adapter`：PX4 本地 NED setpoint 到 AS2 本地 ENU reference
+- `src/planner_interfaces`：统一 ROS 2 消息与 `ControlPlanner` 服务
+- `src/planner_framework`：Registry、配置解析、生命周期、完成判定和 Output Gateway
+- `src/follow_path_execution`：兼容原生 FollowPath 的时间化轨迹扩展、ROS 回归与 SITL 验收入口
+- `src/cat_ora_adapter`：CAT-ORA ROS 1 服务适配
+- `src/swarm_formation_adapter`：Swarm-Formation ROS 1 滚动轨迹适配
+- `src/as2_setpoint_adapter`：PX4 本地 NED setpoint 到 AS2 本地 ENU reference
 - `deployment/integration/compose.yaml`：完整七机仿真部署
-- `planner_framework/examples`：任务与机群部署配置
-- `artifacts/resolved`：运行时生成的 resolved config 和进程日志
+- `src/planner_framework/examples`：任务与机群部署配置
+- `log/resolved`：运行时生成的 resolved config 和进程日志
 
 ## 前置镜像
 
@@ -34,7 +64,7 @@ uav/swarm-formation:noetic-px4
 bash ./deployment/build_from_zero.sh
 ```
 
-完整无缓存复验使用 `NO_CACHE=1 bash ./deployment/build_from_zero.sh`。
+平台镜像无缓存构建使用 `NO_CACHE=1 bash ./deployment/build_from_zero.sh`；集成镜像无缓存构建使用 `docker compose -f deployment/integration/compose.yaml build --no-cache`。
 
 PX4/Gazebo 和两个 ROS 1 算法基础镜像分别来自相邻的 `catora-px4-gazebo` 与 `swarm-formation-px4-gazebo` 复现工程。对应 README 记录了构建步骤。
 
@@ -47,7 +77,7 @@ cd aerostack2-integration
 bash ./deployment/prepare_sources.sh
 ```
 
-脚本只依赖 Bash 和 Git，会拉取并校验以下 commit：
+脚本使用 `git submodule update --init --recursive` 初始化所有子模块；其中 AS2 构建使用以下锁定版本：
 
 ```text
 aerostack2             19c397309c6a41b279e6b551818ec12605cfcecc
@@ -55,7 +85,7 @@ as2_platform_pixhawk   fcba062219935acef69dfa009c8be376c707ee8a
 px4_msgs               86d8239e962f6939e05c3737784f60c02fa884db
 ```
 
-如果目录已存在，脚本只接受完全相同的 commit，避免构建时混入其他版本。需要代理时，在运行脚本前设置 `HTTP_PROXY`、`HTTPS_PROXY` 和 Git 的代理配置。
+子模块按外层仓库记录的 commit 检出；执行前应保留子模块中的本地修改，不使用强制覆盖选项。需要代理时，在运行脚本前设置 `HTTP_PROXY`、`HTTPS_PROXY` 和 Git 的代理配置。
 
 ## 构建与启动
 
@@ -178,9 +208,15 @@ docker exec planner-runtime bash -lc '
 单独运行依赖无关测试：
 
 ```bash
-python3 -m unittest discover -s planner_framework/tests -v
+python3 -m unittest discover -s src/planner_framework/tests -v
 ```
 
-设计与验收边界见 [接口与配置设计](docs/Aerostack2统一Planner第一阶段接口与配置设计.md)，最终构建和冷启动证据见 [最终验证](artifacts/resolved/FINAL_VERIFICATION.md)。
+设计与验收边界见 [接口与配置设计](docs/Aerostack2统一Planner第一阶段接口与配置设计.md)，最终构建和冷启动证据见 [最终验证](log/resolved/FINAL_VERIFICATION.md)。
 
 完整操作流程、任务配置说明和排障方法见 [使用指南](docs/Aerostack2统一Planner使用指南.md)。全部文档见 [文档导航](docs/README.md)。
+
+## 重组后的源码与产物
+
+目录说明见 [项目目录说明](docs/项目目录说明.md)。克隆时使用 `git clone --recurse-submodules`。AS2 子模块位于 `as2/`，PX4 位于 `px4/`，官方仿真工程位于 `simulator/gazebo/`。算法源码位于 `src/planners/`，算法镜像构建会从这里重新编译。
+
+PX4 启动使用本仓库 `px4/`，构建目录挂载 `log/px4-build`，仿真缓存为 `log/px4-sim-cache`，运行日志为 `log/px4-runtime`。新环境需先准备 PX4 SITL 构建产物；本轮迁移保留已有相同 commit 的构建产物，不代表重新编译了 PX4。

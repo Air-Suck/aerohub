@@ -1,4 +1,5 @@
 <launch>
+  <param name="/use_sim_time" value="true"/>
   <arg name="map_size_x" value="40.0"/>
   <arg name="map_size_y" value="30.0"/>
   <arg name="map_size_z" value="4.0"/>

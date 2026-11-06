@@ -8,14 +8,14 @@
 | --- | --- |
 | [项目入口](../README.md) | 工程结构、构建和启动 |
 | [项目目录说明](项目目录说明.md) | 全部顶层目录、主要子目录及按任务查找入口 |
-| [Aerostack2 架构介绍](Aerostack2架构介绍.md) | AS2 分层、逐机组件、控制与反馈闭环 |
-| [统一 Planner 框架集成设计与使用](统一Planner框架集成设计与使用.md) | 设计逻辑、源码实现边界、配置与运行流程 |
-| [使用指南](Aerostack2统一Planner使用指南.md) | 部署、任务配置、生命周期控制和排障 |
-| [接口与配置设计](Aerostack2统一Planner第一阶段接口与配置设计.md) | 模块职责、轨迹契约、坐标、时间及验收边界 |
-| [第一阶段验收摘要](Aerostack2统一Planner集成与PX4-Gazebo多机验收.md) | 已完成能力、历史验收结果和后续方向 |
-| [最终验证证据](../artifacts/resolved/FINAL_VERIFICATION.md) | 2026-10-05 测试、冷启动任务及镜像差异说明 |
+| [Aerostack2 架构介绍](Aerostack2架构介绍.md) | 用起飞、向东飞 5 米、降落的完整实例解释原生执行架构 |
+| [统一 Planner 框架主文档](Aerostack2统一Planner第一阶段接口与配置设计.md) | 设计逻辑、模块接口、配置、使用、验收与实现边界 |
+| [使用指南入口](Aerostack2统一Planner使用指南.md) | 已并入主文档的构建、启动、任务控制与排障章节 |
+| [接口与配置设计入口](Aerostack2统一Planner第一阶段接口与配置设计.md) | 主文档：模块职责、轨迹契约、坐标、时间及验收边界 |
+| [第一阶段验收入口](Aerostack2统一Planner集成与PX4-Gazebo多机验收.md) | 已并入主文档的验收与后续范围章节 |
+| [最终验证证据](../log/resolved/FINAL_VERIFICATION.md) | 2026-10-05 测试、冷启动任务及镜像差异说明 |
 
-初次接触建议按“项目入口 → Aerostack2 架构介绍 → 统一 Planner 框架集成设计与使用”的顺序阅读；详细操作、契约和历史证据再查使用指南、接口设计与验收记录。
+初次接触建议按“项目入口 → Aerostack2 架构介绍 → 统一 Planner 主文档”的顺序阅读；三个旧入口会跳转到主文档，合并前快照位于 `history/planner-before-consolidation/`。
 
 ## 讨论与历史
 

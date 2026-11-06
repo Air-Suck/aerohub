@@ -8,12 +8,12 @@ import struct
 import subprocess
 import sys
 
-sys.path.insert(0, "/integration/planner_framework")
+sys.path.insert(0, "/integration/src/planner_framework")
 from uav_planner_framework.clock_parser import ClockTextParser
 
 
 def main() -> int:
-    destination = ("127.0.0.1", 28502)
+    destinations = [("127.0.0.1", 28502), ("127.0.0.1", 28503)]
     sender = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     master, slave = pty.openpty()
     process = subprocess.Popen(
@@ -29,7 +29,8 @@ def main() -> int:
         for line in stream:
             value = parser.feed(line)
             if value is not None:
-                sender.sendto(struct.pack("!qI", *value), destination)
+                for destination in destinations:
+                    sender.sendto(struct.pack("!qI", *value), destination)
     finally:
         stream.close()
         process.terminate()
