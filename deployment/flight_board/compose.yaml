@@ -1,7 +1,7 @@
 name: aerohub-flight-board
 services:
   drone0:
-    image: "${FLIGHT_BOARD_IMAGE:-flight_board:airsim-px4-humble-threaded-20261105}"
+    image: "${FLIGHT_BOARD_IMAGE:-flight_board:v0.1.0}"
     pull_policy: never
     init: true
     network_mode: host
@@ -21,7 +21,7 @@ services:
     stop_grace_period: 10s
 
   clock:
-    image: "${FLIGHT_BOARD_IMAGE:-flight_board:airsim-px4-humble-threaded-20261105}"
+    image: "${FLIGHT_BOARD_IMAGE:-flight_board:v0.1.0}"
     pull_policy: never
     init: true
     network_mode: host

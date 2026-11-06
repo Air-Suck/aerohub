@@ -1,7 +1,7 @@
 name: aerohub-onboard-computer
 services:
   as2:
-    image: onboard_computer:airsim-px4
+    image: "${ONBOARD_COMPUTER_IMAGE:-onboard_computer:v0.1.0}"
     build:
       context: ../..
       dockerfile: deployment/onboard_computer/Dockerfile

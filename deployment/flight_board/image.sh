@@ -2,9 +2,9 @@
 # Transfer the frozen runtime without rebuilding PX4 or DDS.
 set -euo pipefail
 root=$(cd "$(dirname "$0")/../.." && pwd)
-image=flight_board:airsim-px4-humble-threaded-20261105
+image=flight_board:v0.1.0
 expected=sha256:8c33881fde6985fe5a43a894bde075471df85064e45ac8e5de28efebcc737cd2
-archive=${2:-$root/artifacts/images/flight_board-humble-threaded-20261105-amd64.tar}
+archive=${2:-$root/artifacts/images/flight_board-v0.1.0-amd64.tar}
 check_image() {
   actual=$(docker image inspect "$image" --format '{{.Id}}')
   if [[ "$actual" != "$expected" ]]; then

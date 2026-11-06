@@ -1,4 +1,4 @@
-FROM onboard_computer:airsim-px4
+FROM onboard_computer:v0.1.0
 SHELL ["/bin/bash", "-c"]
 COPY libraries/cat_ora/humble /opt/catora_app_ws/src/cat_ora
 COPY libraries/cat_ora/ros2_adapter /opt/catora_app_ws/src/cat_ora_adapter

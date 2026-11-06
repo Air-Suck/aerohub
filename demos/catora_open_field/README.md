@@ -10,7 +10,7 @@ CAT-ORA 不负责避让场景障碍。首次运行前应查看本应用的俯视
 ## 运行
 
 按 `config/airsim/README.md` 配置 `airsim_nh` 资源，准备本地固定
-`flight_board` 和 `onboard_computer:airsim-px4` 镜像。仓库根目录：
+`flight_board` 和 `onboard_computer:v0.1.0` 镜像。仓库根目录：
 
 ```bash
 python3 demos/catora_open_field/run.py build

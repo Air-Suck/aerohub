@@ -3,6 +3,11 @@ ARG BASE_IMAGE=onboard_computer_dependencies:humble-px4-1.18
 FROM ${BASE_IMAGE}
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ARG DEBIAN_FRONTEND=noninteractive
+ARG IMAGE_VERSION=v0.1.0
+ARG SOURCE_REVISION=unknown
+LABEL org.opencontainers.image.version=$IMAGE_VERSION \
+      org.opencontainers.image.revision=$SOURCE_REVISION \
+      org.opencontainers.image.source="https://github.com/Air-Suck/aerohub"
 ENV ROS_DISTRO=humble \
     AEROSTACK2_WORKSPACE=/root/aerostack2_ws \
     AEROSTACK2_PATH=/root/aerostack2_ws/src/aerostack2 \

@@ -8,7 +8,7 @@ AeroHub 正式维护的 PC 机载计算开发与仿真验证环境，承载 AS2�
 通用运行代码与配置继续由 `runtime/`、`config/` 共享。该镜像随项目交付，用户可选择是否使用 PC 开发；
 修改源码后可按需本地重建。Library 接入仍必须完成 RoboPi 验证。
 
-镜像：`onboard_computer:airsim-px4`，与[固定 flight_board 镜像](../flight_board/README.md#使用固定镜像)配套。
+镜像：`onboard_computer:v0.1.0`，与[固定 flight_board 镜像](../flight_board/README.md#使用固定镜像)配套。
 基础环境使用 `onboard_computer_dependencies:humble-px4-1.18`，其中固定 PX4 消息已编译。
 该依赖镜像基于 `osrf/ros:humble-desktop-full-jammy`，默认锁定其 digest：
 `sha256:592f97da6b871a438fdb97f86b422ab9f80657e80efa7b98d258894738c8a0c0`。
@@ -74,7 +74,7 @@ namespace、FMU 前缀、系统 ID 和 `/clock` 形成同一份交互约定，�
 
 ```bash
 docker load -i /path/to/onboard_computer.tar
-docker image inspect onboard_computer:airsim-px4
+docker image inspect onboard_computer:v0.1.0
 ```
 
 此处路径仅为示例；归档文件名及校验信息以实际交付包为准。
@@ -112,15 +112,14 @@ AS2 使用全局 `/clock`，需要先启动 flight_board 的 clock 模式。
 它不访问 AirSim RPC，不启动 Agent，也不自动解锁或起飞。
 
 ```bash
-docker run --rm -it --network host --ipc host onboard_computer:airsim-px4 bash
+docker run --rm -it --network host --ipc host onboard_computer:v0.1.0 bash
 # 容器内已加载 ROS 和 AS2 环境，可运行 ros2 或在工作区重新编译。
 ```
 
 ## 构建与离线验证记录
 
 下面的镜像 ID 和运行结果来自原 `companion_as2` 配方，作为历史证据保留；
-它们不能代替本次 `onboard_computer` 更名后的构建与启动验收。当前工作区尚未产出
-新名称的基础/运行镜像，正式使用前需完成上文构建及本节 smoke，再按需做交互验证。
+它们不能代替本次 `onboard_computer` 更名后的构建与启动验收。`v0.1.0` 将从当前源码重新构建，发布前另做新镜像 smoke 与交互验证。
 
 2026-11-04 已完成源码编译，9 个 ROS 包构建成功。
 镜像 ID：`sha256:e6d8615e608de820556cca60886fcd78a3bc88f10b4cf07f1616ac5618fa94dc`。

@@ -6,9 +6,10 @@ Agent、Humble AirSim 传感器桥和全局时钟桥。镜像保留原 PX4 所�
 
 ## 使用固定镜像
 
-日常启动直接使用 `flight_board:airsim-px4-humble-threaded-20261105`，Compose
+日常启动直接使用 `flight_board:v0.1.0`，Compose
 不执行 build，也不自动拉取镜像。该版本为 Linux amd64，镜像 ID：
 `sha256:8c33881fde6985fe5a43a894bde075471df85064e45ac8e5de28efebcc737cd2`。
+`v0.1.0` 固定为已验收的 `airsim-px4-humble-threaded-20261105` 相同镜像内容，旧标签保留。
 PX4、DDS Agent、传感器桥、supervisor 和默认 DDS 配置均已包含在镜像内。
 AirSim 场景与车辆配置仍由宿主机提供；RoboPi 的 DDS 网络配置仍按运行环境挂载。
 
@@ -22,7 +23,7 @@ bash deployment/flight_board/image.sh export
 将生成的 `.tar` 和 `.tar.sha256` 一起复制到另一台 amd64 机器，再执行：
 
 ```bash
-bash deployment/flight_board/image.sh load /path/to/flight_board-humble-threaded-20261105-amd64.tar
+bash deployment/flight_board/image.sh load /path/to/flight_board-v0.1.0-amd64.tar
 docker compose -f deployment/flight_board/compose.yaml up -d
 ```
 

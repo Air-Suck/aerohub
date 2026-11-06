@@ -2,7 +2,8 @@
 # Offline process/configuration test; no PX4, Agent, simulator or flight command.
 set -euo pipefail
 root=$(cd "$(dirname "$0")/../.." && pwd)
-out="$root/artifacts/onboard-computer-verification"
+out="${VERIFY_OUTPUT:-$root/artifacts/onboard-computer-verification}"
+image="${ONBOARD_COMPUTER_IMAGE:-onboard_computer:v0.1.0}"
 mkdir -p "$out"
 name=aerohub-onboard-computer-smoke
 if docker container inspect "$name" >/dev/null 2>&1; then
@@ -14,7 +15,7 @@ cleanup() {
 }
 trap cleanup EXIT
 docker run --rm --name "$name" --network none -e ROS_LOCALHOST_ONLY=1 \
-  -e ROS_DOMAIN_ID=82 onboard_computer:airsim-px4 > "$out/startup.log" 2>&1 &
+  -e ROS_DOMAIN_ID=82 "$image" > "$out/startup.log" 2>&1 &
 for ((i=0; i<15; i++)); do
   docker exec "$name" /usr/local/bin/onboard-computer ros2 node list --no-daemon \
     > "$out/nodes.log" 2>/dev/null || true

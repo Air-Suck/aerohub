@@ -6,13 +6,13 @@ root=$(cd "$(dirname "$0")/../.." && pwd)
 out="${VERIFY_OUTPUT:-$root/artifacts/flight-board-verification}"
 source "$root/scripts/load_env.sh"
 mkdir -p "$out"
-image=${FLIGHT_BOARD_IMAGE:-flight_board:airsim-px4-humble-threaded-20261105}
+image=${FLIGHT_BOARD_IMAGE:-flight_board:v0.1.0}
 image=$(docker image inspect "$image" --format '{{.Id}}')
 printf '%s\n' "$image" > "$out/flight-board-image.txt"
 names=(aerohub-fb-vehicle aerohub-fb-clock)
 if [[ ${VERIFY_AS2:-0} == 1 ]]; then
   names+=(aerohub-fb-as2)
-  as2_image=$(docker image inspect onboard_computer:airsim-px4 --format '{{.Id}}')
+  as2_image=$(docker image inspect "${ONBOARD_COMPUTER_IMAGE:-onboard_computer:v0.1.0}" --format '{{.Id}}')
   printf '%s\n' "$as2_image" > "$out/as2-image.txt"
 else
   ros_image=$(docker image inspect "${VERIFY_ROS_IMAGE:-onboard_computer_dependencies:humble-px4-1.18}" --format '{{.Id}}')

@@ -4,7 +4,7 @@ set -euo pipefail
 root=$(cd "$(dirname "$0")/../.." && pwd)
 source "$root/scripts/load_env.sh"
 out=${VERIFY_OUTPUT:-$root/artifacts/flight-board-robopi-verification}
-image=${FLIGHT_BOARD_IMAGE:-flight_board:airsim-px4-humble-threaded-20261105}
+image=${FLIGHT_BOARD_IMAGE:-flight_board:v0.1.0}
 memory_seconds=${VERIFY_MEMORY_SECONDS:-180}
 [[ "$memory_seconds" =~ ^[0-9]+$ && "$memory_seconds" -gt 15 ]] || {
   echo 'VERIFY_MEMORY_SECONDS must be an integer greater than 15' >&2; exit 2;
