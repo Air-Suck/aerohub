@@ -10,6 +10,6 @@ RUN source /root/aerostack2_ws/install/setup.bash && cd /opt/catora_app_ws && \
       --cmake-args -DCMAKE_BUILD_TYPE=Release
 COPY demos/catora_open_field /opt/catora_app
 COPY runtime/airsim_sensors/uav_as2_sensor_adapter/rpc.py /opt/catora_app/airsim_rpc.py
-COPY --from=flight_board:airsim-px4-humble-20261105-43632de22490 /usr/lib/python3/dist-packages/msgpack /usr/lib/python3/dist-packages/msgpack
+COPY --from=flight_board:v0.1.0 /usr/lib/python3/dist-packages/msgpack /usr/lib/python3/dist-packages/msgpack
 ENV AS2_FLEET_FILE=/opt/catora_app/fleet.yaml
 CMD ["bash", "-lc", "source /opt/catora_app_ws/install/setup.bash; exec python3 /opt/catora_app/mission.py"]

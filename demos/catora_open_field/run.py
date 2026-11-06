@@ -10,7 +10,7 @@ ROOT=Path(__file__).resolve().parents[2]
 APP=Path(__file__).resolve().parent
 PREFIX='aerohub-catora-field-'
 IMAGE='uav/apps-catora-open-field:humble'
-BOARD='flight_board:airsim-px4-humble-20261105-43632de22490'
+BOARD='flight_board:v0.1.0'
 NAMES=[PREFIX+'app',PREFIX+'clock']+[PREFIX+f'vehicle{i}' for i in range(4)]
 
 

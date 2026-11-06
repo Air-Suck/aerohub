@@ -6,6 +6,9 @@ root=$(cd "$(dirname "$0")/../.." && pwd)
 out="${VERIFY_OUTPUT:-$root/artifacts/flight-board-verification}"
 source "$root/scripts/load_env.sh"
 mkdir -p "$out"
+domain=${VERIFY_ROS_DOMAIN_ID:-81}
+instance=${VERIFY_PX4_INSTANCE:-20}
+agent_port=${VERIFY_XRCE_AGENT_PORT:-8891}
 image=${FLIGHT_BOARD_IMAGE:-flight_board:v0.1.0}
 image=$(docker image inspect "$image" --format '{{.Id}}')
 printf '%s\n' "$image" > "$out/flight-board-image.txt"
@@ -15,7 +18,7 @@ if [[ ${VERIFY_AS2:-0} == 1 ]]; then
   as2_image=$(docker image inspect "${ONBOARD_COMPUTER_IMAGE:-onboard_computer:v0.1.0}" --format '{{.Id}}')
   printf '%s\n' "$as2_image" > "$out/as2-image.txt"
 else
-  ros_image=$(docker image inspect "${VERIFY_ROS_IMAGE:-onboard_computer_dependencies:humble-px4-1.18}" --format '{{.Id}}')
+  ros_image=$(docker image inspect "${VERIFY_ROS_IMAGE:-${ONBOARD_COMPUTER_IMAGE:-onboard_computer:v0.1.0}}" --format '{{.Id}}')
   printf '%s\n' "$ros_image" > "$out/ros-image.txt"
 fi
 for name in "${names[@]}"; do
@@ -42,9 +45,9 @@ PYPROFILE
 python3 "$root/scripts/airsim/manager.py" start --profile "$out/profile.json" \
   --run-dir "$out/scene" > "$out/scene-start.json"
 docker run --rm --name aerohub-fb-clock --network host \
-  -e ROS_DOMAIN_ID=81 "$image" clock > "$out/clock.log" 2>&1 &
+  -e ROS_DOMAIN_ID="$domain" "$image" clock > "$out/clock.log" 2>&1 &
 docker run --rm --name aerohub-fb-vehicle --network host \
-  -e ROS_DOMAIN_ID=81 -e PX4_INSTANCE=20 -e PX4_SYSTEM_ID=21 -e XRCE_AGENT_PORT=8891 \
+  -e ROS_DOMAIN_ID="$domain" -e PX4_INSTANCE="$instance" -e PX4_SYSTEM_ID=21 -e XRCE_AGENT_PORT="$agent_port" \
   -v "$root/config/airsim/settings/px4-sensors.json:/config/settings.json:ro" \
   "$image" vehicle > "$out/vehicle.log" 2>&1 &
 for ((i=0; i<45; i++)); do
@@ -54,7 +57,7 @@ for ((i=0; i<45; i++)); do
   sleep 1
 done
 for ((i=0; i<15; i++)); do
-  docker exec aerohub-fb-vehicle /opt/px4-gazebo/bin/px4-uxrce_dds_client --instance 20 status \
+  docker exec aerohub-fb-vehicle /opt/px4-gazebo/bin/px4-uxrce_dds_client --instance "$instance" status \
     > "$out/dds.log"
   if grep -q 'Running, connected' "$out/dds.log"; then
     break
@@ -64,7 +67,7 @@ done
 grep -q 'Running, connected' "$out/dds.log"
 if [[ ${VERIFY_AS2:-0} == 1 ]]; then
   docker run --rm --name aerohub-fb-as2 --network host \
-    -e ROS_DOMAIN_ID=81 \
+    -e ROS_DOMAIN_ID="$domain" \
     -e VERIFY_AS2_FLIGHT="${VERIFY_AS2_FLIGHT:-0}" \
     -v "$root/runtime/as2/scripts:/verification:ro" \
     -v "$root/runtime/airsim_sensors/scripts:/sensor-verification:ro" \
@@ -80,7 +83,7 @@ if [[ ${VERIFY_AS2:-0} == 1 ]]; then
     python3 /verification/verify_interaction.py > "$out/as2-interaction.json" 2> "$out/as2-check.log"; then
     for topic in offboard_control_mode failsafe_flags timesync_status vehicle_status; do
       docker exec aerohub-fb-vehicle /opt/px4-gazebo/bin/px4-listener \
-        --instance 20 "$topic" -n 1 > "$out/px4-$topic.log" 2>&1 || true
+        --instance "$instance" "$topic" -n 1 > "$out/px4-$topic.log" 2>&1 || true
     done
     exit 1
   fi
@@ -88,7 +91,7 @@ if [[ ${VERIFY_AS2:-0} == 1 ]]; then
     python3 /sensor-verification/verify_ros2.py > "$out/as2-sensors.json"
 else
 # Observe topics with the documented fixed Humble/PX4 message dependency image.
-docker run --rm --network host -e ROS_DOMAIN_ID=81 \
+docker run --rm --network host -e ROS_DOMAIN_ID="$domain" \
   -v "$root/config/airsim/settings/px4-sensors.json:/config/settings.json:ro" \
   -v "$root/config/dds/fastdds_udp.xml:/opt/fastdds_udp.xml:ro" \
   -e FASTRTPS_DEFAULT_PROFILES_FILE=/opt/fastdds_udp.xml \

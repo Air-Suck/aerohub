@@ -7,7 +7,7 @@ mkdir -p "$result_dir"
 result_dir=$(cd "$result_dir" && pwd)
 docker run --rm --network none --entrypoint bash \
   -v "$repo:/work:ro" -v "$result_dir:/results" \
-  onboard_computer:airsim-px4 -lc '
+  onboard_computer:v0.1.0 -lc '
     set -e
     source /root/aerostack2_ws/install/setup.bash
     export ROS_DOMAIN_ID=179 ROS_LOCALHOST_ONLY=1

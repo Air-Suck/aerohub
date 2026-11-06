@@ -8,7 +8,7 @@
 - 核心无需 MRS 可视化依赖。nodelet 演示、离线文件入口、其他服务不属于这次服务迁移；请求可视化时明确拒绝。
 - 真实对照覆盖单机、四机、重分配、静止，坐标容差 `1e-9`；速度/加速度取不同值时暴露并修正上游 callback 的传参颠倒，另用交换 ROS 1 参数的结果验证。
 - 七种无效请求与恢复通过；JSON 入口与原生服务数值一致。
-- 四机 Planner 接线验证包含真实算法、算法 adapter、公共 Planner 和 AS2 输出 adapter，检查轨迹与 setpoint；需已有 `onboard_computer:airsim-px4` 镜像，命令为 `bash libraries/cat_ora/humble/tests/verify_adapter.sh`。
+- 四机 Planner 接线验证包含真实算法、算法 adapter、公共 Planner 和 AS2 输出 adapter，检查轨迹与 setpoint；需已有 `onboard_computer:v0.1.0` 镜像，命令为 `bash libraries/cat_ora/humble/tests/verify_adapter.sh`。
 - 原 smoke 脚本曾重复启动框架已管理的 adapter，已移除；测试就绪条件同时等待 ROS 服务和独立 TCP 代理。此为测试接线经验，不推定其他项目都有相同问题。
 - 复现：`bash libraries/cat_ora/humble/tests/verify.sh`，需要本地 ROS 1 基线镜像与 Humble 镜像。完整边界和当前集成状态见 `libraries/cat_ora/humble/README.md`。
 

@@ -11,6 +11,8 @@ Agent、Humble AirSim 传感器桥和全局时钟桥。镜像保留原 PX4 所�
 `sha256:8c33881fde6985fe5a43a894bde075471df85064e45ac8e5de28efebcc737cd2`。
 `v0.1.0` 固定为已验收的 `airsim-px4-humble-threaded-20261105` 相同镜像内容，旧标签保留。
 PX4、DDS Agent、传感器桥、supervisor 和默认 DDS 配置均已包含在镜像内。
+本镜像与 `onboard_computer:v0.1.0` 的新一次单机闭环也已通过，见
+[版本验收](../releases/v0.1.0-validation.json)。
 AirSim 场景与车辆配置仍由宿主机提供；RoboPi 的 DDS 网络配置仍按运行环境挂载。
 
 本机校验及离线打包（默认输出到 `artifacts/images/`，不进入 Git）：
@@ -190,15 +192,15 @@ bash deployment/flight_board/verify.sh
 配置 `airsim_nh`。验收使用 `config/airsim/nh.json`，也支持 `AIRSIM_BINARY`
 覆盖可执行文件位置；不会读取开发者的固定场景目录。
 
-默认订阅端使用 `onboard_computer_dependencies:humble-px4-1.18`，包含 Humble
-标准消息与配套 PX4 消息。需提前加载该镜像的 tar，或按
-[固定消息依赖说明](../onboard_computer/px4_msgs/README.md)准备。
+默认订阅端使用 `onboard_computer:v0.1.0`，包含 Humble
+标准消息与配套 PX4 消息；加载两份正式运行镜像即可，不额外要求内部依赖镜像。
+源码构建时的消息来源见[固定消息依赖说明](../onboard_computer/px4_msgs/README.md)。
 已有包含相同接口的镜像可用 `VERIFY_ROS_IMAGE=<image>` 指定。
 该依赖仅供 PC 独立验收，不是 RoboPi 运行链路的额外要求。
 
 脚本先检查所需镜像是否已存在，再启动独立 AirSimNH 场景、逐机容器和 clock
 容器，订阅传感器和时钟，并检查 PX4 DDS 连接。不会解锁或发送运动指令。
-`VERIFY_AS2=1` 时改用 `onboard_computer:airsim-px4` 执行 AS2 交互验收。
+`VERIFY_AS2=1` 时改用 `onboard_computer:v0.1.0` 执行 AS2 交互验收。
 结果保存在 `artifacts/flight-board-verification`，退出时清理验证资源。
 传感器/时钟接收与完整 AS2 飞行控制链路是两项独立验收。
 

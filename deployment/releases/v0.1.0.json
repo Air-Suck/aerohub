@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "version": "v0.1.0",
+  "created_utc": "2026-11-06T10:01:11.418165+00:00",
+  "images": {
+    "flight_board": {
+      "reference": "flight_board:v0.1.0",
+      "image_id": "sha256:8c33881fde6985fe5a43a894bde075471df85064e45ac8e5de28efebcc737cd2",
+      "platform": "linux/amd64",
+      "uncompressed_size_bytes": 5744392603,
+      "same_content_as": "flight_board:airsim-px4-humble-threaded-20261105"
+    },
+    "onboard_computer": {
+      "reference": "onboard_computer:v0.1.0",
+      "image_id": "sha256:a99a9c1df2caabffa370091e48cc8190b6f0578513b913cf971a544e960471bc",
+      "platform": "linux/amd64",
+      "uncompressed_size_bytes": 6198214080,
+      "build_source_revision": "1fba658f257280fc64f2cbb500a53bf25d977316"
+    }
+  },
+  "submodules": {
+    "aerostack2": "f387e0d733a5102808508bcbec1b9eca2c29d1f0",
+    "as2_platform_pixhawk": "80f0f27a72efd053d029d3e6a76c3d5d473db6d2"
+  },
+  "px4_interfaces": {
+    "reference": "onboard_computer_dependencies:humble-px4-1.18",
+    "image_id": "sha256:bbec0217f06d563aabbd86606d1107439fd7ad53f0c11eb1e9998b9b00a0d100",
+    "source_commit": "86d8239e962f6939e05c3737784f60c02fa884db",
+    "verified_reused_from": "companion_as2_dependencies:humble-px4-1.18",
+    "message_sha256": {
+      "VehicleCommandAck.msg": "185833dab85d5e9682ac230afc8ef193c2d48ab43804af52bea2fdc4d959a782",
+      "SensorGps.msg": "c3d42ddfe2c12d1ef832b7d92b8ba3f930a1fe3669ffaa3c294b26afd3920d94",
+      "VehicleControlMode.msg": "621df1162bf1578157523cd57335c55b9f49a86574ee8dc4b31a1e7abf3b4e87"
+    }
+  },
+  "validation": "v0.1.0-validation.json",
+  "publication": {
+    "status": "local_only",
+    "registry_digests": null
+  },
+  "note": "Local image IDs are recorded here; registry digest and publication location must be recorded after an actual push."
+}

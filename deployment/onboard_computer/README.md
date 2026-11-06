@@ -116,10 +116,33 @@ docker run --rm -it --network host --ipc host onboard_computer:v0.1.0 bash
 # 容器内已加载 ROS 和 AS2 环境，可运行 ros2 或在工作区重新编译。
 ```
 
+## v0.1.0 定版验收（2026-11-06）
+
+当前镜像为 `onboard_computer:v0.1.0`，Linux amd64，镜像 ID：
+`sha256:a99a9c1df2caabffa370091e48cc8190b6f0578513b913cf971a544e960471bc`。
+从主仓库 `1fba658` 配方重新编译 9 个包，未把旧 companion 主镜像改标签冒充新构建。
+PX4 消息依赖因源提交和三份覆盖消息字节完全一致，复用原已验证镜像；准确身份在发布清单中。
+
+已通过默认七个节点及精简起降、逐机 TF 的两种离线启动检查，全部 use_sim_time 为 true。
+CAT-ORA、Swarm 及 adapter 在该通用镜像中编译 12 包并加载通过，无需专用 compute 基础镜像。
+与 `flight_board:v0.1.0` 完成新一次单机 NH 起飞、1 m 到点、保持、降落和解除武装：
+到点误差 0.173 m，两秒保持漂移 0.436 m；七路图像、七路 CameraInfo、非空 LiDAR 和必需 TF 均收到。
+完整多机算法验收仍以各 Demo 记录的实际镜像为准，本轮不扩展为新镜像的多机或长期验收。
+
+[发布清单](../releases/v0.1.0.json)、[版本验收](../releases/v0.1.0-validation.json)。
+原始日志在 `artifacts/release-v0.1.0/`，测试资源已清理。校验已加载的固定交付镜像：
+
+```bash
+python3 deployment/check_images.py
+```
+
+源码重建的镜像 ID 可能不同；修改源码时可设置 `ONBOARD_COMPUTER_IMAGE=onboard_computer:dev`，
+将开发镜像与固定交付版本分开。以下历史记录保留原镜像 ID，不覆盖为新版本的证据。
+
 ## 构建与离线验证记录
 
 下面的镜像 ID 和运行结果来自原 `companion_as2` 配方，作为历史证据保留；
-它们不能代替本次 `onboard_computer` 更名后的构建与启动验收。`v0.1.0` 将从当前源码重新构建，发布前另做新镜像 smoke 与交互验证。
+它们不能代替新版本验收；更名后 `v0.1.0` 的新构建与启动、交互验收见上一节。
 
 2026-11-04 已完成源码编译，9 个 ROS 包构建成功。
 镜像 ID：`sha256:e6d8615e608de820556cca60886fcd78a3bc88f10b4cf07f1616ac5618fa94dc`。

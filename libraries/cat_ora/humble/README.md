@@ -45,7 +45,7 @@ docker compose -f libraries/cat_ora/deployment/compose.yaml up --build -d
 
 ```bash
 bash libraries/cat_ora/humble/tests/verify.sh
-# 有本地 onboard_computer:airsim-px4 镜像时，另跑四机 Planner 接线：
+# 有本地 onboard_computer:v0.1.0 镜像时，另跑四机 Planner 接线：
 bash libraries/cat_ora/humble/tests/verify_adapter.sh
 ```
 

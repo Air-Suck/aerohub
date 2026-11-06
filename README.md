@@ -9,6 +9,7 @@
 
 交付包含 `flight_board` 和 `onboard_computer` 两个镜像。用户已有 RoboPi，
 开发流程以 RoboPi 为最终运行与验收目标；是否使用 `onboard_computer` 做 PC 开发可自行选择。
+两份镜像当前定版为 **v0.1.0**，准确镜像 ID 与验收范围见[发布清单](deployment/releases/README.md)。
 官方 builder 从官方指南所指网站获取，SDK 由用户自行检查准备。
 
 ## 除源码外，需要准备什么
