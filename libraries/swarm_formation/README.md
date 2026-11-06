@@ -17,7 +17,7 @@ L-BFGS、编队图、碰撞代价与 A* 算法计算；本轮不调整权重、�
 
 不包含旧 PX4/Gazebo 模拟器、`PositionCommand` 控制服务器、随机地图生成器
 和 UDP `swarm_bridge`。当前 adapter 直接采样 `PolyTraj`。默认七机 launch 保留本机代理转发；
-三机混合应用显式让各机原生规划器直接通过 DDS UDP 广播轨迹，见 `apps/swarm_open_field/`。
+三机混合应用显式让各机原生规划器直接通过 DDS UDP 广播轨迹，见 `demos/swarm_open_field/`。
 
 真实模式每台输入独立注册点云与完整里程计；原回归模式保留
 `/drone_<i>_visual_slam/odom`、`/map_generator/global_cloud`。输出
@@ -212,8 +212,8 @@ OHOS 编译使用标准 Eigen 头路径，并仅链接实际需要的 PCL common
 
 ## 三机 PC/RoboPi 真实应用验收（2026-11-06）
 
-[应用与复现](../../apps/swarm_open_field/README.md)，
-[版本化验收](../../apps/swarm_open_field/hybrid-validation.json)。
+[应用与复现](../../demos/swarm_open_field/README.md)，
+[版本化验收](../../demos/swarm_open_field/hybrid-validation.json)。
 PC 两个独立容器与 RoboPi 各一台，各自运行本机原生 Swarm、GridMap/ESDF、导航注册、
 adapter 和 AS2，三路真实 AirSim LiDAR，跨机原生轨迹通过 DDS UDP 直接广播。
 
@@ -227,7 +227,7 @@ adapter 和 AS2，三路真实 AirSim LiDAR，跨机原生轨迹通过 DDS UDP �
 原生 PVA 解析导数与同一 valid_from、Swarm 自身的 AS2 停止 adapter、
 缺失的导航输入交叉编译和嵌套输出桥构建。默认七机优化公式与权重保持不变。
 
-保留失败证据：[默认间距验收](../../apps/swarm_open_field/default-clearance-validation.json)。
+保留失败证据：[默认间距验收](../../demos/swarm_open_field/default-clearance-validation.json)。
 原生默认 swarm_clearance=0.5 与应用最小 2 m 不一致；应用显式配置 2.0 后复验通过，
 没有降低验收阈值。另修正外层 95 s 墙钟保护早于 90 s 仿真任务截止的问题；
 本场景实时因子约 0.81，墙钟保护改为 180 s，任务仍为 90 s 仿真时间。

@@ -16,7 +16,7 @@ PC: AirSim + PX4 1.18 / DDS Agent + Humble 传感器 / clock
 RoboPi: OHOS Humble + AS2 platform / estimator / controller / Behavior
 ```
 
-PC 不同时启动 companion_as2，以免与板端产生重复的 AS2 节点。
+PC 不同时启动 onboard_computer，以免与板端产生重复的 AS2 节点。
 
 ## 持久部署布局
 
@@ -147,8 +147,8 @@ python3 scripts/diagnostics/verify_sensor_memory.py \
 `up` 表示启动了进程，是否业务就绪以 `verify` 为准。
 
 当前入口覆盖单机 AS2 跨机执行链；两库的简单加载与消息调用使用上文独立验证入口。
-完整飞行使用独立应用：[CAT-ORA 四机及 PC/RoboPi 混合部署](../../apps/catora_open_field/README.md)、
-[Swarm-Formation 三机真实点云混合部署](../../apps/swarm_open_field/README.md)。
+完整飞行使用独立应用：[CAT-ORA 四机及 PC/RoboPi 混合部署](../../demos/catora_open_field/README.md)、
+[Swarm-Formation 三机真实点云混合部署](../../demos/swarm_open_field/README.md)。
 两者都已完成指定场景板端执行验收，不扩展为七机、无线或长期稳定性结论。
 
 需要用独立场景复验整合后的 flight_board 时，见[单机闭环验收入口](../flight_board/README.md#robopi-单机闭环验收)。
@@ -307,7 +307,7 @@ bash deployment/oh-ros-build/build_as2.sh rmw_fastrtps_shared_cpp
 不依赖 PC 的 Python/共享库，也不复制整个系统依赖快照上板。
 
 board_smoke.py、tf_probe.py、dds_probe.py 可在该目录运行。
-full_smoke.py 需要同目录 run_as2.py（来自 companion_as2/run.py，将临时目录
+full_smoke.py 需要同目录 run_as2.py（来自 onboard_computer/run.py，将临时目录
 改到 `/data/local/tmp/aerohub-as2/runtime`）及 config/fleet/pid_speed_controller。
 通过 AS2_CONFIG_FILE、AS2_FLEET_FILE、AS2_CONTROLLER_CONFIG_FILE 指向这些文件。
 测试使用 ROS_DOMAIN_ID=83，与正常运行隔离。

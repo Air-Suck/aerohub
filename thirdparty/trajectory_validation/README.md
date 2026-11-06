@@ -2,6 +2,9 @@
 
 接口与使用说明见 [公共桥 README](../../planner_framework/bridges/as2_setpoint/README.md)。
 
+SUPER 长程端到端任务、配置及验收记录已集中到 [SUPER forest8 Demo](../../demos/super_forest/README.md)。
+本目录保留公共轨迹接口和失流保护的专项验证。
+
 2026-11-05 的真实验证结果：
 
 - PC Humble：AS2 core、控制器、Pixhawk 平台、运动行为构建通过。

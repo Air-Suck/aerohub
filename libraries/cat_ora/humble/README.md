@@ -45,7 +45,7 @@ docker compose -f libraries/cat_ora/deployment/compose.yaml up --build -d
 
 ```bash
 bash libraries/cat_ora/humble/tests/verify.sh
-# 有本地 companion_as2:airsim-px4 镜像时，另跑四机 Planner 接线：
+# 有本地 onboard_computer:airsim-px4 镜像时，另跑四机 Planner 接线：
 bash libraries/cat_ora/humble/tests/verify_adapter.sh
 ```
 
@@ -61,7 +61,7 @@ AS2 输出 adapter，验证四辆车的 `/planner/trajectory` 和 `/planner/setp
 保留的 `smoke_real_ros1.sh` 是历史文件名，现在同样可连接 ROS 2 后端；
 算法 adapter 由框架启动，测试不再重复拉起第二个同名节点。
 
-以上为服务与接线验证。后续 [CAT-ORA 空旷场地应用](../../../apps/catora_open_field/README.md)
+以上为服务与接线验证。后续 [CAT-ORA 空旷场地应用](../../../demos/catora_open_field/README.md)
 已在 PC AirSimNH 完成四机起飞、规划、到点和降落，并通过独立实际位置验收；
 适用范围以 `libraries.yaml` 的 `scenario_pass` 说明为准，不代表 RoboPi 多机已通过。
 

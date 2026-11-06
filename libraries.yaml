@@ -27,9 +27,9 @@ libraries:
       airsim_px4:
         validation: scenario_pass
         reason: NH 四机 PC、RoboPi 原生执行及三 PC 一 RoboPi 混合部署通过；包含取消与断流悬停验证，未覆盖其他场景或长期稳定性
-        application: apps/catora_open_field/README.md
-        evidence: apps/catora_open_field/hybrid-validation.json
-        stability_evidence: apps/catora_open_field/stability-validation.json
+        application: demos/catora_open_field/README.md
+        evidence: demos/catora_open_field/hybrid-validation.json
+        stability_evidence: demos/catora_open_field/stability-validation.json
     docs: libraries/README.md
     history:
       ref: main
@@ -51,8 +51,8 @@ libraries:
       airsim_px4:
         validation: scenario_pass
         reason: NH 三机真实 LiDAR、独立规划/建图/AS2 与两 PC 一 RoboPi 混合飞行通过；未覆盖七机或其他场景
-        application: apps/swarm_open_field/README.md
-        evidence: apps/swarm_open_field/hybrid-validation.json
+        application: demos/swarm_open_field/README.md
+        evidence: demos/swarm_open_field/hybrid-validation.json
         point_cloud_validation: real_sensor_map_pass
         point_cloud_evidence: libraries/swarm_formation/validation/real-point-cloud.json
     docs: libraries/README.md

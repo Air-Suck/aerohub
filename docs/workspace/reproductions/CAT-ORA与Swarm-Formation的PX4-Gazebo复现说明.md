@@ -1,5 +1,8 @@
 # CAT-ORA 与 Swarm-Formation 的 PX4/Gazebo 复现说明
 
+本文是 ROS 1 / Gazebo 历史复现记录。旧演示工具保留在 Git 历史 `02ed54d:tools/planner-demo/`，
+当前 Humble / AirSim 运行入口见 [Demo 导航](../../../demos/README.md)。
+
 ## 1. 复现范围
 
 本项目对两个多无人机 planner 做了两级复现：

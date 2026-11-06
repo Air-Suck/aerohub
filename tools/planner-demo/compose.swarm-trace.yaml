@@ -1,7 +1,0 @@
-services:
-  px4:
-    environment:
-      PX4_GZ_WORLD: default
-  planner:
-    volumes:
-      - /home/noah/code/UAV/demo:/demo

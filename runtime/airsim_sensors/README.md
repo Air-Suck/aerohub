@@ -76,7 +76,7 @@ bash scripts/robopi.sh verify
 证据见 `artifacts/airsim-verification/sensor-result.json`。
 该验收是单机静止状态的数据通路验证，尚未验证 SLAM、避障、飞行闭环、
 频率/延迟指标或多机负载。
-后续已在 [AS2 完整交互验收](../../deployment/companion_as2/README.md) 中，直接使用
+后续已在 [AS2 完整交互验收](../../deployment/onboard_computer/README.md) 中，直接使用
 AS2 运行环境接收全部示例传感器，并通过 PX4 1.18 单机飞行控制闭环。
 
 ## 多线程采集对照（2026-11-05）

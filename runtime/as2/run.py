@@ -14,14 +14,14 @@ def main():
     if os.environ.get('AS2_RESET_OOM_SCORE') == '1':
         Path('/proc/self/oom_score_adj').write_text('0')
     memory_limit = int(os.environ.get('AS2_MAX_RSS_MB', '0')) * 1024
-    config = os.environ.get('AS2_CONFIG_FILE', '/opt/companion_as2/config.yaml')
-    controller = os.environ.get('AS2_CONTROLLER_CONFIG_FILE', '/opt/companion_as2/pid_speed_controller.yaml')
-    fleet = yaml.safe_load(Path(os.environ.get('AS2_FLEET_FILE', '/opt/companion_as2/fleet.yaml')).read_text())
+    config = os.environ.get('AS2_CONFIG_FILE', '/opt/onboard_computer/config.yaml')
+    controller = os.environ.get('AS2_CONTROLLER_CONFIG_FILE', '/opt/onboard_computer/pid_speed_controller.yaml')
+    fleet = yaml.safe_load(Path(os.environ.get('AS2_FLEET_FILE', '/opt/onboard_computer/fleet.yaml')).read_text())
     vehicles = fleet['vehicles']
     if not vehicles:
         raise ValueError('fleet must contain at least one aircraft')
     commands = []
-    runtime = Path(os.environ.get('AS2_RUNTIME_DIR', '/tmp/companion_as2'))
+    runtime = Path(os.environ.get('AS2_RUNTIME_DIR', '/tmp/onboard_computer'))
     runtime.mkdir(exist_ok=True)
     for namespace, vehicle in vehicles.items():
         if not re.fullmatch(r'[A-Za-z][A-Za-z0-9_]*', namespace):

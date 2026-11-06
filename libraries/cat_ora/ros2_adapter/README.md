@@ -29,7 +29,7 @@ Planner 的 CANCEL 代表取消规划获准，不能当作飞机已经停止。
 最终 PVA 的时间检查、50 Hz 执行及失流保护仍由 AS2 负责。
 Swarm 暂时继续使用原公共输出入口，本次不修改其执行流程。
 
-完整启动、真实取消及故障回归见 [四机应用](../../../apps/catora_open_field/README.md)。
+完整启动、真实取消及故障回归见 [四机应用](../../../demos/catora_open_field/README.md)。
 板端隔离接口测试为 `tests/verify_ros_adapters.py`，使用 `adapterprobe*` 命名空间
 及假 AS2 服务，不发送真实解锁或起飞命令；覆盖非法定位、暂停恢复、取消、
 降落后停止结果保持，以及 AS2 拒绝停止的错误反馈。

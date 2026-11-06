@@ -27,7 +27,7 @@ for name, source in paths.items():
                     ignore=shutil.ignore_patterns('.git', '__pycache__', 'build', 'install', 'log'))
 if not (workspace / 'as2_motion_controller/thirdparties/pid_controller/CMakeLists.txt').exists():
     raise SystemExit('Missing offline PID source; initialize a complete workspace with prepare.sh first')
-for source in (root / 'deployment/companion_as2/px4_msgs/overrides').glob('*.msg'):
+for source in (root / 'deployment/onboard_computer/px4_msgs/overrides').glob('*.msg'):
     shutil.copyfile(source, workspace / 'px4_msgs/msg' / source.name)
 record = {'firmware_commit': '61907962c9220437ec01a98fa26bfbf5cbb254b5', 'source_hashes': {}}
 for name in [*paths, 'px4_msgs', 'vision_msgs', 'mocap4r2_msgs', 'rmw_fastrtps_shared_cpp']:

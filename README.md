@@ -7,34 +7,68 @@
 
 **OHOS / RoboPi 使用前提：先完成官方[设备开发环境搭建和开发指南](https://gitcode.com/openharmony-robot/docs/blob/main/device-dev/%E8%AE%BE%E5%A4%87%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA%E5%92%8C%E5%BC%80%E5%8F%91%E6%8C%87%E5%8D%97.md)，再执行本仓库的项目适配、编译和部署步骤。**
 
-交付的 tar 是 PC 仿真运行镜像 `flight_board`。OHOS 开发环境和官方 builder
-由用户按上述指南准备，再按[项目适配说明](deployment/oh-ros-build/README.md)接入。
+交付包含 `flight_board` 和 `onboard_computer` 两个镜像。用户已有 RoboPi，
+开发流程以 RoboPi 为最终运行与验收目标；是否使用 `onboard_computer` 做 PC 开发可自行选择。
+官方 builder 从官方指南所指网站获取，SDK 由用户自行检查准备。
 
-- [容器配方与文档](deployment/README.md)：flight_board tar、官方开发环境前提及项目适配。
+## 除源码外，需要准备什么
+
+| 资源 | 获取与检查 | 是否必须 |
+| --- | --- | --- |
+| Linux amd64 PC | 安装 Git、Docker Engine / Compose、Python 3 和 PyYAML；准备可运行 AirSim 的 GPU、驱动及图形环境 | 必须，承载仿真与交叉编译 |
+| `flight_board` 镜像 | 从交付包加载固定镜像，按[镜像说明](deployment/flight_board/README.md#使用固定镜像)校验 | 必须，提供 PX4 / DDS Agent / 传感器 / clock |
+| `onboard_computer` 镜像 | 从交付包加载；用于 PC 上的 AS2 / Library 开发及部分混合 Demo，见[开发环境](deployment/onboard_computer/README.md) | PC 开发可选；具体 Demo 依赖以其 README 为准 |
+| 官方 OHOS builder | 按[官方指南](deployment/oh-ros-build/README.md#前置条件)从网站获取；本仓库直接调用，不自行构建派生 builder | 必须，用于交叉编译 |
+| OHOS SDK 与目标依赖 | 自行确认已有匹配 SDK、目标 ROS Humble install 和第三方依赖 out；核对 AArch64 OHOS / Python 3.12，按[准备说明](deployment/oh-ros-build/README.md#首次初始化项目工作区)检查与初始化 | 必须；只下载 builder 不足以完成编译 |
+| RoboPi 与 HDC | 确认板端系统及 ROS 环境匹配，PC 可通过 HDC 访问；配置设备 ID 与 HDC 路径 | 必须，Library 必须完成板端验证 |
+| PC ↔ RoboPi 网络 | 准备有线 DDS 通信、可达 IP、对应网卡及时间同步；填写 `.env` | 必须，见[RoboPi 说明](deployment/robopi/README.md) |
+| AirSim 场景 | 自行到 [AirSim 仓库 Releases](https://github.com/microsoft/AirSim/releases) 下载对应 Linux 场景；当前 NH Demo 需要 AirSimNH，解压后按[资源说明](config/airsim/README.md)填写路径 | 必须，场景不随源码或镜像交付 |
+
+选择与 Demo 匹配的场景，下载其他场景或版本不等于该 Demo 已验证。
+SDK、场景及个人设备路径不提交到仓库。
+
+## 首次使用与开发顺序
+
+1. 准备上表资源，加载交付的 `flight_board`；需要 PC 开发或混合 Demo 时再加载 `onboard_computer`。
+2. 初始化 submodule，按模板配置 `.env` 与 `config/resources.local.yaml`。
+3. 按[OHOS 工作区准备说明](deployment/oh-ros-build/README.md#首次初始化项目工作区)确认 SDK / 目标依赖、准备隔离工作区，并执行 `bash deployment/oh-ros-build/run.sh check`。
+4. 按[RoboPi 说明](deployment/robopi/README.md)构建、部署并验证 AS2 基础链路。
+5. 选择 [Demo](demos/README.md)，迁移或修改 Library，完成对应的板端接口验证和端到端验收，保留结果与实际源码版本。
+
+**RoboPi 验证是 Library 接入的必经步骤。** PC 构建、单元测试及 PC 仿真可用于开发，
+不能代替板端验收。板端导入或启动检查也不能代替 Demo 的端到端结果。
+SUPER 当前尚缺统一部署入口，其现有任务的准备步骤和限制见对应 Demo。
+
+## 详细运行入口
+
+- [容器配方与文档](deployment/README.md)：两个交付镜像、官方开发环境前提及项目适配。
+- [PC 机载计算开发环境](deployment/onboard_computer/README.md)：AS2、算法 Library 与应用的开发及仿真验证。
 - [RoboPi 运行](deployment/robopi/README.md)：配置、构建、部署、启动、验证与收尾。
 - [AirSim 场景](config/airsim/README.md)：binary 资源、场景 profile 与 settings。
 - [Library 注册表](libraries.yaml)：已收录算法与当前接入状态。
-- [CAT-ORA 空旷场地应用](apps/catora_open_field/README.md)：PC AirSimNH 四机起飞、队形变化、到点和降落。
+- [端到端 Demo](demos/README.md)：各 Library 的完整调用、场景、运行拓扑与验收入口。
+- [SUPER forest8](demos/super_forest/README.md)：PC SUPER → RoboPi AS2 的单机长程任务与既有验收记录。
+- [CAT-ORA 空旷场地应用](demos/catora_open_field/README.md)：PC AirSimNH 四机起飞、队形变化、到点和降落。
 
 ## 分层与目录
 
 | 层 / 目录 | 职责 |
 | --- | --- |
 | 用户任务与 `scripts/` | 场景选择、任务编排及构建运行入口 |
-| `apps/` | 可重复运行的应用任务及对应场景、部署和验收记录 |
+| `demos/` | 各 Library 的端到端示例、场景、任务、运行入口与验收记录 |
 | `libraries/` | CAT-ORA、Swarm-Formation 的算法专用适配、代理与部署 |
 | `planner_framework/`、`planner_interfaces/` | 公共规划契约、生命周期及 Library → AS2 输出桥 |
 | `runtime/` | 共用 AS2 启动器、AirSim 传感器与时钟接入 |
 | `thirdparty/` | 活动 AS2 / Pixhawk fork submodule |
 | `config/` | 场景、AS2、DDS 与外部资源配置 |
-| `deployment/` | flight_board 镜像说明、官方 OHOS builder 调用及 RoboPi 部署 |
+| `deployment/` | flight_board 仿真底座、onboard_computer 开发环境、官方 OHOS builder 调用及 RoboPi 部署 |
 | `artifacts/` | 本机运行记录、构建缓存与目标产物，不进入交付镜像 |
 
 CAT-ORA 已在 PC AirSimNH 的指定空旷路口通过四机 Planner 飞行应用验收。
-后续 RoboPi 验收包括 [CAT-ORA 四机及混合部署](apps/catora_open_field/README.md)
-和 [Swarm-Formation 三机真实点云混合部署](apps/swarm_open_field/README.md)；
+后续 RoboPi 验收包括 [CAT-ORA 四机及混合部署](demos/catora_open_field/README.md)
+和 [Swarm-Formation 三机真实点云混合部署](demos/swarm_open_field/README.md)；
 性能负载、失败样例及适用边界分别保留在应用目录。
-Swarm-Formation 实景接入仍待完成；PC 验收不代表算法已在 RoboPi 上运行。
+各 Library 的可运行组合与验收边界见 [Demo 导航](demos/README.md)；PC 验收与 RoboPi 验收分别记录。
 
 ## 源码与本机配置
 

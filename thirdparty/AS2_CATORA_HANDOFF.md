@@ -1,12 +1,12 @@
 # CAT-ORA 迁移接入新版 AS2
 
-给正在迁移 CAT-ORA 的 agent：新版轨迹执行已经在当前工作树中，主仓库提交至
-`b5042e0`。CAT-ORA 的插值、时间调度和多机协调继续留在 Planner framework；
+本文件保留 `b5042e0` 时的接口交接约定；两库后续部署与验收已记录在主仓库
+`02ed54d`。当前 AS2 另包含 executor 复用提交 `f387e0d7`。CAT-ORA 的插值、时间调度和多机协调继续留在 Planner framework；
 逐机执行使用公共 AS2 单点轨迹桥。先核对下面的源码和接入约定，再确认新部署包含这些版本。
 
 ## 更新位置和版本
 
-以下均为主仓库根目录下的路径，子模块版本已由 `946ca3e` 锁定。
+以下是当时的接口基线版本；当前实际版本以主仓库 submodule 指针为准。
 
 | 位置 | 版本 | 更新内容 |
 | --- | --- | --- |
@@ -24,7 +24,7 @@
 - [公共输出桥](../planner_framework/bridges/as2_setpoint/uav_as2_setpoint_adapter/node.py)。
 - [完整接口说明](../planner_framework/bridges/as2_setpoint/README.md)。
 
-这轮提交没有 push。共享工作树已有这些提交；其他 checkout 使用前应确认三个子模块版本。
+其他 checkout 使用前应确认所需主仓库与子模块提交均可取得；历史交接文本不代表当前推送状态。
 
 ## CAT-ORA 接入时要保持的约定
 
@@ -54,7 +54,7 @@
 8. 到点／取消时显式悬停，再进入降落流程。插件实现悬停时，ControllerInfo 的输入模式
    可能显示 POSITION；正常轨迹执行时则应明确确认 TRAJECTORY。每架飞机保持一个活动参考源。
 
-核对时，你正在改的 `apps/catora_open_field/mission.py` 已有 `controller_mode()`、
+当前 `demos/catora_open_field/mission.py` 已有 `controller_mode()`、
 桥 `prepared` 检查、TRAJECTORY 接管和 HOVER 退出；请在这些现有改动上继续。
 公共桥的诊断／QoS 改动和 `as2_core/src/core_functions.cpp` 也有未提交修改，
 应保留当前迁移工作的内容，避免用旧提交整文件覆盖。
@@ -70,7 +70,7 @@
 - [低速和失流验证](trajectory_validation/README.md)：PC 20/50/100 Hz 输入测试均为
   1.2 秒输出 60 次；OHOS 构建及单机闭环通过，受控参考源退出、实际 adapter 暂停、
   过期参考和显式取消验证通过。
-- [forest8 记录](trajectory_validation/forest8-2026-11-05/README.md)：PC SUPER → RoboPi AS2
+- [forest8 记录](../demos/super_forest/README.md)：PC SUPER → RoboPi AS2
   → PX4 完成约 235 m A→B，到点误差 0.118 m，速度峰值 8.46 m/s，正常落地解除解锁。
   X 曾越观测边界约 0.44 m，原 observe 策略保留；没有触发备用轨迹切换。
 
@@ -93,4 +93,4 @@ AS2 执行源码、控制频率和轨迹保护未为 CAT-ORA 修改。多机运�
 [CAT-ORA adapter](../libraries/cat_ora/ros2_adapter/README.md)。
 完整应用还修复并验证了 AirSim/PX4 首心跳竞态的应用侧缓解，以及转发器的双向
 TCP_NODELAY；这些属于仿真启动问题，不归因于 CAT-ORA 数值算法。
-复现与证据索引见 [四机应用](../apps/catora_open_field/README.md)。
+复现与证据索引见 [四机应用](../demos/catora_open_field/README.md)。

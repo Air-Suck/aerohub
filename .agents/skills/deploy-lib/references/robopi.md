@@ -21,7 +21,7 @@
 
 `libraries/cat_ora/humble/tests/verify_board.py` 可参考其环境与启动方式，但它执行多组数值回归；简单部署验证不必全部运行。已有板端服务证据见 `libraries/cat_ora/validation/robopi-service.json`，只代表记录中的版本与范围。
 
-`apps/catora_open_field/run.py` 和 `run_robopi.py` 会编排场景并发送飞行指令，不是本 skill 的简单验证入口。算法不同则选择自己的最小服务或消息样例，不照搬 CAT-ORA 的包集合和接口。
+`demos/catora_open_field/run.py` 和 `run_robopi.py` 会编排场景并发送飞行指令，不是本 skill 的简单验证入口。算法不同则选择自己的最小服务或消息样例，不照搬 CAT-ORA 的包集合和接口。
 
 ## 新布局部署入口
 

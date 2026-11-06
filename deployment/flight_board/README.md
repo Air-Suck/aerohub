@@ -72,7 +72,7 @@ PX4 固件沿用基础镜像，不重新编译；仅调整 ELF 解释器和 RPAT
 `sha256:54a7a15ba35b3f4786256296d89edd144e000f40084cb6ed692fcbf74c9168f2`。
 固件提交为 `61907962c9220437ec01a98fa26bfbf5cbb254b5`，报告版本 `1.18.0 80`，
 属于开发快照，不是正式稳定版。本仓库继续使用已验收的该固定基线；
-companion AS2 使用 `companion_as2_dependencies:humble-px4-1.18` 配套消息。
+onboard_computer AS2 使用 `onboard_computer_dependencies:humble-px4-1.18` 配套消息。
 不需要额外的 1.17/1.18 消息翻译节点。
 最终运行环境为 Ubuntu 22.04 / ROS 2 Humble，与 RoboPi 的 ROS 发行版一致。
 PX4 及 Agent 保留 Noble 构建产物；其动态加载器和系统库放在
@@ -103,7 +103,7 @@ status 输出 JSON：mode、各进程 alive/exit_code、healthy。仅表示必�
 进程身份校验参考 LeUAV 的 supervisor（PID + /proc 启动时间）。
 
 DDS 配置复用 LeUAV 的显式 UDPv4 profile，位于
-`config/dds/fastdds_udp.xml`。flight_board 和 companion_as2 镜像均加载
+`config/dds/fastdds_udp.xml`。flight_board 和 onboard_computer 镜像均加载
 该文件，Compose 不再共享 host IPC；AS2 需使用更新后的配套镜像。
 Agent 仍使用镜像构建阶段编译的产物，无 builder 镜像依赖。
 
@@ -158,7 +158,7 @@ AirSim 时间倒退时会发布新时间并告警，消费者仍需处理任务�
 
 已部署且正在运行板端 AS2、有线网络与 `.env` 配置完成后，可用专用场景验收。
 先停止其他占用 AirSim/PX4 单机场景端口的 PC 实例；本入口不部署、不重启板端
-AS2，也不依赖 companion_as2 镜像。默认仅被动检查：
+AS2，也不依赖 onboard_computer 镜像。默认仅被动检查：
 
 ```bash
 bash deployment/flight_board/verify_robopi.sh
@@ -179,7 +179,7 @@ VERIFY_AS2_FLIGHT=1 VERIFY_MEMORY_SECONDS=600 \
 ## 可选 PC 开发验收
 
 以下仅用于 PC 开发检查，不是正式交付的前置要求。正式 RoboPi 验收使用上面的
-`verify_robopi.sh`，无需准备 companion 镜像。
+`verify_robopi.sh`，无需准备 onboard_computer 镜像。
 
 ```bash
 bash deployment/flight_board/verify.sh
@@ -189,15 +189,15 @@ bash deployment/flight_board/verify.sh
 配置 `airsim_nh`。验收使用 `config/airsim/nh.json`，也支持 `AIRSIM_BINARY`
 覆盖可执行文件位置；不会读取开发者的固定场景目录。
 
-默认订阅端使用 `companion_as2_dependencies:humble-px4-1.18`，包含 Humble
+默认订阅端使用 `onboard_computer_dependencies:humble-px4-1.18`，包含 Humble
 标准消息与配套 PX4 消息。需提前加载该镜像的 tar，或按
-[固定消息依赖说明](../companion_as2/px4_msgs/README.md)准备。
+[固定消息依赖说明](../onboard_computer/px4_msgs/README.md)准备。
 已有包含相同接口的镜像可用 `VERIFY_ROS_IMAGE=<image>` 指定。
 该依赖仅供 PC 独立验收，不是 RoboPi 运行链路的额外要求。
 
 脚本先检查所需镜像是否已存在，再启动独立 AirSimNH 场景、逐机容器和 clock
 容器，订阅传感器和时钟，并检查 PX4 DDS 连接。不会解锁或发送运动指令。
-`VERIFY_AS2=1` 时改用 `companion_as2:airsim-px4` 执行 AS2 交互验收。
+`VERIFY_AS2=1` 时改用 `onboard_computer:airsim-px4` 执行 AS2 交互验收。
 结果保存在 `artifacts/flight-board-verification`，退出时清理验证资源。
 传感器/时钟接收与完整 AS2 飞行控制链路是两项独立验收。
 
@@ -248,5 +248,5 @@ PX4 里程计及 DDS 连接均通过，容器健康检查通过。记录位于
 Humble/Fast DDS 在发现 Jazzy/PX4 topic 时仍可能输出
 `sequence size exceeds remaining buffer` 诊断；本轮传感器与时钟消息接收成功，
 该早期结果不代表 AS2 所需的全部 PX4 消息兼容。
-随后已通过 [配套 AS2 的单机完整控制与传感器验收](../companion_as2/README.md)，
+随后已通过 [配套 AS2 的单机完整控制与传感器验收](../onboard_computer/README.md)，
 包含解锁、Offboard、起飞、到点、悬停、降落、解除解锁；多机负载和暂停/变速仍待验收。

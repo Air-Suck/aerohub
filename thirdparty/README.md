@@ -41,7 +41,7 @@ bash scripts/prepare_sources.sh
   心跳和系统时间戳适配。直接修改 C++ 源码，构建时不再应用平台补丁。
 - `px4_msgs` 不作为 submodule。OHOS 首次准备脚本获取固定源码并覆盖三个
   PX4 1.18 消息定义；日常同步保留基础源码。覆盖定义现位于
-  `deployment/companion_as2/px4_msgs/overrides/`，两条开发路径共用同一份接口。
+  `deployment/onboard_computer/px4_msgs/overrides/`，两条开发路径共用同一份接口。
   可选 PC companion 镜像单独构建消息依赖，正式 RoboPi 运行无需该镜像。
 
 当前 fork 的 raw_odometry 使用 `raw_odometry.use_gps` 和

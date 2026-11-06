@@ -1,5 +1,9 @@
 # AirSim 启动
 
+场景不包含在源码或交付镜像中。请先到 [AirSim 仓库 Releases](https://github.com/microsoft/AirSim/releases)
+下载对应 Linux 场景并解压；当前 NH Demo 使用 AirSimNH。场景须与 Demo 匹配，
+下载其他版本或场景后需要重新验证。然后按下文配置可执行文件路径。
+
 在仓库根目录执行，脚本也支持从其他工作目录调用：
 
 ```bash

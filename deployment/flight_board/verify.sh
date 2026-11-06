@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Optional PC development check; requires companion message interfaces.
+# Optional PC development check; requires onboard_computer message interfaces.
 # Formal delivery verification uses verify_robopi.sh.
 set -euo pipefail
 root=$(cd "$(dirname "$0")/../.." && pwd)
@@ -12,10 +12,10 @@ printf '%s\n' "$image" > "$out/flight-board-image.txt"
 names=(aerohub-fb-vehicle aerohub-fb-clock)
 if [[ ${VERIFY_AS2:-0} == 1 ]]; then
   names+=(aerohub-fb-as2)
-  as2_image=$(docker image inspect companion_as2:airsim-px4 --format '{{.Id}}')
+  as2_image=$(docker image inspect onboard_computer:airsim-px4 --format '{{.Id}}')
   printf '%s\n' "$as2_image" > "$out/as2-image.txt"
 else
-  ros_image=$(docker image inspect "${VERIFY_ROS_IMAGE:-companion_as2_dependencies:humble-px4-1.18}" --format '{{.Id}}')
+  ros_image=$(docker image inspect "${VERIFY_ROS_IMAGE:-onboard_computer_dependencies:humble-px4-1.18}" --format '{{.Id}}')
   printf '%s\n' "$ros_image" > "$out/ros-image.txt"
 fi
 for name in "${names[@]}"; do
@@ -76,7 +76,7 @@ if [[ ${VERIFY_AS2:-0} == 1 ]]; then
     fi
     sleep 1
   done
-  if ! docker exec aerohub-fb-as2 /usr/local/bin/companion-as2 \
+  if ! docker exec aerohub-fb-as2 /usr/local/bin/onboard-computer \
     python3 /verification/verify_interaction.py > "$out/as2-interaction.json" 2> "$out/as2-check.log"; then
     for topic in offboard_control_mode failsafe_flags timesync_status vehicle_status; do
       docker exec aerohub-fb-vehicle /opt/px4-gazebo/bin/px4-listener \
@@ -84,7 +84,7 @@ if [[ ${VERIFY_AS2:-0} == 1 ]]; then
     done
     exit 1
   fi
-  docker exec aerohub-fb-as2 /usr/local/bin/companion-as2 \
+  docker exec aerohub-fb-as2 /usr/local/bin/onboard-computer \
     python3 /sensor-verification/verify_ros2.py > "$out/as2-sensors.json"
 else
 # Observe topics with the documented fixed Humble/PX4 message dependency image.

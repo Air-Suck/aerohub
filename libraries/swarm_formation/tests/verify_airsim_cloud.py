@@ -41,7 +41,7 @@ def main():
              '-e','ROS_DOMAIN_ID=92','-e','AIRSIM_RPC_PORT=42472',BOARD,'clock'])
         run(['docker','run','--rm','--detach','--init','--network','host','--name',PREFIX+'as2',
              '-e','ROS_DOMAIN_ID=92','-e','AS2_FLEET_FILE=/config/fleet.yaml',
-             '-v',str(out/'fleet.yaml')+':/config/fleet.yaml:ro','companion_as2:airsim-px4'])
+             '-v',str(out/'fleet.yaml')+':/config/fleet.yaml:ro','onboard_computer:airsim-px4'])
         run(['docker','run','--rm','--init','--network','host','--name',PREFIX+'validation',
              '-e','ROS_DOMAIN_ID=92','-e','FASTRTPS_DEFAULT_PROFILES_FILE=/work/config/dds/fastdds_udp.xml',
              '-v',str(ROOT)+':/work:ro','-v',str(out)+':/results','--entrypoint','bash',

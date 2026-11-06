@@ -81,25 +81,13 @@ rosbag2_*/
 !/artifacts/resolved/final-swarm-takeoff.log
 !/artifacts/resolved/final-runtime-build.log
 
-# Demo recordings, browser profiles, captured frames and review output.
-# Keep scripts, source, scene/config files and the README.
-/tools/planner-demo/deliverables/
-/tools/planner-demo/downloaded/
-/tools/planner-demo/inspection/
-/tools/planner-demo/qa_*/
-/tools/planner-demo/review_*/
-/tools/planner-demo/.qa_*/
-/tools/planner-demo/.review_*/
-/tools/planner-demo/.frames_*/
-/tools/planner-demo/capture_gz_images
-/tools/planner-demo/**/*.mp4
-/tools/planner-demo/**/*.avi
-/tools/planner-demo/**/*.mov
-/tools/planner-demo/**/*.mkv
-/tools/planner-demo/**/*.ppm
+# Curated historical SUPER flight evidence; other runtime logs stay ignored.
+!/demos/super_forest/board-final.log
+!/demos/super_forest/mission.log
+!/demos/super_forest/px4-final-state.log
 
 # vendor/ is optional local input for rebuilding the retained Dockerfile.
-# Runtime delivery uses the frozen flight_board tar; source archives are not shipped.
+# Runtime images are delivered separately; source archives are not shipped.
 # Keep project documentation, references, task YAML, manifests and test fixtures.
 
 artifacts/

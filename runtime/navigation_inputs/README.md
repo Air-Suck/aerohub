@@ -55,10 +55,10 @@ ros2 run as2_navigation_inputs navigation_inputs_node --ros-args \
 `Lidar` 来自当前 `px4-sensors.json`，区分大小写；其他传感器通过 `cloud_topic` 参数指定。
 AS2、传感器、TF 与本节点须在同一 ROS 时间基准下。先启动已有 AS2/传感器/clock，
 再运行本节点。节点没有控制输出，不会请求解锁、起飞或控制模式。
-PC companion 镜像构建包含本包；该节点需显式启动，不改变已有单机运行行为。
+PC onboard_computer 镜像构建包含本包；该节点需显式启动，不改变已有单机运行行为。
 RoboPi 已由 `scripts/build_lib.sh swarm-formation` 将本包加入隔离交叉编译工作区，
 随 Swarm 独立 overlay 安装；三机真实点云与运动闭环证据见
-[Swarm 应用](../../apps/swarm_open_field/README.md)。本机 TF 隔离时，导航节点也须将
+[Swarm 应用](../../demos/swarm_open_field/README.md)。本机 TF 隔离时，导航节点也须将
 `/tf`、`/tf_static` remap 到对应车辆话题。
 
 ## 验证
