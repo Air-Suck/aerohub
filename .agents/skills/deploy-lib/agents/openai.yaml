@@ -1,0 +1,4 @@
+interface:
+  display_name: "Deploy Lib to RoboPi"
+  short_description: "将 AS2 和指定算法部署到 RoboPi，完成启动及最小接口验证"
+  default_prompt: "使用 $deploy-lib 将 AS2 和指定算法部署到 RoboPi，仅做板端加载、启动及最小接口验证。"

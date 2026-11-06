@@ -18,6 +18,73 @@ RoboPi: OHOS Humble + AS2 platform / estimator / controller / Behavior
 
 PC 不同时启动 companion_as2，以免与板端产生重复的 AS2 节点。
 
+## 持久部署布局
+
+活动程序统一使用以下目录，后续部署替换对应 `install/`，不生成按时间累积的安装备份：
+
+```text
+/data/aerohub/
+├── as2/
+│   ├── install/              # AS2、PX4 消息及公共依赖
+│   ├── board_env.sh
+│   ├── config.yaml、fleet.yaml、run_as2.py
+│   └── runtime/
+└── lib/
+    ├── catora/
+    │   ├── install/          # CAT-ORA 及必要应用包
+    │   ├── env.sh
+    │   └── runtime/
+    └── swarm-formation/
+        ├── install/          # 六个原生规划包及必要应用包
+        ├── env.sh            # 先加载 AS2，再加载本应用
+        └── runtime/
+```
+
+`/data/aerohub/as2/board_env.sh` 只加载 AS2；应用加载
+`/data/aerohub/lib/catora/env.sh`。未来算法使用 `/data/aerohub/lib/<应用名>/`，
+各自携带必要应用包并复用 AS2；不要把算法包混进 AS2 安装。
+Swarm 环境入口为 `/data/aerohub/lib/swarm-formation/env.sh`。
+
+```bash
+# 部署到新目录，保持当前 .env 与旧运行不变
+bash scripts/deploy_lib.sh --component all
+# 后续仅更新对应一侧
+bash scripts/deploy_lib.sh --component as2
+bash scripts/deploy_lib.sh --component catora
+bash scripts/deploy_lib.sh --component swarm-formation
+# 需要编译时同步对应算法与最小接口源码，复用官方 OHOS builder
+bash scripts/build_lib.sh all
+# 仅板端加载、启动和小型接口验证，不解锁、不飞行
+bash scripts/verify_lib.sh all
+```
+
+部署先 staging 解包并核对哈希，再替换本次组件；临时旧安装只用于失败回退，
+成功后删除。运行中的目标目录消费者会阻止替换。源码构建仍复用官方 builder；
+打包器显式重定位逐包环境路径、Python shebang 和构建机 ELF 搜索路径，
+检查 AArch64 与动态依赖不变，不直接搬移未处理的 install。
+
+需要切换本机配置时在 AS2 部署命令追加 `--activate-config`，成功后才把 `.env`
+中的 `ROBOPI_ROOT` 更新为 `/data/aerohub/as2`；`scripts/robopi.sh deploy` 包含该步骤。
+默认配置已切换到 `/data/aerohub/as2`；历史路径 `/data/local/tmp/aerohub-as2`
+中的进程已通过管理入口停止，历史文件暂留，不再作为活动安装。
+下文早期验收记录中的 tmp 路径是历史位置。
+
+## 持久布局简单验收（2026-11-05）
+
+默认配置已激活新路径，AS2、CAT-ORA、Swarm-Formation 的板端简单验证均通过：
+
+| 组件 | 检查 | 版本化记录 |
+| --- | --- | --- |
+| AS2 | `as2_core` 导入、PlatformInfo CDR 往返、加载默认配置后估计器存活 5 秒 | `validation/startup.json` |
+| CAT-ORA | 应用模块导入、一次原生服务请求及 JSON 代理一致性，生成 16 点 | `../../libraries/cat_ora/validation/robopi-smoke.json` |
+| Swarm-Formation | 应用模块导入、单节点接收静态里程计/合成点云/手动目标，输出 2 段五阶 PolyTraj | `../../libraries/swarm_formation/validation/robopi-smoke.json` |
+
+本次使用官方 builder 交叉编译算法，复用已有 AS2 产物；原始构建、调试和最终
+验收日志保存在本机 `artifacts/robopi-lib-acceptance/`。板端每个组件的
+`runtime/verification/result.json` 保存最新结果，`deployment.json` 保存部署文件哈希。
+验证进程、专用调试器和转发均已清理，程序保留安装；没有启动仿真或发送运动命令。
+这次不覆盖真实点云、七机编队/代理完整输出或飞行闭环。
+
 ## 手动入口
 
 ```bash
@@ -47,8 +114,8 @@ PC 静态地址仍需本机管理员预先配置；两端不需要网关，PC �
 `build` 复用下文已经准备的隔离 SDK、ROS 目标依赖及 RMW 修复工作区，不负责
 从空机器自动创建这些资源；首次创建使用上面的 `prepare.sh` 入口。
 OHOS 与 PC 产物隔离，部署前须停止板端 AS2。
-当前安装前缀固定为 `/data/local/tmp/aerohub-as2/install`，修改部署路径需要
-同步修改构建前缀并重编，不能只改 `.env` 后搬运二进制。
+当前 AS2 构建默认前缀为 `/data/aerohub/as2/install`；应用按上文独立布局打包。
+已有产物需要经部署打包器重定位并校验，不能只改 `.env` 后搬运二进制。
 
 ## 当前组合与诊断
 
@@ -79,8 +146,10 @@ python3 scripts/diagnostics/verify_sensor_memory.py \
 `AS2_MAX_RSS_MB=1536` 时停止本次 AS2，不修改系统级 OOM 或看门狗配置。
 `up` 表示启动了进程，是否业务就绪以 `verify` 为准。
 
-当前入口覆盖单机 AS2 跨机执行链；CAT-ORA / Swarm-Formation 的板端算法部署
-尚未接入，不应把 Runtime 验收等同于这些 Library 已在 RoboPi 上运行。
+当前入口覆盖单机 AS2 跨机执行链；两库的简单加载与消息调用使用上文独立验证入口。
+完整飞行使用独立应用：[CAT-ORA 四机及 PC/RoboPi 混合部署](../../apps/catora_open_field/README.md)、
+[Swarm-Formation 三机真实点云混合部署](../../apps/swarm_open_field/README.md)。
+两者都已完成指定场景板端执行验收，不扩展为七机、无线或长期稳定性结论。
 
 需要用独立场景复验整合后的 flight_board 时，见[单机闭环验收入口](../flight_board/README.md#robopi-单机闭环验收)。
 

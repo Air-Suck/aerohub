@@ -55,5 +55,70 @@ class ConversionTest(unittest.TestCase):
         )
 
 
+class ThreeVehicleContractTest(unittest.TestCase):
+    def test_three_vehicle_scaled_targets_share_one_anchor(self):
+        config = {
+            'vehicles': ['drone0', 'drone1', 'drone2'],
+            'planner': {'parameters': {'formation_scale': 2.0}},
+            'targets': {
+                'drone0': {'x': 6.0, 'y': 0.0, 'z': -3.0},
+                'drone1': {'x': 4.0, 'y': 3.4642, 'z': -3.0},
+                'drone2': {'x': 2.0, 'y': 0.0, 'z': -3.0},
+            },
+        }
+        self.assertEqual(formation_center(config), (0.0, 6.0, 3.0))
+        config['targets']['drone2']['z'] = -.5
+        with self.assertRaises(ValueError):
+            formation_center(config)
+
+    def test_response_sampling_time_survives_adapter_delay(self):
+        from types import SimpleNamespace
+        from unittest.mock import Mock
+        from uav_swarm_formation_adapter.node import SwarmFormationAdapter
+        node = Mock()
+        node.vehicles = ['drone0', 'drone1', 'drone2']
+        node.config = {'task': {'task_id': 'sample-clock'},
+                       'planner': {'parameters': {'sample_dt': .1, 'valid_from_lead': .2}}}
+        node.get_clock.return_value.now.return_value = SimpleNamespace(nanoseconds=101_500_000_000)
+        msg = SwarmFormationAdapter._message(node, [[[0,0,3],[0,.1,3]]] * 3, valid_from=101.2)
+        self.assertEqual((msg.valid_from.sec, msg.valid_from.nanosec), (101,200_000_000))
+        self.assertEqual((msg.generated_at.sec,msg.generated_at.nanosec), (101,500_000_000))
+        self.assertEqual(len(msg.vehicle_trajectories),3)
+
+    def test_live_goal_waits_for_every_owned_output_publisher(self):
+        from unittest.mock import Mock, patch
+        from uav_swarm_formation_adapter.node import SwarmFormationAdapter
+        node = Mock()
+        node.vehicles = ['drone0','drone1','drone2']
+        node.poses = dict.fromkeys(node.vehicles, [0,0,3])
+        node.config = {'planner': {'parameters': {'wait_for_output': True}},
+                       'deployment': {v:{'namespace':v} for v in node.vehicles}}
+        from types import SimpleNamespace
+        native = SimpleNamespace(node_name='TakeoffBehavior')
+        owned = SimpleNamespace(node_name='swarm_as2_adapter')
+        node.get_publishers_info_by_topic.side_effect = [[native,owned],[native,owned],[native]]
+        with patch('uav_swarm_formation_adapter.node.socket.create_connection') as connect:
+            SwarmFormationAdapter._update(node)
+            connect.assert_not_called()
+        self.assertEqual(node.get_publishers_info_by_topic.call_count,3)
+
+    def test_pva_fields_and_ned_axes_are_preserved(self):
+        from types import SimpleNamespace
+        from unittest.mock import Mock
+        from uav_swarm_formation_adapter.node import SwarmFormationAdapter
+        node=Mock();node.vehicles=['drone0']
+        node.config={'task':{'task_id':'pva'},'planner':{'parameters':{'sample_dt':.1,'valid_from_lead':.2}}}
+        node.get_clock.return_value.now.return_value=SimpleNamespace(nanoseconds=100_000_000_000)
+        msg=SwarmFormationAdapter._message(node,[[[1,2,3],[2,3,4]]],100.2,
+            [[[4,5,6],[4,5,6]]],[[[7,8,9],[7,8,9]]])
+        trajectory=msg.vehicle_trajectories[0];point=trajectory.points[0]
+        self.assertEqual(trajectory.valid_fields,3)
+        self.assertEqual((point.position.x,point.position.y,point.position.z),(2,1,-3))
+        self.assertEqual((point.velocity.x,point.velocity.y,point.velocity.z),(5,4,-6))
+        self.assertEqual((point.acceleration.x,point.acceleration.y,point.acceleration.z),(8,7,-9))
+        with self.assertRaises(ValueError):
+            SwarmFormationAdapter._message(node,[[[1,2,3],[2,3,4]]],100.2,[],None)
+
+
 if __name__ == "__main__":
     unittest.main()

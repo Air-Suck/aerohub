@@ -30,7 +30,7 @@ exec docker run --rm --pull never "${terminal[@]}" --name aerohub-oh-ros-build -
   -v "$root/deployment/oh-ros-build:/opt/aerohub/ohos:ro" \
   -e WS_ROOT=/work/root -e OHOS_SDK=/work/root/ohos-robot-toolchain/18 \
   -e OHOS_WORKSPACE=/work/ws -e OHOS_SYSDEPS=/target-out \
-  -e OHOS_INSTALL_PREFIX=/data/local/tmp/aerohub-as2/install \
+  -e OHOS_INSTALL_PREFIX="${OHOS_INSTALL_PREFIX:-/data/aerohub/as2/install}" \
   -e OHOS_HOST_PYTHON=/root/conda/envs/ros_env/bin/python3 \
   -e OHOS_PYTHON_SOABI=cpython-312-aarch64-linux-ohos -e OHOS_CPU=aarch64 \
   --workdir /work --entrypoint /bin/bash "$image" \

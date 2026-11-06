@@ -12,6 +12,7 @@
 #include "munkres_algorithm.hpp"
 #include <swarm_graph/swarm_graph.hpp>
 #include <fstream>
+#include <stdexcept>
 
 namespace ego_planner
 {
@@ -188,7 +189,7 @@ namespace ego_planner
 
     bool getFormationPos(std::vector<Eigen::Vector3d> &swarm_graph_pos, Eigen::Vector3d pos);
 
-    void setDesiredFormation(int type){
+    void setDesiredFormation(int type, int vehicle_count = 7){
       std::vector<Eigen::Vector3d> swarm_des;
       switch (type)
       {
@@ -218,6 +219,9 @@ namespace ego_planner
           swarm_des.push_back(v5);
           swarm_des.push_back(v6);
 
+          if (vehicle_count < 3 || vehicle_count > 7)
+            throw std::invalid_argument("formation vehicle_count must be in [3,7]");
+          swarm_des.resize(vehicle_count);
           formation_size_ = swarm_des.size();
           // construct the desired swarm graph
           swarm_graph_->setDesiredForm(swarm_des);

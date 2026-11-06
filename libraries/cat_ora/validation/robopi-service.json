@@ -1,0 +1,30 @@
+{
+  "platform": "Linux-6.6.86-aarch64-with-libc",
+  "python": "3.12.12 (main, Jan 15 2026, 16:53:49) [Clang 15.0.4 (llvm-project 7e44bed824d29a5240f775e22e13d753a66218dd)]",
+  "domain": "179",
+  "scope": "native service and JSON proxy numerical regression; no flight commands",
+  "passed": true,
+  "returncode": 0,
+  "processes_alive": [
+    true,
+    true
+  ],
+  "elapsed_seconds": 10.12627321400214,
+  "children_peak_rss_kib": 74156,
+  "validation_date": "2026-11-05",
+  "source_commit": "f6c8c191c0ea97340408f6d2c2737dda90004677",
+  "builder": "voxelsky/ohos-ros-humble-builder@sha256:3312006a50a2a7f4a26e1c92afcfbb0fd2296989b7e6d22e71b1f77caad0d25f",
+  "target": "AArch64 OpenHarmony, ROS 2 Humble, Python 3.12",
+  "cases": [
+    "single",
+    "four",
+    "reassignment",
+    "stationary",
+    "unequal_constraints"
+  ],
+  "invalid_requests": 7,
+  "point_error_threshold_m": 1e-09,
+  "raw_evidence": "artifacts/catora-robopi/",
+  "baseline_sha256": "2a9297adfe6b62cc4992dee843b2a42bcc04ce550ed1acafef42b1d7fb2c2dd9",
+  "package_sha256": "0ca33bd7aa5e332804f39a4a0764c65d94a6bf4291e6e47a8bbd906bd9ccb3f7"
+}

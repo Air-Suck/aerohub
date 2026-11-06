@@ -26,9 +26,10 @@ libraries:
     bindings:
       airsim_px4:
         validation: scenario_pass
-        reason: PC AirSimNH 空旷路口四机起飞、原生 CAT-ORA 规划、到点保持、降落及实际位置验收通过；未覆盖其他场景或 RoboPi 多机
+        reason: NH 四机 PC、RoboPi 原生执行及三 PC 一 RoboPi 混合部署通过；包含取消与断流悬停验证，未覆盖其他场景或长期稳定性
         application: apps/catora_open_field/README.md
-        evidence: apps/catora_open_field/validation.json
+        evidence: apps/catora_open_field/hybrid-validation.json
+        stability_evidence: apps/catora_open_field/stability-validation.json
     docs: libraries/README.md
     history:
       ref: main
@@ -38,7 +39,7 @@ libraries:
       commit: c420169460e59c396f586320e0e06fc96e387f6e
   swarm_formation:
     name: Swarm-Formation
-    description: 七机编队滚动轨迹规划
+    description: 编队滚动轨迹规划；默认七机，当前真实混合部署验收为三机
     kind: planner
     status: registered
     manifest: planner_framework/registry/swarm_formation/967a4bdfae949e994691f8ffc87dbb0147cbebb7/manifest.yaml
@@ -48,8 +49,10 @@ libraries:
       native: libraries/swarm_formation/humble
     bindings:
       airsim_px4:
-        validation: not_integrated
-        reason: 单机真实 AirSim LiDAR 到原生地图/ESDF 已通过；七机传感器并发、目标契约及飞行闭环仍待验收
+        validation: scenario_pass
+        reason: NH 三机真实 LiDAR、独立规划/建图/AS2 与两 PC 一 RoboPi 混合飞行通过；未覆盖七机或其他场景
+        application: apps/swarm_open_field/README.md
+        evidence: apps/swarm_open_field/hybrid-validation.json
         point_cloud_validation: real_sensor_map_pass
         point_cloud_evidence: libraries/swarm_formation/validation/real-point-cloud.json
     docs: libraries/README.md

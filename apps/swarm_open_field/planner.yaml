@@ -1,0 +1,6 @@
+fsm.result_file: /tmp/swarm-three-results.txt
+global_goal.swarm_scale: 2.0
+grid_map.map_size_z: 7.0
+grid_map.virtual_ceil_height: 6.0
+grid_map.visualization_truncate_height: 6.0
+optimization.swarm_clearance: 2.0

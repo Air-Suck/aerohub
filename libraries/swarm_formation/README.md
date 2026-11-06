@@ -16,8 +16,8 @@ L-BFGS、编队图、碰撞代价与 A* 算法计算；本轮不调整权重、�
 临时数组的内存错误，保留距离场计算公式；见下述真实输入验收。
 
 不包含旧 PX4/Gazebo 模拟器、`PositionCommand` 控制服务器、随机地图生成器
-和 UDP `swarm_bridge`。当前 adapter 直接采样 `PolyTraj`，本机广播由 ROS 2
-代理转发；跨机器 UDP 互通不属于本轮验证范围。
+和 UDP `swarm_bridge`。当前 adapter 直接采样 `PolyTraj`。默认七机 launch 保留本机代理转发；
+三机混合应用显式让各机原生规划器直接通过 DDS UDP 广播轨迹，见 `apps/swarm_open_field/`。
 
 真实模式每台输入独立注册点云与完整里程计；原回归模式保留
 `/drone_<i>_visual_slam/odom`、`/map_generator/global_cloud`。输出
@@ -30,17 +30,17 @@ ENU/world。`start_time` 改为 `builtin_interfaces/Time`，系数顺序、float
 1.5、加速度 8.0、规划范围 7.5。RViz marker 仍作为可选输出保留。
 
 TCP `127.0.0.1:28501` 保留原 adapter 的逐行 JSON 契约、`drone0..drone6`
-顺序与多项式采样公式。请求目标发布到 `/traj_start_trigger`，launch 将编队
+默认顺序与多项式采样公式；`vehicle_count` 可显式选择连续前缀的 3..7 机。请求目标发布到 `/traj_start_trigger`，launch 将编队
 手动模式实际订阅的 `/move_base_simple/goal` 映射到此路径；原代理与该模式
-之间的路径差异作为接线变更处理。一次性目标采用 durable QoS，并等待七个
+之间的路径差异作为接线变更处理。一次性目标采用 durable QoS，默认七机等待全部七个
 订阅者发现后发送。代理串行处理状态更新，ROS executor 在独立线程接收轨迹。
 
-上游编队目标 callback 将中心高度写死为 **0.5 m**，忽略请求高度。
-本轮保留该行为；它不是本轮迁移引入的参数变化。AirSim 任务接入时需要
-单独处理此约束，不能直接假定请求的 z 会被算法采用。
+上游编队目标 callback 将中心高度写死为 **0.5 m**。旧模式默认保留；
+真实导航模式显式打开 `global_goal.altitude_from_message`，采用目标消息高度，
+与公共目标和 AS2 执行坐标一致。
 同样，原配置的 `global_goal.swarm_scale=2`，当前公共 adapter 的目标形状
-校验按单位 scale。保留此差异，因此公共轨迹发布通过不等于逐车任务目标
-一致性已通过。
+校验默认按单位 scale 以兼容旧回归。实际应用须显式匹配公共 `formation_scale`
+与原生 `global_goal.swarm_scale`；本次三机两边均为 2。
 
 ## 构建与启动
 
@@ -98,7 +98,7 @@ TF，也不提供逐点扫描去畸变；源时间和运动注册质量仍由导
 
 真实模式 `grid_map.input_timeout` 默认 1 秒：无新鲜地图不开始规划，执行中丢失
 输入进入原生 emergency-stop 分支；不擅自自动恢复飞行任务。地图可保留旧占据
-内容用于观察，但输出保留原始输入时间。代理要求七台地图健康且 heartbeat 未过期，
+内容用于观察，但输出保留原始输入时间。代理要求配置中全部地图健康且 heartbeat 未过期，
 否则停止返回缓存滚动轨迹，上层公共 Planner 的轨迹超时机制继续生效。
 
 Docker 默认走真实导航模式并要求挂载校准后的七机配置。launch 保留 `legacy`
@@ -180,5 +180,54 @@ adapter 能从真实原生后端读取结果并发布七条 `TimedTrajectorySegm
 最终一致性，相关形状/高度差异见前述运行边界。
 
 固定输入基准使用无障碍地图；运行回放仅放置远离通道的一个障碍点。
-复杂障碍、拥挤编队、ROS 1/ROS 2 完整分布式调度对照及 AirSim/AS2 飞行
-尚未验收，`libraries.yaml` 的环境 binding 保持 `not_integrated`。
+复杂障碍、拥挤编队及 ROS 1/ROS 2 完整分布式调度对照尚未验收。后续三机
+真实 AirSim/AS2 混合飞行已通过，见文末应用验收；不扩展为七机验收。
+
+## RoboPi 持久部署与简单验证
+
+复用已准备的 OHOS 工作区和官方 build Docker：
+
+```bash
+bash scripts/build_lib.sh swarm-formation
+bash scripts/deploy_lib.sh --component swarm-formation
+bash scripts/verify_lib.sh swarm-formation
+```
+
+板端安装于 `/data/aerohub/lib/swarm-formation/install`，环境入口为同目录上一层
+`env.sh`，先加载 `/data/aerohub/as2/board_env.sh`。应用包含原生六包、算法 adapter
+及公共 Planner 接口/框架、AS2 输出桥，AS2 本身保持独立。
+
+简单验证只启动一个原生规划节点，以静态里程计、单点合成点云和手动目标检查
+首条有限五阶 PolyTraj；不代表真实点云、七机编队、JSON 七机输出或飞行验收。
+日志与结果保存在板端 `runtime/verification`，并取回本机
+`artifacts/robopi-lib-acceptance/swarm-formation/`。
+
+OHOS 编译使用标准 Eigen 头路径，并仅链接实际需要的 PCL common；
+`pcl_conversions` 的头文件与消息依赖单独声明，避免导出全部 PCL 库而拉入未使用的 IO/PNG。
+首次板端规划还暴露上游 `desired_start_time` 在无旧轨迹分支未初始化；Clang 优化后
+错误读取空轨迹。将该首轮不使用的占位值初始化为零，保留首次规划由当前时钟
+设置实际起始时间的行为及后续轨迹衔接算法。
+
+2026-11-05：上述持久目录中的板端简单验证通过，版本化摘要为 `validation/robopi-smoke.json`。程序安装保留，验证进程已停止。
+
+## 三机 PC/RoboPi 真实应用验收（2026-11-06）
+
+[应用与复现](../../apps/swarm_open_field/README.md)，
+[版本化验收](../../apps/swarm_open_field/hybrid-validation.json)。
+PC 两个独立容器与 RoboPi 各一台，各自运行本机原生 Swarm、GridMap/ESDF、导航注册、
+adapter 和 AS2，三路真实 AirSim LiDAR，跨机原生轨迹通过 DDS UDP 直接广播。
+
+最终 `artifacts/swarm-hybrid-flight-04` 完成 SUCCEEDED、全部降落并解除武装；
+最小真值间距 2.746 m，最大真值终点误差 0.524 m，无新碰撞。
+111 条公共 PVA 轨迹段和三机实际 AS2 参考均有效，实际执行期间三路输入与地图采样健康率均为 100%。
+板端总 CPU 中位 93.5%、最高 96.4%，含全局代理、公共采样与验收开销；不能当作纯单机算法负载。
+仍有一条原生广播因为 269 ms 起始时间差被拒收，不能宣称通信零问题或长期稳定。
+
+关键接线修复：三机前缀与本机 ownership、真实模式消息高度与显式编队尺度、
+原生 PVA 解析导数与同一 valid_from、Swarm 自身的 AS2 停止 adapter、
+缺失的导航输入交叉编译和嵌套输出桥构建。默认七机优化公式与权重保持不变。
+
+保留失败证据：[默认间距验收](../../apps/swarm_open_field/default-clearance-validation.json)。
+原生默认 swarm_clearance=0.5 与应用最小 2 m 不一致；应用显式配置 2.0 后复验通过，
+没有降低验收阈值。另修正外层 95 s 墙钟保护早于 90 s 仿真任务截止的问题；
+本场景实时因子约 0.81，墙钟保护改为 180 s，任务仍为 90 s 仿真时间。

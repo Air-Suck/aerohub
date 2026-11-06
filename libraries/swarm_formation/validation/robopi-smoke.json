@@ -1,0 +1,37 @@
+{
+  "component": "swarm-formation",
+  "root": "/data/aerohub/lib/swarm-formation",
+  "machine": "aarch64",
+  "scope": "board-local startup and minimal interface; no flight or real sensor acceptance",
+  "application_modules_import": true,
+  "native_planner": true,
+  "input": "static odometry + one-point synthetic cloud + manual goal",
+  "trajectory_order": 5,
+  "polynomial_pieces": 2,
+  "coefficients_per_axis": 12,
+  "real_sensor_validation": false,
+  "passed": true,
+  "test_processes_stopped": true,
+  "wall_seconds": 4.499352376995375,
+  "ros_domain_id": "97",
+  "validation_date": "2026-11-05",
+  "source_commit": "b5042e0d03c7464c00d6f8f8d2a0376d97cd767e",
+  "deployment": {
+    "manifest_sha256": "18f87c0f3c173595547362e5870eeac2b6fa59b8b85fb9c3f44c6a67196091d6",
+    "packages": [
+      "ego_planner",
+      "path_searching",
+      "plan_env",
+      "swarm_graph",
+      "traj_opt",
+      "traj_utils",
+      "uav_as2_setpoint_adapter",
+      "uav_planner_framework",
+      "uav_planner_interfaces",
+      "uav_swarm_formation_adapter"
+    ]
+  },
+  "raw_evidence": "artifacts/robopi-lib-acceptance/swarm-formation/",
+  "source_tree": "working tree including uncommitted changes; build input snapshot recorded separately",
+  "build_inputs_sha256": "005187cc976ff81d0459f6a48698f5afcce610cc05894ffae60ae11477065ffc"
+}

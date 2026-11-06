@@ -1,0 +1,651 @@
+{
+  "scope": "RoboPi native CAT-ORA/Planner/AS2 four-vehicle AirSim application adaptation; fixed scene and load",
+  "passed": true,
+  "git_head": "b5042e0d03c7464c00d6f8f8d2a0376d97cd767e",
+  "working_tree_changes_present": true,
+  "runs": {
+    "normal": {
+      "evidence": "artifacts/catora-stability-normal-08",
+      "result": {
+        "task_id": "a778d411-eea7-4242-a33b-9223854f4294",
+        "planner_status": "SUCCEEDED",
+        "endpoint_error_m": {
+          "drone3": 0.06523420597683587,
+          "drone0": 0.03472478488957937,
+          "drone2": 0.05493005634117807,
+          "drone1": 0.09246724497569388
+        },
+        "airsim_truth_endpoint_error_m": {
+          "drone0": 0.11729442163015424,
+          "drone1": 0.10326683739139586,
+          "drone2": 0.1094986179206869,
+          "drone3": 0.10208379066061059
+        },
+        "min_truth_separation_m": 5.869966356284255,
+        "max_localization_disagreement_m": 0.43222850979224037,
+        "min_observed_separation_m": 5.865413023400204,
+        "max_sampled_tracking_error_m": 1.0853483572672904,
+        "planner_wall_seconds": 18.232144301000517,
+        "planning_collisions": false,
+        "as2_trajectory_reference_counts": {
+          "drone0": 303,
+          "drone1": 293,
+          "drone2": 288,
+          "drone3": 284
+        },
+        "position_source": "CAT-ORA input adapter checked AS2 local odometry; same frame as trajectory execution",
+        "runtime_topology": "RoboPi: CAT-ORA + adapters + Planner + AS2; PC: PX4 Docker + AirSim",
+        "execution_host": "localhost",
+        "execution_arch": "aarch64",
+        "landed_and_disarmed": true
+      },
+      "image": {
+        "flight_board": "sha256:8c33881fde6985fe5a43a894bde075471df85064e45ac8e5de28efebcc737cd2"
+      },
+      "bundle_sha256": "14b42e1395656ce7b76c86378ed2252f5c441d23fe91fc4964b8e17cf4fefc22",
+      "as2_manifest_sha256": "725b0c55cab7f4c37bbbd7b0d8cdf713b54ca8b7749525d378a5377afe0a17ba",
+      "catora_manifest_sha256": "55d88b7b41a0cab10474bd89edf62da9551ca7b19fe4998e5d6f4ce13f8b6037",
+      "trajectory_stream_loss_entries": 0,
+      "cleanup": {
+        "initial_processes": 0,
+        "remaining": {}
+      }
+    },
+    "cancel": {
+      "evidence": "artifacts/catora-stability-final-cancel",
+      "result": {
+        "scenario": "cancel",
+        "planner_status": "CANCELED",
+        "as2_hover_confirmed": true,
+        "stop_wall_seconds": 0.10333020800317172,
+        "stop_state": {
+          "task_id": "83529d8d-f9ab-40a0-b358-cb9dc5f72ce1",
+          "prepared": true,
+          "yaw_received": [
+            "drone0",
+            "drone1",
+            "drone2",
+            "drone3"
+          ],
+          "mode_received": [
+            "drone0",
+            "drone1",
+            "drone2",
+            "drone3"
+          ],
+          "mode_ready": {
+            "drone0": false,
+            "drone1": false,
+            "drone2": false,
+            "drone3": false
+          },
+          "setpoints_received": 61,
+          "published": {
+            "drone0": 5,
+            "drone1": 5,
+            "drone2": 5,
+            "drone3": 5
+          },
+          "stop_requested": true,
+          "stop_reason": 5,
+          "stop_confirmed": {
+            "drone0": true,
+            "drone1": true,
+            "drone2": true,
+            "drone3": true
+          },
+          "stop_errors": {}
+        },
+        "landed_and_disarmed": true,
+        "execution_arch": "aarch64",
+        "as2_trajectory_reference_counts": {
+          "drone0": 4,
+          "drone1": 4,
+          "drone2": 4,
+          "drone3": 3
+        }
+      },
+      "image": {
+        "flight_board": "sha256:8c33881fde6985fe5a43a894bde075471df85064e45ac8e5de28efebcc737cd2"
+      },
+      "bundle_sha256": "9199d6e5c1454b8e896e9c73806ba7e217f6caf339a925f939026f0c9433b418",
+      "as2_manifest_sha256": "725b0c55cab7f4c37bbbd7b0d8cdf713b54ca8b7749525d378a5377afe0a17ba",
+      "catora_manifest_sha256": "55d88b7b41a0cab10474bd89edf62da9551ca7b19fe4998e5d6f4ce13f8b6037",
+      "trajectory_stream_loss_entries": 0,
+      "cleanup": {
+        "initial_processes": 0,
+        "remaining": {}
+      }
+    },
+    "stream-loss": {
+      "evidence": "artifacts/catora-stability-final-stream",
+      "result": {
+        "scenario": "stream-loss",
+        "planner_status": "CANCELED",
+        "as2_hover_confirmed": true,
+        "failsafe_observed_seconds": 0.6674709999933839,
+        "failure_stop": {
+          "requested": true,
+          "hover_confirmed": true,
+          "landed_and_disarmed": true,
+          "planner_cancel_accepted": true
+        },
+        "landed_and_disarmed": true,
+        "execution_arch": "aarch64"
+      },
+      "image": {
+        "flight_board": "sha256:8c33881fde6985fe5a43a894bde075471df85064e45ac8e5de28efebcc737cd2"
+      },
+      "bundle_sha256": "d99f534ed7b1719dd2d33a2cc40f718c2b207d75ea6dd34a1dcda222eb928c7e",
+      "as2_manifest_sha256": "725b0c55cab7f4c37bbbd7b0d8cdf713b54ca8b7749525d378a5377afe0a17ba",
+      "catora_manifest_sha256": "55d88b7b41a0cab10474bd89edf62da9551ca7b19fe4998e5d6f4ce13f8b6037",
+      "trajectory_stream_loss_entries": 4,
+      "cleanup": {
+        "initial_processes": 0,
+        "remaining": {}
+      }
+    }
+  },
+  "adapter_contract": {
+    "fresh_input_and_pva": true,
+    "invalid_state_rejected": true,
+    "pause_and_explicit_resume": true,
+    "cancel_calls_as2_and_latches": true,
+    "landing_does_not_invalidate_completed_stop": true,
+    "as2_stop_rejection_reported": true,
+    "as2_requests": [
+      [
+        "adapterprobe0",
+        1
+      ],
+      [
+        "adapterprobe1",
+        1
+      ],
+      [
+        "adapterprobe2",
+        1
+      ],
+      [
+        "adapterprobe3",
+        1
+      ],
+      [
+        "adapterprobe0",
+        7
+      ],
+      [
+        "adapterprobe1",
+        7
+      ],
+      [
+        "adapterprobe2",
+        7
+      ],
+      [
+        "adapterprobe3",
+        7
+      ],
+      [
+        "adapterprobe0",
+        1
+      ],
+      [
+        "adapterprobe1",
+        1
+      ],
+      [
+        "adapterprobe2",
+        1
+      ],
+      [
+        "adapterprobe3",
+        1
+      ],
+      [
+        "adapterprobe0",
+        1
+      ],
+      [
+        "adapterprobe1",
+        1
+      ],
+      [
+        "adapterprobe2",
+        1
+      ],
+      [
+        "adapterprobe3",
+        1
+      ]
+    ],
+    "passed": true
+  },
+  "native_numerical_regression": {
+    "platform": "Linux-6.6.86-aarch64-with-libc",
+    "python": "3.12.12 (main, Jan 15 2026, 16:53:49) [Clang 15.0.4 (llvm-project 7e44bed824d29a5240f775e22e13d753a66218dd)]",
+    "domain": "179",
+    "scope": "native service and JSON proxy numerical regression; no flight commands",
+    "passed": true,
+    "returncode": 0,
+    "processes_alive": [
+      true,
+      true
+    ],
+    "elapsed_seconds": 10.150507213998935,
+    "children_peak_rss_kib": 72740
+  },
+  "numeric_tolerance_m": 1e-09,
+  "slow_rpc": {
+    "passed": true,
+    "requests_before_first_trajectory": 2,
+    "first_response_delay_seconds": 1.3
+  },
+  "startup_before": [
+    {
+      "attempt": 0,
+      "delay": 0.0,
+      "image": "flight_board:airsim-px4-humble-20261105-43632de22490",
+      "passed": true,
+      "elapsed": 24.293096228997456
+    },
+    {
+      "attempt": 1,
+      "delay": 0.0,
+      "image": "flight_board:airsim-px4-humble-20261105-43632de22490",
+      "passed": false,
+      "error": "PX4 startup handshake incomplete; ready vehicles=[0, 2, 3]",
+      "elapsed": 33.707204988997546
+    },
+    {
+      "attempt": 2,
+      "delay": 0.0,
+      "image": "flight_board:airsim-px4-humble-20261105-43632de22490",
+      "passed": true,
+      "elapsed": 24.718931702998816
+    }
+  ],
+  "startup_after": [
+    {
+      "attempt": 0,
+      "delay": 0.1,
+      "image": "flight_board:airsim-px4-humble-20261105-43632de22490",
+      "passed": true,
+      "elapsed": 22.508964819004177
+    },
+    {
+      "attempt": 1,
+      "delay": 0.1,
+      "image": "flight_board:airsim-px4-humble-20261105-43632de22490",
+      "passed": true,
+      "elapsed": 21.69486607098952
+    },
+    {
+      "attempt": 2,
+      "delay": 0.1,
+      "image": "flight_board:airsim-px4-humble-20261105-43632de22490",
+      "passed": true,
+      "elapsed": 23.535665240997332
+    }
+  ],
+  "tcp_relay_latency": {
+    "before": {
+      "samples": 150,
+      "max_age_ms": 41.88774499925785,
+      "mean_age_ms": 16.977839366688084
+    },
+    "after": {
+      "samples": 150,
+      "max_age_ms": 3.34475000272505,
+      "mean_age_ms": 0.10657564028709506
+    }
+  },
+  "tf_comparison": {
+    "shared-02": {
+      "independent": [
+        {
+          "elapsed": 10.009167297001113,
+          "clock_receipt_hz": 49.154938208237375,
+          "setpoint_receipt_hz": 40.263089629918014,
+          "max_clock_step": 0.04500102996826172,
+          "max_sample_age": 0.060001373291015625,
+          "min_sample_age": 0.0,
+          "cpu_total_and_cores_percent": [
+            99.83658223415432,
+            99.43714821763602,
+            99.90680335507922,
+            99.53139643861293,
+            99.90671641791045,
+            100.0,
+            100.0,
+            99.90680335507922,
+            100.0
+          ],
+          "top_processes": [
+            {
+              "pid": "23757",
+              "command": "planner_framewo",
+              "cpu_percent": 54.15035875785499
+            },
+            {
+              "pid": "23466",
+              "command": "cat_ora_state_a",
+              "cpu_percent": 52.2520989490003
+            },
+            {
+              "pid": "23776",
+              "command": "cat_ora_as2_ada",
+              "cpu_percent": 51.452831661061474
+            },
+            {
+              "pid": "23777",
+              "command": "cat_ora_adapter",
+              "cpu_percent": 47.35658681037503
+            },
+            {
+              "pid": "23429",
+              "command": "python3",
+              "cpu_percent": 47.15676998839032
+            },
+            {
+              "pid": "23401",
+              "command": "python3",
+              "cpu_percent": 40.962448506864476
+            },
+            {
+              "pid": "23511",
+              "command": "as2_platform_pi",
+              "cpu_percent": 37.26583730014744
+            },
+            {
+              "pid": "23510",
+              "command": "as2_platform_pi",
+              "cpu_percent": 36.366661601216265
+            },
+            {
+              "pid": "23522",
+              "command": "as2_platform_pi",
+              "cpu_percent": 36.366661601216265
+            },
+            {
+              "pid": "23627",
+              "command": "as2_platform_pi",
+              "cpu_percent": 35.06785225831569
+            },
+            {
+              "pid": "23587",
+              "command": "as2_state_estim",
+              "cpu_percent": 33.26950086045334
+            },
+            {
+              "pid": "23574",
+              "command": "as2_state_estim",
+              "cpu_percent": 30.57197376365983
+            }
+          ]
+        },
+        {
+          "tf_graph": {
+            "/tf": {
+              "publishers": 4,
+              "subscribers": 20
+            },
+            "/drone0/tf": {
+              "publishers": 0,
+              "subscribers": 0
+            },
+            "/drone1/tf": {
+              "publishers": 0,
+              "subscribers": 0
+            },
+            "/drone2/tf": {
+              "publishers": 0,
+              "subscribers": 0
+            },
+            "/drone3/tf": {
+              "publishers": 0,
+              "subscribers": 0
+            }
+          }
+        }
+      ],
+      "mission": {
+        "wall_seconds": 20.013725092998357,
+        "setpoint_receipt_hz": 18.737136087603336,
+        "clock_receipt_hz": 18.7371281691128,
+        "max_sample_age": 0.060001373291015625,
+        "min_sample_age": -0.05700111389160156,
+        "bridge_state": {
+          "task_id": "dacde1e8-3509-43b0-b66c-881b8470b74a",
+          "prepared": true,
+          "yaw_received": [
+            "drone0",
+            "drone1",
+            "drone2",
+            "drone3"
+          ],
+          "mode_received": [
+            "drone0",
+            "drone1",
+            "drone2",
+            "drone3"
+          ],
+          "mode_ready": {
+            "drone0": false,
+            "drone1": false,
+            "drone2": false,
+            "drone3": false
+          },
+          "setpoints_received": 394,
+          "published": {
+            "drone0": 0,
+            "drone1": 0,
+            "drone2": 0,
+            "drone3": 0
+          },
+          "stop_requested": false,
+          "stop_reason": null,
+          "stop_confirmed": {
+            "drone0": false,
+            "drone1": false,
+            "drone2": false,
+            "drone3": false
+          },
+          "stop_errors": {}
+        }
+      }
+    },
+    "scoped": {
+      "independent": [
+        {
+          "elapsed": 10.003821046004305,
+          "clock_receipt_hz": 49.18120763430821,
+          "setpoint_receipt_hz": 45.38265907718684,
+          "max_clock_step": 0.04200100898742676,
+          "max_sample_age": 0.057001352310180664,
+          "min_sample_age": 0.0,
+          "cpu_total_and_cores_percent": [
+            99.64306960142773,
+            99.81024667931689,
+            99.13710450623202,
+            99.4280266920877,
+            99.23591212989494,
+            99.90503323836657,
+            99.90494296577947,
+            99.90503323836657,
+            99.90512333965845
+          ],
+          "top_processes": [
+            {
+              "pid": "23945",
+              "command": "cat_ora_state_a",
+              "cpu_percent": 74.77142949281003
+            },
+            {
+              "pid": "23909",
+              "command": "python3",
+              "cpu_percent": 72.3723461935755
+            },
+            {
+              "pid": "24256",
+              "command": "cat_ora_as2_ada",
+              "cpu_percent": 72.3723461935755
+            },
+            {
+              "pid": "24237",
+              "command": "planner_framewo",
+              "cpu_percent": 68.87368304885844
+            },
+            {
+              "pid": "24255",
+              "command": "cat_ora_adapter",
+              "cpu_percent": 62.576089388367755
+            },
+            {
+              "pid": "23881",
+              "command": "python3",
+              "cpu_percent": 57.67796098576389
+            },
+            {
+              "pid": "23988",
+              "command": "as2_platform_pi",
+              "cpu_percent": 32.98739536447501
+            },
+            {
+              "pid": "24103",
+              "command": "as2_platform_pi",
+              "cpu_percent": 32.98739536447501
+            },
+            {
+              "pid": "24090",
+              "command": "as2_platform_pi",
+              "cpu_percent": 32.58754814793593
+            },
+            {
+              "pid": "24107",
+              "command": "as2_platform_pi",
+              "cpu_percent": 31.38800649831865
+            },
+            {
+              "pid": "23947",
+              "command": "ros2_proxy.py",
+              "cpu_percent": 23.79090938407592
+            },
+            {
+              "pid": "24008",
+              "command": "as2_state_estim",
+              "cpu_percent": 21.59174969311092
+            }
+          ]
+        },
+        {
+          "tf_graph": {
+            "/tf": {
+              "publishers": 0,
+              "subscribers": 0
+            },
+            "/drone0/tf": {
+              "publishers": 1,
+              "subscribers": 5
+            },
+            "/drone1/tf": {
+              "publishers": 1,
+              "subscribers": 5
+            },
+            "/drone2/tf": {
+              "publishers": 1,
+              "subscribers": 5
+            },
+            "/drone3/tf": {
+              "publishers": 1,
+              "subscribers": 5
+            }
+          }
+        }
+      ],
+      "mission": {
+        "wall_seconds": 20.007575593001093,
+        "setpoint_receipt_hz": 30.63837023534198,
+        "clock_receipt_hz": 32.08779011292966,
+        "max_sample_age": 0.04200100898742676,
+        "min_sample_age": -0.02100062370300293,
+        "bridge_state": {
+          "task_id": "a63a4c01-db02-4171-910f-8dda3aa85f66",
+          "prepared": true,
+          "yaw_received": [
+            "drone0",
+            "drone1",
+            "drone2",
+            "drone3"
+          ],
+          "mode_received": [
+            "drone0",
+            "drone1",
+            "drone2",
+            "drone3"
+          ],
+          "mode_ready": {
+            "drone0": false,
+            "drone1": false,
+            "drone2": false,
+            "drone3": false
+          },
+          "setpoints_received": 581,
+          "published": {
+            "drone0": 0,
+            "drone1": 0,
+            "drone2": 0,
+            "drone3": 0
+          },
+          "stop_requested": false,
+          "stop_reason": null,
+          "stop_confirmed": {
+            "drone0": false,
+            "drone1": false,
+            "drone2": false,
+            "drone3": false
+          },
+          "stop_errors": {}
+        }
+      }
+    }
+  },
+  "source_sha256": {
+    "apps/catora_open_field/mission.py": "f563a28a0bfdfc1e20ca74b8bc8918953e4266bd6b80beea93c7ef3cd28d538c",
+    "apps/catora_open_field/run_robopi.py": "ba0fd61667c591ff697c32b5635eae4fc79fa77bf30f60e4a57ff6d807ab3374",
+    "apps/catora_open_field/sim_startup.py": "58ad64583076c5a227f5692dccd972a7d29e146c303faefcafec1b5acaf6823a",
+    "runtime/as2/run.py": "193cb63b32b2bca3cdf0d7de3c7b10d60400fedcde5076fde0e7f0181f504fe3",
+    "runtime/as2/scoped_tf.launch.py": "24e79d5a566ec3d56ded54f5bf4f9b57f5ddb09dd5f5e321462c3ee01443b05e",
+    "libraries/cat_ora/ros2_adapter/uav_cat_ora_adapter/input_node.py": "0cc3357ee7a9cf556c6a1ac5cc32fa5fd934db1b1f268873df83a2c9d95aa659",
+    "libraries/cat_ora/ros2_adapter/uav_cat_ora_adapter/node.py": "495261386f8a546fdf54cd406292e81552c66f1684a271ecea7eba7dfcd090ce",
+    "libraries/cat_ora/ros2_adapter/uav_cat_ora_adapter/output_node.py": "cdb5969e704b264422407d4c6adcaafbc56d77a6b64d063da68052c4952cc954",
+    "libraries/cat_ora/ros2_adapter/uav_cat_ora_adapter/state.py": "5b7bdfb548daed5de687c3bb045bb391b8fe55455ce2e979153fbac59adc4448",
+    "planner_framework/uav_planner_framework/ros_node.py": "bc2b2d377b507025c7ba0fc0941300ff3d9be44236f2c66ac601c4a2d524ae02",
+    "planner_framework/uav_planner_framework/processes.py": "cb1a46c6e885cedaffc6cf5680bd6429e0b17cea6def7fd5d68f0da61f7bd505",
+    "planner_framework/bridges/as2_setpoint/uav_as2_setpoint_adapter/node.py": "45dcd6197fcb0ad903cfddd3b0c216cddc9698d77b45d310f7203ed872a3fe0a"
+  },
+  "installation": {
+    "as2": "/data/aerohub/as2/install",
+    "catora": "/data/aerohub/lib/catora/install"
+  },
+  "limitations": [
+    "One NH scene and fixed four-vehicle profile; no endurance or increased-load certification.",
+    "Board CPU remains near saturation in ground diagnostics; TF isolation improves timing but does not establish spare CPU capacity.",
+    "AS2 source age 300ms, future allowance 50ms, loss timeout 500ms unchanged.",
+    "Stateless native/JSON numerical tests preserve the previously documented unequal-constraint argument-order correction.",
+    "VehicleStatus v1/v4 mismatch was observed in an excluded diagnostic; no incompatible health subscription remains.",
+    "Swarm and SUPER source-specific adapters were not migrated or flight-tested in this task."
+  ],
+  "final_cleanup": {
+    "board_owned_processes": [],
+    "board_algorithm_ports": [],
+    "pc_owned_containers": [],
+    "pc_owned_sockets": [],
+    "scene_phases": {
+      "catora-stability-normal-08": "stopped",
+      "catora-stability-final-cancel": "stopped",
+      "catora-stability-final-stream": "stopped"
+    },
+    "shared_lock_free": true
+  }
+}

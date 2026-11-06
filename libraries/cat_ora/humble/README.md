@@ -64,3 +64,42 @@ AS2 输出 adapter，验证四辆车的 `/planner/trajectory` 和 `/planner/setp
 以上为服务与接线验证。后续 [CAT-ORA 空旷场地应用](../../../apps/catora_open_field/README.md)
 已在 PC AirSimNH 完成四机起飞、规划、到点和降落，并通过独立实际位置验收；
 适用范围以 `libraries.yaml` 的 `scenario_pass` 说明为准，不代表 RoboPi 多机已通过。
+
+## RoboPi 原生服务验证
+
+2026-11-05 使用现有官方 build Docker 与隔离 SDK，当前 Humble 包交叉编译通过。
+ELF 为 AArch64，生成的 Python 类型支持 ABI 为 `cpython-312-aarch64-linux-ohos`。
+通过 HDC 将单个包安装到 `/data/local/tmp/aerohub-as2/install/mrs_formation_reshaping`，
+未替换系统 ROS 或其他 AS2 包。
+
+RoboPi 原生运行 C++ 服务及 Python JSON 代理，独立域 `179`、仅本机发现。
+五组用例两类接口均通过，轨迹逐点与 ROS1 基线距离小于 `1e-9 m`；
+七类非法请求拒绝及后续恢复通过。测试结束后停止本次两个服务进程。
+本次不包含跨机 adapter、AS2 轨迹执行、多机飞行或持续负载性能验收。
+
+摘要：[robopi-service.json](../validation/robopi-service.json)。原始构建、ELF、
+校验和、板端日志保存在本机 `artifacts/catora-robopi/`。
+复验使用 `tests/verify_board.py`，同目录放 `verify_service.py`、`cases.json` 和
+由 `tests/capture_ros1.py` 取得的 `baseline.json`；板端在同一 shell 加载
+`/data/local/tmp/aerohub-as2/board_env.sh`，设置 `ROS_DOMAIN_ID=179`
+及 `ROS_LOCALHOST_ONLY=1`，然后执行 `python3 verify_board.py`。
+构建复用 `deployment/oh-ros-build/run.sh build mrs_formation_reshaping`，
+输入为隔离工作区 `ws/src/mrs_formation_reshaping` 中的当前 `humble/` 源码副本。
+
+## 当前持久部署入口
+
+AS2 独立安装于 `/data/aerohub/as2`；CAT-ORA 应用安装于
+`/data/aerohub/lib/catora/install`，加载 `/data/aerohub/lib/catora/env.sh`。
+前述 tmp 路径属于历史验证位置。
+
+```bash
+bash scripts/build_lib.sh catora
+bash scripts/deploy_lib.sh --component catora
+bash scripts/verify_lib.sh catora
+```
+
+此简单验证只调用一次原生轨迹服务并核对本地 JSON 响应，结束后停止测试进程。
+AS2 可通过 `bash scripts/verify_lib.sh as2` 单独做消息加载和估计器最小启动检查，
+不启动 PX4/AirSim 或发送运动指令。
+
+2026-11-05：上述持久目录中的板端简单验证通过，版本化摘要为 `../validation/robopi-smoke.json`。程序安装保留，验证进程已停止。

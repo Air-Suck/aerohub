@@ -5,7 +5,7 @@ drone0:
   - 0.0
   namespace: /drone0
   topics:
-    pose: /drone0/self_localization/pose
+    pose: /drone0/catora/local_pose
     trajectory_setpoint: /drone0/planner/setpoint
 drone1:
   px4_origin_in_fleet_ned:
@@ -14,7 +14,7 @@ drone1:
   - 0.0
   namespace: /drone1
   topics:
-    pose: /drone1/self_localization/pose
+    pose: /drone1/catora/local_pose
     trajectory_setpoint: /drone1/planner/setpoint
 drone2:
   px4_origin_in_fleet_ned:
@@ -23,7 +23,7 @@ drone2:
   - 0.0
   namespace: /drone2
   topics:
-    pose: /drone2/self_localization/pose
+    pose: /drone2/catora/local_pose
     trajectory_setpoint: /drone2/planner/setpoint
 drone3:
   px4_origin_in_fleet_ned:
@@ -32,5 +32,5 @@ drone3:
   - 0.0
   namespace: /drone3
   topics:
-    pose: /drone3/self_localization/pose
+    pose: /drone3/catora/local_pose
     trajectory_setpoint: /drone3/planner/setpoint

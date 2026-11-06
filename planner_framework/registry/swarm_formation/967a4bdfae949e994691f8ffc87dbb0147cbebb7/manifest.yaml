@@ -9,7 +9,7 @@ parameters:
   schema: parameters.schema.yaml
 capabilities:
   planning_mode: rolling
-  min_vehicles: 7
+  min_vehicles: 3
   max_vehicles: 7
   required_inputs: [vehicle_state, obstacle_map]
 output: {type: TimedTrajectorySegment, interface_version: 1}

@@ -20,6 +20,8 @@ setup(
     entry_points={
         "console_scripts": [
             "cat_ora_adapter_node = uav_cat_ora_adapter.node:main",
+            "cat_ora_state_adapter_node = uav_cat_ora_adapter.input_node:main",
+            "cat_ora_as2_adapter_node = uav_cat_ora_adapter.output_node:main",
         ],
     },
 )

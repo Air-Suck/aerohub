@@ -119,66 +119,8 @@ def down():
 
 
 def deploy():
-    work_root = Path(os.environ.get('OHOS_WORK_ROOT', 'artifacts/ohos-as2')).expanduser()
-    if not work_root.is_absolute():
-        work_root = ROOT / work_root
-    install = work_root / 'ws/install'
-    # The builder embeds this private prefix; do not silently relocate it.
-    if required('ROBOPI_ROOT') != '/data/local/tmp/aerohub-as2':
-        raise ValueError('Rebuild with a matching --custom-prefix before changing ROBOPI_ROOT')
-    expected = ROOT / 'deployment/companion_as2/px4_msgs/overrides/VehicleCommandAck.msg'
-    actual = install / 'px4_msgs/share/px4_msgs/msg/VehicleCommandAck.msg'
-    if not actual.exists() or actual.read_bytes() != expected.read_bytes():
-        raise RuntimeError('OHOS px4_msgs is stale; rebuild the current 1.18 messages first')
-    remote = required('ROBOPI_ROOT')
-    print(board(f'mkdir -p {shlex.quote(remote)}'))
-    # Refuse deployment while AS2 binaries from this overlay are running.
-    check = ("import pathlib; root=" + repr(remote + '/install/') + "; "
-             "active=[str(p) for p in pathlib.Path('/proc').glob('[0-9]*/cmdline') "
-             "if p.read_bytes().split(bytes([0]))[0].startswith(root.encode())]; "
-             "assert not active, 'Stop AS2 before deploy: '+str(active)")
-    board('python3 -c ' + shlex.quote(check))
-    bundle = OUT / 'overlay.tar.gz'
-    # Board tar supports GNU long names, but not Python's default PAX headers.
-    with tarfile.open(bundle, 'w:gz', dereference=True, format=tarfile.GNU_FORMAT) as archive:
-        archive.add(install, arcname='install')
-        files = {
-            'board_env.sh': ROOT / 'deployment/robopi/board_env.sh',
-            'manage_runtime.py': ROOT / 'deployment/robopi/manage_runtime.py',
-            'run_as2.py': ROOT / 'runtime/as2/run.py',
-            'verify_interaction.py': ROOT / 'runtime/as2/scripts/verify_interaction.py',
-            'verify_sensors.py': ROOT / 'runtime/airsim_sensors/scripts/verify_ros2.py',
-            'config.yaml': ROOT / 'config/as2/config.yaml',
-            'fleet.yaml': ROOT / 'config/as2/fleet.yaml',
-            'pid_speed_controller.yaml': ROOT / 'config/as2/pid_speed_controller.yaml',
-            'fastdds_udp.xml': OUT / 'board-dds.xml',
-            'settings.json': ROOT / 'config/airsim/settings/px4-sensors.json',
-            'source-manifest.json': work_root / 'current-sources.json',
-        }
-        for name, source in files.items():
-            archive.add(source, arcname=name)
-    hdc('file', 'send', bundle, remote + '/overlay.tar.gz')
-    import hashlib
-    digest = hashlib.sha256(bundle.read_bytes()).hexdigest()
-    board(f'cd {shlex.quote(remote)} && sha256sum overlay.tar.gz')
-    check = ("import hashlib; assert hashlib.sha256(open(" + repr(remote + '/overlay.tar.gz') +
-             ", 'rb').read()).hexdigest()==" + repr(digest))
-    board('python3 -c ' + shlex.quote(check))
-    # Extract first so an incompatible archive cannot replace the working install.
-    stamp = str(time.time_ns())
-    stage = remote + '/deploy-stage-' + stamp
-    board(f'mkdir {shlex.quote(stage)} && tar -xzf {shlex.quote(remote + "/overlay.tar.gz")} '
-          f'-C {shlex.quote(stage)} && test -f '
-          f'{shlex.quote(stage + "/install/as2_platform_pixhawk/share/as2_platform_pixhawk/package.xml")}')
-    activate = (
-        'from pathlib import Path; import os; '
-        f'root=Path({remote!r}); stage=Path({stage!r}); '
-        f'backup=root/"install-backup-{stamp}"; '
-        'os.rename(root/"install",backup) if (root/"install").exists() else None; '
-        'os.rename(stage/"install",root/"install"); '
-        '[os.replace(p,root/p.name) for p in stage.iterdir()]; stage.rmdir()')
-    board('python3 -c ' + shlex.quote(activate))
-    print('OHOS overlay deployed and transfer hash verified')
+    run(['python3', ROOT / 'deployment/robopi/deploy_lib.py', '--component', 'as2', '--activate-config'])
+    os.environ['ROBOPI_ROOT'] = '/data/aerohub/as2'
 
 
 def main():

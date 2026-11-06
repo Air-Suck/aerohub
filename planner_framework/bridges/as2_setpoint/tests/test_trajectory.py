@@ -47,6 +47,7 @@ class AdapterTest(unittest.TestCase):
     def test_fleet_position_only(self):
         published=[]
         n=S(latest_setpoints=None, task_id='task', vehicles=['v'],
+            setpoints_seen=0, published_counts={'v':0},
             mode_ready={'v':True}, held_yaw={'v':.25}, current_yaw={'v':.75},
             config={'deployment':{'v':{'namespace':'drone0'}}},
             trajectory_publishers={'v':S(publish=published.append)})

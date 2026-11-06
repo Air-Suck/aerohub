@@ -38,15 +38,15 @@ def broadcast_callback(message):
     broadcast_publisher.publish(message)
 
 
-def evaluate(coefficients, piece, order, value):
+def evaluate(coefficients, piece, order, value, derivative=0):
     offset = piece * (order + 1)
     return sum(
-        coefficients[offset + order - power] * value ** power
-        for power in range(order + 1)
+        coefficients[offset + order - power] * math.factorial(power) / math.factorial(power-derivative) * value ** (power-derivative)
+        for power in range(derivative, order + 1)
     )
 
 
-def sample(message, absolute_time, sample_dt, horizon):
+def sample(message, absolute_time, sample_dt, horizon, derivative=0):
     relative = max(0.0, (absolute_time - Time.from_msg(message.start_time)).nanoseconds / 1e9)
     points = []
     count = max(2, int(round(horizon / sample_dt)) + 1)
@@ -56,11 +56,14 @@ def sample(message, absolute_time, sample_dt, horizon):
         while piece + 1 < len(message.duration) and remaining > message.duration[piece]:
             remaining -= message.duration[piece]
             piece += 1
+        if derivative and remaining > message.duration[piece]:
+            points.append([0.0, 0.0, 0.0])
+            continue
         remaining = min(remaining, message.duration[piece])
         points.append([
-            evaluate(message.coef_x, piece, message.order, remaining),
-            evaluate(message.coef_y, piece, message.order, remaining),
-            evaluate(message.coef_z, piece, message.order, remaining),
+            evaluate(message.coef_x, piece, message.order, remaining, derivative),
+            evaluate(message.coef_y, piece, message.order, remaining, derivative),
+            evaluate(message.coef_z, piece, message.order, remaining, derivative),
         ])
     return points
 
@@ -69,7 +72,7 @@ def update(payload):
     global last_task_id
     vehicles = payload["vehicles"]
     if [item["id"] for item in vehicles] != VEHICLES:
-        raise ValueError("Swarm-Formation deployment requires drone0..drone6")
+        raise ValueError("vehicle IDs must match configured vehicle_count")
     for item in vehicles:
         position = item["position_enu"]
         if len(position) != 3 or not all(math.isfinite(float(v)) for v in position):
@@ -128,17 +131,14 @@ def update(payload):
 
     lead = float(payload["lead"])
     valid_from = node.get_clock().now() + Duration(seconds=lead)
+    def sampled(derivative):
+        return [sample(message, valid_from, float(payload["sample_dt"]), float(payload["horizon"]), derivative) for message in messages]
     return {
         "ok": True,
-        "trajectories_enu": [
-            sample(
-                message,
-                valid_from,
-                float(payload["sample_dt"]),
-                float(payload["horizon"]),
-            )
-            for message in messages
-        ],
+        "valid_from": valid_from.nanoseconds / 1e9,
+        "trajectories_enu": sampled(0),
+        "velocities_enu": sampled(1),
+        "accelerations_enu": sampled(2),
     }
 
 
@@ -162,9 +162,13 @@ node = None
 
 
 def main():
-    global node, broadcast_publisher, goal_publisher
+    global node, broadcast_publisher, goal_publisher, VEHICLES
     rclpy.init()
     node = Node("swarm_formation_proxy")
+    count = node.declare_parameter("vehicle_count", 7).value
+    if not 3 <= count <= 7: raise ValueError("vehicle_count must be in [3,7]")
+    VEHICLES = [f"drone{i}" for i in range(count)]
+    relay_broadcast = node.declare_parameter("relay_broadcast", True).value
     publish_odometry = node.declare_parameter("publish_odometry", True).value
     node.declare_parameter("map_frame", "world")
     subscriptions = []
@@ -184,8 +188,9 @@ def main():
         PoseStamped, "/traj_start_trigger",
         QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL))
     broadcast_publisher = node.create_publisher(PolyTraj, "/broadcast_traj_to_planner", 100)
-    subscriptions.append(node.create_subscription(
-        PolyTraj, "/broadcast_traj_from_planner", broadcast_callback, 100))
+    if relay_broadcast:
+        subscriptions.append(node.create_subscription(
+            PolyTraj, "/broadcast_traj_from_planner", broadcast_callback, 100))
     executor = threading.Thread(target=rclpy.spin, args=(node,), daemon=True)
     executor.start()
     try:

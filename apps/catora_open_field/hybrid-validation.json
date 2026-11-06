@@ -1,0 +1,497 @@
+{
+  "passed": true,
+  "topology": {
+    "environment": {
+      "ROS_DOMAIN_ID": "91",
+      "ROS_LOCALHOST_ONLY": "0",
+      "RMW_IMPLEMENTATION": "rmw_fastrtps_cpp",
+      "FASTRTPS_DEFAULT_PROFILES_FILE": "/data/aerohub/lib/catora/validation/run-1793942190692948048/dds.xml",
+      "CATORA_APP_ROOT": "/data/aerohub/lib/catora/validation/run-1793942190692948048",
+      "CATORA_OUTPUT": "/data/aerohub/lib/catora/validation/run-1793942190692948048/results",
+      "AIRSIM_HOST": "192.168.100.1",
+      "AIRSIM_PORT": "42473",
+      "AS2_LAUNCHER": "/data/aerohub/lib/catora/validation/run-1793942190692948048/run_as2.py",
+      "AS2_CONFIG_FILE": "/data/aerohub/lib/catora/validation/run-1793942190692948048/config.yaml",
+      "AS2_CONTROLLER_CONFIG_FILE": "/data/aerohub/lib/catora/validation/run-1793942190692948048/pid.yaml",
+      "AS2_FLEET_FILE": "/data/aerohub/lib/catora/validation/run-1793942190692948048/fleet.yaml",
+      "AS2_RUNTIME_DIR": "/data/aerohub/lib/catora/validation/run-1793942190692948048/runtime",
+      "AS2_BEHAVIORS": "takeoff,land",
+      "AS2_RESET_OOM_SCORE": "1",
+      "AS2_MAX_RSS_MB": "4096",
+      "PLANNER_STARTUP_TIMEOUT": "30.0",
+      "CATORA_PREFLIGHT_ONLY": "0",
+      "CATORA_SCENARIO": "normal",
+      "AS2_TF_SCOPE": "per-vehicle",
+      "PLANNER_REGISTRY": "/data/aerohub/lib/catora/install/uav_planner_framework/share/uav_planner_framework/registry",
+      "CATORA_TOPOLOGY": "RoboPi: drone0 AS2 + global CAT-ORA/Planner; PC: three independent AS2+adapter containers for drone1..3, PX4/AirSim",
+      "CATORA_MIXED": "1",
+      "CATORA_LOCAL_VEHICLE": "drone0",
+      "CATORA_COMPUTE_ID": "robopi-drone0",
+      "CATORA_INPUT_DEPLOYMENT": "/data/aerohub/lib/catora/validation/run-1793942190692948048/board-deployment.yaml",
+      "CATORA_METRICS_SCRIPT": "/data/aerohub/lib/catora/validation/run-1793942190692948048/metrics.py",
+      "CATORA_METRICS_FILE": "/data/aerohub/lib/catora/validation/run-1793942190692948048/results/metrics.jsonl"
+    },
+    "clock_offset_s": -0.12261721,
+    "image": "flight_board:airsim-px4-humble-threaded-20261105",
+    "mode": "three-pc-one-robopi",
+    "trajectory_sampling": "central Planner on RoboPi; AS2 control and output adapter local to each compute node",
+    "configuration_transfer": "one-time HDC copy with SHA256; live state/control/status use DDS UDP",
+    "compute_nodes": {
+      "drone0": {
+        "host": "RoboPi",
+        "architecture": "aarch64",
+        "ip": "192.168.100.11"
+      },
+      "drone1": {
+        "host": "PC logical container",
+        "container": "aerohub-catora-field-compute1",
+        "architecture": "x86_64",
+        "shared_host_ip": "192.168.100.1"
+      },
+      "drone2": {
+        "host": "PC logical container",
+        "container": "aerohub-catora-field-compute2",
+        "architecture": "x86_64",
+        "shared_host_ip": "192.168.100.1"
+      },
+      "drone3": {
+        "host": "PC logical container",
+        "container": "aerohub-catora-field-compute3",
+        "architecture": "x86_64",
+        "shared_host_ip": "192.168.100.1"
+      }
+    }
+  },
+  "images": {
+    "flight_board": "sha256:8c33881fde6985fe5a43a894bde075471df85064e45ac8e5de28efebcc737cd2",
+    "compute": "sha256:b94d5859c1bbc54ddccb29745246fe4e27150fec224ab3b8fef801cefde7e678"
+  },
+  "flight_result": {
+    "task_id": "8ea1af89-9b6a-4fd8-a3a0-271f8b3fd630",
+    "planner_status": "SUCCEEDED",
+    "endpoint_error_m": {
+      "drone1": 0.06641950408070686,
+      "drone2": 0.06809328096690717,
+      "drone3": 0.05599322203881379,
+      "drone0": 0.05298751289438989
+    },
+    "airsim_truth_endpoint_error_m": {
+      "drone0": 0.10685720067499184,
+      "drone1": 0.09183531243019476,
+      "drone2": 0.10393598828765936,
+      "drone3": 0.10336082576599277
+    },
+    "min_truth_separation_m": 5.885954115591409,
+    "max_localization_disagreement_m": 0.402543534072804,
+    "min_observed_separation_m": 5.9105378496476515,
+    "max_sampled_tracking_error_m": 1.0572146164800906,
+    "planner_wall_seconds": 30.740934598012245,
+    "planning_collisions": false,
+    "as2_trajectory_reference_counts": {
+      "drone0": 1002,
+      "drone1": 1009,
+      "drone2": 996,
+      "drone3": 975
+    },
+    "position_source": "CAT-ORA input adapter checked AS2 local odometry; same frame as trajectory execution",
+    "runtime_topology": "RoboPi: drone0 AS2 + global CAT-ORA/Planner; PC: three independent AS2+adapter containers for drone1..3, PX4/AirSim",
+    "execution_host": "localhost",
+    "execution_arch": "aarch64",
+    "mixed_deployment": true,
+    "communication_rtt": {
+      "drone0": {
+        "samples": 20,
+        "discovery_seconds": 0.000702916004229337,
+        "min_ms": 6.989792003878392,
+        "median_ms": 7.875437499023974,
+        "p95_ms": 11.145750002469867,
+        "max_ms": 17.03274999454152
+      },
+      "drone1": {
+        "samples": 20,
+        "discovery_seconds": 0.0006667499983450398,
+        "min_ms": 7.073790999129415,
+        "median_ms": 8.287125499919057,
+        "p95_ms": 11.856541997985914,
+        "max_ms": 12.75779100251384
+      },
+      "drone2": {
+        "samples": 20,
+        "discovery_seconds": 0.0006568340031662956,
+        "min_ms": 6.996791998972185,
+        "median_ms": 8.04679149587173,
+        "p95_ms": 11.870542002725415,
+        "max_ms": 12.72979099303484
+      },
+      "drone3": {
+        "samples": 20,
+        "discovery_seconds": 0.0007029159896774217,
+        "min_ms": 6.927666006959043,
+        "median_ms": 9.112833497056272,
+        "p95_ms": 11.44062499224674,
+        "max_ms": 11.839333004900254
+      }
+    },
+    "per_vehicle_execution": {
+      "task_id": "8ea1af89-9b6a-4fd8-a3a0-271f8b3fd630",
+      "prepared": true,
+      "stop_requested": true,
+      "receipt_by_vehicle": {
+        "drone2": {
+          "count": 1058,
+          "max_wall_gap_s": 0.04807613500452135,
+          "min_source_age_s": 0.0,
+          "max_source_age_s": 0.0390009880065918,
+          "duplicate_or_reordered": 0,
+          "hz": 48.43066212129289
+        },
+        "drone1": {
+          "count": 1058,
+          "max_wall_gap_s": 0.04892847599694505,
+          "min_source_age_s": 0.0,
+          "max_source_age_s": 0.0390009880065918,
+          "duplicate_or_reordered": 0,
+          "hz": 48.429923155569696
+        },
+        "drone3": {
+          "count": 1058,
+          "max_wall_gap_s": 0.04802136399666779,
+          "min_source_age_s": 0.0,
+          "max_source_age_s": 0.0390009880065918,
+          "duplicate_or_reordered": 0,
+          "hz": 48.42874998038171
+        },
+        "drone0": {
+          "count": 1057,
+          "max_wall_gap_s": 0.04493183299200609,
+          "min_source_age_s": 0.0,
+          "max_source_age_s": 0.0390009880065918,
+          "duplicate_or_reordered": 0,
+          "hz": 48.38975590701209
+        }
+      },
+      "compute_by_vehicle": {
+        "drone2": "pc-drone2",
+        "drone1": "pc-drone1",
+        "drone3": "pc-drone3",
+        "drone0": "robopi-drone0"
+      },
+      "mode_ready": {
+        "drone2": false,
+        "drone1": false,
+        "drone3": false,
+        "drone0": false
+      },
+      "published": {
+        "drone2": 1050,
+        "drone1": 1050,
+        "drone3": 1049,
+        "drone0": 1045
+      },
+      "stop_confirmed": {
+        "drone2": true,
+        "drone1": true,
+        "drone3": true,
+        "drone0": true
+      },
+      "stop_errors": {}
+    },
+    "landed_and_disarmed": true
+  },
+  "active_window_board_unix": [
+    1793942278.2926257,
+    1793942299.8169398
+  ],
+  "active_window_seconds": 21.524314165115356,
+  "node_metrics": {
+    "drone0": {
+      "machine": "aarch64",
+      "samples": 20,
+      "as2_native_processes": 5,
+      "groups": {
+        "as2_launch": {
+          "cpu_core_percent": 14.928404643412673,
+          "rss_sum_mib": 297.98046875,
+          "processes": 5.0
+        },
+        "as2_native": {
+          "cpu_core_percent": 112.27342687342765,
+          "rss_sum_mib": 278.265625,
+          "processes": 5.0
+        },
+        "adapter": {
+          "cpu_core_percent": 223.508020916644,
+          "rss_sum_mib": 400.2734375,
+          "processes": 6.0
+        },
+        "mission": {
+          "cpu_core_percent": 107.49122200670759,
+          "rss_sum_mib": 146.80078125,
+          "processes": 2.0
+        },
+        "other": {
+          "cpu_core_percent": 4.7539710290378645,
+          "rss_sum_mib": 40.18359375,
+          "processes": 1.0
+        },
+        "algorithm_service": {
+          "cpu_core_percent": 33.006661172335086,
+          "rss_sum_mib": 222.234375,
+          "processes": 4.0
+        },
+        "coordinator": {
+          "cpu_core_percent": 73.60222320167884,
+          "rss_sum_mib": 132.8671875,
+          "processes": 2.0
+        }
+      },
+      "host_cpu_percent": {
+        "median": 73.48391019115485,
+        "p95": 77.04367301231802,
+        "max": 77.85016286644951
+      },
+      "process_cpu_core_percent": {
+        "median": 570.9493490617385,
+        "p95": 593.2024604990982,
+        "max": 595.5278767508954
+      },
+      "rss_sum_mib": {
+        "median": 1518.59375,
+        "p95": 1518.71875,
+        "max": 1518.84375
+      }
+    },
+    "drone1": {
+      "machine": "x86_64",
+      "samples": 21,
+      "as2_native_processes": 5,
+      "groups": {
+        "as2_native": {
+          "cpu_core_percent": 14.952390362971864,
+          "rss_sum_mib": 215.96484375,
+          "processes": 5
+        },
+        "other": {
+          "cpu_core_percent": 0.0,
+          "rss_sum_mib": 34.51171875,
+          "processes": 4
+        },
+        "adapter": {
+          "cpu_core_percent": 19.922818264751932,
+          "rss_sum_mib": 186.96875,
+          "processes": 4
+        },
+        "as2_launch": {
+          "cpu_core_percent": 0.0,
+          "rss_sum_mib": 163.94921875,
+          "processes": 4
+        }
+      },
+      "host_cpu_percent": {
+        "median": 42.951541850220266,
+        "p95": 45.401459854014604,
+        "max": 46.44886363636363
+      },
+      "process_cpu_core_percent": {
+        "median": 33.92981918856239,
+        "p95": 36.913073808452445,
+        "max": 38.84949561626627
+      },
+      "rss_sum_mib": {
+        "median": 601.39453125,
+        "p95": 601.40234375,
+        "max": 601.40234375
+      }
+    },
+    "drone2": {
+      "machine": "x86_64",
+      "samples": 21,
+      "as2_native_processes": 5,
+      "groups": {
+        "as2_native": {
+          "cpu_core_percent": 13.978466507958759,
+          "rss_sum_mib": 214.90625,
+          "processes": 5
+        },
+        "other": {
+          "cpu_core_percent": 0.0,
+          "rss_sum_mib": 34.82421875,
+          "processes": 4
+        },
+        "adapter": {
+          "cpu_core_percent": 18.966492561520315,
+          "rss_sum_mib": 186.66015625,
+          "processes": 4
+        },
+        "as2_launch": {
+          "cpu_core_percent": 0.0,
+          "rss_sum_mib": 164.453125,
+          "processes": 4
+        }
+      },
+      "host_cpu_percent": {
+        "median": 42.68204758471521,
+        "p95": 45.853658536585364,
+        "max": 45.900439238653
+      },
+      "process_cpu_core_percent": {
+        "median": 33.94770437647127,
+        "p95": 35.919883501465236,
+        "max": 36.90421941613236
+      },
+      "rss_sum_mib": {
+        "median": 600.84375,
+        "p95": 600.859375,
+        "max": 600.86328125
+      }
+    },
+    "drone3": {
+      "machine": "x86_64",
+      "samples": 21,
+      "as2_native_processes": 5,
+      "groups": {
+        "as2_native": {
+          "cpu_core_percent": 14.946458720656107,
+          "rss_sum_mib": 215.59765625,
+          "processes": 5
+        },
+        "other": {
+          "cpu_core_percent": 0.0,
+          "rss_sum_mib": 35.046875,
+          "processes": 4
+        },
+        "adapter": {
+          "cpu_core_percent": 18.959159165304982,
+          "rss_sum_mib": 187.359375,
+          "processes": 4
+        },
+        "as2_launch": {
+          "cpu_core_percent": 0.0,
+          "rss_sum_mib": 163.87890625,
+          "processes": 4
+        }
+      },
+      "host_cpu_percent": {
+        "median": 42.70309130122214,
+        "p95": 46.38422205989774,
+        "max": 46.58002735978112
+      },
+      "process_cpu_core_percent": {
+        "median": 33.924969569887466,
+        "p95": 38.883635743061106,
+        "max": 38.9079924802634
+      },
+      "rss_sum_mib": {
+        "median": 601.8828125,
+        "p95": 601.890625,
+        "max": 601.89453125
+      }
+    }
+  },
+  "per_node_stream_loss_entries": {
+    "drone0": 0,
+    "drone1": 0,
+    "drone2": 0,
+    "drone3": 0
+  },
+  "ownership_test": {
+    "fresh_input_and_pva": true,
+    "one_owner_per_vehicle": true,
+    "invalid_state_rejected": true,
+    "pause_and_explicit_resume": true,
+    "cancel_calls_as2_and_latches": true,
+    "landing_does_not_invalidate_completed_stop": true,
+    "as2_stop_rejection_reported": true,
+    "as2_requests": [
+      [
+        "adapterprobe3",
+        1
+      ],
+      [
+        "adapterprobe2",
+        1
+      ],
+      [
+        "adapterprobe0",
+        1
+      ],
+      [
+        "adapterprobe1",
+        1
+      ],
+      [
+        "adapterprobe0",
+        7
+      ],
+      [
+        "adapterprobe1",
+        7
+      ],
+      [
+        "adapterprobe2",
+        7
+      ],
+      [
+        "adapterprobe3",
+        7
+      ],
+      [
+        "adapterprobe0",
+        1
+      ],
+      [
+        "adapterprobe1",
+        1
+      ],
+      [
+        "adapterprobe3",
+        1
+      ],
+      [
+        "adapterprobe2",
+        1
+      ],
+      [
+        "adapterprobe0",
+        1
+      ],
+      [
+        "adapterprobe1",
+        1
+      ],
+      [
+        "adapterprobe3",
+        1
+      ],
+      [
+        "adapterprobe2",
+        1
+      ]
+    ],
+    "passed": true
+  },
+  "ground_evidence": "artifacts/catora-hybrid-ground-01",
+  "flight_evidence": "artifacts/catora-hybrid-flight-01",
+  "configuration_transfer": {
+    "remote": "/data/aerohub/lib/catora/validation/run-1793942190692948048/results/resolved/8ea1af89-9b6a-4fd8-a3a0-271f8b3fd630.yaml",
+    "sha256": "7a8e364bdf48c848509a7aee7caf9b47547cfa7db0fb70e1536cb21cd5afdeac",
+    "wall_ms": 367.41202900884673,
+    "task_id": "8ea1af89-9b6a-4fd8-a3a0-271f8b3fd630"
+  },
+  "limits": [
+    "Three PC containers are logical compute nodes on shared x86 hardware/host network, not three ARM boards or three independent radio links.",
+    "Global CAT-ORA, Planner, fleet sampling and mission observer remain on RoboPi; each of four AS2/output adapters executes locally.",
+    "RTT includes ROS scheduling/serialization; source-age includes simulation-clock dispatch and is not pure one-way wire latency.",
+    "PC host_cpu_percent includes AirSim/PX4 and unrelated host load; use process_cpu_core_percent for each compute container.",
+    "100 process_cpu_core_percent means one logical CPU core; board host_cpu_percent is across eight cores.",
+    "RSS is a sum across processes and counts shared pages more than once.",
+    "One successful normal mission; no induced packet-loss, disconnect, bandwidth, clock-drift, or endurance qualification."
+  ],
+  "cleanup": {
+    "board_tagged_processes": [],
+    "pc_running_containers": [],
+    "pc_listening_test_ports": [],
+    "runtime_lock_free": true,
+    "passed": true
+  }
+}

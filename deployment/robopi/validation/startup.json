@@ -1,0 +1,35 @@
+{
+  "component": "as2",
+  "root": "/data/aerohub/as2",
+  "machine": "aarch64",
+  "scope": "board-local startup and minimal interface; no flight or real sensor acceptance",
+  "as2_core_import": true,
+  "platform_info_cdr_bytes": 39,
+  "state_estimator_alive_seconds": 5,
+  "passed": true,
+  "test_processes_stopped": true,
+  "wall_seconds": 5.5280706269986695,
+  "ros_domain_id": "97",
+  "validation_date": "2026-11-05",
+  "source_commit": "b5042e0d03c7464c00d6f8f8d2a0376d97cd767e",
+  "deployment": {
+    "manifest_sha256": "410c0fb30d511140a72f7342eaa05af1bd29301636a9feff1cc8b233207807dc",
+    "packages": [
+      "as2_behavior",
+      "as2_behaviors_motion",
+      "as2_core",
+      "as2_motion_controller",
+      "as2_motion_reference_handlers",
+      "as2_msgs",
+      "as2_platform_pixhawk",
+      "as2_state_estimator",
+      "mocap4r2_msgs",
+      "px4_msgs",
+      "rmw_fastrtps_shared_cpp",
+      "vision_msgs"
+    ]
+  },
+  "raw_evidence": "artifacts/robopi-lib-acceptance/as2/",
+  "source_tree": "working tree including uncommitted changes; build input snapshot recorded separately",
+  "build_inputs_sha256": "7876f74363fe672c58e6a082c8d8358570ca7ae27a6ed1cf0d2d213fccee529f"
+}

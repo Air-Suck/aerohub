@@ -1,5 +1,6 @@
 """AS2-only multi-aircraft launcher; Agent and simulator live in flight_board."""
 import os
+import json
 from pathlib import Path
 import re
 import signal
@@ -46,6 +47,23 @@ def main():
             ['ros2', 'launch', 'as2_behaviors_motion', 'motion_behaviors_launch.py',
              f'namespace:={namespace}', f'config_file:={config}', 'use_sim_time:=true'],
         ])
+    if os.environ.get('AS2_BEHAVIORS'):
+        subset=str(Path(__file__).with_name('selected_behaviors.launch.py'))
+        for command in commands:
+            if command[1:4]==['launch','as2_behaviors_motion','motion_behaviors_launch.py']:
+                command[2:4]=[subset]
+    if os.environ.get('AS2_TF_SCOPE')=='per-vehicle':
+        scoped=str(Path(__file__).with_name('scoped_tf.launch.py'))
+        wrapped=[]
+        for command in commands:
+            standalone=command[2].startswith('/')
+            package,name,args=('',command[2],command[3:]) if standalone else (command[2],command[3],command[4:])
+            arguments=dict(item.split(':=',1) for item in args)
+            replacement=['ros2','launch',scoped,'target_launch:='+name,
+                'target_arguments:='+json.dumps(arguments,separators=(',',':'))]
+            if package:replacement.append('target_package:='+package)
+            wrapped.append(replacement)
+        commands=wrapped
     children = []
     stopping = False
 

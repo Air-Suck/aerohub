@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import math
+import json
+import os
+import time
 from pathlib import Path
 
 import rclpy
@@ -10,8 +13,9 @@ import yaml
 from as2_msgs.msg import ControlMode, ControllerInfo, TrajectoryPoint, TrajectorySetpoints
 from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import Odometry
+from std_msgs.msg import String
 from rclpy.node import Node
-from rclpy.qos import qos_profile_sensor_data
+from rclpy.qos import qos_profile_sensor_data, QoSProfile, ReliabilityPolicy
 
 from uav_planner_interfaces.msg import FleetSetpoint
 
@@ -32,9 +36,12 @@ def quaternion_yaw(orientation):
     )
 
 
+latest_state_qos = QoSProfile(depth=1, reliability=ReliabilityPolicy.BEST_EFFORT)
+
+
 class As2SetpointAdapter(Node):
-    def __init__(self):
-        super().__init__("as2_setpoint_adapter")
+    def __init__(self, node_name="as2_setpoint_adapter"):
+        super().__init__(node_name)
         self.declare_parameter("resolved_config", "")
         path = self.get_parameter("resolved_config").value
         if not path:
@@ -42,12 +49,26 @@ class As2SetpointAdapter(Node):
         self.config = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
         self.task_id = self.config["task"]["task_id"]
         self.vehicles = list(self.config["vehicles"])
+        self.expected_vehicles = list(self.vehicles)
+        self.declare_parameter('vehicle_id','')
+        owned=self.get_parameter('vehicle_id').value
+        if owned:
+            if owned not in self.vehicles:raise ValueError('vehicle_id is not in the task')
+            self.vehicles=[owned]
+        self.receipt_stats={'count':0,'max_wall_gap_s':0.0,'min_source_age_s':None,'max_source_age_s':None,
+                            'duplicate_or_reordered':0}
+        self.receipt_first=None;self.receipt_last=None;self.receipt_stamp=None
         self.trajectory_publishers = {}
         self.mode_ready = {vehicle: False for vehicle in self.vehicles}
         self.held_yaw = {}
         self.current_yaw = {}
         self._pose_subscriptions = []
         self.latest_setpoints = None
+        self.mode_seen = set()
+        self.setpoints_seen = 0
+        self.published_counts = {vehicle:0 for vehicle in self.vehicles}
+        self.state_publisher = self.create_publisher(String, 'planner/as2_bridge_state', 1)
+        self.create_timer(0.1, self._publish_state)
 
         for vehicle in self.vehicles:
             deployment = self.config["deployment"][vehicle]
@@ -59,7 +80,7 @@ class As2SetpointAdapter(Node):
             self._pose_subscriptions.append(self.create_subscription(
                 ControllerInfo, f"{prefix}/controller/info",
                 lambda message, vehicle_id=vehicle: self._on_mode(vehicle_id, message),
-                qos_profile_sensor_data,
+                latest_state_qos,
             ))
             pose_topic = f"{prefix}/sensor_measurements/odom"
             self._pose_subscriptions.append(
@@ -69,11 +90,29 @@ class As2SetpointAdapter(Node):
                     lambda message, vehicle_id=vehicle: self._on_odometry(
                         vehicle_id, message
                     ),
-                    qos_profile_sensor_data,
+                    latest_state_qos,
                 )
             )
 
         self.create_subscription(FleetSetpoint, "planner/setpoints", self._on_setpoints, 1)
+
+    def _publish_state(self):
+        prepared = (set(self.current_yaw)==set(self.vehicles) and self.mode_seen==set(self.vehicles)
+                    and all(math.isfinite(yaw) for yaw in self.current_yaw.values()) and self.setpoints_seen>0)
+        message=String()
+        state={'task_id':self.task_id,'prepared':prepared,
+            'yaw_received':sorted(self.current_yaw),'mode_received':sorted(self.mode_seen),
+            'mode_ready':self.mode_ready,'setpoints_received':self.setpoints_seen,
+            'published':self.published_counts,'owned_vehicles':self.vehicles,
+            'compute_id':os.environ.get('CATORA_COMPUTE_ID',self.get_name()),'receipt':dict(self.receipt_stats)}
+        if self.receipt_first is not None and self.receipt_last>self.receipt_first:
+            state['receipt']['hz']=(self.receipt_stats['count']-1)/(self.receipt_last-self.receipt_first)
+        state.update(self.extra_state())
+        message.data=json.dumps(state)
+        self.state_publisher.publish(message)
+
+    def extra_state(self):
+        return {}
 
     def _on_odometry(self, vehicle, message):
         pose = PoseStamped()
@@ -91,13 +130,24 @@ class As2SetpointAdapter(Node):
     def _on_setpoints(self, message):
         if message.task_id != self.task_id:
             return
-        if {item.vehicle_id for item in message.setpoints} != set(self.vehicles):
+        if {item.vehicle_id for item in message.setpoints} != set(getattr(self,'expected_vehicles',self.vehicles)):
             self.get_logger().error("dropping incomplete fleet setpoint")
             return
+        if hasattr(self,'receipt_stats'):
+            now=time.monotonic();stamp=message.sampled_at.sec+message.sampled_at.nanosec/1e9
+            age=self.get_clock().now().nanoseconds/1e9-stamp
+            stats=self.receipt_stats;stats['count']+=1
+            if self.receipt_last is not None:stats['max_wall_gap_s']=max(stats['max_wall_gap_s'],now-self.receipt_last)
+            if self.receipt_stamp is not None and stamp<=self.receipt_stamp:stats['duplicate_or_reordered']+=1
+            for key,fn in [('min_source_age_s',min),('max_source_age_s',max)]:stats[key]=age if stats[key] is None else fn(stats[key],age)
+            if self.receipt_first is None:self.receipt_first=now
+            self.receipt_last=now;self.receipt_stamp=stamp
+        self.setpoints_seen += 1
         self.latest_setpoints = message
         self._publish_if_ready()
 
     def _on_mode(self, vehicle, message):
+        self.mode_seen.add(vehicle)
         mode = message.input_control_mode
         ready = (mode.control_mode == ControlMode.TRAJECTORY and
                  mode.yaw_mode == ControlMode.YAW_ANGLE)
@@ -142,6 +192,7 @@ class As2SetpointAdapter(Node):
 
         for vehicle, trajectory in prepared:
             self.trajectory_publishers[vehicle].publish(trajectory)
+            self.published_counts[vehicle] += 1
         self.latest_setpoints = None
 
 

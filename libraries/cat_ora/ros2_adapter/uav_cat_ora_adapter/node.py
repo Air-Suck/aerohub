@@ -9,6 +9,7 @@ from pathlib import Path
 
 import rclpy
 import yaml
+from .state import checked_pose
 from geometry_msgs.msg import PoseStamped
 from rclpy.node import Node
 from rclpy.qos import (
@@ -57,6 +58,9 @@ def set_time(target, value):
         target.nanosec = 0
 
 
+latest_state_qos = QoSProfile(depth=1, reliability=ReliabilityPolicy.BEST_EFFORT)
+
+
 class CatOraAdapter(Node):
     def __init__(self):
         super().__init__("cat_ora_adapter")
@@ -69,6 +73,7 @@ class CatOraAdapter(Node):
         self.config = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
         self.vehicles = list(self.config["vehicles"])
         self.poses = {}
+        self.pose_stamps = {}
         qos = QoSProfile(
             depth=1,
             reliability=ReliabilityPolicy.RELIABLE,
@@ -87,20 +92,29 @@ class CatOraAdapter(Node):
                 PoseStamped,
                 topic,
                 lambda message, vehicle_id=vehicle: self._on_pose(vehicle_id, message),
-                qos_profile_sensor_data,
+                latest_state_qos,
             ))
         self.published = False
         self.create_timer(1.0, self._try_generate)
 
     def _on_pose(self, vehicle_id, message):
+        frame=self.config['deployment'][vehicle_id]['namespace'].strip('/')+'/odom'
+        try:
+            stamp=checked_pose(message,frame,self.get_clock().now().nanoseconds/1e9,self.pose_stamps.get(vehicle_id,0))
+        except ValueError:
+            return
         point = message.pose.position
         origin = self.config["deployment"][vehicle_id]["px4_origin_in_fleet_ned"]
         self.poses[vehicle_id] = local_enu_to_fleet_enu(
             [point.x, point.y, point.z], origin
         )
+        self.pose_stamps[vehicle_id]=stamp
 
     def _try_generate(self):
         if self.published or len(self.poses) != len(self.vehicles):
+            return
+        now=self.get_clock().now().nanoseconds/1e9
+        if any(not -.05<=now-stamp<=1.0 for stamp in self.pose_stamps.values()):
             return
         try:
             self._generate()
@@ -124,6 +138,9 @@ class CatOraAdapter(Node):
             stream.write((json.dumps(request, separators=(",", ":")) + "\n").encode())
             stream.flush()
             response = json.loads(stream.readline().decode())
+        now=self.get_clock().now().nanoseconds/1e9
+        if any(not -.05<=now-stamp<=1.0 for stamp in self.pose_stamps.values()):
+            raise RuntimeError('local state expired while waiting for CAT-ORA response')
         if not response.get("ok"):
             if response.get("reason") == "NO_SOLUTION":
                 failure = PlannerFailure()

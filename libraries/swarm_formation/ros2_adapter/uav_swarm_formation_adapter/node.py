@@ -62,11 +62,12 @@ def set_time(target, value):
 
 
 def formation_center(config):
+    scale = float(config.get("planner", {}).get("parameters", {}).get("formation_scale", 1.0))
     centers = []
     for vehicle in config["vehicles"]:
         target = ned_to_enu(config["targets"][vehicle])
         relative = RELATIVE_ENU[vehicle]
-        centers.append(tuple(target[index] - relative[index] for index in range(3)))
+        centers.append(tuple(target[index] - scale * relative[index] for index in range(3)))
     center = tuple(sum(values) / len(values) for values in zip(*centers))
     if any(math.dist(candidate, center) > 0.05 for candidate in centers):
         raise ValueError("targets do not match the configured Swarm-Formation shape")
@@ -98,8 +99,8 @@ class SwarmFormationAdapter(Node):
             raise RuntimeError("resolved_config parameter is required")
         self.config = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
         self.vehicles = list(self.config["vehicles"])
-        if self.vehicles != list(RELATIVE_ENU):
-            raise RuntimeError("first deployment requires drone0..drone6")
+        if not 3 <= len(self.vehicles) <= 7 or self.vehicles != list(RELATIVE_ENU)[:len(self.vehicles)]:
+            raise RuntimeError("vehicles must be a contiguous drone0..droneN prefix, 3..7 vehicles")
         self.goal_center = formation_center(self.config)
         self.poses = {}
         qos = QoSProfile(
@@ -136,6 +137,12 @@ class SwarmFormationAdapter(Node):
         if len(self.poses) != len(self.vehicles):
             return
         parameters = self.config["planner"]["parameters"]
+        if parameters.get("wait_for_output", False) and not all(
+            sum(p.node_name.startswith("swarm_as2_") for p in self.get_publishers_info_by_topic(
+                "/"+self.config["deployment"][v]["namespace"].strip("/")+"/motion_reference/trajectory")) == 1
+            for v in self.vehicles
+        ):
+            return
         request = {
             "task_id": self.config["task"]["task_id"],
             "vehicles": [
@@ -182,27 +189,40 @@ class SwarmFormationAdapter(Node):
             failure.detail = str(exc)
             self.failure_publisher.publish(failure)
             return
-        self.publisher.publish(self._message(trajectories))
+        self.publisher.publish(self._message(trajectories, response.get("valid_from"),
+            response.get("velocities_enu"), response.get("accelerations_enu")))
 
-    def _message(self, trajectories):
+    def _message(self, trajectories, valid_from=None, velocities=None, accelerations=None):
         if len(trajectories) != len(self.vehicles) or any(len(points) < 2 for points in trajectories):
             raise RuntimeError("Swarm-Formation returned invalid trajectories")
+        derivatives = velocities is not None and accelerations is not None
+        if (velocities is None) != (accelerations is None):
+            raise ValueError("incomplete polynomial derivatives")
+        if derivatives:
+            for arrays in (velocities, accelerations):
+                if len(arrays)!=len(trajectories) or any(
+                    len(row)!=len(points) or any(len(v)!=3 or not all(math.isfinite(x) for x in v) for v in row)
+                    for row,points in zip(arrays,trajectories)):
+                    raise ValueError("invalid polynomial derivative dimensions/values")
         parameters = self.config["planner"]["parameters"]
         now = self.get_clock().now().nanoseconds / 1_000_000_000.0
         message = TimedTrajectorySegment()
         message.interface_version = 1
         message.task_id = self.config["task"]["task_id"]
         set_time(message.generated_at, now)
-        set_time(message.valid_from, now + float(parameters["valid_from_lead"]))
+        set_time(message.valid_from, now + float(parameters["valid_from_lead"]) if valid_from is None else float(valid_from))
         message.is_final = False
-        for vehicle, points in zip(self.vehicles, trajectories):
+        for vehicle_index, (vehicle, points) in enumerate(zip(self.vehicles, trajectories)):
             trajectory = VehicleTrajectory()
             trajectory.vehicle_id = vehicle
-            trajectory.valid_fields = 0
+            trajectory.valid_fields = (VehicleTrajectory.VELOCITY | VehicleTrajectory.ACCELERATION) if derivatives else 0
             for index, position in enumerate(points):
                 point = TimedTrajectoryPoint()
                 set_time(point.time_from_start, index * float(parameters["sample_dt"]))
                 point.position.x, point.position.y, point.position.z = enu_to_ned(position)
+                if derivatives:
+                    point.velocity.x, point.velocity.y, point.velocity.z = enu_to_ned(velocities[vehicle_index][index])
+                    point.acceleration.x, point.acceleration.y, point.acceleration.z = enu_to_ned(accelerations[vehicle_index][index])
                 trajectory.points.append(point)
             message.vehicle_trajectories.append(trajectory)
         return message

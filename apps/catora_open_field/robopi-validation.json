@@ -1,0 +1,79 @@
+{
+  "validated_at": "2026-11-06T00:32:38+08:00",
+  "scope": "Single four-vehicle NH AirSim full flight; native CAT-ORA, Planner and AS2 on RoboPi; PX4/Agent Docker and AirSim on PC",
+  "evidence": "artifacts/catora-robopi-full-06",
+  "result": {
+    "task_id": "440e95c0-efa8-4335-8211-eae566a0a2de",
+    "planner_status": "SUCCEEDED",
+    "endpoint_error_m": {
+      "drone1": 0.040837487098335054,
+      "drone0": 0.03332659350077395,
+      "drone3": 0.040423008526700076,
+      "drone2": 0.03595226292612852
+    },
+    "airsim_truth_endpoint_error_m": {
+      "drone0": 0.1520764775203053,
+      "drone1": 0.18663629184469518,
+      "drone2": 0.19695031495376775,
+      "drone3": 0.14586244999880635
+    },
+    "min_truth_separation_m": 5.881983822655631,
+    "max_localization_disagreement_m": 0.40061996356877133,
+    "min_observed_separation_m": 5.8976229855702496,
+    "max_sampled_tracking_error_m": 1.0916784304654976,
+    "planner_wall_seconds": 23.357535843999358,
+    "planning_collisions": false,
+    "as2_trajectory_reference_counts": {
+      "drone0": 124,
+      "drone1": 116,
+      "drone2": 108,
+      "drone3": 105
+    },
+    "position_source": "AS2 sensor_measurements/odom; same local frame as trajectory execution",
+    "runtime_topology": "RoboPi: CAT-ORA + adapters + Planner + AS2; PC: PX4 Docker + AirSim",
+    "execution_host": "localhost",
+    "execution_arch": "aarch64",
+    "landed_and_disarmed": true
+  },
+  "bridge_published_counts": {
+    "drone0": 191,
+    "drone1": 191,
+    "drone2": 191,
+    "drone3": 191
+  },
+  "trajectory_rejection_or_loss_log_entries": 0,
+  "native_cat_ora_compute_ms": 0.35,
+  "native_trajectory_duration_s": 5.8,
+  "cleanup": {
+    "owned_board_processes": [],
+    "board_port_28500": [],
+    "owned_pc_containers": [],
+    "scene_phase": "stopped",
+    "owned_pc_sockets": [],
+    "shared_lock_free": true
+  },
+  "as2_install": "/data/aerohub/as2/install",
+  "catora_install": "/data/aerohub/lib/catora/install",
+  "images": {
+    "flight_board": "sha256:43632de224903a6f283683cf539bebec3a3f34283b4b49b2a7e54f745fbf1757"
+  },
+  "source_hashes_at_acceptance": {
+    "apps/catora_open_field/mission.py": "9027e734b7cf63d9060e2cd3bc84ddf8f97893325c637f7e677b0b30c43ec59a",
+    "apps/catora_open_field/run_robopi.py": "888b27efce4da79b534a47fc9c996a7e22722bd37548269b70f84715e80a3272",
+    "runtime/as2/run.py": "f839e2675101a33f10d27690af334db803d40cda079c248de3e9e29e85708341",
+    "runtime/as2/selected_behaviors.launch.py": "d56b52b710518dd9977ee908fc187c39e26befa6d3750208598a660d4a9a11db",
+    "planner_framework/bridges/as2_setpoint/uav_as2_setpoint_adapter/node.py": "1c315d86661ce675dd06e47db2cd794003ba0f0b36675f07a6f8521811d64de6",
+    "thirdparty/aerostack2/as2_core/src/core_functions.cpp": "b975918021426fbbabd0d9dd5c0d54f40de22051bf73b5d469ab44a01a3a11fc"
+  },
+  "limitations": [
+    "One scenario, one successful flight; not a load or endurance benchmark.",
+    "Observer receipt counts are lossy; bridge telemetry separately reports actual publishing.",
+    "mission.py now also enforces the truth-separation condition; the saved flight measurement passes this condition."
+  ],
+  "application_bundle_sha256": "e7759e248c6931db7ca9e67b2ac11e012a9983a2cdcae7c21b6a6bb01637bd9b",
+  "run_bundle_module_hashes": {
+    "mission.py": "94e02a513be2df41b81b6ec4bf5fdb63a16e603cdbe4432001a7f498579580b6",
+    "run_as2.py": "f839e2675101a33f10d27690af334db803d40cda079c248de3e9e29e85708341",
+    "selected_behaviors.launch.py": "d56b52b710518dd9977ee908fc187c39e26befa6d3750208598a660d4a9a11db"
+  }
+}

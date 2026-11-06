@@ -752,7 +752,9 @@ namespace ego_planner
 
     // set the formation type
     swarm_graph_.reset(new SwarmGraph);
-    setDesiredFormation(formation_type_);
+    int vehicle_count;
+    swarm_ros::param(nh, "optimization/vehicle_count", vehicle_count, 7);
+    setDesiredFormation(formation_type_, vehicle_count);
   }
 
   void PolyTrajOptimizer::setEnvironment(const GridMap::Ptr &map)

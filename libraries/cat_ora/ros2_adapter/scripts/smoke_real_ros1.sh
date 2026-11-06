@@ -17,7 +17,7 @@ ros2 run uav_planner_framework planner_framework_node \
   -p registry_root:="$workspace/planner_framework/registry" \
   -p resolved_dir:="$resolved_dir" >/tmp/uav_cat_real_framework.log 2>&1 &
 framework_pid=$!
-trap 'kill "$framework_pid" "${trajectory_echo_pid:-}" "${setpoint_echo_pid:-}" 2>/dev/null || true' EXIT
+trap 'kill "$framework_pid" "${trajectory_echo_pid:-}" "${setpoint_echo_pid:-}" "${pose_pid:-}" 2>/dev/null || true' EXIT
 
 for _ in {1..20}; do
   ros2 service list | grep -qx /planner/control && break
@@ -46,18 +46,8 @@ trajectory_echo_pid=$!
 timeout 15 ros2 topic echo /planner/setpoints >/tmp/uav_cat_real_setpoints.log &
 setpoint_echo_pid=$!
 
-pose_pids=()
-for vehicle in drone0 drone1 drone2 drone3; do
-  timeout 10 ros2 topic pub --once \
-    "/$vehicle/self_localization/pose" \
-    geometry_msgs/msg/PoseStamped \
-    '{pose: {position: {x: 0.0, y: 0.0, z: 2.0}, orientation: {w: 1.0}}}' \
-    >/dev/null &
-  pose_pids+=("$!")
-done
-for pose_pid in "${pose_pids[@]}"; do
-  wait "$pose_pid"
-done
+python3 "$workspace/libraries/cat_ora/ros2_adapter/scripts/publish_test_poses.py" &
+pose_pid=$!
 
 for _ in {1..40}; do
   grep -q "task_id: $task_id" /tmp/uav_cat_real_setpoints.log 2>/dev/null && break

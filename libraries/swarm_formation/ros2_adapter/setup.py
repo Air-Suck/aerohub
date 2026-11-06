@@ -19,6 +19,8 @@ setup(
     license="Apache-2.0",
     entry_points={
         "console_scripts": [
+            "swarm_as2_adapter_node = uav_swarm_formation_adapter.output_node:main",
+            "swarm_input_adapter_node = uav_swarm_formation_adapter.input_node:main",
             "swarm_formation_adapter_node = uav_swarm_formation_adapter.node:main",
         ],
     },

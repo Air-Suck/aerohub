@@ -168,9 +168,10 @@ bash deployment/oh-ros-build/build_as2.sh runtime
 使用的 CMake 参数，不替代官方工具链。
 
 `/work` 挂载隔离工作区，`/target-out` 只读挂载目标依赖，本目录只读挂载为
-`/opt/aerohub/ohos`。默认安装前缀为 `/data/local/tmp/aerohub-as2/install`；
-构建目录为 `/work/ws/install`，部署脚本要求该固定板端前缀。
-不能只搬动产物目录就认定完成重定位。
+`/opt/aerohub/ohos`。默认 AS2 安装前缀为 `/data/aerohub/as2/install`；
+构建目录为 `/work/ws/install`，部署布局见 [RoboPi 持久部署](../robopi/README.md#持久部署布局)。
+应用最终位于 `/data/aerohub/lib/<应用名>/install`，打包器显式处理逐包前缀、
+Python 入口与 ELF 搜索路径；不能只搬动目录就认定完成重定位。
 
 ## 输出与验证
 

@@ -1,0 +1,30 @@
+task:
+  name: swarm_nh_open_field_three
+planner:
+  id: swarm_formation
+  version: 967a4bdfae949e994691f8ffc87dbb0147cbebb7
+  parameters:
+    formation_scale: 2.0
+    wait_for_output: true
+    valid_from_lead: 0.2
+vehicles:
+- drone0
+- drone1
+- drone2
+targets:
+  drone0:
+    x: 6
+    y: 0
+    z: -3.0
+  drone1:
+    x: 4
+    y: 3.4642
+    z: -3.0
+  drone2:
+    x: 2
+    y: 0
+    z: -3.0
+completion:
+  position_tolerance: 0.6
+  hold_duration: 2.0
+  task_timeout: 90.0

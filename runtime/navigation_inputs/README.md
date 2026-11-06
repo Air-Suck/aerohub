@@ -56,8 +56,10 @@ ros2 run as2_navigation_inputs navigation_inputs_node --ros-args \
 AS2、传感器、TF 与本节点须在同一 ROS 时间基准下。先启动已有 AS2/传感器/clock，
 再运行本节点。节点没有控制输出，不会请求解锁、起飞或控制模式。
 PC companion 镜像构建包含本包；该节点需显式启动，不改变已有单机运行行为。
-RoboPi 需将本包源码加入隔离交叉编译工作区，准备相应目标依赖后独立构建部署；
-本轮仅验证 PC Humble，不宣称已完成 OHOS 构建。
+RoboPi 已由 `scripts/build_lib.sh swarm-formation` 将本包加入隔离交叉编译工作区，
+随 Swarm 独立 overlay 安装；三机真实点云与运动闭环证据见
+[Swarm 应用](../../apps/swarm_open_field/README.md)。本机 TF 隔离时，导航节点也须将
+`/tf`、`/tf_static` remap 到对应车辆话题。
 
 ## 验证
 

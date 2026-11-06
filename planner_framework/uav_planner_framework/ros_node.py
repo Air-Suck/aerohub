@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import math
 import os
-import signal
 import subprocess
 from pathlib import Path
 
@@ -33,6 +32,7 @@ from .completion import FleetCompletion
 from .registry import ConfigError, PlannerRegistry
 from .ros_conversions import fill_setpoint_message, seconds_to_time, segment_from_msg
 from .trajectory import OutputGateway, Setpoint, Vector3
+from .processes import terminate_session
 
 
 def _read_yaml(path: str) -> dict:
@@ -48,6 +48,8 @@ class PlannerFrameworkNode(Node):
         self.declare_parameter("registry_root", "")
         self.declare_parameter("resolved_dir", "resolved")
         self.declare_parameter("sample_rate_hz", 50.0)
+        self.declare_parameter("runtime_startup_timeout", 0.0)
+        self.declare_parameter('output_vehicle_id','')
         registry_root = self.get_parameter("registry_root").value
         if not registry_root:
             raise RuntimeError("registry_root parameter is required")
@@ -57,6 +59,7 @@ class PlannerFrameworkNode(Node):
         self.resolved: dict | None = None
         self.trajectory_wait_started_at: float | None = None
         self.positions: dict[str, Vector3] = {}
+        self.pose_stamps = {}
         self.pose_subscriptions = []
         self.completion: FleetCompletion | None = None
         self.active_started_at: float | None = None
@@ -89,12 +92,14 @@ class PlannerFrameworkNode(Node):
             elif request.command == request.PAUSE:
                 self._freeze_active_time()
                 self.lifecycle.pause()
+                self._notify_cat_stop()
                 self._publish_hover()
                 self._stop_planner_adapter()
                 self.gateway.clear()
                 self.completion.reset()
                 self.trajectory_wait_started_at = None
             elif request.command == request.RESUME:
+                self._require_clock()
                 self.lifecycle.resume()
                 self.gateway.clear()
                 self.completion.reset()
@@ -103,9 +108,10 @@ class PlannerFrameworkNode(Node):
                 self._start_planner_adapter()
             elif request.command == request.CANCEL:
                 self._freeze_active_time()
+                self.lifecycle.cancel()
+                self._notify_cat_stop()
                 self._publish_hover()
                 self._stop_planner_adapter()
-                self.lifecycle.cancel()
                 self.gateway.clear()
                 self.completion.reset()
                 self.trajectory_wait_started_at = None
@@ -120,7 +126,13 @@ class PlannerFrameworkNode(Node):
         self.status_publisher.publish(response.result)
         return response
 
+    def _require_clock(self) -> None:
+        if bool(self.get_parameter("use_sim_time").value) and self._now() <= 0:
+            raise TransitionError("CLOCK_NOT_READY")
+
     def _start(self, task_path: str, deployment_path: str) -> None:
+        # DDS service discovery can precede this process's first /clock sample.
+        self._require_clock()
         try:
             resolved = self.registry.resolve(_read_yaml(task_path), _read_yaml(deployment_path))
         except (ConfigError, OSError, yaml.YAMLError):
@@ -147,6 +159,7 @@ class PlannerFrameworkNode(Node):
         self.active_started_at = now
         self.active_elapsed = 0.0
         self.positions = {}
+        self.pose_stamps = {}
         targets = {
             vehicle: Vector3(
                 float(target["x"]), float(target["y"]), float(target["z"])
@@ -168,7 +181,7 @@ class PlannerFrameworkNode(Node):
                 PoseStamped,
                 topic,
                 lambda message, vehicle_id=vehicle: self._on_pose(vehicle_id, message),
-                qos_profile_sensor_data,
+                QoSProfile(depth=1, reliability=ReliabilityPolicy.BEST_EFFORT),
             ))
         output = Path(self.get_parameter("resolved_dir").value) / f"{task_id}.yaml"
         output.parent.mkdir(parents=True, exist_ok=True)
@@ -210,17 +223,23 @@ class PlannerFrameworkNode(Node):
             self._fail("OUTPUT_ADAPTER_ERROR", "output adapter exited")
             return
         task_timeout = float(self.resolved["completion"]["task_timeout"])
+        if self.resolved['planner']['id'] in ('cat_ora','swarm_formation') and any(now-stamp>1.0 or now-stamp<-.05 for stamp in self.pose_stamps.values()):
+            self._fail('STATE_TIMEOUT','Local state is stale or clock changed')
+            return
         if self._active_time(now) >= task_timeout:
             self._fail("TASK_TIMEOUT")
             return
         if self.completion.update(self.positions, now):
             self._freeze_active_time(now)
             self.lifecycle.succeed()
+            self._notify_cat_stop()
             self._stop_planner_adapter()
             self.trajectory_wait_started_at = None
             self.status_publisher.publish(self._result_message())
             return
         timeout = float(self.resolved["planner"]["parameters"]["trajectory_timeout"])
+        if self.gateway.segment is None:
+            timeout = max(timeout, float(self.get_parameter("runtime_startup_timeout").value))
         if self.gateway.trajectory_timed_out(now, timeout, self.trajectory_wait_started_at):
             self._fail("TRAJECTORY_TIMEOUT")
             return
@@ -237,6 +256,12 @@ class PlannerFrameworkNode(Node):
 
     def _on_pose(self, vehicle_id: str, message: PoseStamped) -> None:
         point = message.pose.position
+        if self.resolved['planner']['id'] in ('cat_ora','swarm_formation'):
+            stamp=message.header.stamp.sec+message.header.stamp.nanosec/1e9
+            frame=self.resolved['deployment'][vehicle_id]['namespace'].strip('/')+'/odom'
+            if message.header.frame_id!=frame or stamp<=0 or not -.05<=self._now()-stamp<=1.0 or stamp<=self.pose_stamps.get(vehicle_id,0) or not all(math.isfinite(x) for x in (point.x,point.y,point.z)):
+                return
+            self.pose_stamps[vehicle_id]=stamp
         origin = self.gateway.origins[vehicle_id]
         self.positions[vehicle_id] = Vector3(
             float(point.y) + origin.x,
@@ -245,6 +270,10 @@ class PlannerFrameworkNode(Node):
         )
 
     def _publish_hover(self) -> None:
+        # CAT-ORA's own AS2 adapter requests real HOVER and confirms its result.
+        # Keep the legacy path for other planners until their separate migration.
+        if self.resolved and self.resolved['planner']['id'] in ('cat_ora','swarm_formation'):
+            return
         snapshot = self.lifecycle.snapshot
         if snapshot is None or self.gateway is None or set(self.positions) != set(self.gateway.origins):
             return
@@ -265,14 +294,23 @@ class PlannerFrameworkNode(Node):
         self.setpoint_publisher.publish(message)
 
     def _fail(self, reason: str, detail: str = "") -> None:
+        if self.resolved and self.resolved['planner']['id'] in ('cat_ora','swarm_formation'):
+            self.lifecycle.fail(reason)
+            self._notify_cat_stop()
         self._publish_hover()
         self._stop_planner_adapter()
         self._freeze_active_time()
-        self.lifecycle.fail(reason)
+        if not (self.resolved and self.resolved['planner']['id'] in ('cat_ora','swarm_formation')):
+            self.lifecycle.fail(reason)
         self.trajectory_wait_started_at = None
         if self.completion is not None:
             self.completion.reset()
         self.status_publisher.publish(self._result_message(detail))
+
+    def _notify_cat_stop(self):
+        # Deliver the AS2 stop intent before waiting for a planner process to exit.
+        if self.resolved and self.resolved['planner']['id'] in ('cat_ora','swarm_formation'):
+            self.status_publisher.publish(self._result_message())
 
     def _start_runtime(self, resolved_path: Path) -> None:
         self._start_output_adapter(resolved_path)
@@ -293,14 +331,19 @@ class PlannerFrameworkNode(Node):
 
     def _start_output_adapter(self, resolved_path: Path) -> None:
         use_sim_time = str(bool(self.get_parameter("use_sim_time").value)).lower()
+        package,executable={'cat_ora':('uav_cat_ora_adapter','cat_ora_as2_adapter_node'),
+                            'swarm_formation':('uav_swarm_formation_adapter','swarm_as2_adapter_node')}.get(self.resolved['planner']['id'], ('uav_as2_setpoint_adapter','as2_setpoint_adapter_node'))
         command = [
-            "ros2", "run", "uav_as2_setpoint_adapter", "as2_setpoint_adapter_node",
+            "ros2", "run", package, executable,
             "--ros-args", "-p", f"resolved_config:={resolved_path}",
             "-p", f"use_sim_time:={use_sim_time}",
         ]
+        owned=self.get_parameter('output_vehicle_id').value
+        if owned:command.extend(['-p','vehicle_id:='+owned])
         self.output_process = self._spawn(command, resolved_path.with_suffix(".output.log"))
 
     def _spawn(self, command: list[str], log_path: Path) -> subprocess.Popen:
+        self.get_logger().info("Starting runtime: " + " ".join(command))
         log = log_path.open("w", encoding="utf-8")
         self.process_logs.append(log)
         environment = os.environ.copy()
@@ -327,14 +370,7 @@ class PlannerFrameworkNode(Node):
 
     @staticmethod
     def _terminate(process: subprocess.Popen | None) -> None:
-        if process is None or process.poll() is not None:
-            return
-        os.killpg(process.pid, signal.SIGTERM)
-        try:
-            process.wait(timeout=2.0)
-        except subprocess.TimeoutExpired:
-            os.killpg(process.pid, signal.SIGKILL)
-            process.wait(timeout=2.0)
+        terminate_session(process)
 
     def _active_time(self, now: float | None = None) -> float:
         if self.active_started_at is None:

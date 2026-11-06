@@ -6,6 +6,11 @@
 桥观察 `controller/info`，不申请控制模式，不因收到 topic 自动接管。
 接管航向取自 `sensor_measurements/odom`，不能将 `earth` 下的定位姿态冒充局部姿态。
 
+CAT-ORA 当前使用其自有 `cat_ora_as2_adapter_node` 入口复用本包转换实现，
+并将任务的暂停、取消、失败和完成转为 AS2 HOVER 请求及确认；仍不自动申请
+TRAJECTORY。输入、停止与故障回归见 [CAT-ORA adapter](../../../libraries/cat_ora/ros2_adapter/README.md)。
+其他算法的原有入口保持兼容，不要求串联 CAT-ORA 的适配节点。
+
 每条 `TrajectorySetpoints` 必须恰好一个点，frame 为 `<namespace>/odom`。
 position 和 yaw 必须有限；twist、acceleration 各自必须全有限或全 NaN。
 header.stamp 是源采样时间，控制周期不得改写。旧点不排队、重放或插值。

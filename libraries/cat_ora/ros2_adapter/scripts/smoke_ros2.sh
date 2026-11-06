@@ -19,7 +19,7 @@ ros2 run uav_planner_framework planner_framework_node \
   -p registry_root:="$workspace/planner_framework/registry" \
   -p resolved_dir:="$resolved_dir" >/tmp/uav_cat_ora_framework.log 2>&1 &
 framework_pid=$!
-trap 'kill "$proxy_pid" "$framework_pid" "${adapter_pid:-}" "${echo_pid:-}" 2>/dev/null || true' EXIT
+trap 'kill "$proxy_pid" "$framework_pid" "${adapter_pid:-}" "${echo_pid:-}" "${pose_pid:-}" 2>/dev/null || true' EXIT
 
 for _ in {1..20}; do
   ros2 service list | grep -qx /planner/control && break
@@ -51,11 +51,9 @@ ros2 node list | grep -qx /cat_ora_adapter
 
 timeout 8 ros2 topic echo /planner/setpoints >/tmp/uav_cat_ora_setpoints.log &
 echo_pid=$!
-timeout 10 ros2 topic pub --once \
-  /drone0/self_localization/pose \
-  geometry_msgs/msg/PoseStamped \
-  '{pose: {position: {x: 0.0, y: 0.0, z: 1.0}, orientation: {w: 1.0}}}' \
-  >/tmp/uav_cat_ora_pose.log
+python3 "$workspace/libraries/cat_ora/ros2_adapter/scripts/publish_test_poses.py" --vehicles drone0 --height 1 &
+pose_pid=$!
+
 sleep 2
 
 kill "$echo_pid" 2>/dev/null || true

@@ -58,6 +58,7 @@ namespace ego_planner
     }
 
     swarm_ros::param(nh, "global_goal/swarm_scale", swarm_scale_, 1.0);
+    swarm_ros::param(nh, "global_goal/altitude_from_message", goal_altitude_from_message_, false);
 
     /* initialize main modules */
     visualization_.reset(new PlanningVisualization(nh));
@@ -638,7 +639,7 @@ namespace ego_planner
     bool success = false;
     swarm_central_pos_(0) = msg->pose.position.x;
     swarm_central_pos_(1) = msg->pose.position.y;
-    swarm_central_pos_(2) = 0.5;
+    swarm_central_pos_(2) = goal_altitude_from_message_ ? msg->pose.position.z : 0.5;
 
     int id = planner_manager_->pp_.drone_id;
 
@@ -786,7 +787,8 @@ namespace ego_planner
         local_target_pt_, local_target_vel_);
 
     Eigen::Vector3d desired_start_pt, desired_start_vel, desired_start_acc;
-    double desired_start_time;
+    // The first plan has no previous trajectory; keep the unused timestamp defined.
+    double desired_start_time = 0.0;
     if (have_local_traj_ && use_formation)
     {
       desired_start_time = swarm_ros::now().seconds() + replan_trajectory_time_;

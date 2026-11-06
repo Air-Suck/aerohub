@@ -31,6 +31,9 @@
 | `artifacts/` | 本机运行记录、构建缓存与目标产物，不进入交付镜像 |
 
 CAT-ORA 已在 PC AirSimNH 的指定空旷路口通过四机 Planner 飞行应用验收。
+后续 RoboPi 验收包括 [CAT-ORA 四机及混合部署](apps/catora_open_field/README.md)
+和 [Swarm-Formation 三机真实点云混合部署](apps/swarm_open_field/README.md)；
+性能负载、失败样例及适用边界分别保留在应用目录。
 Swarm-Formation 实景接入仍待完成；PC 验收不代表算法已在 RoboPi 上运行。
 
 ## 源码与本机配置
