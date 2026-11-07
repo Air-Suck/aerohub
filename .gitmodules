@@ -11,10 +11,10 @@
 	path = simulator/gazebo
 	url = https://github.com/aerostack2/project_gazebo.git
 [submodule "cat_ora"]
-	path = src/planners/cat_ora
+	path = src/planner/cat_ora/upstream
 	url = https://github.com/ctu-mrs/catora.git
 [submodule "swarm_formation"]
-	path = src/planners/swarm_formation
+	path = src/planner/swarm_formation/upstream
 	url = https://github.com/ZJU-FAST-Lab/Swarm-Formation.git
 [submodule "px4_msgs"]
 	path = as2/px4_msgs

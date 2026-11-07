@@ -8,7 +8,7 @@ import struct
 import subprocess
 import sys
 
-sys.path.insert(0, "/integration/src/planner_framework")
+sys.path.insert(0, "/integration/src/planner/framework")
 from uav_planner_framework.clock_parser import ClockTextParser
 
 

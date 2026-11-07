@@ -81,3 +81,6 @@ rosbag2_*/
 
 # All generated logs, caches and migration backups
 /log/
+
+# Local-only documents: Survey, discussions, handoffs and operations
+/docs/local/

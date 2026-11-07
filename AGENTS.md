@@ -10,6 +10,17 @@
 
 ## 目标架构
 
+### 2026-11-07 目标架构补充（优先于下方早期分层描述）
+
+- 目标运行链为 Application → Mission（人类目标、Online Agent）→ Tool → 基础 Behavior → 基础能力与平台。现有 Planner 和 adapter 是 Navigation Tool 的实现基础；本次不实现 Mission 或 Tool。
+- Tool 可直接读取传感器、状态与地图。基础能力层的 State Estimator 聚焦自身状态；新增 `src/perception/` 对应并列的环境感知、建图与环境表示，不将地图塞入自定位接口。
+- 高层复合 Behavior 不加载、不暴露，保留上游代码；基础执行按需兼容扩展。
+- Tool 必须声明功能卡片；资源互斥、取消交接和应急优先级由运行时软件强制执行，不仅依赖 Agent 自律。
+- Offline Agent 负责适配和部署，Online Agent 负责任务编排。详细接口、目录和验证约束见 `docs/开发者贡献指导.md`。
+
+### 早期 Planner 集成分层与当前实现约束
+
+
 ```text
 Mission / Agent（后续阶段，当前不实现）
         ↓
@@ -61,10 +72,14 @@ PX4 / 仿真后端 / 飞行器
 
 ## 文档归属
 
-- 原生 Aerostack2 架构介绍维护在 `docs/Aerostack2架构介绍.md`，以原生框架的具体执行实例解释，不混入本项目 Planner 的实现细节。
-- 统一 Planner 的设计、模块接口数据形式、使用和验收集中维护在 `docs/Aerostack2统一Planner第一阶段接口与配置设计.md`。
+- `docs/local/UAV调研与参考资料.md` 仅保留在远程磁盘，加入 `.gitignore`，不随 Git 仓库分发。
+
+- 插件扩展和 Model Hub 开发者贡献指导独立维护在 `docs/开发者贡献指导.md`，作为独立的开发者贡献指导主文档；相关开发应遵循其中约定。
+
+- 原生 Aerostack2 架构介绍维护在 `docs/as2简介.md`，以原生框架的具体执行实例解释，不混入本项目 Planner 的实现细节。
+- 统一 Planner 的设计、模块接口数据形式、使用和验收集中维护在 `docs/项目简介.md`。
 - 本文件用于保存开发约束和架构决策；详细接口及迁移设计写入上述 Planner 主文档，并明确与当前实现的差异。
 
-## 目录约定（2026-11-05）
+## 目录约定（2026-11-06）
 
-自建代码位于 `src/`，原始 Planner 在 `src/planners/`（保留上游归属）；AS2 依赖在 `as2/`，PX4 在 `px4/`，官方 Gazebo 工程在 `simulator/gazebo/`，均以 `.gitmodules` 和 gitlink 锁定。运行产物与测试日志统一进入被忽略的 `log/`。部署入口仍为 `deployment/`，不得重新依赖项目外部的旧源码路径。
+自建代码位于 `src/`，先按 `planner/`、`behavior/`、`state_estimator/`、`perception/` 分类，再按对象分子目录。两个 Planner 都使用 `upstream/`、`ros2_adapter/`、`ros1_proxy/`。上游算法分别在 `src/planner/cat_ora/upstream/` 和 `src/planner/swarm_formation/upstream/`。同类对象的目录规则见 `docs/开发者贡献指导.md`。AS2 依赖在 `as2/`，PX4 在 `px4/`，官方 Gazebo 工程在 `simulator/gazebo/`，均以 `.gitmodules` 和 gitlink 锁定。运行产物与测试日志统一进入被忽略的 `log/`。部署入口仍为 `deployment/`，不得重新依赖项目外部的旧源码路径。
