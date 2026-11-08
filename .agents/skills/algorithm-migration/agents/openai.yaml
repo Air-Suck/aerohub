@@ -1,4 +1,0 @@
-interface:
-  display_name: "算法迁移分析"
-  short_description: "分析算法接入 AS2 的分层、依赖与接口，生成流程表、架构图和分阶段验证方案"
-  default_prompt: "使用 $algorithm-migration 分析这个算法如何接入 AeroHub，给出有源码依据的分层架构图、改动与依赖清单、迁移流程表及验证门槛。"

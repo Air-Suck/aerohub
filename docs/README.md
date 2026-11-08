@@ -10,7 +10,6 @@
 | [场景与 settings](../config/airsim/README.md) | AirSim binary、profile 与传感器配置 |
 | [配置组织](../config/README.md) | Library 注册、AS2 和 DDS 配置 |
 | [项目目录说明](项目目录说明.md) | 目录职责及按任务查找入口 |
-| [算法迁移技能](../.agents/skills/algorithm-migration/SKILL.md) | 源码分析、迁移流程表、分层架构图、模块与依赖清单、验证门槛 |
 
 初次使用按“项目入口 → 容器配方与交付 → RoboPi 运行”阅读。
 
