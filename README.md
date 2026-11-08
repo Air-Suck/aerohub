@@ -57,10 +57,12 @@ SUPER 已新增独立 PC 镜像与 FollowTimedPath 场景入口；板端统一�
 | --- | --- |
 | 用户任务与 `scripts/` | 场景选择、任务编排及构建运行入口 |
 | `demos/` | 各 Library 的端到端示例、场景、任务、运行入口与验收记录 |
-| `libraries/` | CAT-ORA、Swarm-Formation 的算法专用适配、代理与部署 |
+| `src/planner/cat_ora/`、`src/planner/swarm_formation/`、`src/planner/super/` | 算法专用适配、代理及部署入口；SUPER 原生核心位于 `thirdparty/SUPER-sim` |
+| `src/behavior/` | FollowTimedPath 执行扩展与保留的旧执行适配器 |
 | `src/planner/framework/`、`src/planner/interfaces/` | 公共规划契约、生命周期及 Library → AS2 输出桥 |
 | `runtime/` | 共用 AS2 启动器、AirSim 传感器与时钟接入 |
-| `thirdparty/` | 活动 AS2 / Pixhawk fork submodule |
+| `as2/` | 活动 AS2 / Pixhawk fork submodule |
+| `thirdparty/` | SUPER 等第三方算法源码 |
 | `config/` | 场景、AS2、DDS 与外部资源配置 |
 | `deployment/` | flight_board 仿真底座、onboard_computer 开发环境、官方 OHOS builder 调用及 RoboPi 部署 |
 | `artifacts/` | 本机运行记录、构建缓存与目标产物，不进入交付镜像 |

@@ -22,8 +22,8 @@ Humble 算法、RoboPi/OHOS、AS2/Pixhawk 的 PVA 和失流保护必须保留并
 - PC 镜像配方加入执行 overlay；启动器支持显式 AS2_EXECUTION_BACKEND=follow_path。
 
 CAT-ORA PC 应用已支持显式 CATORA_EXECUTION_BACKEND=follow_path，基于
-onboard_computer:v0.1.0 的独立应用镜像已通过四机正常飞行场景。板端和 Swarm/SUPER
-应用仍为旧链路；不能据此宣称 OHOS/RoboPi 迁移完成。未导入依赖旧 Gazebo 部署的验收驱动。
+onboard_computer:v0.1.0 的独立应用镜像已通过四机正常飞行场景。板端和 Swarm
+应用仍为旧链路；SUPER 的独立 PC 新链路结果见本文末节。不能据此宣称 OHOS/RoboPi 迁移完成。未导入依赖旧 Gazebo 部署的验收驱动。
 PC 复现方式和局限见 [应用说明](demos/catora_open_field/README.md#followtimedpath-迁移的-pc-验证入口)。
 
 ## 接手执行顺序
@@ -90,3 +90,25 @@ RoboPi/OHOS、混合部署、受控备用切换与可靠性复验仍未完成。
 Action消息未改，原生FollowPath仍保留，未修改AirSim/PX4算法或保护参数。
 
 证据与失败限制见 [SUPER版本化摘要](demos/super_forest/migration-pc-validation.json)。
+
+## verify 合并与推送交接
+
+本轮整理交付到 `verify/px4-airsim-as2`，不直接合并 main；后续由 PR 管理员审阅合并。
+提前实现的算法迁移 skill 已通过撤销提交排除，镜像发布文档已单独提交。
+
+整理时在 `uav/apps-super-forest:migration-attempt7` 镜像内，以只读源码挂载、禁用网络的方式复核：
+framework 27 项、SUPER 8 项全部通过，无跳过；真实 Mission/Adapter 构造，以及 C++ Behavior
+正常终点收敛和外部模式接管测试通过。镜像 ID 为
+`sha256:41da0729254202cc409c6a29b023e1f87f3c6e2b8f554e9b8421353a7113c0de`。
+本轮未重跑飞行，PC 场景结论及未解决限制沿用上述版本化证据；RoboPi 仍未验收。
+
+推送前已 fetch 核对：AS2 fork 的 `f387e0d733a5102808508bcbec1b9eca2c29d1f0`
+比其远端 main 多一个本地提交，必须先发布依赖，再推主仓库。以下为待执行命令，本轮没有执行 push：
+
+```bash
+git -C as2/aerostack2 push origin HEAD:main
+git push --recurse-submodules=check origin verify/px4-airsim-as2
+```
+
+第一条目标为 `Popc0rn7/aerostack2-aerohub` 的依赖 fork，不是本项目 main。
+若推送时远端已有新提交，重新 fetch 并处理差异，不使用强制推送。
