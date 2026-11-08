@@ -9,6 +9,8 @@ AeroHub 正式维护的 PC 机载计算开发与仿真验证环境，承载 AS2�
 修改源码后可按需本地重建。Library 接入仍必须完成 RoboPi 验证。
 
 镜像：`onboard_computer:v0.1.0`，与[固定 flight_board 镜像](../flight_board/README.md#使用固定镜像)配套。
+GHCR 地址为 `ghcr.io/popc0rn7/aerohub/onboard-computer:v0.1.0`，
+拉取、权限与实际摘要见[发布说明](../releases/README.md#从-ghcr-获取)。
 基础环境使用 `onboard_computer_dependencies:humble-px4-1.18`，其中固定 PX4 消息已编译。
 该依赖镜像基于 `osrf/ros:humble-desktop-full-jammy`，默认锁定其 digest：
 `sha256:592f97da6b871a438fdb97f86b422ab9f80657e80efa7b98d258894738c8a0c0`。

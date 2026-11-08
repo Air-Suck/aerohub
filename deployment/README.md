@@ -10,7 +10,7 @@ OHOS 开发环境由用户先按官方[设备开发环境搭建和开发指南](
 
 | 目录 | 用途 | 是否为镜像交付项 |
 | --- | --- | --- |
-| [flight_board](flight_board/README.md) | PX4 / Agent / Humble sensors / clock 的统一仿真底座 | 是，通过 tar 交付 |
+| [flight_board](flight_board/README.md) | PX4 / Agent / Humble sensors / clock 的统一仿真底座 | 是，GHCR 或离线 tar 交付 |
 | [oh-ros-build](oh-ros-build/README.md) | 官方 builder 调用、工作区准备与 CMake 适配；目录名为既有脚本路径 | 否，只有脚本和文档 |
 | [robopi](robopi/README.md) | 板端原生 AS2 部署、启动和诊断 | 否，部署交叉编译产物 |
 | [onboard_computer](onboard_computer/README.md) | 承载 AS2、算法 Library 与应用的正式 PC 开发及仿真验证环境 | 是，PC 开发可选，源码修改后可重建 |
@@ -19,14 +19,15 @@ AirSim 场景在 PC 宿主机独立运行，binary 通过资源 YAML 配置，�
 RoboPi 原生运行 AS2，不运行 Docker。SDK、目标 ROS 和第三方依赖由官方环境提供。
 
 当前两份正式镜像统一为 **v0.1.0**，见[发布清单](releases/v0.1.0.json)与
-[验收说明](releases/README.md)。镜像目前在本地确认，尚未上传 registry。
+[验收说明](releases/README.md)。镜像已发布至 `ghcr.io/popc0rn7/aerohub/`，由个人账号托管，
+通过[获取与发布说明](releases/README.md#从-ghcr-获取)提供仓库文档链接；未正式关联 GitHub Packages。
 
 ## 首次使用顺序
 
 1. 完成官方指南，准备匹配的 SDK、目标依赖、官方 builder 和板端系统环境。
 2. 执行 `bash scripts/prepare_sources.sh` 初始化仓库锁定的活动 submodule。
 3. 按[项目适配说明](oh-ros-build/README.md#首次初始化项目工作区)准备隔离工作区，填写 `.env`。
-4. 按[固定镜像说明](flight_board/README.md#使用固定镜像)加载 flight_board tar 和校验文件。
+4. 按[固定镜像说明](flight_board/README.md#使用固定镜像)加载 flight_board tar 和校验文件，或按[GHCR 说明](releases/README.md#从-ghcr-获取)拉取固定镜像并设置 `.env`。
 5. 从 [AirSim 仓库 Releases](https://github.com/microsoft/AirSim/releases) 下载对应 Linux 场景，按[场景说明](../config/airsim/README.md)配置 AirSim binary 资源，准备 PC 与板端网络。
 6. 需要 PC 开发或混合 Demo 时加载交付的 onboard_computer 镜像。
 7. 按[RoboPi 文档](robopi/README.md)编译、部署、启动和验收；Library 接入必须完成 RoboPi 验证，PC 验证不能替代。

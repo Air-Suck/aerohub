@@ -8,14 +8,16 @@
       "image_id": "sha256:8c33881fde6985fe5a43a894bde075471df85064e45ac8e5de28efebcc737cd2",
       "platform": "linux/amd64",
       "uncompressed_size_bytes": 5744392603,
-      "same_content_as": "flight_board:airsim-px4-humble-threaded-20261105"
+      "same_content_as": "flight_board:airsim-px4-humble-threaded-20261105",
+      "registry_reference": "ghcr.io/popc0rn7/aerohub/flight-board:v0.1.0"
     },
     "onboard_computer": {
       "reference": "onboard_computer:v0.1.0",
       "image_id": "sha256:a99a9c1df2caabffa370091e48cc8190b6f0578513b913cf971a544e960471bc",
       "platform": "linux/amd64",
       "uncompressed_size_bytes": 6198214080,
-      "build_source_revision": "1fba658f257280fc64f2cbb500a53bf25d977316"
+      "build_source_revision": "1fba658f257280fc64f2cbb500a53bf25d977316",
+      "registry_reference": "ghcr.io/popc0rn7/aerohub/onboard-computer:v0.1.0"
     }
   },
   "submodules": {
@@ -35,8 +37,16 @@
   },
   "validation": "v0.1.0-validation.json",
   "publication": {
-    "status": "local_only",
-    "registry_digests": null
+    "status": "published",
+    "registry": "ghcr.io/popc0rn7/aerohub",
+    "registry_digests": {
+      "flight_board": "sha256:1eff3190ca7870d0267ddb1531365dd7c68d85c6e52ade3d25b17b84b4758843",
+      "onboard_computer": "sha256:964048afd46a9d394aa771d801d48b57de8a2b2665979b1ba6f2b5e273f9adb9"
+    },
+    "verified_utc": "2026-11-08",
+    "repository_linked": false,
+    "source_repository": "https://github.com/Air-Suck/aerohub",
+    "verification": "Remote index digests match Skopeo digest files. Runtime and attestation manifest descriptors match original OCI archives; remote indexes omit the original top-level mediaType field."
   },
-  "note": "Local image IDs are recorded here; registry digest and publication location must be recorded after an actual push."
+  "note": "Original local image IDs and registry index digests differ. Runtime and attestation manifests are unchanged. Images are hosted in the personal namespace and linked from repository documentation; registry visibility is managed separately."
 }

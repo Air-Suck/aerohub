@@ -30,7 +30,8 @@ docker compose -f deployment/flight_board/compose.yaml up -d
 ```
 
 加载入口校验归档文件的 SHA256 及加载后的镜像 ID。无需源码编译或下载
-基础镜像。当前交付使用离线包，尚未推送镜像仓库。
+基础镜像。也可从 `ghcr.io/popc0rn7/aerohub/flight-board:v0.1.0` 获取，
+见[GHCR 拉取与摘要说明](../releases/README.md#从-ghcr-获取)。
 
 ## 采集线程与相机开关
 
@@ -55,7 +56,7 @@ docker build --network none --pull=false -f deployment/flight_board/Dockerfile.s
 
 ## 镜像组成与来源
 
-交付和使用均通过 tar 文件进行。[Dockerfile](Dockerfile) 保留为来源记录，
+交付支持 GHCR 拉取及离线 tar。[Dockerfile](Dockerfile) 保留为来源记录，
 用于查看从 `px4io/px4-sitl-gazebo` 基础镜像开始添加的内容：
 
 | 增加项 | 作用 |
