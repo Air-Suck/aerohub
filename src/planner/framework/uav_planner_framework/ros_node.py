@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+import json
 import os
 import subprocess
 from pathlib import Path
@@ -10,6 +11,7 @@ from pathlib import Path
 import rclpy
 import yaml
 from geometry_msgs.msg import PoseStamped
+from std_msgs.msg import String
 from rclpy.node import Node
 from rclpy.qos import (
     DurabilityPolicy,
@@ -74,6 +76,7 @@ class PlannerFrameworkNode(Node):
         self.planner_process: subprocess.Popen | None = None
         self.output_process: subprocess.Popen | None = None
         self.process_logs = []
+        self.execution_publisher = self.create_publisher(String, "planner/execution_state", 10)
         self.status_publisher = self.create_publisher(BehaviorResult, "planner/status", 10)
         self.setpoint_publisher = self.create_publisher(FleetSetpoint, "planner/setpoints", 10)
         trajectory_qos = QoSProfile(
@@ -229,6 +232,15 @@ class PlannerFrameworkNode(Node):
         self._fail(reason, message.detail)
 
     def _tick(self) -> None:
+        if self.execution is not None:
+            confirmed = self.execution.quiescent if self.execution.cancel_started else False
+            state = {"task_id": self.lifecycle.snapshot.task_id,
+                     "status": int(self.lifecycle.snapshot.status),
+                     "failure_reason": self.lifecycle.snapshot.failure_reason,
+                     "backend": "follow_path", "prepared": self.execution.ready,
+                     "stop_requested": self.execution.cancel_started,
+                     "stop_confirmed": {v: confirmed for v in self.resolved["vehicles"]}}
+            self.execution_publisher.publish(String(data=json.dumps(state)))
         snapshot = self.lifecycle.snapshot
         if snapshot is None or snapshot.status != BehaviorStatus.RUNNING or self.gateway is None:
             return
@@ -257,6 +269,8 @@ class PlannerFrameworkNode(Node):
         ):
             self._freeze_active_time(now)
             self.lifecycle.succeed()
+            if self.execution is not None:
+                self.execution.close()
             self._notify_cat_stop()
             self._stop_planner_adapter()
             self.trajectory_wait_started_at = None
@@ -324,6 +338,7 @@ class PlannerFrameworkNode(Node):
         self.setpoint_publisher.publish(message)
 
     def _fail(self, reason: str, detail: str = "") -> None:
+        self.get_logger().error(f"Planner failed: {reason}: {detail}")
         if self.resolved and self.resolved['planner']['id'] in ('cat_ora','swarm_formation'):
             self.lifecycle.fail(reason)
             self._notify_cat_stop()

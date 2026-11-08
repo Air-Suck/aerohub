@@ -1,0 +1,190 @@
+{
+  "scope": "PC AirSimNH four-vehicle FollowTimedPath only; not RoboPi acceptance",
+  "base_image": "onboard_computer:v0.1.0",
+  "images": {
+    "application": "sha256:c0ba48a50f140205d435b8b03d02f72527b21ab108d8c15552a4d675c6962bc8",
+    "flight_board": "sha256:8c33881fde6985fe5a43a894bde075471df85064e45ac8e5de28efebcc737cd2"
+  },
+  "source_manifest": {
+    "commit": "c209c0b98eaa9cb08907368710940a4bd98f8b82",
+    "execution_backend": "follow_path",
+    "source_hashes": {
+      "demos/catora_open_field/mission.py": "24e201bb7d91520406dadc354810c4d0fce21c1883f2d21c79d6a5fa32e5729f",
+      "src/planner/framework/uav_planner_framework/ros_node.py": "dad66b5623d5ff2ff803623389116cf910c72d1d218cdfe3f77d0f2be12cc213",
+      "src/behavior/follow_path/src/follow_path_extended.cpp": "c1261ae0d7edec5b2505169c902b1a02a79e5a988c18b81eba79b2989a73f3c4"
+    }
+  },
+  "normal": {
+    "execution_backend": "follow_path",
+    "task_id": "9807458d-10b4-4bf6-9af4-ffbf7d4fae19",
+    "planner_status": "SUCCEEDED",
+    "endpoint_error_m": {
+      "drone1": 0.1371951104041084,
+      "drone3": 0.22789168036252297,
+      "drone0": 0.2010224746707785,
+      "drone2": 0.09569400461718988
+    },
+    "airsim_truth_endpoint_error_m": {
+      "drone0": 0.08137126792706635,
+      "drone1": 0.03591284653570743,
+      "drone2": 0.024006636256768646,
+      "drone3": 0.13149173548171397
+    },
+    "min_truth_separation_m": 5.815578896442135,
+    "max_localization_disagreement_m": 0.335709698023567,
+    "min_observed_separation_m": 5.81785186678761,
+    "max_sampled_tracking_error_m": 1.0894608641839,
+    "planner_wall_seconds": 14.837706658989191,
+    "planning_collisions": false,
+    "as2_trajectory_reference_counts": {
+      "drone0": 290,
+      "drone1": 290,
+      "drone2": 290,
+      "drone3": 290
+    },
+    "position_source": "CAT-ORA input adapter checked AS2 local odometry; same frame as trajectory execution",
+    "runtime_topology": "PC containers",
+    "execution_arch": "x86_64",
+    "landed_and_disarmed": true
+  },
+  "reference_transport": "motion_reference/pose; historical result key as2_trajectory_reference_counts counts position references in follow_path mode",
+  "normal_evidence": "artifacts/catora-migration-pc-normal2",
+  "cancel": {
+    "status": "passed",
+    "result": {
+      "execution_backend": "follow_path",
+      "scenario": "cancel",
+      "planner_status": "CANCELED",
+      "as2_hover_confirmed": true,
+      "stop_wall_seconds": 0.1257269789930433,
+      "stop_state": {
+        "task_id": "e41c870c-29c4-424b-a557-b294e0169340",
+        "status": 5,
+        "failure_reason": "NONE",
+        "backend": "follow_path",
+        "prepared": true,
+        "stop_requested": true,
+        "stop_confirmed": {
+          "drone0": true,
+          "drone1": true,
+          "drone2": true,
+          "drone3": true
+        }
+      },
+      "landed_and_disarmed": true,
+      "execution_arch": "x86_64",
+      "as2_trajectory_reference_counts": {
+        "drone0": 3,
+        "drone1": 3,
+        "drone2": 3,
+        "drone3": 3
+      }
+    },
+    "evidence": "artifacts/catora-migration-pc-cancel2",
+    "images": {
+      "application": "sha256:c0ba48a50f140205d435b8b03d02f72527b21ab108d8c15552a4d675c6962bc8",
+      "flight_board": "sha256:8c33881fde6985fe5a43a894bde075471df85064e45ac8e5de28efebcc737cd2"
+    },
+    "source_manifest": {
+      "commit": "c209c0b98eaa9cb08907368710940a4bd98f8b82",
+      "execution_backend": "follow_path",
+      "scenario": "cancel",
+      "startup_timeout": 30.0,
+      "source_hashes": {
+        "demos/catora_open_field/mission.py": "24e201bb7d91520406dadc354810c4d0fce21c1883f2d21c79d6a5fa32e5729f",
+        "src/planner/framework/uav_planner_framework/ros_node.py": "dad66b5623d5ff2ff803623389116cf910c72d1d218cdfe3f77d0f2be12cc213",
+        "src/behavior/follow_path/src/follow_path_extended.cpp": "c1261ae0d7edec5b2505169c902b1a02a79e5a988c18b81eba79b2989a73f3c4"
+      }
+    }
+  },
+  "failed_attempt": {
+    "evidence": "artifacts/catora-migration-pc-cancel1",
+    "failure": {
+      "phase": "planning",
+      "error": "timed out during planning",
+      "reference_counts": {
+        "drone0": 0,
+        "drone1": 0,
+        "drone2": 0,
+        "drone3": 0
+      },
+      "trajectory_received": false,
+      "setpoints_received": false,
+      "planner_status": 4,
+      "controller_modes": {
+        "drone2": 2,
+        "drone0": 2,
+        "drone1": 2,
+        "drone3": 2
+      },
+      "local_frames": {
+        "drone1": "drone1/odom",
+        "drone0": "drone0/odom",
+        "drone3": "drone3/odom",
+        "drone2": "drone2/odom"
+      },
+      "bridge_state": {
+        "task_id": "ac8b21e9-349d-44b8-b6af-2a326a14d6f9",
+        "backend": "follow_path",
+        "prepared": true,
+        "stop_requested": true,
+        "stop_confirmed": {
+          "drone0": true,
+          "drone1": true,
+          "drone2": true,
+          "drone3": true
+        }
+      },
+      "input_state": {
+        "received": {
+          "drone0": 7723,
+          "drone1": 7785,
+          "drone2": 7702,
+          "drone3": 7714
+        },
+        "published": {
+          "drone0": 1290,
+          "drone1": 1299,
+          "drone2": 1273,
+          "drone3": 1288
+        },
+        "last_rejection": {
+          "drone1": "duplicate or out-of-order pose",
+          "drone0": "duplicate or out-of-order pose",
+          "drone3": "duplicate or out-of-order pose",
+          "drone2": "duplicate or out-of-order pose"
+        }
+      }
+    },
+    "recovery": {
+      "requested": true,
+      "hover_confirmed": true,
+      "landed_and_disarmed": true,
+      "planner_cancel_accepted": false
+    },
+    "note": "Failure before first trajectory; original failure_reason was not recorded, so root cause remains unconfirmed. Separate 30s cold-start allowance is now explicit; trajectory timeout remains 5s."
+  },
+  "limitations": [
+    "No RoboPi/OHOS or mixed-deployment acceptance",
+    "No Behavior stream-loss injection acceptance",
+    "No Swarm/SUPER migration acceptance",
+    "No repeated reliability or obstacle avoidance claim",
+    "Peak sampled tracking error is 1.089 m, not centimeter tracking"
+  ],
+  "execution_parameters": {
+    "startup_timeout_seconds": 30.0,
+    "trajectory_timeout_seconds": 5.0
+  },
+  "evidence_hashes": {
+    "artifacts/catora-migration-pc-normal2/source-manifest.json": "b26b4a236ea3c3a8fd548421ca9973f3c2e8e61942a02a11e62885f9f16768ee",
+    "artifacts/catora-migration-pc-normal2/result.json": "5779f19e74151706ef2a3c74a6e99fc80884b880e33f61c48823f8392107b58f",
+    "artifacts/catora-migration-pc-normal2/images.json": "6fa94e40129f076de5547f1588eaacb404b93f161ea1ff6b4c077d46c0d1c62b",
+    "artifacts/catora-migration-pc-cancel2/source-manifest.json": "5e6da49734110aa3ef523c906f36adbef2ee3a8dedfdf3eac964345770b5d83f",
+    "artifacts/catora-migration-pc-cancel2/result.json": "f0f637541898b9c4571d3c69f5dcdd9efd580b54d70873ebaa1e73c99809a031",
+    "artifacts/catora-migration-pc-cancel2/images.json": "6fa94e40129f076de5547f1588eaacb404b93f161ea1ff6b4c077d46c0d1c62b",
+    "artifacts/catora-migration-pc-cancel1/source-manifest.json": "9029d474513002353667f9c4796ef25a9a4d0743f44e3cba8362e2a9815e2120",
+    "artifacts/catora-migration-pc-cancel1/failure-stop.json": "4261ff016500092e4783d9c295622bc3b5bda19177d09622c77e61c60babf5bc",
+    "artifacts/catora-migration-pc-cancel1/images.json": "4d7f56187eeccf6deda9af5f7eacfd2268b8b49ad6aa6ff6c4a14adfcfdb56e8",
+    "artifacts/catora-migration-pc-cancel1/failure.json": "356e756a255ea3853d4efd283d5c8f1dc9ba777dfbd9f375825781f5786f276a"
+  }
+}

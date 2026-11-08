@@ -235,3 +235,33 @@ executor，应用只启动所需起降行为，状态消费者保留最新样本
 现按 `VehicleCommandAck.MESSAGE_VERSION` 订阅实际 topic。
 另一次仅用 AS2 自反馈的验证暴露地面局部高度原点偏差，最终版本加入固定
 原点对齐及独立 AirSim 终点检查后通过。算法及 AS2 控制参数未为本案例修改。
+
+
+## FollowTimedPath 迁移的 PC 验证入口
+
+迁移应用镜像基于现有 `onboard_computer:v0.1.0`，另行编译当前接口、框架、
+CAT-ORA 和 FollowPath 扩展；不覆盖冻结的 onboard_computer/flight_board 镜像。
+
+```bash
+docker build --network none --pull=false -f demos/catora_open_field/Dockerfile \
+  -t uav/apps-catora-open-field:migration-main-behavior .
+CATORA_APP_IMAGE=uav/apps-catora-open-field:migration-main-behavior \
+CATORA_EXECUTION_BACKEND=follow_path \
+python3 demos/catora_open_field/run.py run --output artifacts/catora-migration-pc-normal
+```
+
+PC 入口为首次轨迹保留独立的 `PLANNER_STARTUP_TIMEOUT=30.0` 秒冷启动预算，
+可显式覆盖；收到首条轨迹后仍使用原 `trajectory_timeout=5.0`，不延长过期轨迹。
+
+取消验证额外设置 `CATORA_SCENARIO=cancel` 并使用新的输出目录。
+该入口使用 domain 91、RPC 42471 和应用专用容器，结束后回收自身资源。
+启动握手使用已有 sim_startup 中继，不改变 MAVLink 负载或飞控参数。
+
+新链路读取 `/planner/execution_state` 的停止状态，不再等待 FleetSetpoint 桥或
+由应用抢占 TRAJECTORY。CAT-ORA 当前只提供位置，因此 Behavior 发布位置参考，
+不能要求 ControllerInfo 始终为 TRAJECTORY，也不能以轨迹话题计数代替执行验证。
+`prepared` 仅代表执行接口可发现；到点成功仍需框架 Action 结果、实际定位和
+AirSim 真值检查，停止确认需 stop 服务响应与后续控制模式反馈。
+
+旧 `stream-loss` 用例暂停的是旧输出桥，在新后端下明确拒绝该注入方式；
+Behavior 进程失效与参考断流需单独实现和验收。本节不表示 RoboPi 或混合部署通过。

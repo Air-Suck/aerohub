@@ -36,6 +36,9 @@ class VerifiedStreamLoss(RuntimeError):
 
 class Mission:
     def __init__(self):
+        self.execution_backend = os.environ.get('CATORA_EXECUTION_BACKEND', 'legacy_setpoint')
+        if self.execution_backend not in ('follow_path', 'legacy_setpoint'):
+            raise ValueError('invalid CATORA_EXECUTION_BACKEND')
         self.root = Path(os.environ.get('CATORA_APP_ROOT', '/opt/catora_app'))
         self.output = Path(os.environ.get('CATORA_OUTPUT', '/results'))
         self.output.mkdir(parents=True, exist_ok=True)
@@ -56,6 +59,8 @@ class Mission:
         self.mode_clients = {}
         self.status = None
         self.task_id = None
+        if self.execution_backend == 'follow_path' and os.environ.get('CATORA_SCENARIO','normal') == 'stream-loss':
+            raise ValueError('stream-loss scenario needs Behavior-specific injection; legacy adapter pause is inapplicable')
         self.phase = 'initializing'
         self.children = []
         self.subscriptions = []
@@ -77,6 +82,9 @@ class Mission:
         self.samples = (self.output/'flight.jsonl').open('w')
         for vehicle in self.vehicles:
             self.reference_counts[vehicle] = 0
+            if self.execution_backend == 'follow_path':
+                self.subscriptions.append(self.node.create_subscription(PoseStamped, f'/{vehicle}/motion_reference/pose',
+                    lambda msg,v=vehicle:self.on_position_reference(v,msg), qos_profile_sensor_data))
             topic=self.pose_topic(vehicle)
             self.deployment[vehicle]['topics']['pose']=topic
             self.subscriptions.append(self.node.create_subscription(PoseStamped,topic,
@@ -93,7 +101,8 @@ class Mission:
                     kind, f'/{vehicle}/{suffix}', lambda msg,v=vehicle,s=store: s.__setitem__(v,msg), qos_profile_sensor_data))
             self.subscriptions.append(self.node.create_subscription(VehicleCommandAck, f'/{vehicle}/fmu/out/vehicle_command_ack_v{VehicleCommandAck.MESSAGE_VERSION}',
                 lambda msg,v=vehicle: self.acks.__setitem__((v,msg.command),msg.result), qos_profile_sensor_data))
-        self.subscriptions.append(self.node.create_subscription(String, '/planner/as2_bridge_state', self.on_bridge_state,10))
+        state_topic = '/planner/execution_state' if self.execution_backend == 'follow_path' else '/planner/as2_bridge_state'
+        self.subscriptions.append(self.node.create_subscription(String, state_topic, self.on_bridge_state,10))
         self.subscriptions.append(self.node.create_subscription(String,'/planner/catora_input_state',self.on_input_state,10))
         self.subscriptions.append(self.node.create_subscription(BehaviorResult, '/planner/status', self.on_status,10))
         self.subscriptions.append(self.node.create_subscription(TimedTrajectorySegment, '/planner/trajectory', self.on_trajectory,
@@ -135,6 +144,17 @@ class Mission:
         if message.header.frame_id != vehicle+'/odom':
             raise RuntimeError('unexpected local odometry frame for '+vehicle+': '+message.header.frame_id)
         self.local_poses[vehicle]=message
+
+    def on_position_reference(self, vehicle, message):
+        if self.phase != 'planning':
+            return
+        p = message.pose.position
+        if message.header.frame_id != vehicle+'/odom' or not all(math.isfinite(x) for x in (p.x,p.y,p.z)):
+            raise RuntimeError('invalid AS2 position reference for '+vehicle)
+        self.reference_counts[vehicle] += 1
+        actual = self.local_poses[vehicle].pose.position
+        self.max_tracking_error = max(self.max_tracking_error,
+            math.dist((p.x,p.y,p.z),(actual.x,actual.y,actual.z)))
 
     def on_reference(self, vehicle, message):
         if self.phase != 'planning': return
@@ -291,6 +311,9 @@ class Mission:
     def run(self):
         if os.environ.get('CATORA_METRICS_SCRIPT'):
             self.start('metrics',['python3',os.environ['CATORA_METRICS_SCRIPT']])
+        if self.execution_backend == 'follow_path':
+            os.environ['AS2_EXECUTION_BACKEND'] = 'follow_path'
+            os.environ.pop('AS2_BEHAVIORS', None)
         self.start('as2',['python3',os.environ.get('AS2_LAUNCHER', '/opt/onboard_computer/run.py')])
         self.start('input-adapter',['ros2','run','uav_cat_ora_adapter','cat_ora_state_adapter_node','--ros-args',
             '-p','deployment_config:='+os.environ.get('CATORA_INPUT_DEPLOYMENT',str(self.root/'deployment.yaml')),'-p','use_sim_time:=true'])
@@ -329,7 +352,7 @@ class Mission:
         for index,vehicle in enumerate(self.vehicles):self.collision_baseline[vehicle]=self.rpc.call('simGetCollisionInfo',f'Drone{index}')['time_stamp']
         planner_command=['ros2','run','uav_planner_framework','planner_framework_node','--ros-args',
             '-p','runtime_startup_timeout:='+os.environ.get('PLANNER_STARTUP_TIMEOUT', '0.0'),
-            '-p','execution_backend:=legacy_setpoint','-p','registry_root:='+os.environ.get('PLANNER_REGISTRY', '/opt/catora_app_ws/src/framework/registry'),'-p','resolved_dir:='+str(self.output/'resolved'),'-p','use_sim_time:=true']
+            '-p','execution_backend:='+self.execution_backend,'-p','registry_root:='+os.environ.get('PLANNER_REGISTRY', '/opt/catora_app_ws/src/framework/registry'),'-p','resolved_dir:='+str(self.output/'resolved'),'-p','use_sim_time:=true']
         if os.environ.get('CATORA_LOCAL_VEHICLE'):planner_command+=['-p','output_vehicle_id:='+os.environ['CATORA_LOCAL_VEHICLE']]
         self.start('planner',planner_command)
         client=self.node.create_client(ControlPlanner,'/planner/control');self.clients.append(client)
@@ -350,9 +373,13 @@ class Mission:
             self.wait(lambda:time.monotonic()>=settle)
         self.task_id=response.result.task_id
         self.status=response.result
-        # Wait for a real algorithm output and the output bridge before taking control.
-        self.wait(lambda:self.trajectory is not None and self.setpoints is not None and self.bridge_state.get('prepared',False) and
-                  all(any(info.node_name.startswith(('cat_ora_as2_','swarm_as2_')) for info in self.node.get_publishers_info_by_topic('/'+v+'/motion_reference/trajectory')) for v in self.vehicles),35)
+        self.reference_counts = {v:0 for v in self.vehicles}
+        if self.execution_backend == 'follow_path':
+            self.wait(self.execution_ready,35)
+        else:
+            # Wait for a real algorithm output and the output bridge before taking control.
+            self.wait(lambda:self.trajectory is not None and self.setpoints is not None and self.bridge_state.get('prepared',False) and
+                      all(any(info.node_name.startswith(('cat_ora_as2_','swarm_as2_')) for info in self.node.get_publishers_info_by_topic('/'+v+'/motion_reference/trajectory')) for v in self.vehicles),35)
         if os.environ.get('CATORA_PREFLIGHT_ONLY')=='1':
             self.setpoint_samples.clear()
             self.clock_samples.clear()
@@ -369,7 +396,8 @@ class Mission:
             print(json.dumps(result),flush=True)
             return
         self.snapshot_processes()
-        self.controller_mode(ControlMode.TRAJECTORY)
+        if self.execution_backend == 'legacy_setpoint':
+            self.controller_mode(ControlMode.TRAJECTORY)
         scenario=os.environ.get('CATORA_SCENARIO','normal')
         if scenario!='normal':
             self.run_stop_scenario(client,scenario)
@@ -392,7 +420,7 @@ class Mission:
         if self.min_separation<2.0:raise RuntimeError(f'insufficient observed separation: {self.min_separation}')
         if self.min_truth_separation<2.0:raise RuntimeError(f'insufficient AirSim truth separation: {self.min_truth_separation}')
         self.screenshot('goals')
-        result={'task_id':self.task_id,'planner_status':'SUCCEEDED','endpoint_error_m':errors,
+        result={'execution_backend':self.execution_backend,'task_id':self.task_id,'planner_status':'SUCCEEDED','endpoint_error_m':errors,
             'airsim_truth_endpoint_error_m':truth_errors,'min_truth_separation_m':self.min_truth_separation,
             'max_localization_disagreement_m':self.max_localization_disagreement,
             'min_observed_separation_m':self.min_separation,'max_sampled_tracking_error_m':self.max_tracking_error,
@@ -413,6 +441,11 @@ class Mission:
         self.screenshot('landed')
         (self.output/'result.json').write_text(json.dumps(result,indent=2)+'\n')
         print(json.dumps(result,indent=2),flush=True)
+
+    def execution_ready(self):
+        if self.status and self.status.overall_status == BehaviorResult.FAILED:
+            raise RuntimeError('Planner failed before execution: '+self.status.failure_reason)
+        return self.trajectory is not None and self.bridge_state.get('prepared',False)
 
     def wait_as2_stop(self):
         def done():
@@ -473,7 +506,7 @@ class Mission:
             self.action(vehicle,Land,'LandBehavior',Land.Goal(land_speed=.5),'land_success')
             self.wait(lambda v=vehicle:not self.modes[v].flag_armed)
         self.screenshot('landed')
-        result={'scenario':scenario,'planner_status':'CANCELED','as2_hover_confirmed':True,
+        result={'execution_backend':self.execution_backend,'scenario':scenario,'planner_status':'CANCELED','as2_hover_confirmed':True,
                 'stop_wall_seconds':stop_seconds,'stop_state':self.bridge_state,
                 'landed_and_disarmed':True,'execution_arch':os.uname().machine,
                 'as2_trajectory_reference_counts':self.reference_counts}
@@ -533,6 +566,7 @@ def main():
         (mission.output/('fault-event.json' if expected else 'failure.json')).write_text(json.dumps({'phase':mission.phase,'error':str(error),'reference_counts':mission.reference_counts,
             'trajectory_received':mission.trajectory is not None,'setpoints_received':mission.setpoints is not None,
             'planner_status':None if mission.status is None else mission.status.overall_status,
+            'failure_reason':None if mission.status is None else mission.status.failure_reason,
             'controller_modes':{v:m.input_control_mode.control_mode for v,m in mission.controllers.items()},
             'local_frames':{v:m.header.frame_id for v,m in mission.local_poses.items()},'bridge_state':mission.bridge_state,'input_state':mission.input_state},indent=2)+'\n')
         report=mission.stop_after_failure() if any(m.flag_armed for m in mission.modes.values()) else {}

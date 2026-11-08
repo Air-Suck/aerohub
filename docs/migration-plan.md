@@ -3,6 +3,13 @@
 本计划自创建起进入实施；每个阶段必须有独立提交与真实验证记录。
 交接入口见 [migration.md](../migration.md)。首批目标为 CAT-ORA，完整路线覆盖 Swarm 和 SUPER。
 
+## 实施进度补充
+
+CAT-ORA PC 已接入 FollowTimedPath，新增执行状态观察、正常/取消场景运行入口。
+正常四机场景已完成到点、悬停、降落解除解锁；板端及 Swarm/SUPER 仍未验收。
+一轮首轨迹到达前的失败及其恢复已保留，不将后续成功当作失败已根治。
+最终场景结果、源码哈希和镜像 ID 见应用目录 migration-pc-validation.json。
+
 ## 版本管理
 
 - 来源 b3be98e、目标 main b701e04；保留来源分支，使用独立 integration 分支。

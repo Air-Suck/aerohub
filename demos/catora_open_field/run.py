@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 """Own the isolated AirSim scene and containers for this application only."""
 import argparse
+import hashlib
+import os
 import json
 from pathlib import Path
 import subprocess
 import sys
+from sim_startup import launch_vehicles
 
 ROOT=Path(__file__).resolve().parents[2]
 APP=Path(__file__).resolve().parent
 PREFIX='aerohub-catora-field-'
-IMAGE='uav/apps-catora-open-field:humble'
+IMAGE=os.environ.get('CATORA_APP_IMAGE','uav/apps-catora-open-field:humble')
 BOARD='flight_board:v0.1.0'
 NAMES=[PREFIX+'app',PREFIX+'clock']+[PREFIX+f'vehicle{i}' for i in range(4)]
 
@@ -56,15 +59,18 @@ def main():
     status=subprocess.run(manager('status',output),capture_output=True)
     if status.returncode:
         execute(manager('start',output)+['--timeout','90'])
+    sources = ['demos/catora_open_field/mission.py',
+               'src/planner/framework/uav_planner_framework/ros_node.py',
+               'src/behavior/follow_path/src/follow_path_extended.cpp']
+    manifest = {'commit': subprocess.check_output(['git','-C',str(ROOT),'rev-parse','HEAD'],text=True).strip(),
+                'execution_backend': os.environ.get('CATORA_EXECUTION_BACKEND','legacy_setpoint'),
+                'scenario': os.environ.get('CATORA_SCENARIO','normal'),
+                'startup_timeout': float(os.environ.get('PLANNER_STARTUP_TIMEOUT','30.0')),
+                'source_hashes': {name:hashlib.sha256((ROOT/name).read_bytes()).hexdigest() for name in sources}}
+    (output/'source-manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
+    relays=[]
     try:
-        for index in range(4):
-            command=['docker','run','--rm','--detach','--init','--network','host','--name',PREFIX+f'vehicle{index}',
-                '-e','ROS_DOMAIN_ID=91','-e',f'VEHICLE_NAME=Drone{index}',
-                '-e',f'VEHICLE_NAMESPACE=drone{index}','-e',f'PX4_INSTANCE={40+index}',
-                '-e',f'PX4_SYSTEM_ID={41+index}','-e',f'XRCE_AGENT_PORT={8901+index}',
-                '-e','AIRSIM_RPC_PORT=42471','-e','FLIGHT_BOARD_SENSORS=0',
-                '-v',str(APP/'settings.json')+':/config/settings.json:ro',BOARD,'vehicle']
-            execute(command,stdout=subprocess.DEVNULL)
+        relays=launch_vehicles(BOARD,APP,output,PREFIX,ROOT/'config/dds/fastdds_udp.xml')
         execute(['docker','run','--rm','--detach','--init','--network','host','--name',PREFIX+'clock',
                  '-e','ROS_DOMAIN_ID=91','-e','VEHICLE_NAME=Drone0','-e','AIRSIM_RPC_PORT=42471',BOARD,'clock'],stdout=subprocess.DEVNULL)
         # Record the actual image identities alongside simulation evidence.
@@ -72,9 +78,10 @@ def main():
                     for name,image in (('application',IMAGE),('flight_board',BOARD))}
         (output/'images.json').write_text(json.dumps(identities,indent=2)+'\n')
         execute(['docker','run','--rm','--init','--network','host','--name',PREFIX+'app',
-                 '-e','ROS_DOMAIN_ID=91','-v',str(output)+':/results',IMAGE])
+                 '-e','ROS_DOMAIN_ID=91','-e','CATORA_EXECUTION_BACKEND='+os.environ.get('CATORA_EXECUTION_BACKEND','legacy_setpoint'),'-e','PLANNER_STARTUP_TIMEOUT='+os.environ.get('PLANNER_STARTUP_TIMEOUT','30.0'),'-e','CATORA_SCENARIO='+os.environ.get('CATORA_SCENARIO','normal'),'-e','AS2_TF_SCOPE=per-vehicle','-v',str(output)+':/results',IMAGE])
     finally:
         cleanup(output)
+        for relay in relays:relay.close()
     return 0
 
 
