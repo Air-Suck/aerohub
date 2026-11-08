@@ -197,6 +197,9 @@ private:
         s.v[0],s.v[1],s.v[2],
         (p.fields & 2)?s.a[0]:nan,(p.fields & 2)?s.a[1]:nan,(p.fields & 2)?s.a[2]:nan);
     } else {
+      // Final-position settling intentionally releases trajectory mode. The
+      // takeover guard still applies while streaming the active trajectory.
+      trajectory_started_ = trajectory_acquired_ = false;
       sent=position_.sendPositionCommandWithYawAngle(frame_,s.p[0],s.p[1],s.p[2],yaw,
         frame_,p.max_speed,p.max_speed,p.max_speed);
     }
