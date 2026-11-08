@@ -40,6 +40,18 @@ SDK、场景及个人设备路径不提交到仓库。
 不能代替板端验收。板端导入或启动检查也不能代替 Demo 的端到端结果。
 SUPER 已新增独立 PC 镜像与 FollowTimedPath 场景入口；板端统一部署仍缺失，PC 结果不能代替 RoboPi 验收。
 
+## 算法迁移分析
+
+迁移新算法时，使用项目技能 [$algorithm-migration](.agents/skills/algorithm-migration/SKILL.md)，提供算法源码位置、需要保留的能力和目标运行环境。例如：
+
+```text
+使用 $algorithm-migration 分析 <算法源码路径> 如何接入本项目，
+保留 <所需能力>，目标为 PC onboard_computer 和 RoboPi。
+```
+
+技能先核查源码和当前 AS2 接口，交付迁移流程表、分层架构图、各层新增/复用/修改清单、依赖及接口契约，并安排分阶段验证。
+报告默认保存在 `docs/migrations/<算法名>/migration.md`；分析报告与实际迁移、验收状态分别记录。
+
 ## 详细运行入口
 
 - [容器配方与文档](deployment/README.md)：两个交付镜像、官方开发环境前提及项目适配。
