@@ -53,3 +53,9 @@ Humble 算法、RoboPi/OHOS、AS2/Pixhawk 的 PVA 和失流保护必须保留并
 禁止运行中叠加两套 AS2 install；冻结 v0.1.0 不重新标记为迁移构建。
 
 完整顺序、验收门槛见 [迁移实施计划](docs/migration-plan.md)。
+
+## RoboPi 就绪纠正
+
+当前迁移不具备板端端到端就绪条件；实测工作区源码未同步、板端无执行扩展。
+CAT-ORA/Swarm 仍使用旧应用流程，SUPER 缺少统一环境入口。
+详见 [RoboPi 就绪审计](docs/robopi-migration-readiness.md)。旧板端验证记录不能替代本轮验收。
