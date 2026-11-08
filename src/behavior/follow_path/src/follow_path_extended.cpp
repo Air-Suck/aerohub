@@ -156,7 +156,8 @@ private:
     status_pub_->publish(status);
     if (!timed_ || !handle_) {return;}
     if (cancel_requested_ && handle_->is_canceling()) {finish(false,"CANCELED",true); return;}
-    const double t=now().seconds();
+    const auto sample_time=now();
+    const double t=sample_time.seconds();
     if (t<last_tick_) {finish(false,"CLOCK_RESET"); return;}
     last_tick_=t;
     if (!poseFresh()) {finish(false,"STALE_LOCALIZATION"); return;}
@@ -193,9 +194,18 @@ private:
     if ((p.fields & 1) && t<p.end()) {
       trajectory_started_ = true;
       const double nan = std::numeric_limits<double>::quiet_NaN();
-      sent=trajectory_.sendTrajectoryCommandWithYawAngle(frame_,s.p[0],s.p[1],s.p[2],yaw,
-        s.v[0],s.v[1],s.v[2],
-        (p.fields & 2)?s.a[0]:nan,(p.fields & 2)?s.a[1]:nan,(p.fields & 2)?s.a[2]:nan);
+      as2_msgs::msg::TrajectorySetpoints reference;
+      reference.header.frame_id=frame_;
+      reference.header.stamp=sample_time;
+      as2_msgs::msg::TrajectoryPoint point;
+      point.position.x=s.p[0]; point.position.y=s.p[1]; point.position.z=s.p[2];
+      point.twist.x=s.v[0]; point.twist.y=s.v[1]; point.twist.z=s.v[2];
+      point.acceleration.x=(p.fields & 2)?s.a[0]:nan;
+      point.acceleration.y=(p.fields & 2)?s.a[1]:nan;
+      point.acceleration.z=(p.fields & 2)?s.a[2]:nan;
+      point.yaw_angle=yaw;
+      reference.setpoints.push_back(point);
+      sent=trajectory_.sendTrajectorySetpoints(reference);
     } else {
       // Final-position settling intentionally releases trajectory mode. The
       // takeover guard still applies while streaming the active trajectory.

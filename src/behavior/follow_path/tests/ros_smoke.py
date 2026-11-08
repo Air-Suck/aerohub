@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Real ROS Actions against the compiled extension; fake controller, NOT SITL."""
 import copy
+import math
 from pathlib import Path
 from ament_index_python.packages import get_package_share_directory
 import os
@@ -157,6 +158,20 @@ class Test(Node):
         assert self.wait(handle.get_result_async()).result.success
         assert self.trajectory_references, "derivatives did not reach trajectory motion handler"
         assert any(abs(msg.setpoints[0].twist.x)>0.01 for msg in self.trajectory_references)
+        start=goal.path.valid_from.sec+goal.path.valid_from.nanosec/1e9
+        duration=goal.path.points[-1].time_from_start.sec+goal.path.points[-1].time_from_start.nanosec/1e9
+        x0=goal.path.points[0].position.x
+        dx=goal.path.points[-1].position.x-x0
+        for msg in self.trajectory_references:
+            t=msg.header.stamp.sec+msg.header.stamp.nanosec/1e9
+            u=min(1.,max(0.,(t-start)/duration))
+            p=x0+dx*(10*u**3-15*u**4+6*u**5)
+            v=dx*(30*u**2-60*u**3+30*u**4)/duration
+            a=dx*(60*u-180*u**2+120*u**3)/(duration**2)
+            actual=msg.setpoints[0]
+            assert abs(actual.position.x-p)<1e-5, "reference position does not match its sampling timestamp"
+            assert abs(actual.twist.x-v)<1e-5, "reference velocity does not match its sampling timestamp"
+            assert abs(actual.acceleration.x-a)<1e-4, "reference acceleration does not match its sampling timestamp"
         print("PASS: timed execution, future start, legacy exclusion/execution, stale rejection, rolling update, pause/replan, cancel, expiration, derivative feedforward")
 
 
