@@ -55,6 +55,8 @@ class FleetFollowPathClient:
         self.actions, self.modifiers, self.stoppers = {}, {}, {}
         self.handles = {}
         self.results = set()
+        self.plans = {}
+        self.feedbacks = {}
         self.pending = set()
         self.revision = 0
         self.failed = False
@@ -114,14 +116,40 @@ class FleetFollowPathClient:
             vehicle = item.vehicle_id
             goal = make_goal(segment, item, self.config["deployment"][vehicle],
                              self.revision, self.config["planner"]["parameters"].get("max_velocity", 1.0))
+            self.plans[(vehicle, self.revision)] = (
+                bool(goal.path.is_final),
+                time_to_seconds(goal.path.points[-1].time_from_start))
             if self.revision == 1:
-                future = self.actions[vehicle].send_goal_async(goal)
+                future = self.actions[vehicle].send_goal_async(
+                    goal, feedback_callback=lambda msg, v=vehicle, g=generation: self._feedback(v, g, msg))
                 future.add_done_callback(lambda f, v=vehicle, g=generation: self._accepted(v, g, f))
             else:
                 request = FollowTimedPath_SendGoal.Request()
                 request.goal = goal
                 future = self.modifiers[vehicle].call_async(request)
                 future.add_done_callback(lambda f, v=vehicle, g=generation: self._modified(v, g, f))
+
+    def _feedback(self, vehicle, generation, message):
+        if self.closed or self.failed or generation != self.generation:
+            return
+        feedback = message.feedback
+        previous = self.feedbacks.get(vehicle)
+        if previous is not None and feedback.revision < previous.revision:
+            return
+        if (vehicle, feedback.revision) not in self.plans:
+            return
+        self.feedbacks[vehicle] = feedback
+        self.plans = {key: value for key, value in self.plans.items()
+                      if key[0] != vehicle or key[1] >= feedback.revision}
+
+    @property
+    def settling_vehicles(self):
+        if self.closed or self.failed:
+            return set()
+        return {vehicle for vehicle, feedback in self.feedbacks.items()
+                if not feedback.waiting_for_start and
+                self.plans.get((vehicle, feedback.revision), (False, 0))[0] and
+                feedback.elapsed >= self.plans[(vehicle, feedback.revision)][1]}
 
     def _accepted(self, vehicle, generation, future):
         try:

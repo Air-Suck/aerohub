@@ -94,3 +94,25 @@ class FollowPathConversionTest(unittest.TestCase):
         self.assertAlmostEqual(p.points[0].yaw, 1.5707963267948966)
         self.assertEqual(point.position.x, 11.)
         self.assertEqual(point.velocity.x, 1.)
+
+
+@unittest.skipIf(TimedTrajectorySegment is None, "requires generated ROS messages")
+class ExecutionFeedbackTest(unittest.TestCase):
+    def test_settling_uses_active_revision_not_latest_pending_plan(self):
+        coordinator=FleetFollowPathClient.__new__(FleetFollowPathClient)
+        coordinator.closed=coordinator.failed=False
+        coordinator.generation=0
+        coordinator.plans={("a",1):(False,1.),("a",2):(True,3.),("a",3):(False,10.)}
+        coordinator.feedbacks={}
+        feedback=Mock(revision=1,elapsed=2.,waiting_for_start=False)
+        coordinator._feedback("a",0,Mock(feedback=feedback))
+        self.assertEqual(coordinator.settling_vehicles,set())
+        feedback=Mock(revision=2,elapsed=2.9,waiting_for_start=False)
+        coordinator._feedback("a",0,Mock(feedback=feedback))
+        self.assertEqual(coordinator.settling_vehicles,set())
+        feedback.elapsed=3.
+        self.assertEqual(coordinator.settling_vehicles,{"a"})
+        coordinator._feedback("a",0,Mock(feedback=Mock(revision=1,elapsed=10.,waiting_for_start=False)))
+        self.assertEqual(coordinator.settling_vehicles,{"a"})
+        coordinator.closed=True
+        self.assertEqual(coordinator.settling_vehicles,set())
