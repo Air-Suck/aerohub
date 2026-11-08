@@ -4,7 +4,7 @@ task:
 planner:
   id: swarm_formation
   version: 967a4bdfae949e994691f8ffc87dbb0147cbebb7
-  manifest: /opt/uav_planner_ws/install/share/uav_planner_framework/registry/swarm_formation/967a4bdfae949e994691f8ffc87dbb0147cbebb7/manifest.yaml
+  manifest: /opt/uav_planner_ws/install/share/uav_src/planner/framework/registry/swarm_formation/967a4bdfae949e994691f8ffc87dbb0147cbebb7/manifest.yaml
   runtime:
     image: uav/swarm-formation:noetic-px4
     adapter: swarm_formation_adapter

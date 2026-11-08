@@ -4,7 +4,7 @@ task:
 planner:
   id: cat_ora
   version: 4bc41f593eebde65dd74108a97e80430a145dfa0
-  manifest: /opt/uav_planner_ws/install/share/uav_planner_framework/registry/cat_ora/4bc41f593eebde65dd74108a97e80430a145dfa0/manifest.yaml
+  manifest: /opt/uav_planner_ws/install/share/uav_src/planner/framework/registry/cat_ora/4bc41f593eebde65dd74108a97e80430a145dfa0/manifest.yaml
   runtime:
     image: uav/catora:noetic-px4
     adapter: cat_ora_adapter

@@ -58,7 +58,7 @@ SUPER 当前尚缺统一部署入口，其现有任务的准备步骤和限制�
 | 用户任务与 `scripts/` | 场景选择、任务编排及构建运行入口 |
 | `demos/` | 各 Library 的端到端示例、场景、任务、运行入口与验收记录 |
 | `libraries/` | CAT-ORA、Swarm-Formation 的算法专用适配、代理与部署 |
-| `planner_framework/`、`planner_interfaces/` | 公共规划契约、生命周期及 Library → AS2 输出桥 |
+| `src/planner/framework/`、`src/planner/interfaces/` | 公共规划契约、生命周期及 Library → AS2 输出桥 |
 | `runtime/` | 共用 AS2 启动器、AirSim 传感器与时钟接入 |
 | `thirdparty/` | 活动 AS2 / Pixhawk fork submodule |
 | `config/` | 场景、AS2、DDS 与外部资源配置 |
@@ -104,7 +104,7 @@ PC 运行 AirSim、PX4/Agent 及 Humble 传感器/clock；RoboPi 原生运行 AS
 ## 测试与历史
 
 ```bash
-PYTHONPATH=planner_framework python3 -m unittest discover -s planner_framework/tests -v
+PYTHONPATH=src/planner/framework python3 -m unittest discover -s src/planner/framework/tests -v
 PYTHONPATH=runtime/airsim_sensors python3 -m unittest discover -s runtime/airsim_sensors/tests -v
 ```
 

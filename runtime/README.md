@@ -14,4 +14,4 @@ AS2 核心源码由 `thirdparty/` 管理；本目录维护项目自己的平台�
 
 这里是当前自建接入代码的归属，不代表已经迁入全部 AS2 能力或实现统一
 Runtime 生命周期。Planner 专用的 AS2 输出桥位于
-`planner_framework/bridges/as2_setpoint/`，由 Planner framework 管理。
+`src/behavior/legacy_setpoint/`，由 Planner framework 管理。

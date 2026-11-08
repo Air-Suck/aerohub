@@ -76,8 +76,8 @@ bash scripts/verify_lib.sh all
 | 组件 | 检查 | 版本化记录 |
 | --- | --- | --- |
 | AS2 | `as2_core` 导入、PlatformInfo CDR 往返、加载默认配置后估计器存活 5 秒 | `validation/startup.json` |
-| CAT-ORA | 应用模块导入、一次原生服务请求及 JSON 代理一致性，生成 16 点 | `../../libraries/cat_ora/validation/robopi-smoke.json` |
-| Swarm-Formation | 应用模块导入、单节点接收静态里程计/合成点云/手动目标，输出 2 段五阶 PolyTraj | `../../libraries/swarm_formation/validation/robopi-smoke.json` |
+| CAT-ORA | 应用模块导入、一次原生服务请求及 JSON 代理一致性，生成 16 点 | `../../src/planner/cat_ora/validation/robopi-smoke.json` |
+| Swarm-Formation | 应用模块导入、单节点接收静态里程计/合成点云/手动目标，输出 2 段五阶 PolyTraj | `../../src/planner/swarm_formation/validation/robopi-smoke.json` |
 
 本次使用官方 builder 交叉编译算法，复用已有 AS2 产物；原始构建、调试和最终
 验收日志保存在本机 `artifacts/robopi-lib-acceptance/`。板端每个组件的

@@ -20,7 +20,7 @@
 
 ## 阶段二：按 main 归位源码
 
-- planner_framework -> src/planner/framework，planner_interfaces -> src/planner/interfaces。
+- src/planner/framework -> src/planner/framework，src/planner/interfaces -> src/planner/interfaces。
 - 两算法 Adapter -> src/planner/<算法>/ros2_adapter；Humble 移植 -> 同级 humble。
 - 上游源码 -> 同级 upstream，保留许可证与原始版本，不将移植伪装为干净上游。
 - 活动 AS2/Pixhawk -> main 的 as2 布局，保留 fork 来源和保护修改。

@@ -9,7 +9,7 @@ AS2 platform、状态估计、控制器及运动 Behavior。PC onboard_computer 
 
 - PC AS2：[部署配方](../../deployment/onboard_computer/README.md)
 - RoboPi：[运行入口](../../deployment/robopi/README.md)
-- Planner 输出桥仍位于 `planner_framework/bridges/as2_setpoint/`。
+- Planner 输出桥仍位于 `src/behavior/legacy_setpoint/`。
 
 ## 多机 TF 话题
 

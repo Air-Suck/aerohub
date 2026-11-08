@@ -48,6 +48,15 @@ RUN source /opt/ros/humble/setup.bash \
     && ros2 pkg prefix as2_motion_controller \
     && ros2 pkg prefix as2_behaviors_motion \
     && ros2 pkg prefix as2_navigation_inputs
+# Project execution overlay; the flight-board image and PX4 dependencies are unchanged.
+COPY src/planner/interfaces/ /opt/uav_execution_ws/src/interfaces/
+COPY src/behavior/follow_path/ /opt/uav_execution_ws/src/follow_path/
+WORKDIR /opt/uav_execution_ws
+RUN source /opt/ros/humble/setup.bash \
+    && source /opt/px4_ws/install/setup.bash \
+    && source /root/aerostack2_ws/install/setup.bash \
+    && colcon build --merge-install --parallel-workers 2 \
+       --cmake-args -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF
 COPY deployment/onboard_computer/entrypoint.sh /usr/local/bin/onboard-computer
 COPY runtime/as2/run.py /opt/onboard_computer/run.py
 COPY runtime/as2/selected_behaviors.launch.py /opt/onboard_computer/selected_behaviors.launch.py

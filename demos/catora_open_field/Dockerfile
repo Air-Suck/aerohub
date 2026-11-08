@@ -1,12 +1,13 @@
 FROM onboard_computer:v0.1.0
 SHELL ["/bin/bash", "-c"]
-COPY libraries/cat_ora/humble /opt/catora_app_ws/src/cat_ora
-COPY libraries/cat_ora/ros2_adapter /opt/catora_app_ws/src/cat_ora_adapter
-COPY planner_interfaces /opt/catora_app_ws/src/planner_interfaces
-COPY planner_framework /opt/catora_app_ws/src/planner_framework
+COPY src/planner/cat_ora/humble /opt/catora_app_ws/src/cat_ora
+COPY src/planner/cat_ora/ros2_adapter /opt/catora_app_ws/src/cat_ora_adapter
+COPY src/planner/interfaces /opt/catora_app_ws/src/interfaces
+COPY src/planner/framework /opt/catora_app_ws/src/framework
+COPY src/behavior/legacy_setpoint /opt/catora_app_ws/src/legacy_setpoint
 RUN source /root/aerostack2_ws/install/setup.bash && cd /opt/catora_app_ws && \
-    colcon build --base-paths src/cat_ora src/cat_ora_adapter src/planner_interfaces \
-      src/planner_framework src/planner_framework/bridges/as2_setpoint \
+    colcon build --base-paths src/cat_ora src/cat_ora_adapter src/interfaces \
+      src/framework src/legacy_setpoint \
       --cmake-args -DCMAKE_BUILD_TYPE=Release
 COPY demos/catora_open_field /opt/catora_app
 COPY runtime/airsim_sensors/uav_as2_sensor_adapter/rpc.py /opt/catora_app/airsim_rpc.py

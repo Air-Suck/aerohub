@@ -19,16 +19,16 @@ import hashlib, json, shutil, sys, os, subprocess
 from pathlib import Path
 root, work = map(Path, sys.argv[1:3])
 component=sys.argv[3]
-packages={'uav_planner_interfaces':'planner_interfaces', 'uav_planner_framework':'planner_framework',
-          'uav_as2_setpoint_adapter':'planner_framework/bridges/as2_setpoint'}
+packages={'uav_planner_interfaces':'src/planner/interfaces', 'uav_planner_framework':'src/planner/framework',
+          'uav_as2_setpoint_adapter':'src/behavior/legacy_setpoint'}
 if component in ('all','catora'):
- packages.update(mrs_formation_reshaping='libraries/cat_ora/humble',uav_cat_ora_adapter='libraries/cat_ora/ros2_adapter')
+ packages.update(mrs_formation_reshaping='src/planner/cat_ora/humble',uav_cat_ora_adapter='src/planner/cat_ora/ros2_adapter')
 if component in ('all','swarm-formation'):
- for directory in (root/'libraries/swarm_formation/humble').iterdir():
+ for directory in (root/'src/planner/swarm_formation/humble').iterdir():
   if (directory/'package.xml').exists():
    import xml.etree.ElementTree as ET
    packages[ET.parse(directory/'package.xml').getroot().findtext('name')]=str(directory.relative_to(root))
- packages['uav_swarm_formation_adapter']='libraries/swarm_formation/ros2_adapter'
+ packages['uav_swarm_formation_adapter']='src/planner/swarm_formation/ros2_adapter'
  packages['as2_navigation_inputs']='runtime/navigation_inputs'
 manifest={}
 stale_paths=[]

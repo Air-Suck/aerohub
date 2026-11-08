@@ -22,7 +22,7 @@ ROS 1 原始源码、代理与旧部署已归档到 `thirdparty/cat_ora_ros1/` �
 CAT-ORA 已提取上游源码并迁移当前使用的轨迹服务，见
 [迁移边界与验证](cat_ora/humble/README.md)；Swarm-Formation 已迁移原生规划依赖闭包，
 见[迁移边界与验证](swarm_formation/README.md)。公共任务契约、Planner Registry 和
-任务配置仍在 `planner_interfaces/`、`planner_framework/`；公共 AS2 能力
+任务配置仍在 `src/planner/interfaces/`、`src/planner/framework/`；公共 AS2 能力
 不归属某个算法库。
 
 独立算法部署文件位于 `libraries/<name>/deployment/compose.yaml`，构建上下文

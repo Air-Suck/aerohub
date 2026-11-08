@@ -1,6 +1,7 @@
 // The original FollowPath action and plugins run unchanged through inheritance.
 // Only one of the original action and the timed companion may own execution.
 #include <memory>
+#include <limits>
 #include <string>
 #include "follow_path_behavior/follow_path_behavior.hpp"
 #include "as2_motion_reference_handlers/position_motion.hpp"
@@ -33,6 +34,14 @@ public:
       "platform/info", rclcpp::SensorDataQoS(), [this](as2_msgs::msg::PlatformInfo::SharedPtr msg) {
         flying_ = msg->status.state == as2_msgs::msg::PlatformStatus::FLYING;
       });
+    controller_sub_ = create_subscription<as2_msgs::msg::ControllerInfo>(
+      "controller/info", rclcpp::SensorDataQoS(), [this](as2_msgs::msg::ControllerInfo::SharedPtr msg) {
+        const auto mode = msg->input_control_mode.control_mode;
+        if (timed_ && trajectory_started_) {
+          if (mode == as2_msgs::msg::ControlMode::TRAJECTORY) {trajectory_acquired_ = true;}
+          else if (trajectory_acquired_) {mode_lost_ = true;}
+        }
+      });
     pose_sub_ = create_subscription<geometry_msgs::msg::PoseStamped>(
       "self_localization/pose", rclcpp::SensorDataQoS(), [this](geometry_msgs::msg::PoseStamped::SharedPtr msg) {
         if (msg->header.frame_id != frame_ && !timed_tf_->tryConvert(*msg, frame_)) {return;}
@@ -56,6 +65,8 @@ public:
           timeline_.reset();
           return rclcpp_action::GoalResponse::REJECT;
         }
+        held_yaw_ = yaw_;
+        trajectory_started_ = trajectory_acquired_ = mode_lost_ = false;
         timed_ = true; paused_ = false; needs_replan_ = false;
         last_tick_ = now().seconds();
         return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
@@ -87,7 +98,7 @@ public:
         res->message = "REPLAN_REQUIRED: cancel paused goal and submit a future-dated plan";
       });
     stop_ = create_service<Trigger>("follow_timed_path/_behavior/stop",
-      [this](Trigger::Request::SharedPtr, Trigger::Response::SharedPtr res) {res->success = timed_; if (timed_) {finish(false,"STOPPED");}});
+      [this](Trigger::Request::SharedPtr, Trigger::Response::SharedPtr res) {res->success = timed_ ? true : hover_.sendHover(); if (timed_) {res->success = finish(false,"STOPPED");}});
     status_pub_ = create_publisher<as2_msgs::msg::BehaviorStatus>(
       "follow_timed_path/_behavior/behavior_status", 10);
     timer_ = create_wall_timer(std::chrono::milliseconds(20), [this] {tick();});
@@ -126,16 +137,17 @@ private:
     const double age=now().seconds()-pose_time_;
     return has_pose_ && age>=0 && age<=pose_timeout_;
   }
-  void finish(bool success, const std::string & reason, bool canceled=false) {
+  bool finish(bool success, const std::string & reason, bool canceled=false) {
     auto result=std::make_shared<Timed::Result>();
     result->success=success; result->reason=reason; result->revision=timeline_.active.revision;
-    hover_.sendHover();
+    const bool stopped = hover_.sendHover();
     if (handle_) {
       if (canceled) {handle_->canceled(result);}
       else if (success) {handle_->succeed(result);}
       else {handle_->abort(result);}
     }
     handle_.reset(); timeline_.reset(); timed_=paused_=needs_replan_=cancel_requested_=false;
+    return stopped;
   }
   void tick() {
     as2_msgs::msg::BehaviorStatus status;
@@ -150,6 +162,7 @@ private:
     if (!poseFresh()) {finish(false,"STALE_LOCALIZATION"); return;}
     if (!flying_) {finish(false,"NOT_FLYING"); return;}
     if (paused_) {return;}
+    if (mode_lost_) {finish(false,"CONTROL_MODE_LOST"); return;}
     timeline_.advance(t);
     const auto & p=timeline_.active;
     auto feedback=std::make_shared<Timed::Feedback>();
@@ -175,11 +188,14 @@ private:
       if (feedback->tracking_error<=tolerance_) {finish(true,"COMPLETED"); return;}
       if (t>p.end()+settle_timeout_) {finish(false,"TRACKING_TIMEOUT"); return;}
     }
-    const double yaw=(p.fields & 4)?s.yaw:yaw_;
+    const double yaw=(p.fields & 4)?s.yaw:held_yaw_;
     bool sent;
     if ((p.fields & 1) && t<p.end()) {
+      trajectory_started_ = true;
+      const double nan = std::numeric_limits<double>::quiet_NaN();
       sent=trajectory_.sendTrajectoryCommandWithYawAngle(frame_,s.p[0],s.p[1],s.p[2],yaw,
-        s.v[0],s.v[1],s.v[2],s.a[0],s.a[1],s.a[2]);
+        s.v[0],s.v[1],s.v[2],
+        (p.fields & 2)?s.a[0]:nan,(p.fields & 2)?s.a[1]:nan,(p.fields & 2)?s.a[2]:nan);
     } else {
       sent=position_.sendPositionCommandWithYawAngle(frame_,s.p[0],s.p[1],s.p[2],yaw,
         frame_,p.max_speed,p.max_speed,p.max_speed);
@@ -187,6 +203,8 @@ private:
     if (!sent) {finish(false,"MOTION_REFERENCE_REJECTED");}
   }
   bool legacy_{false},timed_{false},paused_{false},needs_replan_{false},cancel_requested_{false};
+  bool trajectory_started_{false},trajectory_acquired_{false},mode_lost_{false};
+  double held_yaw_{};
   bool has_pose_{false},flying_{false};
   double pose_time_{},yaw_{},last_tick_{},tolerance_,continuity_,velocity_continuity_;
   double settle_timeout_,pose_timeout_;
@@ -203,6 +221,7 @@ private:
   rclcpp::Service<Timed::Impl::SendGoalService>::SharedPtr modify_;
   rclcpp::Service<Trigger>::SharedPtr pause_,resume_,stop_;
   rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr pose_sub_;
+  rclcpp::Subscription<as2_msgs::msg::ControllerInfo>::SharedPtr controller_sub_;
   rclcpp::Subscription<as2_msgs::msg::PlatformInfo>::SharedPtr info_sub_;
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Publisher<as2_msgs::msg::BehaviorStatus>::SharedPtr status_pub_;

@@ -109,7 +109,7 @@ AS2 源年龄、未来偏差及失流保护没有放宽。后续增加节点或�
 `cat_ora_as2_adapter_node` 复用 PVA 转换，取消／暂停／失败／成功时将停止意图
 转为真实 AS2 HOVER 服务请求，要求响应成功和模式反馈；停止确认完成后保留结果，
 不因随后的降落模式撤销确认。Swarm 继续使用原公共输出入口。
-接口与测试说明见 [CAT-ORA adapter](../../libraries/cat_ora/ros2_adapter/README.md)。
+接口与测试说明见 [CAT-ORA adapter](../../src/planner/cat_ora/ros2_adapter/README.md)。
 
 应用异常时先请求 AS2 悬停，尝试取消规划，再通过 AS2 降落；失败结果写入
 `results/failure-stop.json`，不会把清理进程当作停止成功。AS2 本身的失流保护仍启用。

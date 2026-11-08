@@ -10,13 +10,17 @@
 启动、通信、传感器与 clock 以来源分支为权威。不能用 main 的 Gazebo 部署覆盖。
 Humble 算法、RoboPi/OHOS、AS2/Pixhawk 的 PVA 和失流保护必须保留并重新验证。
 
-## 已引入但尚未启用
+## 当前实施状态
 
 - main 的独立 `uav_follow_path_execution` 包及无 ROS 时间线测试。
 - `FollowTimedPath` Action、`TimedPath` 消息及 action_msgs 构建依赖。
-- main 的机群 FollowPath 客户端；尚未连接当前 framework。
+- main 的机群 FollowPath 客户端已接通 framework；默认 follow_path，显式 legacy_setpoint 保留。
+- Planner、接口和 Humble 算法已归位 src/planner，旧桥归位 src/behavior/legacy_setpoint。
+- 加强停止响应与模式反馈检查，保留输入新鲜度、时钟保护及进程组回收。
+- 缺失加速度保持 NaN，未指定 yaw 固定为接管时航向；轨迹模式取得后丢失会结束执行。
+- PC 镜像配方加入执行 overlay；启动器支持显式 AS2_EXECUTION_BACKEND=follow_path。
 
-默认运行链仍为来源分支的 Planner 采样与输出桥。本次不宣称 Behavior
+现有 Demo 显式使用旧链路，应用编排尚未迁移。本次不宣称 Behavior
 后端、ROS 构建、OHOS 或飞行已通过。未导入依赖旧 Gazebo 部署的验收驱动。
 
 ## 接手执行顺序
@@ -40,8 +44,8 @@ Humble 算法、RoboPi/OHOS、AS2/Pixhawk 的 PVA 和失流保护必须保留并
 
 ## 验证与回退
 
-初始引入验证：C++ timeline 测试通过；原 framework 23 项单元测试通过。
-这些测试不证明 ROS Action 生成、AS2 ABI、板端加载或飞行兼容。
+当前验证：现有 onboard_computer 镜像内接口和扩展编译通过；框架 26 项（含真实 ROS 消息）及 CTest timeline 通过；CAT-ORA 6 项、Swarm 转换 9 项通过；板端打包布局 2 项通过。Swarm 多项式测试在该镜像缺少 traj_utils，尚未执行成功。
+这些测试不证明板端加载或飞行兼容。AS2/Pixhawk 子模块路径、OHOS 扩展部署、Demo Action 编排和动力学验收尚待实施。
 历史证据见各 demos 的 validation JSON 与 README，仅代表原运行组合。
 
 回退时先停止新执行、确认无活动参考源，再切回原分支对应的镜像与板端安装。

@@ -52,6 +52,15 @@ def main():
         for command in commands:
             if command[1:4]==['launch','as2_behaviors_motion','motion_behaviors_launch.py']:
                 command[2:4]=[subset]
+    backend = os.environ.get('AS2_EXECUTION_BACKEND', 'legacy_setpoint')
+    if backend not in ('follow_path', 'legacy_setpoint'):
+        raise ValueError('invalid AS2_EXECUTION_BACKEND')
+    if backend == 'follow_path':
+        for command in commands:
+            if command[1:4] == ['launch', 'as2_behaviors_motion', 'motion_behaviors_launch.py']:
+                command[2:4] = ['uav_follow_path_execution', 'motion_behaviors.launch.py']
+            elif len(command) > 2 and command[2].endswith('selected_behaviors.launch.py'):
+                raise ValueError('AS2_BEHAVIORS subset is incompatible with follow_path backend')
     if os.environ.get('AS2_TF_SCOPE')=='per-vehicle':
         scoped=str(Path(__file__).with_name('scoped_tf.launch.py'))
         wrapped=[]

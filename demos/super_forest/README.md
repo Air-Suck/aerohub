@@ -2,7 +2,7 @@
 
 这是 SUPER 的端到端样例：真实 LiDAR / AS2 定位 → SUPER → 单点轨迹 adapter
 → RoboPi AS2 → PX4 / AirSim。任务入口为 `forest8_as2_mission.py`，算法源码仍在
-`thirdparty/SUPER-sim/`，公共执行桥仍在 `planner_framework/bridges/as2_setpoint/`。
+`thirdparty/SUPER-sim/`，公共执行桥仍在 `src/behavior/legacy_setpoint/`。
 
 ## 运行前提与任务入口
 
@@ -17,7 +17,7 @@
   此脚本固定访问本机 RPC 41472，使用 ROS domain 83 和 `drone0`。
 - 启动 RoboPi AS2、PC 导航输入和 SUPER，使用本目录 `planner.yaml`。
   导航输入为 `/drone0/navigation/odom`、`/drone0/navigation/points`。
-- 按[轨迹桥说明](../../planner_framework/bridges/as2_setpoint/README.md#super)
+- 按[轨迹桥说明](../../src/behavior/legacy_setpoint/README.md#super)
   提前启动 `super_as2_adapter_node`，保持禁用，使用 `drone0/odom` 和仿真时钟。
 - 为每次任务准备独立输出目录，在执行环境中挂载为可写 `/evidence`；复制
   `source-task.json` 到该目录，并根据本次地面定位重新生成 `origin.json` 中的
