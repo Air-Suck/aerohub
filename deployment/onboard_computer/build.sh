@@ -9,7 +9,7 @@ for variable in HTTP_PROXY HTTPS_PROXY NO_PROXY; do
     args+=(--build-arg "$variable")
   fi
 done
-image=${ONBOARD_COMPUTER_IMAGE:-onboard_computer:v0.1.0}
+image=${MIGRATION_ONBOARD_IMAGE:-onboard_computer:migration-main-behavior}
 deps=${ONBOARD_DEPS_IMAGE:-onboard_computer_dependencies:humble-px4-1.18}
 if [[ ${BUILD_PX4_DEPS:-1} == 1 ]]; then
   docker build "${args[@]}" -f "$root/deployment/onboard_computer/px4_msgs/Dockerfile" \
@@ -19,5 +19,5 @@ else
   docker image inspect "$deps" >/dev/null
 fi
 docker build "${args[@]}" --build-arg BASE_IMAGE="$deps" \
-  --build-arg IMAGE_VERSION=v0.1.0 --build-arg SOURCE_REVISION="$(git -C "$root" rev-parse HEAD)" \
+  --build-arg IMAGE_VERSION=migration-main-behavior --build-arg SOURCE_REVISION="$(git -C "$root" rev-parse HEAD)" \
   -f "$root/deployment/onboard_computer/Dockerfile" -t "$image" "$root"

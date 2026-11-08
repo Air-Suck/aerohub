@@ -199,7 +199,7 @@ AS2 进程树内存约 648 MiB，继续保留 1536 MiB 保护阈值。
 这不是 PC Linux 安装目录复制上板，也未替换板端系统 ROS。
 
 以下记录早期独立构建工作区的准备过程。当前活动源码已迁到 `thirdparty/` 的两个
-fork，`uint` 可移植性修复已直接进入 `thirdparty/aerostack2/as2_core`，无需重复应用。
+fork，`uint` 可移植性修复已直接进入 `as2/aerostack2/as2_core`，无需重复应用。
 当前入口由 `scripts/prepare_ohos_sources.py` 同步该工作区的活动 AS2 源码与
 PX4 1.18 消息；首次准备目标工具链仍参考下文。
 

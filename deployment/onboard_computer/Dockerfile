@@ -18,8 +18,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-rosdep python3-vcstool python3-yaml \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /root/aerostack2_ws/src
-COPY thirdparty/aerostack2/ aerostack2/
-COPY thirdparty/as2_platform_pixhawk/ as2_platform_pixhawk/
+COPY as2/aerostack2/ aerostack2/
+COPY as2/as2_platform_pixhawk/ as2_platform_pixhawk/
 COPY runtime/navigation_inputs/ as2_navigation_inputs/
 WORKDIR /root/aerostack2_ws
 # Install only dependencies of the selected flight components, not unrelated

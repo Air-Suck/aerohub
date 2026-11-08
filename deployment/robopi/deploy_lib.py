@@ -23,7 +23,7 @@ APPLICATIONS = {
     'swarm-formation': COMMON_PACKAGES | {'swarm_graph', 'traj_utils', 'plan_env', 'path_searching',
                                          'traj_opt', 'ego_planner', 'uav_swarm_formation_adapter', 'as2_navigation_inputs'},
 }
-AS2_PACKAGES = {'as2_behavior', 'as2_behaviors_motion', 'as2_core', 'as2_motion_controller',
+AS2_PACKAGES = {'uav_planner_interfaces', 'uav_follow_path_execution', 'as2_behavior', 'as2_behaviors_motion', 'as2_core', 'as2_motion_controller',
                 'as2_motion_reference_handlers', 'as2_msgs', 'as2_platform_pixhawk', 'as2_state_estimator',
                 'mocap4r2_msgs', 'px4_msgs', 'rmw_fastrtps_shared_cpp', 'vision_msgs'}
 OLD = '/data/local/tmp/aerohub-as2'

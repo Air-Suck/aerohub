@@ -29,7 +29,7 @@ setup(
     license="Apache-2.0",
     entry_points={
         "console_scripts": [
-            "src/planner/framework_node = uav_planner_framework.ros_node:main",
+            "planner_framework_node = uav_planner_framework.ros_node:main",
             "gazebo_clock_bridge_node = uav_planner_framework.gazebo_clock:main",
         ],
     },

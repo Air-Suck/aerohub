@@ -10,7 +10,7 @@ source "$install_root/setup.bash"
 set -u
 rm -rf "$resolved_dir"
 
-ros2 run uav_planner_framework src/planner/framework_node \
+ros2 run uav_planner_framework planner_framework_node \
   --ros-args \
   -p registry_root:="$workspace/src/planner/framework/registry" \
   -p resolved_dir:="$resolved_dir" >/tmp/uav_planner_node.log 2>&1 &

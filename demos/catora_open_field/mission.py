@@ -327,7 +327,7 @@ class Mission:
                 self.wait(lambda v=vehicle,z=ground_z:self.platforms[v].status.state==PlatformStatus.FLYING and self.local_poses[v].pose.position.z-z>2.5)
             self.screenshot('airborne')
         for index,vehicle in enumerate(self.vehicles):self.collision_baseline[vehicle]=self.rpc.call('simGetCollisionInfo',f'Drone{index}')['time_stamp']
-        planner_command=['ros2','run','uav_planner_framework','src/planner/framework_node','--ros-args',
+        planner_command=['ros2','run','uav_planner_framework','planner_framework_node','--ros-args',
             '-p','runtime_startup_timeout:='+os.environ.get('PLANNER_STARTUP_TIMEOUT', '0.0'),
             '-p','execution_backend:=legacy_setpoint','-p','registry_root:='+os.environ.get('PLANNER_REGISTRY', '/opt/catora_app_ws/src/framework/registry'),'-p','resolved_dir:='+str(self.output/'resolved'),'-p','use_sim_time:=true']
         if os.environ.get('CATORA_LOCAL_VEHICLE'):planner_command+=['-p','output_vehicle_id:='+os.environ['CATORA_LOCAL_VEHICLE']]

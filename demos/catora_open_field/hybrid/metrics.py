@@ -24,7 +24,7 @@ def snapshot():
             elif '/lib/as2_navigation_inputs/navigation_inputs_node' in command:group='navigation_native'
             elif 'ros2 launch' in command or 'run_as2.py' in command:group='as2_launch'
             elif 'cat_ora_node' in command or 'ros2_proxy.py' in command:group='algorithm_service'
-            elif 'src/planner/framework_node' in command:group='coordinator'
+            elif 'planner_framework_node' in command:group='coordinator'
             elif 'cat_ora_' in command or 'swarm_formation_adapter' in command or 'swarm_as2_adapter' in command or 'swarm_input_adapter' in command:group='adapter'
             elif 'mission.py' in command:group='mission'
             processes[p.name]=(int(fields[11])+int(fields[12]),int(status.get('VmRSS','0 kB').split()[0]),group,command)

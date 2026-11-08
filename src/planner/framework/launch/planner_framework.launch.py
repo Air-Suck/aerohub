@@ -10,7 +10,7 @@ def generate_launch_description():
     return LaunchDescription([
         Node(
             package="uav_planner_framework",
-            executable="src/planner/framework_node",
+            executable="planner_framework_node",
             name="src/planner/framework",
             output="screen",
             parameters=[{

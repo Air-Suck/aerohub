@@ -12,7 +12,7 @@ source "$install_root/setup.bash"
 export ROS_DOMAIN_ID="$domain_id"
 set -u
 
-ros2 run uav_planner_framework src/planner/framework_node \
+ros2 run uav_planner_framework planner_framework_node \
   --ros-args \
   -p registry_root:="$workspace/src/planner/framework/registry" \
   -p resolved_dir:="$resolved_dir" >/tmp/uav_cat_real_framework.log 2>&1 &

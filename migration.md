@@ -8,6 +8,7 @@
 
 命名、目录和规划/执行职责遵循 main；AirSim/PX4 版本、配置、消息兼容、
 启动、通信、传感器与 clock 以来源分支为权威。不能用 main 的 Gazebo 部署覆盖。
+迁移 PC 镜像构建默认使用 onboard_computer:migration-main-behavior；可通过 MIGRATION_ONBOARD_IMAGE 指定独立标签，不覆盖冻结 v0.1.0。
 Humble 算法、RoboPi/OHOS、AS2/Pixhawk 的 PVA 和失流保护必须保留并重新验证。
 
 ## 当前实施状态
@@ -44,8 +45,8 @@ Humble 算法、RoboPi/OHOS、AS2/Pixhawk 的 PVA 和失流保护必须保留并
 
 ## 验证与回退
 
-当前验证：现有 onboard_computer 镜像内接口和扩展编译通过；框架 26 项（含真实 ROS 消息）及 CTest timeline 通过；CAT-ORA 6 项、Swarm 转换 9 项通过；板端打包布局 2 项通过。Swarm 多项式测试在该镜像缺少 traj_utils，尚未执行成功。
-这些测试不证明板端加载或飞行兼容。AS2/Pixhawk 子模块路径、OHOS 扩展部署、Demo Action 编排和动力学验收尚待实施。
+当前验证：现有 onboard_computer 镜像内接口和扩展编译通过；框架 26 项（含真实 ROS 消息）及 CTest timeline 通过；CAT-ORA 6 项、Swarm 转换 9 项通过；板端打包布局 2 项通过。Swarm 12 项（含真实 traj_utils 多项式测试）在已有 Swarm 镜像中通过。
+这些测试不证明板端加载或飞行兼容。AS2/Pixhawk 已归位 as2/ 并保持原 fork 提交。OHOS 源码准备、runtime 构建选包和部署打包已纳入扩展，尚未实际交叉编译或部署。Demo Action 编排和动力学验收尚待实施。
 历史证据见各 demos 的 validation JSON 与 README，仅代表原运行组合。
 
 回退时先停止新执行、确认无活动参考源，再切回原分支对应的镜像与板端安装。

@@ -7,9 +7,11 @@ case "${1:-}" in
   *) echo "Usage: $0" >&2; exit 2 ;;
 esac
 for name in aerostack2 as2_platform_pixhawk SUPER-sim; do
-  target="$root_dir/thirdparty/$name"
+  relative="as2/$name"
+  [[ "$name" != SUPER-sim ]] || relative="thirdparty/$name"
+  target="$root_dir/$relative"
   if [[ ! -e "$target/.git" ]]; then
-    git -C "$root_dir" submodule update --init -- "thirdparty/$name"
+    git -C "$root_dir" submodule update --init -- "$relative"
   fi
   git -C "$target" rev-parse --show-toplevel
   git -C "$target" log -1 --format='%H %s'

@@ -14,7 +14,7 @@ set -u
 
 python3 "$workspace/src/planner/cat_ora/ros2_adapter/scripts/fake_proxy.py" "$proxy_port" &
 proxy_pid=$!
-ros2 run uav_planner_framework src/planner/framework_node \
+ros2 run uav_planner_framework planner_framework_node \
   --ros-args \
   -p registry_root:="$workspace/src/planner/framework/registry" \
   -p resolved_dir:="$resolved_dir" >/tmp/uav_cat_ora_framework.log 2>&1 &

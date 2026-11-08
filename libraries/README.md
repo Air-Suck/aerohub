@@ -4,7 +4,7 @@
 ROS 适配、代理、测试及部署文件放在同一个目录：
 
 ```text
-libraries/
+src/planner/
 ├── cat_ora/
 │   ├── ros2_adapter/    # ROS 包 uav_cat_ora_adapter，含脚本与测试
 │   ├── humble/         # 原生 Humble 轨迹服务与 ROS 2 JSON 兼容入口

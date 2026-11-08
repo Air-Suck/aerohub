@@ -4,7 +4,7 @@ set -euo pipefail
 root=$(cd "$(dirname "$0")/../.." && pwd)
 if [[ ${1:-as2_core} == runtime ]]; then
   shift
-  set -- rmw_fastrtps_shared_cpp as2_platform_pixhawk as2_state_estimator as2_motion_controller as2_behaviors_motion "$@"
+  set -- rmw_fastrtps_shared_cpp as2_platform_pixhawk as2_state_estimator as2_motion_controller as2_behaviors_motion uav_follow_path_execution "$@"
 elif (( $# == 0 )); then
   set -- as2_core
 fi
