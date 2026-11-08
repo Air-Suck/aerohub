@@ -38,7 +38,7 @@ SDK、场景及个人设备路径不提交到仓库。
 
 **RoboPi 验证是 Library 接入的必经步骤。** PC 构建、单元测试及 PC 仿真可用于开发，
 不能代替板端验收。板端导入或启动检查也不能代替 Demo 的端到端结果。
-SUPER 当前尚缺统一部署入口，其现有任务的准备步骤和限制见对应 Demo。
+SUPER 已新增独立 PC 镜像与 FollowTimedPath 场景入口；板端统一部署仍缺失，PC 结果不能代替 RoboPi 验收。
 
 ## 详细运行入口
 
@@ -48,7 +48,7 @@ SUPER 当前尚缺统一部署入口，其现有任务的准备步骤和限制�
 - [AirSim 场景](config/airsim/README.md)：binary 资源、场景 profile 与 settings。
 - [Library 注册表](libraries.yaml)：已收录算法与当前接入状态。
 - [端到端 Demo](demos/README.md)：各 Library 的完整调用、场景、运行拓扑与验收入口。
-- [SUPER forest8](demos/super_forest/README.md)：PC SUPER → RoboPi AS2 的单机长程任务与既有验收记录。
+- [SUPER forest8](demos/super_forest/README.md)：新 PC FollowTimedPath 长程场景、失败限制，以及历史 PC → RoboPi 单点桥记录。
 - [CAT-ORA 空旷场地应用](demos/catora_open_field/README.md)：PC AirSimNH 四机起飞、队形变化、到点和降落。
 
 ## 分层与目录

@@ -74,3 +74,19 @@ PC 首轨迹使用独立30秒冷启动预算，后续轨迹超时保持5秒。
 原始证据、准确镜像 ID、源码哈希和失败限制见
 [版本化摘要](demos/catora_open_field/migration-pc-validation.json)。
 本结果不覆盖 OHOS/RoboPi、混合部署、Behavior 断流、Swarm 或 SUPER。
+
+## SUPER PC 迁移结果
+
+新增 src/planner/super/ros2_adapter 与 demos/super_forest 的独立PC构建、启动、
+任务和分析入口；完整committed曲线（含备用拼接段）经 FollowTimedPath 执行。
+源算法仍在原fork子模块，不重启或替换原有SUPER运行。Adapter固定航向，未实现yaw曲线约束。
+
+指定 forest8 PC 场景已完成 Action 成功、0.162m到点保持、停止确认及降落解除解锁。
+但X超观测边界6.96m、峰值速度8.36m/s，且前轮有未解释的碰撞失败；不宣称整体就绪。
+RoboPi/OHOS、混合部署、受控备用切换与可靠性复验仍未完成。
+
+为迁移补充的公共执行修复已单独提交：正常终点POSITION收敛不再误判接管；
+客户端按当前Action反馈revision观察settling；运动参考保留真实采样时间。
+Action消息未改，原生FollowPath仍保留，未修改AirSim/PX4算法或保护参数。
+
+证据与失败限制见 [SUPER版本化摘要](demos/super_forest/migration-pc-validation.json)。

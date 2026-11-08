@@ -4,10 +4,34 @@
 → RoboPi AS2 → PX4 / AirSim。任务入口为 `forest8_as2_mission.py`，算法源码仍在
 `thirdparty/SUPER-sim/`，公共执行桥仍在 `src/behavior/legacy_setpoint/`。
 
-## 运行前提与任务入口
+## 新迁移链路的 PC 入口
 
-当前提供任务脚本、场景 / 规划配置和一次完整飞行记录，尚未提供与 CAT-ORA、Swarm
-一致的环境构建、部署及启动编排入口。`source-profile.yaml` 是原 LeUAV 配置快照，
+本目录新增 `run.py`，基于现有 `onboard_computer:v0.1.0` 构建独立应用镜像，
+使用完整 committed polynomial → FollowTimedPath → AS2 → PX4/AirSim。
+当前旧 RoboPi 记录与下方 `forest8_as2_mission.py` 仍属于历史单点桥链路，不能互换验收。
+
+```bash
+python3 demos/super_forest/run.py build
+python3 demos/super_forest/run.py run --output artifacts/super-migration-pc-new
+```
+
+该命令会执行仿真解锁、起飞、约235m单目标航段、停止与降落。使用独立
+ROS domain94、RPC43472、TCP4881/4981、DDS Agent8951及容器前缀
+`aerohub-super-migration-`；不停止已有的 `aerohub-nh-super-*`。
+先等待权威 PX4 的 Ready for takeoff，再通过真实命令ACK与平台状态确认解锁/Offboard。
+不强制解锁，不关闭飞控预检，不更改原任务速度、加速度和observe策略。
+
+本次任务从静止里程计重新测量局部原点，同步平移目标、地图初始原点和虚拟地面/天花板。
+原生SUPER保持自身规划、重规划及备用轨迹；Adapter只转换执行请求，不发布运动参考。
+成功须同时满足 FollowTimedPath 成功、原任务1.5m到点与低速保持2秒、停止确认及降落解除解锁。
+
+Adapter说明与测试见 [SUPER接入](../../src/planner/super/README.md)。
+结果写入新输出目录的 result.json；失败、镜像ID和源码哈希均保留。
+这不是 RoboPi、混合部署或固定扰动下备用切换成功率验收。
+
+## 历史链路的运行前提与任务入口
+
+旧入口保留任务脚本、场景 / 规划配置和一次完整飞行记录；其准备流程不等同于上方新增的PC镜像入口。`source-profile.yaml` 是原 LeUAV 配置快照，
 不能直接作为本仓库的启动配置；下文的现场进程状态也只是历史记录。
 
 运行任务前，需要在已加载 ROS 2 Humble、AS2、配套 PX4 消息、SUPER 消息、
@@ -93,3 +117,29 @@ AS2 的 `navigation/odom` / `navigation/points`，不运行旧 LeUAV PX4 控制�
 
 完整原始 DDS / SUPER 日志：`/tmp/aerohub-forest8-as2-20261105T141215Z`；主要证据见 [summary.json](summary.json)、
 [mission.log](mission.log)、[px4-final-state.log](px4-final-state.log)。
+
+
+## 新链路 PC 场景验证结果
+
+固定镜像 `uav/apps-super-forest:migration-attempt7` 完成 forest8：Action 成功、
+原任务到点保持、停止确认、降落解除解锁；到点误差0.162m，航段39.15仿真秒，
+观测路径约262.61m，速度峰值8.36m/s。原生备用flag=2出现在12条命令消息中（Adapter去重后5条），不表示12次独立切换，也不是受控故障注入验收。
+
+X最大26.96m，超过任务20m观测边界约6.96m，采样估计持续5.20秒。
+按原observe策略记录并完成任务，不能称作严格边界通过或限速保证。
+前轮有碰撞失败，根因未确认，不能据后轮成功宣称碰撞问题已根治。
+
+原始计划与执行参考已保存；对接收的原生计划按参考时间做最佳匹配，2327条参考均有
+候选曲线，最大P/V/A差约1.91e-6m、5.43e-6m/s、1.71e-3m/s²。
+该分析包含插值与发布时序误差，不证明唯一revision绑定或所有输入的误差上界。
+
+完整结果、失败轮次、准确版本和证据哈希见
+[migration-pc-validation.json](migration-pc-validation.json)。原始记录保存在
+`artifacts/super-migration-pc-attempt7/`，运行后可执行：
+
+```bash
+python3 demos/super_forest/analyze.py artifacts/super-migration-pc-attempt7
+```
+
+本轮没有更新 RoboPi 安装，没有验证 OHOS 编译或板端执行。现有
+`build_lib.sh`/`deploy_lib.sh` 的组件列表不包含SUPER，不应将PC镜像当作板端产物。

@@ -45,3 +45,11 @@ CAT-ORA 的 PC FollowTimedPath 正常与取消场景现已完成，均降落解�
 详见 [PC 摘要](../demos/catora_open_field/migration-pc-validation.json)。
 这只更新 PC 验证状态；本审计关于 RoboPi 工作区/安装缺失和板端未验收的结论不变。
 首轨迹前曾有一轮失败，恢复降落成功，具体根因尚未确认。
+
+
+## SUPER PC 跟进补充
+
+新增独立PC镜像和完整committed曲线到FollowTimedPath链路，指定forest8场景完成。
+观测越界与前轮碰撞失败仍保留；参见
+[SUPER摘要](../demos/super_forest/migration-pc-validation.json)。
+板端未部署新SUPER，OHOS、RoboPi和混合运行均未验证；本审计的未就绪结论保持。

@@ -7,7 +7,7 @@
 | --- | --- | --- | --- |
 | [CAT-ORA 空旷场地](catora_open_field/README.md) | `cat_ora` | PC 四机、RoboPi 四机、三 PC 加一 RoboPi | 正常任务、主动取消、实际输出失流；各拓扑范围见详情 |
 | [Swarm 空旷场地](swarm_open_field/README.md) | `swarm_formation` | 两 PC 加一 RoboPi，三机真实 LiDAR | 地面输入检查及完整任务；不代表默认七机验收 |
-| [SUPER forest8](super_forest/README.md) | SUPER | PC SUPER → RoboPi AS2 → PX4 / AirSim | 已有单次长程飞行记录；需预先启动运行环境，尚无统一部署入口 |
+| [SUPER forest8](super_forest/README.md) | SUPER | 新 PC SUPER → FollowTimedPath → PC AS2；历史 PC → RoboPi | 新 PC 指定场景完成；保留越界与碰撞失败，板端迁移未验证 |
 
 ## 从仓库根目录运行
 
