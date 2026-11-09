@@ -6,6 +6,8 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 COPY src/planner/super/upstream/mars_uav_sim/mars_quadrotor_msgs /opt/super_ws/src/mars_quadrotor_msgs
 COPY src/planner/super/upstream/rog_map /opt/super_ws/src/rog_map
 COPY src/planner/super/upstream/super_planner /opt/super_ws/src/super_planner
+COPY deployment/airsim/demos/super_forest/super-free-start.patch /tmp/super-free-start.patch
+RUN cd /opt/super_ws/src && patch --batch --forward -p1 < /tmp/super-free-start.patch
 WORKDIR /opt/super_ws
 RUN source /opt/ros/humble/setup.bash && MAKEFLAGS=-j2 colcon build \
     --parallel-workers 1 --cmake-args -DCMAKE_BUILD_TYPE=Release \
