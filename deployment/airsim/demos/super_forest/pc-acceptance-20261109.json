@@ -381,6 +381,13 @@
     "copied_native_files": 292,
     "import_equal_to_previously_accepted_native_code": true,
     "requires_new_super_fork_push": false,
-    "layout_build_verification": "pending"
+    "layout_build_verification": "passed: offline build without reference SUPER source, 35 ROS tests without skips, real node construction, native startup regression and Behavior lifecycle tests",
+    "layout_commit": "3d8a431",
+    "layout_image": "uav/apps-super-forest:repo-native-20261109",
+    "layout_image_id": "sha256:1242967324756673026eb117fadbc55ec1629af1a6a1a89db64ebb5527cc6a87",
+    "native_binary_sha256": "0eb366aef80a0867ddc3ce0076607663645b402c609a2d535ce90c7d022254df",
+    "native_binary_identical_to_flight_accepted_image": true,
+    "new_full_flight_run": false,
+    "verification_evidence_root": "log/airsim/super-native-layout-20261109"
   }
 }
