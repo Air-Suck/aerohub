@@ -14,6 +14,13 @@ get_filename_component(AS2_ESTIMATOR_PREFIX "${as2_state_estimator_DIR}/../../..
 find_path(AS2_ESTIMATOR_INCLUDE as2_state_estimator/plugin_base.hpp
   HINTS "${AS2_ESTIMATOR_PREFIX}/include" REQUIRED)
 target_include_directories(fast_livo2_plugin PRIVATE ${AS2_ESTIMATOR_INCLUDE})
+# The AirSim AS2 build exposes a host-owned state interface; the original
+# pinned AS2 uses plugin-owned publishers. Select against the actual header.
+file(STRINGS "${AS2_ESTIMATOR_INCLUDE}/as2_state_estimator/plugin_base.hpp"
+  AS2_STATE_INTERFACE REGEX "getTransformationTypesAvailable")
+if(AS2_STATE_INTERFACE)
+  target_compile_definitions(fast_livo2_plugin PRIVATE FAST_LIVO2_AS2_STATE_INTERFACE)
+endif()
 target_compile_features(fast_livo2_plugin PUBLIC cxx_std_17)
 ament_target_dependencies(fast_livo2_plugin as2_state_estimator as2_core pluginlib rclcpp nav_msgs geometry_msgs tf2_geometry_msgs)
 pluginlib_export_plugin_description_file(as2_state_estimator plugins.xml)

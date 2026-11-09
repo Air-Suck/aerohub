@@ -2,6 +2,8 @@
 
 本组件保留官方 FAST-LIVO2 为独立 ROS 1 Noetic 进程，通过只读输出桥连接 ROS 2 Humble。自身状态由独立包中的原生 AS2 State Estimator 插件提供，点云走独立 Perception 接口；不创建 Planner 或运动 Behavior，不修改 AS2 上游源码。
 
+插件构建会检测实际 AS2 State Estimator 头文件接口，同时支持原锁定版本和 AirSim 构建补丁中的宿主状态接口。后一种模式通过 `StateEstimatorInterface` 提交变换与速度，由宿主发布主状态和 TF；仅点云别名由插件发布。主变换在宿主完成权限注册后的首个有效测量中初始化。要求 `publish_hz=0`，以免宿主定时重复发布陈旧状态。两种宿主均已通过插件契约测试，此结论不等于 FAST-LIVO2 仿真飞行通过。
+
 ## 目录与版本
 
 | 目录 | 用途 |
@@ -51,6 +53,8 @@ docker compose -f deployment/fast_livo2/compose.yaml build
 ```
 
 编译产物在镜像内 `/opt/fast_livo_ws/`（算法）和 `/opt/fast_livo2_as2_ws/`（插件）。补丁仅在 Docker 构建副本上应用；不修改锁定上游工作树。ROS 1 编译采用 `-j2`。上游启用了 native CPU 优化，换到不同 CPU／架构需在目标环境重新构建。
+
+使用 AirSim 的 AS2 环境时，给 `Dockerfile.as2` 传入 `--build-arg BASE_IMAGE=<本次构建的机载镜像>`，在该宿主上重新编译插件。不得把原版本编译的插件动态库直接拷入新版宿主；接口兼容不意味着二进制 ABI 兼容。
 
 插件测试（不启动算法）：
 
