@@ -217,3 +217,40 @@ python3 deployment/airsim/demos/super_forest/analyze.py log/airsim/super-migrati
 
 本轮没有更新 RoboPi 安装，没有验证 OHOS 编译或板端执行。现有
 `build_lib.sh`/`deploy_lib.sh` 的组件列表不包含SUPER，不应将PC镜像当作板端产物。
+
+### PC 规划、RoboPi 执行候选入口
+
+`run.py` 默认仍为 `--execution-location pc`。`robopi` 将 SUPER、导航输入和
+Adapter 留在 PC，AS2 使用 `/data/aerohub/validation/super-follow-path/as2`。
+不编译或部署 OHOS SUPER。配置沿用本机 `.env` 的 HDC、`PC_IP`、`ROBOPI_IP`；
+两侧显式生成 DDS 网卡与 peer，domain 94、system ID 61。启动前检查独立端口。
+
+```bash
+bash tools/robopi/deploy_lib.sh --component as2 \
+  --as2-root /data/aerohub/validation/super-follow-path/as2 \
+  --prepare-only log/airsim/super-candidate.tar.gz
+# 去掉 prepare-only 后安装候选；默认安装和 .env 保持原样。
+python3 deployment/airsim/demos/super_forest/run.py build
+python3 deployment/airsim/demos/super_forest/run.py run --execution-location robopi \
+  --case ground --output log/airsim/super-ground-01
+# ground 不解锁。通过后才执行 short；forest8 保留原任务参数。
+python3 deployment/airsim/demos/super_forest/run.py run --execution-location robopi \
+  --case short --output log/airsim/super-short-01
+python3 deployment/airsim/demos/super_forest/run.py status --output log/airsim/super-short-01
+python3 deployment/airsim/demos/super_forest/run.py stop --output log/airsim/super-short-01
+```
+
+`short` 使用独立 4 m 目标，只检查接口和恢复，不能替代 forest8。
+`stop` 只在运行结果确认降落解除解锁、板端进程身份仍匹配时回收 AS2。
+若任务恢复未确认，会保留板端控制、时钟与仿真并报错；此时先恢复并确认状态，
+再清理。板端存活由编排监控，运动过程中仍由任务检查状态/时钟新鲜度和控制权。
+异常用例分别选择 `--case short-cancel`、`short-input-loss`、`short-takeover`，
+在真实轨迹开始后注入取消、SUPER 退出或控制器 HOVER 接管，检查停止反馈、
+两秒内不再接受更新或发出轨迹参考，并执行降落解除解锁。用例实现仍须按实际结果
+逐项验收，入口存在不能作为异常执行通过的证据。
+
+本轮结果见 [RoboPi 验证摘要](robopi-acceptance-20261109.json)：当前只通过构建、
+板端加载及地面联通，短程在 PX4 Offboard 切换时被拒绝，已恢复解除解锁。
+板端墙钟约慢 2.77 秒；即使消费同一 `/clock`，PX4 平台系统时钟时间戳仍要求
+两端墙钟匹配。入口现在沿用既有运行时的 0.5 秒偏差门槛并记录偏差，不自动改时。
+临时系统对时是设备级操作，需要明确授权；未完成同步回归前不进入后续飞行阶段。

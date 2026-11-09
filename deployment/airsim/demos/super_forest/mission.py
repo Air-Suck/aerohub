@@ -32,13 +32,17 @@ class Mission(Node):
         super().__init__('super_forest_migration',parameter_overrides=[Parameter('use_sim_time',value=True)])
         self.root=Path('/opt/super_app');self.out=Path('/evidence')
         self.task=json.loads((self.root/'task.json').read_text())
+        self.case=os.environ.get('SUPER_CASE','forest8')
+        if self.case.startswith('short'):
+            self.task['waypoints_enu_m']=[[0.,4.,2.]]
+            self.task['leg_timeout_s']=60
         self.rpc=Rpc('127.0.0.1',43472,timeout=5)
         self.phase='initializing';self.odom=None;self.platform=None;self.controller=None
         self.state={};self.acks={};self.counts=collections.Counter();self.flags=collections.Counter()
-        self.received={};self._mission_clients=[];self.children=[];self.origin=None
+        self.last_clock=None;self.input_ages={};self.received={};self._mission_clients=[];self.children=[];self.origin=None
         self.max_speed=0.;self.bound_violations=0;self.collision_stamp=None
         self.mode_lost_at=None
-        self.last_collision=0.;self.started=None;self.result={'execution_backend':'follow_path'}
+        self.last_collision=0.;self.started=None;self.result={'execution_backend':'follow_path','case':self.case,'motion_requested':False,'execution_location':os.environ.get('SUPER_EXECUTION_LOCATION','pc')}
         self.samples=(self.out/'flight.jsonl').open('w')
         self.create_subscription(Odometry,'/drone0/sensor_measurements/odom',self.on_odom,qos_profile_sensor_data)
         self.create_subscription(PlatformInfo,'/drone0/platform/info',lambda m:setattr(self,'platform',m),qos_profile_sensor_data)
@@ -46,7 +50,7 @@ class Mission(Node):
         self.create_subscription(String,'/drone0/super_adapter/state',lambda m:setattr(self,'state',json.loads(m.data)),10)
         self.create_subscription(VehicleCommandAck,f'/drone0/fmu/out/vehicle_command_ack_v{VehicleCommandAck.MESSAGE_VERSION}',
             lambda m:self.acks.__setitem__(m.command,m.result),qos_profile_sensor_data)
-        self.create_subscription(Clock,'/clock',lambda m:self.touch('clock'),qos_profile_sensor_data)
+        self.create_subscription(Clock,'/clock',self.on_clock,qos_profile_sensor_data)
         self.create_subscription(TrajectorySetpoints,'/drone0/motion_reference/trajectory',self.on_reference,qos_profile_sensor_data)
         from mars_quadrotor_msgs.msg import PositionCommand,PolynomialTrajectory
         self.create_subscription(PositionCommand,'/planning/pos_cmd',self.on_command,qos_profile_sensor_data)
@@ -56,6 +60,18 @@ class Mission(Node):
         self.goal_pub=self.create_publisher(PoseStamped,'/goal_pose',1)
         self.create_timer(.1,self.record)
 
+    def on_clock(self,msg):
+        stamp=msg.clock.sec+msg.clock.nanosec/1e9
+        if self.last_clock is not None and stamp<self.last_clock:
+            raise RuntimeError('simulation clock moved backwards')
+        self.last_clock=stamp;self.touch('clock')
+
+    def input_age(self,key,msg):
+        if self.last_clock is None:return
+        age=self.now_seconds()-(msg.header.stamp.sec+msg.header.stamp.nanosec/1e9)
+        stats=self.input_ages.setdefault(key,{'count':0,'min':age,'max':age})
+        stats['count']+=1;stats['min']=min(stats['min'],age);stats['max']=max(stats['max'],age)
+
     def touch(self,key):
         self.counts[key]+=1;self.received[key]=time.monotonic()
 
@@ -63,7 +79,7 @@ class Mission(Node):
 
     def on_odom(self,msg):
         if msg.header.frame_id!='drone0/odom':raise RuntimeError('unexpected odometry frame')
-        self.odom=msg;self.touch('odom')
+        self.odom=msg;self.touch('odom');self.input_age('odom',msg)
         v=msg.twist.twist.linear
         speed=math.sqrt(v.x*v.x+v.y*v.y+v.z*v.z)
         if self.phase=='route':self.max_speed=max(self.max_speed,speed)
@@ -71,10 +87,11 @@ class Mission(Node):
     def on_controller(self,msg):self.controller=msg;self.touch('controller')
 
     def on_cloud(self,key,msg):
-        if msg.width*msg.height:self.touch(key)
+        if msg.width*msg.height:
+            self.touch(key);self.input_age(key,msg)
 
     def on_reference(self,msg):
-        if self.phase!='route':return
+        if self.phase not in ('route','fault'):return
         self.touch('reference')
         if msg.header.frame_id!='drone0/odom' or len(msg.setpoints)!=1:raise RuntimeError('invalid Behavior reference')
         p=msg.setpoints[0]
@@ -110,15 +127,16 @@ class Mission(Node):
 
     def healthy(self):
         for name,child,_ in self.children:
+            if self.phase=='fault' and self.case=='short-input-loss' and name=='super':continue
             if self.phase in ('stopping','landing') and name!='as2':continue
             if child.poll() is not None:raise RuntimeError(name+' exited: '+str(child.returncode))
-        if self.phase=='route':
-            if self.state.get('error'):raise RuntimeError(self.state['error'])
+        if self.phase in ('route','fault'):
+            if self.phase=='route' and self.state.get('error'):raise RuntimeError(self.state['error'])
             if time.monotonic()-self.received.get('controller',0)>1.5:
                 raise RuntimeError('controller feedback timeout')
             if any(time.monotonic()-self.received.get(k,0)>.5 for k in ('clock','odom')):
                 raise RuntimeError('state/clock timeout')
-            if (self.controller.input_control_mode.control_mode!=ControlMode.TRAJECTORY and not self.state.get('complete')
+            if (self.phase=='route' and self.controller.input_control_mode.control_mode!=ControlMode.TRAJECTORY and not self.state.get('complete')
                 and not (self.state.get('settling') and self.controller.input_control_mode.control_mode==ControlMode.POSITION)):
                 if self.mode_lost_at is None:self.mode_lost_at=time.monotonic()
                 if time.monotonic()-self.mode_lost_at>.3:raise RuntimeError('Behavior trajectory mode lost')
@@ -170,7 +188,8 @@ class Mission(Node):
 
     def prepare(self):
         os.environ.update(AS2_EXECUTION_BACKEND='follow_path',AS2_FLEET_FILE='/evidence/fleet.yaml')
-        self.start('as2',['python3','/opt/onboard_computer/run.py'])
+        if os.environ.get('SUPER_EXECUTION_LOCATION', 'pc') == 'pc':
+            self.start('as2',['python3','/opt/onboard_computer/run.py'])
         self.start('navigation',['ros2','run','as2_navigation_inputs','navigation_inputs_node','--ros-args',
             '-r','__ns:=/drone0','--params-file',str(self.root/'navigation.yaml')])
         self.wait(lambda:self.odom is not None and self.platform is not None and self.controller is not None and self.counts['cloud']>=3,90)
@@ -194,6 +213,24 @@ class Mission(Node):
     def run(self):
         try:
             self.phase='preparing';target=self.prepare()
+            if self.case=='ground':
+                from uav_planner_interfaces.action import FollowTimedPath
+                clients=[ActionClient(self,kind,name) for kind,name in (
+                    (Takeoff,'/drone0/TakeoffBehavior'),(Land,'/drone0/LandBehavior'),
+                    (FollowTimedPath,'/drone0/follow_timed_path'))]
+                self._mission_clients.extend(clients)
+                self.wait(lambda:all(c.server_is_ready() for c in clients),30)
+                if self.platform.armed:raise RuntimeError('Ground check found armed platform')
+                if any(time.monotonic()-self.received.get(k,0)>.5 for k in ('clock','odom','cloud')):
+                    raise RuntimeError('Ground input freshness failed')
+                authorities={topic:[{'name':p.node_name,'namespace':p.node_namespace} for p in self.get_publishers_info_by_topic(topic)]
+                    for topic in ('/clock','/drone0/sensor_measurements/odom','/tf','/tf_static')}
+                if any(len(authorities[t])!=1 for t in ('/clock','/drone0/sensor_measurements/odom')):
+                    raise RuntimeError('Ground input authority is not unique')
+                self.result['publishers']=authorities
+                self.result.update(ground_ready=True,landed_and_disarmed=True)
+                return
+            self.result['motion_requested']=True
             self.phase='arming'
             self.platform_service('/drone0/set_arming_state',400,True)
             self.wait(lambda:self.platform.armed)
@@ -215,6 +252,36 @@ class Mission(Node):
                 return self.state.get('revision',0)>0 and self.controller.input_control_mode.control_mode==ControlMode.TRAJECTORY
             self.wait(executing,15)
             self.phase='route';self.started=self.now_seconds();stable=None
+            if self.case in ('short-cancel','short-input-loss','short-takeover'):
+                self.wait(lambda:self.now_seconds()-self.started>=.5,10)
+                self.phase='fault'
+                self.result['fault_injected']=self.case
+                if self.case=='short-cancel':
+                    self.service(SetBool,'/drone0/super_adapter/enable',SetBool.Request(data=False))
+                elif self.case=='short-input-loss':
+                    child=next(p for name,p,_ in self.children if name=='super')
+                    os.killpg(child.pid,signal.SIGTERM)
+                else:
+                    request=SetControlMode.Request();request.control_mode.control_mode=ControlMode.HOVER
+                    request.control_mode.yaw_mode=ControlMode.YAW_ANGLE
+                    self.service(SetControlMode,'/drone0/controller/set_control_mode',request)
+                self.wait(lambda:not self.state.get('enabled') and self.state.get('stop_confirmed'),15)
+                if self.case=='short-input-loss' and 'stream expired' not in self.state.get('error',''):
+                    raise RuntimeError('Input loss did not trigger stream expiry protection')
+                drain=self.now_seconds();self.wait(lambda:self.now_seconds()-drain>=.3,10)
+                references=self.counts['reference']
+                revision=self.state.get('revision');start=self.now_seconds()
+                def remained_stopped():
+                    if self.state.get('enabled') or self.state.get('revision')!=revision:
+                        raise RuntimeError('Execution resumed after fault stop')
+                    if self.counts['reference']!=references:
+                        raise RuntimeError('Trajectory references continued after confirmed stop')
+                    if self.case=='short-takeover' and self.controller.input_control_mode.control_mode==ControlMode.TRAJECTORY:
+                        raise RuntimeError('Trajectory control reclaimed after external takeover')
+                    return self.now_seconds()-start>=2
+                self.wait(remained_stopped,15)
+                self.result['fault_validated']=True
+                return
             def arrived():
                 nonlocal stable
                 v=self.odom.twist.twist.linear
@@ -253,10 +320,10 @@ class Mission(Node):
                     self.wait(lambda:not self.platform.armed,20)
                     self.result['landed_and_disarmed']=True
                 except BaseException as exc:self.result['recovery_error']=str(exc)
-            self.result.update(success=bool(self.result.get('arrived') and self.result.get('behavior_stop_confirmed') and
-                 self.result.get('landed_and_disarmed') and not self.result.get('error')),
+            self.result.update(success=bool(self.result.get('ground_ready') or ((self.result.get('arrived') or self.result.get('fault_validated')) and self.result.get('behavior_stop_confirmed') and
+                 self.result.get('landed_and_disarmed') and not self.result.get('error'))),
                  max_speed_m_s=self.max_speed,bounds_observation_count=self.bound_violations,
-                 source_flags=dict(self.flags),counts=dict(self.counts),adapter=self.state)
+                 source_flags=dict(self.flags),counts=dict(self.counts),input_ages_s=self.input_ages,adapter=self.state)
             (self.out/'result.json').write_text(json.dumps(self.result,indent=2)+'\n')
             print(json.dumps(self.result,indent=2),flush=True)
 
@@ -275,6 +342,9 @@ class Mission(Node):
 
 def main():
     rclpy.init();node=Mission()
+    def interrupted(*_):raise RuntimeError('Mission interrupted; recovering')
+    signal.signal(signal.SIGTERM,interrupted)
+    signal.signal(signal.SIGINT,interrupted)
     try:node.run()
     finally:node.close();rclpy.try_shutdown()
     if not node.result.get('success'):raise SystemExit(1)
