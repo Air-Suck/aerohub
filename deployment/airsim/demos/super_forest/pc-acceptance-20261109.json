@@ -368,6 +368,19 @@
     "previous_pc_validation_code_equivalent": true,
     "native_file_sha256": "7e573ecce4dd5b737828cd44cb25ed1332e0abf088eebcbaad9fd454f4af944c",
     "source_change": "Same PlanFromRest fix now committed in SUPER; Docker startup patch removed",
-    "requires_dependency_publication_before_parent_push": true
+    "requires_dependency_publication_before_parent_push": true,
+    "status": "Historical intermediate delivery; superseded by active_source_delivery"
+  },
+  "active_source_delivery": {
+    "path": "src/planner/super/ros2_adapter/native",
+    "owner": "AeroHub repository",
+    "bridge": "src/planner/super/ros2_adapter/bridge",
+    "reference_submodule": "src/planner/super/upstream",
+    "reference_commit": "3bfa4033361bbdc7cd814c94aff826e6e1679018",
+    "reference_used_for_build": false,
+    "copied_native_files": 292,
+    "import_equal_to_previously_accepted_native_code": true,
+    "requires_new_super_fork_push": false,
+    "layout_build_verification": "pending"
   }
 }

@@ -46,13 +46,14 @@ Adapter说明与测试见 [SUPER接入](../../../../src/planner/super/README.md)
 
 SUPER 原生源码中的 PlanFromRest 已直接修复：地图内未占据的实际起点
 直接作为轨迹边界，避免先取 0.2m 栅格中心引入位置跳变；起点被占据或超出地图时
-仍调用原最近非占据栅格搜索。主仓库通过 gitlink 引用修复后的 SUPER 提交，Docker
-直接编译该源码，不再另打启动补丁；地图分辨率和 Behavior 的 0.15m 首点连续性门槛不变。
+仍调用原最近非占据栅格搜索。实际算法源码受主仓库管理，位于
+`src/planner/super/ros2_adapter/native/`，Docker 直接编译这里的三个 ROS 2 包。
+`upstream/` 固定在原参考提交 `3bfa403`，只用于对照，不参与构建或运行。
 
-原生修复提交为 `148116eee43112b2bee242b2480d147a2c1f4e3d`，位于 SUPER fork 的
-`fix/preserve-measured-start` 分支。它与下述已通过 PC 验收的构建补丁产生相同的
-原生源码；该等价检查不是另一次飞行验收。发布主仓库前须先推送 SUPER 依赖提交，
-确保其他人能取得 gitlink 指向的版本。
+启动修复曾提交到 SUPER fork 的 `148116e`，现已完整导入主仓库 native 目录；
+后续修改直接在这里提交，无需先推送算法子仓。迁移逐文件核对与已通过 PC 验收的
+源码一致，来源与导入哈希见 native/SOURCE.json；这不等于另一次飞行验收。
+地图分辨率和 Behavior 的 0.15m 首点连续性门槛保持不变。
 
 本轮原镜像已复现首点偏移 0.1622m 导致接管拒绝，随后正常降落；隔离回归脚本
 `tests/verify_native_start.py` 使用真实 SUPER 节点和明确的合成里程计/平面点云检查

@@ -69,8 +69,9 @@ def main():
              ROOT/'src/planner/framework',ROOT/'deployment/airsim/as2',ROOT/'deployment/airsim/config/as2',ROOT/'deployment/platform/patches') for p in directory.rglob('*')
             if p.is_file() and '__pycache__' not in p.parts and p.suffix not in ('.png','.log')}
     (out/'source-manifest.json').write_text(json.dumps({'commit':subprocess.check_output(['git','-C',ROOT,'rev-parse','HEAD'],text=True).strip(),
-        'super_commit':subprocess.check_output(['git','-C',ROOT/'src/planner/super/upstream','rev-parse','HEAD'],text=True).strip(),
-        'submodules':{name:subprocess.check_output(['git','-C',ROOT/name,'rev-parse','HEAD'],text=True).strip()
+        'super_source':{'path':'src/planner/super/ros2_adapter/native','owner':'main repository',
+                        'import':json.loads((ROOT/'src/planner/super/ros2_adapter/native/SOURCE.json').read_text())},
+        'locked_submodules':{name:subprocess.check_output(['git','-C',ROOT,'ls-tree','HEAD',name],text=True).split()[2]
                       for name in ('as2/aerostack2','as2/as2_platform_pixhawk','src/planner/super/upstream')},
         'source_hashes':hashes,'ports':{'rpc':43472,'tcp':4881,'relay':4981,'agent':8951},'ros_domain':94},indent=2)+'\n')
     relay=None

@@ -1,11 +1,11 @@
-# Compile native SUPER unchanged, offline, against the existing Humble toolchain.
+# Compile the repository-owned native SUPER sources offline.
 ARG NATIVE_BASE_IMAGE=osrf/ros:humble-desktop-full-jammy
 ARG BASE_IMAGE=onboard_computer:v0.1.0
 FROM ${NATIVE_BASE_IMAGE} AS native
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-COPY src/planner/super/upstream/mars_uav_sim/mars_quadrotor_msgs /opt/super_ws/src/mars_quadrotor_msgs
-COPY src/planner/super/upstream/rog_map /opt/super_ws/src/rog_map
-COPY src/planner/super/upstream/super_planner /opt/super_ws/src/super_planner
+COPY src/planner/super/ros2_adapter/native/mars_uav_sim/mars_quadrotor_msgs /opt/super_ws/src/mars_quadrotor_msgs
+COPY src/planner/super/ros2_adapter/native/rog_map /opt/super_ws/src/rog_map
+COPY src/planner/super/ros2_adapter/native/super_planner /opt/super_ws/src/super_planner
 WORKDIR /opt/super_ws
 RUN source /opt/ros/humble/setup.bash && MAKEFLAGS=-j2 colcon build \
     --parallel-workers 1 --cmake-args -DCMAKE_BUILD_TYPE=Release \
@@ -22,7 +22,7 @@ COPY --from=native /opt/super_deps /opt/super_deps
 COPY src/planner/interfaces /opt/super_app_ws/src/interfaces
 COPY src/planner/framework /opt/super_app_ws/src/framework
 COPY src/behavior/follow_path /opt/super_app_ws/src/follow_path
-COPY src/planner/super/ros2_adapter /opt/super_app_ws/src/super_adapter
+COPY src/planner/super/ros2_adapter/bridge /opt/super_app_ws/src/super_adapter
 WORKDIR /opt/super_app_ws
 RUN source /root/aerostack2_ws/install/setup.bash && source /opt/super_ws/install/setup.bash && \
     colcon build --merge-install --parallel-workers 2 --cmake-args -DCMAKE_BUILD_TYPE=Release

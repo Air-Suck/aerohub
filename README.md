@@ -15,7 +15,7 @@ AirSim / RoboPi 扩展与主线 Gazebo、FAST-LIVO2 入口并存：
 - 自建算法和适配器：`src/planner/`；基础执行：`src/behavior/`；导航输入整理：`src/perception/navigation_inputs/`。
 - AirSim 场景配置、模拟器启动与管理、传感器桥：`simulator/airsim/`；跨组件演示和 AS2 启动入口：`deployment/airsim/`；板端管理工具：`tools/robopi/`。
 - 主线 AS2 依赖仍在 `as2/aerostack2/` 和 `as2/as2_platform_pixhawk/`；Pixhawk 的 PX4 1.18 适配已转为构建补丁；AS2 核心也已转为 `as2-airsim-pr.patch`，只在 AirSim/OHOS 构建副本应用。
-- SUPER 上游子模块：`src/planner/super/upstream/`。运行产物进入被忽略的 `log/airsim/`。
+- SUPER 实际源码与 CAT-ORA 一致：`src/planner/super/ros2_adapter/native/`，AS2 适配在 `bridge/`，`upstream/` 子模块只作参考。运行产物进入被忽略的 `log/airsim/`。
 
 已有 Skill 集中在 `skill/`；历史运行证据保留在忽略的 `log/pr-history/`，复现过程记录在 `skill/temp/`。`docs/` 只跟踪三份主文档及其图片。原 PR 锁定的 AS2 `f387e0d` 已取得并转为构建补丁，官方子模块保持 main 锁定版本；这仍是构建时源码修改，不是无侵入插件替代。
 

@@ -9,7 +9,7 @@ COPY src/planner/framework/ src/planner/framework/
 COPY src/planner/cat_ora/ros2_adapter/bridge/ src/planner/cat_ora/ros2_adapter/bridge/
 COPY src/planner/swarm_formation/ros2_adapter/bridge/ src/planner/swarm_formation/ros2_adapter/bridge/
 COPY src/behavior/legacy_setpoint/ src/behavior/legacy_setpoint/
-COPY src/planner/super/upstream/mars_uav_sim/mars_quadrotor_msgs/ src/dependencies/mars_quadrotor_msgs/
+COPY src/planner/super/ros2_adapter/native/mars_uav_sim/mars_quadrotor_msgs/ src/dependencies/mars_quadrotor_msgs/
 COPY deployment/platform/fleet_takeoff.py /usr/local/bin/fleet_takeoff.py
 COPY deployment/platform/run_single_as2.sh /usr/local/bin/run_single_as2.sh
 COPY deployment/platform/run_multi_as2.sh /usr/local/bin/run_multi_as2.sh
