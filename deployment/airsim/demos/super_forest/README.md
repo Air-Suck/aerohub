@@ -249,8 +249,54 @@ python3 deployment/airsim/demos/super_forest/run.py stop --output log/airsim/sup
 两秒内不再接受更新或发出轨迹参考，并执行降落解除解锁。用例实现仍须按实际结果
 逐项验收，入口存在不能作为异常执行通过的证据。
 
-本轮结果见 [RoboPi 验证摘要](robopi-acceptance-20261109.json)：当前只通过构建、
-板端加载及地面联通，短程在 PX4 Offboard 切换时被拒绝，已恢复解除解锁。
+早期混合拓扑结果见 [RoboPi 验证摘要](robopi-acceptance-20261109.json)：
+首轮短程曾在 PX4 Offboard 切换时被拒绝，对时后 short-02 已完成短程闭环。
 板端墙钟约慢 2.77 秒；即使消费同一 `/clock`，PX4 平台系统时钟时间戳仍要求
 两端墙钟匹配。入口现在沿用既有运行时的 0.5 秒偏差门槛并记录偏差，不自动改时。
-临时系统对时是设备级操作，需要明确授权；未完成同步回归前不进入后续飞行阶段。
+临时系统对时是设备级操作，需要明确授权；本轮经用户授权执行后通过同步回归，
+不据此宣称持续同步可靠。
+
+2026-11-09 用户授权临时对时后，short-02 已完成板端轨迹执行、停止、降落解除解锁，
+到点误差约 0.292 m；这不证明长期时钟稳定。针对间歇漂移疑虑，新增运行中时差
+采样（clock-offsets.jsonl）及超限后请求任务恢复的路径，仍使用 0.5 秒门槛。
+此为编排层轮询保护，有检测及恢复延迟，不能保证墙钟跳变后的第一帧控制消息即被阻止。
+运行中超限回归已用隔离测试验证，实际时钟故障下飞行恢复尚未验收。
+更长时段的间歇漂移、时间服务行为与持续同步方案仍待验证。
+
+RoboPi 间歇时钟漂移的模式与触发条件暂不确定，根因未定位。用户要求先记录，
+不继续专项排查；随后明确恢复全板端 Demo。异常用例及 forest8 两轮仍未验收。
+
+### SUPER 与执行链全部放到 RoboPi
+
+`--execution-location robopi-all` 把原生 SUPER、导航输入、Adapter、Mission 和 AS2
+都放在 RoboPi。PC 只运行 AirSim、模拟 PX4、传感器/时钟桥及验收协调，不启动规划
+应用容器。`robopi` 仍表示旧的 PC 规划/板端执行拓扑，`pc` 默认值保持不变。
+
+```bash
+bash tools/robopi/build_lib.sh super
+bash tools/robopi/deploy_lib.sh --component as2 --include-super \
+  --as2-root /data/aerohub/validation/super-follow-path/as2
+python3 deployment/airsim/demos/super_forest/run.py run --execution-location robopi-all \
+  --case ground --output log/airsim/super-robopi/all-board-ground-new
+python3 deployment/airsim/demos/super_forest/run.py run --execution-location robopi-all \
+  --case short --output log/airsim/super-robopi/all-board-short-new
+python3 deployment/airsim/demos/super_forest/run.py stop \
+  --output log/airsim/super-robopi/all-board-short-new
+```
+
+每次使用全新输出目录。全板端 `stop` 向所属编排请求恢复，随后用 `status` 与
+`result.json` 确认停止/降落；恢复未确认时保留独立中继和执行组件。
+板端原始证据位于候选 `runtime/super-runs/<输出目录名>/`，结束后校验归档哈希并
+回传到对应 PC `log/` 目录。进程身份、包哈希、板端资源和时差采样均随证据保留。
+
+全板端模式使用专用 PC 网卡提供 AirSim RPC，解锁前从板端验证 ping；同一地址也
+用于 PX4 启动中继。候选自带有来源和版权记录的 msgpack 纯 Python 实现，匹配 PCL
+所需符号版本的 libpng 也只放候选内部，不替换板端系统库。
+
+滚动更新等待当前首计划实际发布第一条轨迹参考后再开始，避免原生模式切换的
+100 ms 阻塞窗口。旧参考不能解除新任务等待，原始轨迹绝对时间及拒绝阈值保留。
+
+本轮全板端快速闭环结果见 [全板端验收摘要](all-board-acceptance-20261109.json)。
+all-board-short-04 单次通过，到点误差约 0.205 m、执行 revision 28，完成停止确认和
+降落解除解锁。前三轮失败分别涉及 RPC 回环监听、PX4/relay 地址及启动更新抢跑，
+均保留证据；未将成功轮当作原 forest8 长任务或长期可靠性通过。

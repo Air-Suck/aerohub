@@ -1,6 +1,6 @@
 {
   "date": "2026-11-09",
-  "scope": "PC SUPER native/bridge → RoboPi candidate FollowTimedPath → PX4/AirSim; not accepted for flight",
+  "scope": "PC SUPER native/bridge → RoboPi candidate FollowTimedPath → PX4/AirSim; one short flight passed, full forest8 acceptance incomplete",
   "source_base": "b32eaea8f2d13c08012f4548f7f4fbd8442740a7",
   "candidate_root": "/data/aerohub/validation/super-follow-path/as2",
   "build": {
@@ -117,6 +117,50 @@
       "landed_and_disarmed": true,
       "evidence": "log/airsim/super-robopi/short-01/result.json",
       "sha256": "f83e286ded0cb785102f5bef9ed894d9a78f69f63cb8ef3f693960958fcc7494"
+    },
+    "short-02": {
+      "success": true,
+      "case": "short",
+      "error": null,
+      "phase": null,
+      "counts": {
+        "odom": 3864,
+        "clock": 2546,
+        "controller": 394,
+        "cloud": 355,
+        "map": 75,
+        "inflated": 32,
+        "reference": 148
+      },
+      "motion_requested": true,
+      "landed_and_disarmed": true,
+      "arrival_error_m": 0.29202223970413393,
+      "evidence": "log/airsim/super-robopi/short-02/result.json",
+      "sha256": "ff97733f8d620af91cc87b4d2ef12eb77ad543b625e5408d0bbb675930c4831d"
+    },
+    "clock-ground-01": {
+      "success": true,
+      "case": "ground",
+      "error": null,
+      "phase": null,
+      "counts": {
+        "odom": 1378,
+        "clock": 921,
+        "controller": 137,
+        "cloud": 123,
+        "map": 7,
+        "inflated": 3
+      },
+      "motion_requested": false,
+      "landed_and_disarmed": true,
+      "arrival_error_m": null,
+      "evidence": "log/airsim/super-robopi/clock-ground-01/result.json",
+      "sha256": "5722c16bafd8af963f43dfdbed6ba6db566bbe4a616fa195d0b214e932e83200"
+    },
+    "forest8-01": {
+      "success": false,
+      "status": "aborted on user topology change during takeoff; landing unconfirmed; isolated simulator stopped",
+      "evidence": "log/airsim/super-robopi/forest8-01/abort.json"
     }
   },
   "clock_offset_samples_seconds": [
@@ -124,16 +168,17 @@
     -2.77251282,
     -2.771119674
   ],
-  "blocker": "PX4 command 176 temporarily rejected in short-01. Board wall clock differs ~-2.77 s; existing runtime requires <=0.5 s. System clock change rejected by automatic approval review; user authorization pending. Clock skew is a likely cause, not yet confirmed by synchronized regression.",
+  "blocker": "User explicitly approved temporary synchronization; it completed and short-02 passed. User subsequently reported intermittent clock drift. Further flights deferred while investigating clock stability; no root cause confirmed. Runtime offset polling now requests existing recovery path above 0.5 s, but true clock-fault flight recovery and continuous synchronization remain unverified.",
   "not_covered": [
-    "short normal trajectory execution",
     "cancel fault flight",
     "SUPER input-loss fault flight",
     "external mode takeover fault flight",
     "forest8 first run",
     "forest8 second run",
-    "cross-machine trajectory PVA scoring",
-    "long-term reliability"
+    "long-term reliability",
+    "continuous clock synchronization",
+    "intermittent clock drift root cause",
+    "true system-clock-fault flight recovery"
   ],
   "cleanup": {
     "candidate_processes": [],
@@ -142,13 +187,115 @@
     "evidence": "log/airsim/super-robopi/cleanup-processes.json"
   },
   "test_counts": {
-    "layout": 4,
-    "execution_configuration": 3,
-    "ros_construction": "passed, current image; no motion"
+    "layout_and_clock_probe": 7,
+    "execution_configuration": 4,
+    "ros_construction": "passed; no motion",
+    "runtime_skew_regression": "fails on old HEAD, passes on current check()"
   },
   "limits": "Ground success does not prove flight. Short failure retained; no retry-filtered acceptance. Input ages include source cadence and transport, not pure network latency.",
   "implementation_commit": "8f994b8ef1c9ad25ef8a42e72b8399e29e732100",
   "transferred_archive_sha256": "7ecbff98d898dc715969d1732418ed55db061c67f1107a23d764f4c9b29359b2",
   "installed_file_manifest_sha256": "a737cb192aca6a03af06b68d4ded3693f4ed70c2087a8eea5c07bf684524b4c8",
-  "diagnostic_update": "After installation, board_smoke.py was replaced with the repository path-relative diagnostic; install package contents unchanged."
+  "diagnostic_update": "After installation, board_smoke.py was replaced with the repository path-relative diagnostic; install package contents unchanged.",
+  "time_sync": {
+    "before_seconds": -2.753865834,
+    "after_seconds": -0.135203976,
+    "authorization": "User explicitly approved temporary system wall clock synchronization in this turn",
+    "method": "CLOCK_REALTIME only; no RTC/NTP/timezone changes",
+    "precondition": "no board ROS_DOMAIN_ID consumers"
+  },
+  "short_pva_analysis": {
+    "result_success": true,
+    "axis_min_max_task_enu_m": [
+      [
+        -0.20339921076083556,
+        0.2458578799269162
+      ],
+      [
+        0.0031525285448879004,
+        4.463964964961633
+      ],
+      [
+        1.8701171875,
+        1.9926300048828125
+      ]
+    ],
+    "observed_route_length_m": 5.140489447645894,
+    "bounds_policy": "observe",
+    "out_of_bounds_samples": 0,
+    "sampled_out_of_bounds_seconds_estimate": 0,
+    "strict_bounds_pass_for_observed_samples": true,
+    "source_flag_counts": {
+      "1": 720
+    },
+    "native_plans_recorded": 32,
+    "references_recorded": 148,
+    "references_with_source_curve_candidate": 148,
+    "max_best_match_pva_difference": [
+      9.014933542665367e-07,
+      1.331335214502718e-06,
+      0.00011467641327363605
+    ],
+    "matching_note": "Best match across received native plans at reference header time; includes interpolation and publication timing error, and does not prove a unique revision mapping."
+  },
+  "clock_observation": {
+    "samples": 12,
+    "elapsed_seconds": 58.340590401,
+    "definite_offset_limit_violation": false,
+    "wall_step_detected": false,
+    "offset_change_seconds": -0.009333019999999997,
+    "offset_change_uncertainty_seconds": 0.305791215,
+    "observed_rate_ppm": -159.97472661572556,
+    "rate_uncertainty_ppm": 5241.483037764365,
+    "rate_interval_ppm": [
+      -5401.457764380089,
+      5081.508311148639
+    ],
+    "frequency_drift_conclusion": "unresolved",
+    "limits": {
+      "offset_seconds": 0.5,
+      "wall_step_seconds": 0.05
+    },
+    "scope": "Short read-only observation; gradual frequency drift needs longer observation. Linux monotonic can share clock slewing; wall/monotonic differences detect steps, not all drift."
+  },
+  "clock_environment": {
+    "time_related_processes": [
+      {
+        "pid": "543",
+        "name": "time_service"
+      }
+    ],
+    "clocksource": {
+      "current_clocksource": "arch_sys_counter",
+      "available_clocksource": "arch_sys_counter"
+    },
+    "time_related_init_files": [
+      "/system/etc/init/timeservice.cfg"
+    ]
+  },
+  "work_status": "completed_user_requested_all_board_quick_demo",
+  "clock_issue": {
+    "title": "RoboPi intermittent clock drift",
+    "status": "recorded; cause unconfirmed",
+    "user_observation": "Pattern and trigger currently uncertain",
+    "instruction": "Record for future troubleshooting; do not continue dedicated clock investigation",
+    "known_evidence": "Initial ~2.77 s offset; authorized temporary sync followed by one passing short flight. Short read-only observation did not establish drift rate or reproduce a wall clock step.",
+    "open_questions": [
+      "fixed offset vs gradual drift vs intermittent wall-clock step",
+      "time_service synchronization behavior",
+      "continuous synchronization approach",
+      "PX4 system wall-clock timestamp dependency",
+      "true clock-fault flight recovery"
+    ],
+    "automatic_time_configuration": {
+      "auto_time": "ON",
+      "ntp_server": "1.cn.pool.ntp.org",
+      "service": "time_service running",
+      "recent_success": "unconfirmed",
+      "deployed_period": "unconfirmed"
+    }
+  },
+  "latest_scope": "User explicitly requires SUPER/native, navigation, adapter, mission and AS2 on RoboPi; PC simulator and PX4 only. One short full-chain verification first.",
+  "latest_result": "All-board short-04 passed; earlier mixed topology and failed attempts retained",
+  "latest_summary": "all-board-acceptance-20261109.json"
 }

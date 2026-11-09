@@ -49,3 +49,15 @@ description: 使用现有 OHOS build Docker，将 AS2 和指定算法库部署�
 AS2 可显式使用 `--component as2 --as2-root /data/aerohub/validation/<任务>/as2`；默认前缀不变。非默认路径只接受 AS2，且不与 `--activate-config` 共用。先用 `--prepare-only <归档>` 检查完整包集（包括 uav_follow_path_execution），再核对 ELF、Python ABI 和内容哈希。候选 board_env.sh、逐包文本前缀、manifest 与安装器使用同一前缀；仅改变解包目录不够。替换前只检查该候选路径的消费者，保留其他安装和任务。候选模式的布局单元测试不等于板端加载或飞行验收。
 
 在已安装候选中运行诊断时，诊断脚本应由自身位置定位 install 和日志，避免继续加载默认 AS2。候选 Python 类型支持和 FollowTimedPath 可发现性均须在实际目标解释器检查；PC 构造通过不能代替 OHOS 加载。系统 ROS、默认安装和默认配置均保持原样。
+
+全板端 SUPER 快速验证使用 `--component as2 --include-super --as2-root <候选路径>`，
+将原生算法、Adapter、框架及导航包与 AS2 一起放入隔离候选，默认不带算法。
+候选携带已记录来源、版权和 SHA 的 msgpack 纯 Python fallback，以及匹配 PCL 的局部
+libpng；不把 PC 的 Python C 扩展复制到 OHOS。部署完成后再执行
+`deployment/airsim/demos/super_forest/tests/verify_board_load.py` 的目标端加载检查，
+避免将传输结束当成 staging 安装已完成。快速端到端用例由验证 Skill 负责。
+
+候选包含 super_app 等非空目录时，更新必须把目录、文件和 manifest 都纳入事务：
+先在 staging 保留各项旧内容，逐项切换，最后切 deployment.json；失败时逆序恢复
+所有已切换项。不要直接 os.replace 覆盖非空目录；runtime 证据应保留。部署失败的
+staging 先独立保留再重试，不把回滚执行包误认为元数据也已全部回滚。

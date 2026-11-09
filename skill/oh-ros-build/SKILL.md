@@ -21,3 +21,13 @@ description: 为 OpenHarmony 交叉编译 ROS 2 包时使用，涵盖构建条�
 ## 工作区版本与补丁冲突
 
 主仓库 gitlink 与本地 AS2/Pixhawk checkout 不同时，先记录两者及 dirty 状态。当前构建契约使用 gitlink 加兼容补丁：从子仓 `git archive <gitlink>` 导出隔离副本再应用补丁，保留用户 checkout；不要向已经包含补丁的 checkout 再应用同一补丁。`tools/robopi/prepare_ohos_sources.py` 按此导出并在 current-sources.json 记录锁定提交和实际同步源码哈希。导出成功不证明目标编译或板端加载成功。
+
+## SUPER 的板端构建
+
+用户明确要求 SUPER 在 RoboPi 执行时，复用 `bash tools/robopi/build_lib.sh super`，
+从主仓库 native/bridge 同步三个原生包、Adapter、框架和导航输入；不使用参考 upstream。
+官方 builder 必须显式传入 `ROS_DISTRO=humble`。本组合已使用现有目标 PCL 1.15 编译，
+不需要先重建 PCL。若 PCL IO 出现 `png_*@PNG16_0` 未解析，检查目标 libpng 的动态
+符号版本：曾有默认 16.43 无版本符号、已有 16.50 提供所需版本的情况。用
+`SUPER_PNG_LIBRARY` 显式选择匹配目标库并在候选局部部署，保留共享 SDK/系统库；
+不要使用忽略未解析符号的链接选项。此经验只适用于该依赖快照，不能替代其他版本 ABI 核对。
