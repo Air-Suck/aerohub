@@ -20,7 +20,7 @@ from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import PointCloud2
 from rosgraph_msgs.msg import Clock
-from px4_msgs.msg import VehicleCommandAck
+from px4_msgs.msg import VehicleCommand,VehicleCommandAck
 from std_msgs.msg import String
 from std_srvs.srv import SetBool
 import yaml
@@ -30,13 +30,13 @@ from airsim_rpc import Rpc
 class Mission(Node):
     def __init__(self):
         super().__init__('super_forest_migration',parameter_overrides=[Parameter('use_sim_time',value=True)])
-        self.root=Path('/opt/super_app');self.out=Path('/evidence')
+        self.root=Path(os.environ.get('SUPER_APP_ROOT','/opt/super_app'));self.out=Path(os.environ.get('SUPER_EVIDENCE_ROOT','/evidence'))
         self.task=json.loads((self.root/'task.json').read_text())
         self.case=os.environ.get('SUPER_CASE','forest8')
         if self.case.startswith('short'):
             self.task['waypoints_enu_m']=[[0.,4.,2.]]
             self.task['leg_timeout_s']=60
-        self.rpc=Rpc('127.0.0.1',43472,timeout=5)
+        self.rpc=Rpc(os.environ.get('AIRSIM_RPC_HOST','127.0.0.1'),43472,timeout=5)
         self.phase='initializing';self.odom=None;self.platform=None;self.controller=None
         self.state={};self.acks={};self.counts=collections.Counter();self.flags=collections.Counter()
         self.last_clock=None;self.input_ages={};self.received={};self._mission_clients=[];self.children=[];self.origin=None
@@ -175,6 +175,21 @@ class Mission(Node):
         if self.acks[command]!=VehicleCommandAck.VEHICLE_CMD_RESULT_ACCEPTED:
             raise RuntimeError('PX4 rejected command '+str(command)+': '+str(self.acks[command]))
 
+    def emergency_land(self):
+        # Recovery only: never count this fallback as native Behavior acceptance.
+        pub=self.create_publisher(VehicleCommand,'/drone0/fmu/in/vehicle_command',qos_profile_sensor_data)
+        self.wait(lambda:pub.get_subscription_count()>0,15)
+        command=VehicleCommand(timestamp=time.time_ns()//1000,command=VehicleCommand.VEHICLE_CMD_NAV_LAND,
+            target_system=61,target_component=1,source_system=255,source_component=1,from_external=True,
+            param4=float('nan'),param5=float('nan'),param6=float('nan'),param7=float('nan'))
+        self.acks.pop(command.command,None);pub.publish(command)
+        self.wait(lambda:command.command in self.acks,15)
+        if self.acks[command.command]!=VehicleCommandAck.VEHICLE_CMD_RESULT_ACCEPTED:
+            raise RuntimeError('PX4 emergency land rejected')
+        self.result['emergency_fallback']='PX4 NAV_LAND'
+        self.wait(lambda:self.platform is not None and not self.platform.armed,90)
+        self.result['landed_and_disarmed']=True
+
     def action(self,kind,name,goal,field):
         client=ActionClient(self,kind,name);self._mission_clients.append(client)
         self.wait(client.server_is_ready)
@@ -187,7 +202,7 @@ class Mission(Node):
         if not getattr(result.result().result,field):raise RuntimeError(name+' failed')
 
     def prepare(self):
-        os.environ.update(AS2_EXECUTION_BACKEND='follow_path',AS2_FLEET_FILE='/evidence/fleet.yaml')
+        os.environ.update(AS2_EXECUTION_BACKEND='follow_path',AS2_FLEET_FILE=str(self.out/'fleet.yaml'))
         if os.environ.get('SUPER_EXECUTION_LOCATION', 'pc') == 'pc':
             self.start('as2',['python3','/opt/onboard_computer/run.py'])
         self.start('navigation',['ros2','run','as2_navigation_inputs','navigation_inputs_node','--ros-args',
@@ -203,7 +218,7 @@ class Mission(Node):
         config['rog_map']['virtual_ceil_height']=self.task['virtual_ceil_height_m']+self.origin[2]
         (self.out/'planner.yaml').write_text(yaml.safe_dump(config))
         (self.out/'origin-measured.json').write_text(json.dumps({'task_to_odom_translation_m':self.origin,'target':target},indent=2)+'\n')
-        self.start('super',['ros2','run','super_planner','fsm_node','--ros-args','-p','use_sim_time:=true','-p','config_name:=/evidence/planner.yaml'])
+        self.start('super',['ros2','run','super_planner','fsm_node','--ros-args','-p','use_sim_time:=true','-p','config_name:='+str(self.out/'planner.yaml')])
         self.start('adapter',['ros2','run','uav_super_adapter','super_timed_path_adapter','--ros-args',
             '-r','__ns:=/drone0','-p','use_sim_time:=true','-p','goal:='+str(target),
             '-p','goal_tolerance:='+str(float(self.task['goal_tolerance_m']))])
@@ -319,9 +334,12 @@ class Mission(Node):
                         self.platform_service('/drone0/set_arming_state',400,False)
                     self.wait(lambda:not self.platform.armed,20)
                     self.result['landed_and_disarmed']=True
-                except BaseException as exc:self.result['recovery_error']=str(exc)
+                except BaseException as exc:
+                    self.result['recovery_error']=str(exc)
+                    try:self.emergency_land()
+                    except BaseException as failure:self.result['emergency_recovery_error']=str(failure)
             self.result.update(success=bool(self.result.get('ground_ready') or ((self.result.get('arrived') or self.result.get('fault_validated')) and self.result.get('behavior_stop_confirmed') and
-                 self.result.get('landed_and_disarmed') and not self.result.get('error'))),
+                 self.result.get('landed_and_disarmed') and not self.result.get('error') and not self.result.get('recovery_error'))),
                  max_speed_m_s=self.max_speed,bounds_observation_count=self.bound_violations,
                  source_flags=dict(self.flags),counts=dict(self.counts),input_ages_s=self.input_ages,adapter=self.state)
             (self.out/'result.json').write_text(json.dumps(self.result,indent=2)+'\n')

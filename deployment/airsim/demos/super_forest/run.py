@@ -10,13 +10,13 @@ import sys
 import time
 import socket
 import fcntl
+import signal
 from robopi_execution import BoardExecution
 import yaml
 
 ROOT=Path(__file__).resolve().parents[4]
 APP=Path(__file__).resolve().parent
 sys.path.insert(0,str(ROOT/'deployment/airsim/demos/catora_open_field'))
-from sim_startup import StartupRelay
 PREFIX='aerohub-super-migration-'
 NAMES=[PREFIX+'app',PREFIX+'clock',PREFIX+'vehicle']
 IMAGE=os.environ.get('SUPER_APP_IMAGE','uav/apps-super-forest:migration-main-behavior')
@@ -36,6 +36,35 @@ def owned(name,out):
     if value!=str(out):raise RuntimeError('Container belongs to another run: '+name)
 
 
+def start_relay(out,host='127.0.0.1'):
+    with (out/'relay.log').open('w') as stream:
+        child=subprocess.Popen([sys.executable,str(APP/'relay.py'),'--output',str(out),'--listen-host',host],
+            stdout=stream,stderr=subprocess.STDOUT,start_new_session=True)
+    deadline=time.monotonic()+5
+    while not (out/'relay-state.json').exists():
+        if child.poll() is not None:raise RuntimeError('Relay exited; inspect relay.log')
+        if time.monotonic()>deadline:raise RuntimeError('Relay startup timed out')
+        time.sleep(.05)
+
+
+def stop_relay(out):
+    path=out/'relay-state.json'
+    if not path.exists():return
+    state=json.loads(path.read_text());pid=state['pid']
+    def alive():
+        try:
+            text=Path(f'/proc/{pid}/stat').read_text();fields=text[text.rfind(')')+2:].split()
+            return (fields[0]!='Z' and fields[19]==state['ticks'] and
+                Path('/proc/sys/kernel/random/boot_id').read_text().strip()==state['boot_id'] and
+                str(APP/'relay.py').encode() in Path(f'/proc/{pid}/cmdline').read_bytes().split(bytes([0])))
+        except OSError:return False
+    if alive():os.kill(pid,signal.SIGTERM)
+    deadline=time.monotonic()+5
+    while alive() and time.monotonic()<deadline:time.sleep(.1)
+    if alive():raise RuntimeError('Owned relay did not stop')
+    (out/'relay-stopped.json').write_text(json.dumps({'pid':pid,'alive':False})+'\n')
+
+
 def cleanup(out):
     for name in NAMES:
         if subprocess.run(['docker','container','inspect',name],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL).returncode:
@@ -45,18 +74,31 @@ def cleanup(out):
             subprocess.run(['docker','logs',name],stdout=log,stderr=subprocess.STDOUT)
         subprocess.run(['docker','stop','--timeout','10',name],stdout=subprocess.DEVNULL)
     subprocess.run(manager('stop',out),check=False)
+    stop_relay(out)
 
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('action',choices=['build','run','stop','status'])
     parser.add_argument('--case', choices=['ground','short','short-cancel','short-input-loss','short-takeover','forest8'], default='forest8')
-    parser.add_argument('--execution-location', choices=['pc','robopi'], default='pc')
+    parser.add_argument('--execution-location', choices=['pc','robopi','robopi-all'], default='pc')
     parser.add_argument('--output',type=Path,default=ROOT/'log/airsim/super-migration-pc')
     args=parser.parse_args();out=args.output.resolve();out.mkdir(parents=True,exist_ok=True)
     if args.action=='build':
         run(['docker','build','--network','none','--pull=false','-f',APP/'Dockerfile','-t',IMAGE,ROOT]);return
     if args.action=='stop':
+        coordinator=out/'coordinator.json'
+        if coordinator.exists():
+            state=json.loads(coordinator.read_text())
+            if state.get('execution_location')=='robopi-all':
+                try:
+                    text=Path(f"/proc/{state['pid']}/stat").read_text();fields=text[text.rfind(')')+2:].split()
+                    current=(fields[0]!='Z' and fields[19]==state['ticks'] and Path('/proc/sys/kernel/random/boot_id').read_text().strip()==state['boot_id'])
+                except OSError:current=False
+                if current:
+                    os.kill(state['pid'],signal.SIGINT)
+                    print('Recovery requested from the owning coordinator; inspect status and result before cleanup')
+                    return
         running=subprocess.run(['docker','inspect','--format','{{.State.Running}}',PREFIX+'app'],
             capture_output=True,text=True)
         if running.returncode==0 and running.stdout.strip()=='true':
@@ -76,12 +118,16 @@ def main():
         subprocess.run(manager('status',out),check=False);run(['docker','ps','--filter','name='+PREFIX]);return
     lock=(ROOT/'log/airsim/super-execution.lock').open('w')
     fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+    stat=Path('/proc/self/stat').read_text();ticks=stat[stat.rfind(')')+2:].split()[19]
+    (out/'coordinator.json').write_text(json.dumps({'pid':os.getpid(),'ticks':ticks,'boot_id':Path('/proc/sys/kernel/random/boot_id').read_text().strip(),'execution_location':args.execution_location})+'\n')
     if (out/'result.json').exists() or (out/'images.json').exists():raise RuntimeError('Choose a fresh output directory')
     for name in NAMES:
         if not subprocess.run(['docker','container','inspect',name],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL).returncode:
             raise RuntimeError('Reserved container already exists: '+name)
-    for image in (IMAGE,BOARD):run(['docker','image','inspect',image],stdout=subprocess.DEVNULL)
+    for image in ((BOARD,) if args.execution_location=='robopi-all' else (IMAGE,BOARD)):run(['docker','image','inspect',image],stdout=subprocess.DEVNULL)
+    execution = BoardExecution(out) if args.execution_location != 'pc' else None
     settings=json.loads((ROOT/'simulator/airsim/scenarios/super_forest/settings.json').read_text())
+    if args.execution_location=='robopi-all':settings['LocalHostIp']=execution.link.required('PC_IP')
     settings['ApiServerPort']=43472
     vehicle=settings['Vehicles']['PX4']
     vehicle.update(TcpPort=4881,ControlPortLocal=15641,ControlPortRemote=15681)
@@ -102,8 +148,9 @@ def main():
         'locked_submodules':{name:subprocess.check_output(['git','-C',ROOT,'ls-tree','HEAD',name],text=True).split()[2]
                       for name in ('as2/aerostack2','as2/as2_platform_pixhawk','src/planner/super/upstream')},
         'source_hashes':hashes,'ports':{'rpc':43472,'tcp':4881,'relay':4981,'agent':8951},'ros_domain':94},indent=2)+'\n')
-    execution = BoardExecution(out) if args.execution_location == 'robopi' else None
-    if execution: execution.prepare()
+    if execution:
+        execution.require_super=args.execution_location=='robopi-all'
+        execution.prepare()
     # Refuse occupied independent ports before starting any simulation resources.
     for kind, ports in ((socket.SOCK_STREAM,(43472,4881,4981)),(socket.SOCK_DGRAM,(8951,15641,15681))):
         for port in ports:
@@ -112,10 +159,10 @@ def main():
                 probe.bind(('0.0.0.0',port))
     dds = ['-e','FASTRTPS_DEFAULT_PROFILES_FILE=/evidence/pc-dds.xml',
            '-e','ROS_LOCALHOST_ONLY=0','-e','RMW_IMPLEMENTATION=rmw_fastrtps_cpp','-v',str(out)+':/evidence:ro'] if execution else []
-    relay=None
+    if args.execution_location=='robopi-all':dds+=['-e','AIRSIM_HOST='+execution.link.required('PC_IP')]
     try:
         run(manager('start',out)+['--timeout','90'])
-        relay=StartupRelay(('127.0.0.1',4981),('127.0.0.1',4881))
+        start_relay(out,execution.link.required('PC_IP') if args.execution_location=='robopi-all' else '127.0.0.1')
         run(['docker','run','--rm','--detach','--init','--network','host','--name',PREFIX+'vehicle','--label','aerohub.super.output='+str(out),
              '-e','ROS_DOMAIN_ID=94','-e','VEHICLE_NAME=PX4','-e','VEHICLE_NAMESPACE=drone0',
              '-e','PX4_INSTANCE=60','-e','PX4_SYSTEM_ID=61','-e','XRCE_AGENT_PORT=8951',
@@ -133,30 +180,32 @@ def main():
             if time.monotonic()>deadline:raise RuntimeError('PX4 preflight did not become ready')
             time.sleep(.25)
         (out/'images.json').write_text(json.dumps({name:subprocess.check_output(['docker','image','inspect','--format','{{.Id}}',image],text=True).strip()
-            for name,image in [('application',IMAGE),('flight_board',BOARD)]},indent=2)+'\n')
+            for name,image in ([('flight_board',BOARD)] if args.execution_location=='robopi-all' else [('application',IMAGE),('flight_board',BOARD)])},indent=2)+'\n')
         if execution: execution.start()
-        command=['docker','run','--rm','--init','--network','host','--name',PREFIX+'app','--label','aerohub.super.output='+str(out),
-             '-e','ROS_DOMAIN_ID=94','-e','SUPER_EXECUTION_LOCATION='+args.execution_location,'-e','SUPER_CASE='+args.case,
-             *(['-e','FASTRTPS_DEFAULT_PROFILES_FILE=/evidence/pc-dds.xml','-e','ROS_LOCALHOST_ONLY=0'] if execution else []),
-             '-v',str(out)+':/evidence',IMAGE]
-        app=subprocess.Popen(list(map(str,command)))
-        try:
-            while app.poll() is None:
-                if execution: execution.check()
-                time.sleep(2)
-        except BaseException:
-            # Let the mission execute its existing stop/landing recovery before cleanup.
-            subprocess.run(['docker','kill','--signal=SIGINT',PREFIX+'app'],check=False)
-            try:app.wait(timeout=120)
-            except subprocess.TimeoutExpired:pass
-            raise
-        if app.returncode:raise RuntimeError('Application exited: '+str(app.returncode))
-        result=json.loads((out/'result.json').read_text())
-        if not result.get('success'):raise RuntimeError('SUPER mission did not pass')
+        if args.execution_location=='robopi-all':
+            execution.run_mission(args.case)
+        else:
+            command=['docker','run','--rm','--init','--network','host','--name',PREFIX+'app','--label','aerohub.super.output='+str(out),
+                 '-e','ROS_DOMAIN_ID=94','-e','SUPER_EXECUTION_LOCATION='+args.execution_location,'-e','SUPER_CASE='+args.case,
+                 *(['-e','FASTRTPS_DEFAULT_PROFILES_FILE=/evidence/pc-dds.xml','-e','ROS_LOCALHOST_ONLY=0'] if execution else []),
+                 '-v',str(out)+':/evidence',IMAGE]
+            app=subprocess.Popen(list(map(str,command)))
+            try:
+                while app.poll() is None:
+                    if execution: execution.check()
+                    time.sleep(2)
+            except BaseException:
+                # Let the mission execute its existing stop/landing recovery before cleanup.
+                subprocess.run(['docker','kill','--signal=SIGINT',PREFIX+'app'],check=False)
+                try:app.wait(timeout=120)
+                except subprocess.TimeoutExpired:pass
+                raise
+            if app.returncode:raise RuntimeError('Application exited: '+str(app.returncode))
+            result=json.loads((out/'result.json').read_text())
+            if not result.get('success'):raise RuntimeError('SUPER mission did not pass')
     finally:
         # Retain simulator, clock and board control if recovery has not been confirmed.
         if execution: execution.stop()
         cleanup(out)
-        if relay:relay.close()
 
 if __name__=='__main__':main()

@@ -5,6 +5,9 @@ from pathlib import Path
 import shlex
 import subprocess
 import sys
+import time
+import hashlib
+import tarfile
 import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[4]
@@ -63,11 +66,17 @@ class BoardExecution:
                         'AS2_CONTROLLER_CONFIG_FILE':'pid_speed_controller.yaml',
                         'AS2_RUNTIME_DIR':'runtime'}.items())+' && ')
 
-    def prepare(self):
+    def check_time(self, phase):
         offset=self.link.clock_offset()
-        (self.out/'clock-offset.json').write_text(json.dumps({'board_minus_pc_wall_seconds':offset,'maximum_absolute_seconds':.5})+'\n')
+        sample={'pc_wall_seconds':time.time(),'phase':phase,
+                'board_minus_pc_wall_seconds':offset,'maximum_absolute_seconds':.5}
+        with (self.out/'clock-offsets.jsonl').open('a') as stream:stream.write(json.dumps(sample)+'\n')
+        if phase=='startup':(self.out/'clock-offset.json').write_text(json.dumps(sample)+'\n')
         if abs(offset)>.5:
-            raise RuntimeError('Board/PC wall clocks differ by more than 0.5s; use the existing explicit sync-time procedure before flight')
+            raise RuntimeError('Board/PC wall clocks differ by more than 0.5s ('+phase+'); controlled mission recovery required')
+
+    def prepare(self):
+        self.check_time('startup')
         check_domain = """from pathlib import Path
 active=[]
 for p in Path('/proc').glob('[0-9]*'):
@@ -85,6 +94,8 @@ assert not active, 'Domain 94 already has board consumers: '+str(active)
         status = json.loads(self.link.board(self.env+'python3 manage_runtime.py status || true'))
         if status.get('alive'):
             raise RuntimeError('Candidate AS2 is already running')
+        if getattr(self,'require_super',False) and not {'super_planner','uav_super_adapter','as2_navigation_inputs'}.issubset(manifest['packages']):
+            raise RuntimeError('All-board mode requires a candidate deployed with --include-super')
         local = self.link.required('PC_IP')
         peer = self.link.required('ROBOPI_IP')
         dds_profile(self.out/'pc-dds.xml', local, peer)
@@ -95,16 +106,87 @@ assert not active, 'Domain 94 already has board consumers: '+str(active)
         (self.out/'execution.json').write_text(json.dumps({'location':'robopi','root':CANDIDATE,
             'domain':94,'pc_interface':local,'board_interface':peer,'backend':'follow_path'},indent=2)+'\n')
 
+    def mission_command(self, action, case):
+        remote=CANDIDATE+'/runtime/super-runs/'+self.out.name
+        return (self.env+'python3 super_app/manage_mission.py '+action+' --output '+shlex.quote(remote)+
+            ' --case '+shlex.quote(case)+' --rpc-host '+shlex.quote(self.link.required('PC_IP')))
+
+    def collect_mission(self):
+        remote=CANDIDATE+'/runtime/super-runs/'+self.out.name
+        archive=CANDIDATE+'/runtime/'+self.out.name+'-evidence.tar.gz'
+        code="""import tarfile,hashlib
+from pathlib import Path
+root=Path(ROOT)
+archive=Path(ARCHIVE)
+with tarfile.open(archive,'w:gz') as output:
+ for path in sorted(root.rglob('*')):
+  if path.is_file():output.add(path,arcname=str(path.relative_to(root)))
+print(hashlib.sha256(archive.read_bytes()).hexdigest())
+""".replace('ROOT',repr(remote)).replace('ARCHIVE',repr(archive))
+        digest=self.link.board('python3 -c '+shlex.quote(code),timeout=60)
+        local=self.out/'board-evidence.tar.gz'
+        self.link.hdc('file','recv',archive,str(local))
+        if hashlib.sha256(local.read_bytes()).hexdigest()!=digest:raise RuntimeError('Board evidence transfer hash mismatch')
+        with tarfile.open(local) as bundle:
+            for member in bundle.getmembers():
+                path=Path(member.name)
+                if path.is_absolute() or '..' in path.parts or member.issym() or member.islnk():raise RuntimeError('Unexpected board evidence member')
+            bundle.extractall(self.out,filter='data')
+        (self.out/'board-evidence-sha256.txt').write_text(digest+'\n')
+
+    def run_mission(self, case):
+        manifest=json.loads((self.out/'board-deployment.json').read_text())
+        needed={'super_planner','rog_map','mars_quadrotor_msgs','uav_super_adapter','uav_planner_framework','as2_navigation_inputs'}
+        if not needed.issubset(manifest['packages']):raise RuntimeError('Candidate does not contain board SUPER; deploy --include-super')
+        remote=CANDIDATE+'/runtime/super-runs/'+self.out.name
+        ping="import sys;sys.path.insert(0,APP);from airsim_rpc import Rpc;assert Rpc(HOST,43472,timeout=3).call('ping')".replace('APP',repr(CANDIDATE+'/super_app')).replace('HOST',repr(self.link.required('PC_IP')))
+        try:self.link.board(self.env+'python3 -c '+shlex.quote(ping),timeout=15)
+        except BaseException as exc:
+            (self.out/'result.json').write_text(json.dumps({'success':False,'motion_requested':False,'case':case,'error':'Board AirSim RPC preflight: '+str(exc)})+'\n')
+            raise
+        self.link.board('mkdir -p '+shlex.quote(remote))
+        self.link.hdc('file','send',str(self.out/'fleet.yaml'),remote+'/fleet.yaml')
+        state=self.link.board(self.mission_command('start',case))
+        (self.out/'board-mission-start.json').write_text(state+'\n')
+        deadline=time.monotonic()+900
+        try:
+            while True:
+                state=json.loads(self.link.board(self.mission_command('status',case)))
+                if not state['alive']:break
+                self.check()
+                if time.monotonic()>deadline:raise RuntimeError('Board mission deadline exceeded')
+                time.sleep(2)
+        except BaseException:
+            self.link.board(self.mission_command('stop',case))
+            recovery_deadline=time.monotonic()+150
+            while time.monotonic()<recovery_deadline:
+                state=json.loads(self.link.board(self.mission_command('status',case)))
+                if not state['alive']:break
+                time.sleep(2)
+            self.collect_mission()
+            raise
+        self.collect_mission()
+        execution=json.loads((self.out/'execution.json').read_text())
+        execution.update(location='robopi-all',algorithm_location='robopi',mission_location='robopi',
+            navigation_location='robopi',adapter_location='robopi',remote_evidence=remote)
+        (self.out/'execution.json').write_text(json.dumps(execution,indent=2)+'\n')
+        result=json.loads((self.out/'result.json').read_text())
+        if not result.get('success'):raise RuntimeError('Board SUPER mission failed; inspect result.json')
+
     def start(self):
         self.started = True
         state = self.link.board(self.env+'python3 manage_runtime.py start')
         (self.out/'board-start.json').write_text(state+'\n')
 
     def check(self):
+        self.check_time('runtime')
         state=json.loads(self.link.board(self.env+'python3 manage_runtime.py status',timeout=10))
         owned=json.loads((self.out/'board-start.json').read_text())
         if not state.get('alive') or any(state.get(k)!=owned.get(k) for k in ('pid','ticks','boot_id')):
             raise RuntimeError('Candidate AS2 process lost')
+        roots=[state['pid']]
+        mission_state=self.out/'board-mission-start.json'
+        if mission_state.exists():roots.append(json.loads(mission_state.read_text())['pid'])
         sample = """import json,os,time
 from pathlib import Path
 rows={}
@@ -118,8 +200,8 @@ while True:
  new={pid for pid,r in rows.items() if r['ppid'] in owned}-owned
  if not new:break
  owned.update(new)
-print(json.dumps({'monotonic':time.monotonic(),'ticks_per_second':os.sysconf('SC_CLK_TCK'),'processes':[rows[p] for p in sorted(owned) if p in rows]}))
-""".replace('PID', str(state['pid']))
+print(json.dumps({'monotonic':time.monotonic(),'ticks_per_second':os.sysconf('SC_CLK_TCK'),'roots':[PID],'processes':[rows[p] for p in sorted(owned) if p in rows]}))
+""".replace('PID', ','.join(map(str,roots)))
         metrics=self.link.board('python3 -c '+shlex.quote(sample),timeout=10)
         with (self.out/'board-resources.jsonl').open('a') as stream:stream.write(metrics+'\n')
 

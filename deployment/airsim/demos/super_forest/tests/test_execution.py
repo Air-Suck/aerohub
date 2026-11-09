@@ -34,6 +34,22 @@ class ExecutionTest(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError,'wall clocks differ'):board.prepare()
             self.assertTrue((board.out/'clock-offset.json').exists())
 
+    def test_runtime_skew_is_detected_after_initially_valid_clock(self):
+        import json
+        state={'pid':123,'ticks':'456','boot_id':'test','alive':True}
+        class Link:
+            offset=-.1
+            def clock_offset(self):return self.offset
+            def board(self,*args,**kwargs):return json.dumps(state)
+        with tempfile.TemporaryDirectory() as folder:
+            board=execution.BoardExecution.__new__(execution.BoardExecution)
+            board.out=Path(folder);board.link=Link();board.env=''
+            (board.out/'board-start.json').write_text(json.dumps(state))
+            board.check()
+            board.link.offset=-2.77
+            with self.assertRaisesRegex(RuntimeError,'runtime'):board.check()
+            self.assertEqual(len((board.out/'clock-offsets.jsonl').read_text().splitlines()),2)
+
     def test_unconfirmed_recovery_retains_board(self):
         with tempfile.TemporaryDirectory() as folder:
             board=execution.BoardExecution.__new__(execution.BoardExecution)
