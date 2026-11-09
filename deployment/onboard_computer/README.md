@@ -5,7 +5,7 @@ AeroHub 正式维护的 PC 机载计算开发与仿真验证环境，承载 AS2�
 
 基础镜像提供 ROS 2 Humble、PX4 消息接口、AS2 与开发工具；Library 和应用
 既有快照通过派生镜像加入各自的算法及任务依赖，例如 `deployment/airsim/demos/catora_open_field/Dockerfile`。
-通用运行代码与配置继续由 `runtime/`、`deployment/airsim/config/` 共享。该镜像随项目交付，用户可选择是否使用 PC 开发；
+通用 AS2 启动代码与配置由 `deployment/airsim/as2/`、`deployment/airsim/config/` 共享。该镜像随项目交付，用户可选择是否使用 PC 开发；
 日常源码迭代按下节使用工作区补编译，基础镜像维护单独处理。Library 接入仍必须完成 RoboPi 验证。
 
 镜像：`onboard_computer:v0.1.0`，与[固定 flight_board 镜像](../flight_board/README.md#使用固定镜像)配套。
@@ -153,7 +153,8 @@ CAT-ORA、Swarm 及 adapter 在该通用镜像中编译 12 包并加载通过，
 到点误差 0.173 m，两秒保持漂移 0.436 m；七路图像、七路 CameraInfo、非空 LiDAR 和必需 TF 均收到。
 完整多机算法验收仍以各 Demo 记录的实际镜像为准，本轮不扩展为新镜像的多机或长期验收。
 
-[发布清单](../releases/v0.1.0.json)、[版本验收](../../log/pr-history/deployment/releases/v0.1.0-validation.json)。
+[发布清单](../releases/v0.1.0.json)受版本管理；历史详细验收文件为本地
+`log/pr-history/deployment/releases/v0.1.0-validation.json`，不随仓库分发，缺失时不能由该路径复核原始验收。
 原始日志在 `log/airsim/release-v0.1.0/`，测试资源已清理。校验已加载的固定交付镜像：
 
 ```bash

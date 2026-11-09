@@ -50,7 +50,7 @@ AS2 可显式使用 `--component as2 --as2-root /data/aerohub/validation/<任务
 
 在已安装候选中运行诊断时，诊断脚本应由自身位置定位 install 和日志，避免继续加载默认 AS2。候选 Python 类型支持和 FollowTimedPath 可发现性均须在实际目标解释器检查；PC 构造通过不能代替 OHOS 加载。系统 ROS、默认安装和默认配置均保持原样。
 
-全板端 SUPER 快速验证使用 `--component as2 --include-super --as2-root <候选路径>`，
+SUPER 算力侧候选（适用于 `four-part` 和历史 `robopi-all`）使用 `--component as2 --include-super --as2-root <候选路径>`，
 将原生算法、Adapter、框架及导航包与 AS2 一起放入隔离候选，默认不带算法。
 候选携带已记录来源、版权和 SHA 的 msgpack 纯 Python fallback，以及匹配 PCL 的局部
 libpng；不把 PC 的 Python C 扩展复制到 OHOS。部署完成后再执行
@@ -62,7 +62,9 @@ libpng；不把 PC 的 Python C 扩展复制到 OHOS。部署完成后再执行
 所有已切换项。不要直接 os.replace 覆盖非空目录；runtime 证据应保留。部署失败的
 staging 先独立保留再重试，不把回滚执行包误认为元数据也已全部回滚。
 
-四方拓扑中，板端 `compute_runtime.py` 是导航/SUPER/Adapter 的能力启动器，
+通用生命周期按[四方部署职责](../../docs/项目简介.md#deployment-roles)区分能力服务与工作站任务；各项目按实际入口交付，不自动照搬 SUPER 的包集合和脚本。
+
+在 SUPER 四方实例中，板端 `compute_runtime.py` 是导航/SUPER/Adapter 的能力启动器，
 不执行 Mission、解锁或仿真 RPC。`manage_mission.py --kind compute` 使用独立
 状态文件管理身份；旧 mission 模式仅为历史兼容。部署层启动 AS2 与 compute，
 等待真实数据和就绪状态后交接工作站 ROS 调用。任务结束不自动等于服务应停止：
