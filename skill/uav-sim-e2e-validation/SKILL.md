@@ -104,3 +104,18 @@ executor。不要直接延长生效期限；保留已接受首计划，等该任
 后再允许滚动更新。参考须匹配当前 frame、有效 setpoint 数和首计划开始时间，
 历史参考不能解除等待。`verify_board_handoff.py` 已在旧实现复现抢跑、修复后通过，
 但是否完成动力学闭环仍以本轮真实飞行结果为准。
+
+### 四方职责验证
+
+`four-part` 把 Mission 放工作站共享 ROS 镜像，导航/SUPER/Adapter/AS2 放 RoboPi，
+PC flight_board 提供 PX4、传感器和时钟，AirSim 为宿主进程。部署启动与任务调用
+分开：先等待算力服务真实地图/ROS 就绪，工作站再经 ROS 调参数与调用 Behavior。
+解锁前在工作站本地验证实际碰撞 RPC schema、Action 与目标参数响应；板端无需
+访问 AirSim RPC。记录工作站无算法子进程、任务后算力服务仍存活以及显式回收身份。
+
+2026-11-09 该拓扑地面和4m短程通过，但原 forest8 在 revision222 更新被拒，不能
+称完整原任务通过。`invalid metadata or late trajectory` 合并了多个谓词，须补齐
+提交/接收的仿真时间、generated/start、校验失败条件及转换耗时，才能区分迟到、
+未来时间或其他元数据问题。不得仅根据错误文字认定时钟漂移，更不得放宽门槛。
+保留失败轮、停止确认、原生降落结果和最终 disarmed；降落期间的重复 disarm
+服务告警也须保留。资源/时差抽样与源曲线最佳 PVA 匹配均应说明采样及映射限制。

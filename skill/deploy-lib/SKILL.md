@@ -61,3 +61,10 @@ libpng；不把 PC 的 Python C 扩展复制到 OHOS。部署完成后再执行
 先在 staging 保留各项旧内容，逐项切换，最后切 deployment.json；失败时逆序恢复
 所有已切换项。不要直接 os.replace 覆盖非空目录；runtime 证据应保留。部署失败的
 staging 先独立保留再重试，不把回滚执行包误认为元数据也已全部回滚。
+
+四方拓扑中，板端 `compute_runtime.py` 是导航/SUPER/Adapter 的能力启动器，
+不执行 Mission、解锁或仿真 RPC。`manage_mission.py --kind compute` 使用独立
+状态文件管理身份；旧 mission 模式仅为历史兼容。部署层启动 AS2 与 compute，
+等待真实数据和就绪状态后交接工作站 ROS 调用。任务结束不自动等于服务应停止：
+先记录服务仍存活，再由拥有身份的部署层显式回收。恢复未确认时保留服务与时钟。
+停止后复查包装进程及其子进程，并把 compute 证据单独收集，避免覆盖工作站结果。

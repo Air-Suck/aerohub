@@ -1,0 +1,498 @@
+{
+  "date": "2026-11-09",
+  "status": "four-role chain connected; short passed; original forest8 FAILED",
+  "roles": {
+    "simulator": "PC host AirSim",
+    "flight_board": "PC flight_board container: PX4 SITL, sensors, clock",
+    "onboard_computer": "RoboPi candidate: navigation, SUPER, Adapter, AS2 FollowTimedPath/control/platform",
+    "workstation": "unchanged shared ROS desktop image + external message overlay + mission.py"
+  },
+  "images": {
+    "workstation_base": "sha256:592f97da6b871a438fdb97f86b422ab9f80657e80efa7b98d258894738c8a0c0",
+    "flight_board": "sha256:8c33881fde6985fe5a43a894bde075471df85064e45ac8e5de28efebcc737cd2"
+  },
+  "shared_image_rebuilt": false,
+  "candidate": "/data/aerohub/validation/super-follow-path/as2",
+  "execution_backend": "follow_path",
+  "criteria": {
+    "forest8_max_velocity_config_m_s": 8,
+    "forest8_max_acceleration_config_m_s2": 8,
+    "arrival_error_max_m": 1.5,
+    "arrival_speed_below_m_s": 0.3,
+    "arrival_hold_sim_seconds": 2,
+    "bounds_policy": "observe",
+    "require_behavior_success_stop_and_landed_disarmed": true
+  },
+  "runs": {
+    "four-ground-01": {
+      "evidence": "log/airsim/super-four-part/four-ground-01",
+      "result": {
+        "execution_backend": "follow_path",
+        "case": "ground",
+        "motion_requested": false,
+        "execution_location": "four-part",
+        "simulator_collision_preflight": true,
+        "mission_location": "workstation",
+        "algorithm_location": "robopi",
+        "task_protocol": "ROS parameters + enable service + goal topic + Behavior Actions",
+        "publishers": {
+          "/clock": [
+            {
+              "name": "platform_clock_bridge",
+              "namespace": "/"
+            }
+          ],
+          "/drone0/sensor_measurements/odom": [
+            {
+              "name": "platform",
+              "namespace": "/drone0"
+            }
+          ],
+          "/tf": [
+            {
+              "name": "state_estimator",
+              "namespace": "/drone0"
+            },
+            {
+              "name": "fsm_node",
+              "namespace": "/"
+            }
+          ],
+          "/tf_static": [
+            {
+              "name": "platform_sensor_adapter",
+              "namespace": "/"
+            },
+            {
+              "name": "state_estimator",
+              "namespace": "/drone0"
+            }
+          ]
+        },
+        "ground_ready": true,
+        "landed_and_disarmed": true,
+        "success": true,
+        "max_speed_m_s": 0.0,
+        "bounds_observation_count": 0,
+        "source_flags": {},
+        "counts": {
+          "clock": 56,
+          "odom": 88,
+          "runtime": 5,
+          "controller": 9,
+          "map": 3,
+          "cloud": 7,
+          "inflated": 3
+        },
+        "input_ages_s": {
+          "odom": {
+            "count": 88,
+            "min": 0.0,
+            "max": 0.06600141525268555
+          },
+          "map": {
+            "count": 3,
+            "min": 0.0,
+            "max": 0.0
+          },
+          "cloud": {
+            "count": 7,
+            "min": 0.02400064468383789,
+            "max": 0.13800287246704102
+          },
+          "inflated": {
+            "count": 3,
+            "min": 0.0,
+            "max": 0.0
+          }
+        },
+        "adapter": {
+          "enabled": false,
+          "error": "",
+          "task_id": "",
+          "revision": 0,
+          "complete": false,
+          "settling": false,
+          "stop_confirmed": false,
+          "reference_ready": false,
+          "source_flags": {},
+          "late_updates": 0,
+          "last_curve": {}
+        },
+        "mission_owned_children": []
+      },
+      "analysis": null,
+      "wall_offset_range_seconds": [
+        -0.335487196,
+        -0.278362499
+      ],
+      "resource_samples": 10,
+      "max_summed_process_rss_bytes": 1595449344,
+      "mean_existing_process_cpu_percent_one_core": 279.82476914518446,
+      "resource_note": "Sampled owned AS2/compute descendant processes; RSS sums shared pages repeatedly; interval CPU excludes newly discovered PIDs.",
+      "compute_alive_after_task": true,
+      "compute_alive_after_cleanup": false,
+      "as2_alive_after_cleanup": false,
+      "relay_alive_after_cleanup": false,
+      "artifact_sha256": {
+        "source-manifest.json": "992e468a62922e7734cd7bfe826935149e8bbfc62e6155a5df54c895ae40d82d",
+        "flight.jsonl": "fc3d7be97da3814601e43ef5b29f932ab0c724fbfd4736ca60c6fed58bf5ead2",
+        "execution.json": "076b49bb7910f732324857e24d0703022c8b2eaf35fe42079716cc241efa171e",
+        "result.json": "c54c47a6258c74394c065efcc3ad9a330bdf8ec15186261d93368fbe3d500858",
+        "board-compute-ready.json": "1069953b8fcdd801d00e0d8d8190aa2bbb39045413be0334f349ce864d040999",
+        "board-deployment.json": "8b8c08c3aec9c5b4e5b8043198352b54286d711707e6ea41a8621835d63e6470",
+        "compute-ready.json": "2e86be9ce23405b26b461183f3a790f26d929b4194b7292d7c81967bc5ebc9f2",
+        "images.json": "c18b425fc14210630cd53e518b8d899c7fd468f11faa565bb3a828d8e31d4dad",
+        "compute/board-evidence.tar.gz": "e0bca77c585d8a53f8e8504ac0c4e0cc2b915007a865b550b8c61b8034d8b1c9"
+      }
+    },
+    "four-short-01": {
+      "evidence": "log/airsim/super-four-part/four-short-01",
+      "result": {
+        "execution_backend": "follow_path",
+        "case": "short",
+        "motion_requested": true,
+        "execution_location": "four-part",
+        "simulator_collision_preflight": true,
+        "mission_location": "workstation",
+        "algorithm_location": "robopi",
+        "task_protocol": "ROS parameters + enable service + goal topic + Behavior Actions",
+        "arrived": true,
+        "execution_completed": true,
+        "arrival_error_m": 0.1154313866885741,
+        "route_sim_seconds": 4.830102920532227,
+        "final_task_enu_m": [
+          -0.004870089469477534,
+          4.102526681926975,
+          1.9471893310546875
+        ],
+        "behavior_stop_confirmed": true,
+        "landed_and_disarmed": true,
+        "success": true,
+        "max_speed_m_s": 3.6608194795387496,
+        "bounds_observation_count": 0,
+        "source_flags": {
+          "1": 634
+        },
+        "counts": {
+          "clock": 1680,
+          "odom": 2548,
+          "controller": 263,
+          "cloud": 233,
+          "runtime": 131,
+          "map": 71,
+          "inflated": 65,
+          "reference": 138
+        },
+        "input_ages_s": {
+          "odom": {
+            "count": 2548,
+            "min": 0.0,
+            "max": 0.09000182151794434
+          },
+          "cloud": {
+            "count": 233,
+            "min": 0.0060002803802490234,
+            "max": 0.30600666999816895
+          },
+          "map": {
+            "count": 71,
+            "min": 0.0,
+            "max": 0.02100062370300293
+          },
+          "inflated": {
+            "count": 65,
+            "min": 0.0,
+            "max": 0.07800173759460449
+          }
+        },
+        "adapter": {
+          "enabled": false,
+          "error": "",
+          "task_id": "be46d882-1fab-4d67-b310-3844cab621e0",
+          "revision": 25,
+          "complete": false,
+          "settling": false,
+          "stop_confirmed": true,
+          "reference_ready": true,
+          "source_flags": {
+            "1": 131
+          },
+          "late_updates": 1,
+          "last_curve": {
+            "source_start": 1794231318.63306,
+            "source_end": 1794231320.317229,
+            "submitted_from": 1794231320.3890953,
+            "endpoint": [
+              0.09999999999999998,
+              4.1000000000000005,
+              1.9000000000000001
+            ],
+            "end_velocity": [
+              -6.938893903907228e-17,
+              -3.1086244689504383e-15,
+              3.642919299551295e-17
+            ],
+            "is_final": true,
+            "pieces": 2
+          }
+        },
+        "mission_owned_children": []
+      },
+      "analysis": {
+        "result_success": true,
+        "axis_min_max_task_enu_m": [
+          [
+            -0.20338141079992056,
+            0.04212183225899935
+          ],
+          [
+            0.0006401429636753164,
+            4.423458116558322
+          ],
+          [
+            1.9413070678710938,
+            2.0369873046875
+          ]
+        ],
+        "observed_route_length_m": 4.812536425486958,
+        "bounds_policy": "observe",
+        "out_of_bounds_samples": 0,
+        "sampled_out_of_bounds_seconds_estimate": 0,
+        "strict_bounds_pass_for_observed_samples": true,
+        "source_flag_counts": {
+          "1": 634
+        },
+        "native_plans_recorded": 27,
+        "references_recorded": 138,
+        "references_with_source_curve_candidate": 138,
+        "max_best_match_pva_difference": [
+          1.222756711517612e-07,
+          8.49221437963696e-07,
+          2.7026320631003957e-05
+        ],
+        "matching_note": "Best match across received native plans at reference header time; includes interpolation and publication timing error, and does not prove a unique revision mapping."
+      },
+      "wall_offset_range_seconds": [
+        -0.315941585,
+        -0.259586903
+      ],
+      "resource_samples": 21,
+      "max_summed_process_rss_bytes": 1609109504,
+      "mean_existing_process_cpu_percent_one_core": 381.6002099896159,
+      "resource_note": "Sampled owned AS2/compute descendant processes; RSS sums shared pages repeatedly; interval CPU excludes newly discovered PIDs.",
+      "compute_alive_after_task": true,
+      "compute_alive_after_cleanup": false,
+      "as2_alive_after_cleanup": false,
+      "relay_alive_after_cleanup": false,
+      "artifact_sha256": {
+        "source-manifest.json": "992e468a62922e7734cd7bfe826935149e8bbfc62e6155a5df54c895ae40d82d",
+        "flight.jsonl": "f7902f02bc6f854e679ac86f820eb3ed93cdf33b1742cbad83a56aee29a60e88",
+        "analysis.json": "abd6d7b7e0c58a9bf154ad268414a86a42713c06ab3da35b884d8657da50dd19",
+        "execution.json": "fd16db5e9bbee03a74b572bb9bb6571579bfd99c7a02f301a6eff637d06141b8",
+        "result.json": "b2239b1e221911fe4183fc358d4375c9cc305e3c8d3d4c3aa56fb577249af650",
+        "board-compute-ready.json": "7f0ff492e0281a9cd3ce9504de1e293199a8cbd9093aad1fd06359dcdb9f5be4",
+        "board-deployment.json": "8b8c08c3aec9c5b4e5b8043198352b54286d711707e6ea41a8621835d63e6470",
+        "compute-ready.json": "3fd267ea0ffe580c5c095d809f9e4ac1fea537db56911e6b5b76bb6a197ba25b",
+        "images.json": "c18b425fc14210630cd53e518b8d899c7fd468f11faa565bb3a828d8e31d4dad",
+        "compute/board-evidence.tar.gz": "71d465dc8b97a13daa38351c77d40ddd1a2d4f43cdaf15f3c4a97041808d934d"
+      }
+    },
+    "four-forest8-01": {
+      "evidence": "log/airsim/super-four-part/four-forest8-01",
+      "result": {
+        "execution_backend": "follow_path",
+        "case": "forest8",
+        "motion_requested": true,
+        "execution_location": "four-part",
+        "simulator_collision_preflight": true,
+        "mission_location": "workstation",
+        "algorithm_location": "robopi",
+        "task_protocol": "ROS parameters + enable service + goal topic + Behavior Actions",
+        "error": "EXECUTION_FAILED:FOLLOW_PATH_UPDATE_REJECTED:drone0",
+        "failed_phase": "route",
+        "behavior_stop_confirmed": true,
+        "landed_and_disarmed": true,
+        "success": false,
+        "max_speed_m_s": 8.192490601797296,
+        "bounds_observation_count": 0,
+        "source_flags": {
+          "1": 4665,
+          "2": 403
+        },
+        "counts": {
+          "odom": 6422,
+          "runtime": 326,
+          "map": 174,
+          "inflated": 172,
+          "controller": 650,
+          "cloud": 589,
+          "clock": 4129,
+          "reference": 2546
+        },
+        "input_ages_s": {
+          "odom": {
+            "count": 6358,
+            "min": 0.0,
+            "max": 0.07200145721435547
+          },
+          "map": {
+            "count": 172,
+            "min": 0.0,
+            "max": 0.06300115585327148
+          },
+          "cloud": {
+            "count": 585,
+            "min": 0.003000020980834961,
+            "max": 0.20400452613830566
+          },
+          "inflated": {
+            "count": 170,
+            "min": 0.0,
+            "max": 0.08400177955627441
+          }
+        },
+        "adapter": {
+          "enabled": false,
+          "error": "EXECUTION_FAILED:FOLLOW_PATH_UPDATE_REJECTED:drone0",
+          "task_id": "d6b63b6b-d606-4cb5-8951-629770c6db32",
+          "revision": 222,
+          "complete": false,
+          "settling": false,
+          "stop_confirmed": true,
+          "reference_ready": true,
+          "source_flags": {
+            "1": 1770,
+            "2": 150
+          },
+          "late_updates": 0,
+          "last_curve": {
+            "source_start": 1794231461.178926,
+            "source_end": 1794231467.2341783,
+            "submitted_from": 1794231461.3869283,
+            "endpoint": [
+              -34.63423623888479,
+              227.79232339127614,
+              7.410910164818762
+            ],
+            "end_velocity": [
+              3.574918139293004e-14,
+              -2.886579864025407e-14,
+              3.622102617839573e-15
+            ],
+            "is_final": false,
+            "pieces": 3
+          }
+        },
+        "mission_owned_children": []
+      },
+      "analysis": {
+        "result_success": false,
+        "axis_min_max_task_enu_m": [
+          [
+            -30.79352119838586,
+            19.619358745461795
+          ],
+          [
+            -0.0037463442495209165,
+            220.5920098507704
+          ],
+          [
+            2.0070037841796875,
+            9.045555114746094
+          ]
+        ],
+        "observed_route_length_m": 245.41777118573546,
+        "bounds_policy": "observe",
+        "out_of_bounds_samples": 0,
+        "sampled_out_of_bounds_seconds_estimate": 0,
+        "strict_bounds_pass_for_observed_samples": true,
+        "source_flag_counts": {
+          "1": 4665,
+          "2": 403
+        },
+        "native_plans_recorded": 249,
+        "references_recorded": 2546,
+        "references_with_source_curve_candidate": 2546,
+        "max_best_match_pva_difference": [
+          3.1436389930785525e-05,
+          0.0017980070383138635,
+          0.07561795500767111
+        ],
+        "matching_note": "Best match across received native plans at reference header time; includes interpolation and publication timing error, and does not prove a unique revision mapping."
+      },
+      "wall_offset_range_seconds": [
+        -0.333599112,
+        -0.263338841
+      ],
+      "resource_samples": 36,
+      "max_summed_process_rss_bytes": 1628200960,
+      "mean_existing_process_cpu_percent_one_core": 487.66369648778175,
+      "resource_note": "Sampled owned AS2/compute descendant processes; RSS sums shared pages repeatedly; interval CPU excludes newly discovered PIDs.",
+      "compute_alive_after_task": true,
+      "compute_alive_after_cleanup": false,
+      "as2_alive_after_cleanup": false,
+      "relay_alive_after_cleanup": false,
+      "artifact_sha256": {
+        "source-manifest.json": "992e468a62922e7734cd7bfe826935149e8bbfc62e6155a5df54c895ae40d82d",
+        "flight.jsonl": "f3bc8c224e87e5b880d9ffea37892129022b66a2abbfb2ba775e9b3edaaa1807",
+        "analysis.json": "0266dc05ce4a1cabf6cb716b80423fa1ad093f443c3eae2e32fe7250ee2f0fb8",
+        "execution.json": "9b0240e32e6e8bf89636a13a16614feb537a6228cc4c44dbf560ddd7eee1f355",
+        "result.json": "a2b111be297bd2389560c8f9be92a6d7b071b8861cac8c25bb192f56c43ef15f",
+        "board-compute-ready.json": "0dc7a8f7f8ce5984eacdf63734648fa827927663de38acb2e03eb8e58c0a0535",
+        "board-deployment.json": "8b8c08c3aec9c5b4e5b8043198352b54286d711707e6ea41a8621835d63e6470",
+        "board-as2.log": "e2ff40564828f5759c9447bfae9cd60253ac4d211b680fd5c46f3e1c36bc1b9b",
+        "compute-ready.json": "a0653b67ca60f51745d460a8727f10c8cc1be732692104630d49897ee86e1efa",
+        "images.json": "c18b425fc14210630cd53e518b8d899c7fd468f11faa565bb3a828d8e31d4dad",
+        "compute/board-evidence.tar.gz": "40bed1e9364f106f6d1f12de769550e62771e67f90aa3537c6097ac371d6209f"
+      }
+    }
+  },
+  "prerequisite_failures": [
+    {
+      "failure": "Shared image lacks rclpy.parameter_client",
+      "resolution": "Use standard SetParametersAtomically ROS service; unchanged image smoke passed"
+    },
+    {
+      "failure": "ROS DOUBLE_ARRAY wire roundtrip decodes to array.array; old list/tuple check rejected goal",
+      "resolution": "Check ROS Parameter.Type.DOUBLE_ARRAY; target RED then GREEN and handoff regression passed"
+    }
+  ],
+  "forest8_failure": {
+    "adapter": "EXECUTION_FAILED:FOLLOW_PATH_UPDATE_REJECTED:drone0",
+    "revision": 222,
+    "behavior_log": "invalid metadata or late trajectory",
+    "conclusion": "Execution rejected an update. Existing log groups metadata and timing failures; exact predicate and end-to-end submit/receive timing were not recorded. Do not attribute to wall-clock drift without further evidence.",
+    "recovery": "Stop confirmed; native LandBehavior succeeded; platform disarmed; components retained until recovery then explicitly stopped. Native log also reports a disarm-service race with PX4 already disarmed; do not omit this warning.",
+    "retry_count": 0
+  },
+  "checks": {
+    "robopi_unit_tests_passed": 8,
+    "demo_unit_tests_passed": 4,
+    "board_goal_wire_regression": "passed",
+    "board_handoff_regression": "passed",
+    "workstation_interface_smoke": "passed",
+    "cleanup": {
+      "log/airsim/robopi-runtime/cli.lock": "unlocked",
+      "log/airsim/super-execution.lock": "unlocked",
+      "43472": "free",
+      "4881": "free",
+      "4981": "free",
+      "8951": "free",
+      "15641": "free",
+      "15681": "free"
+    }
+  },
+  "not_covered": [
+    "Original forest8 successful completion or two independent passes",
+    "Cancellation/input-loss/external-control injection in four-part mode",
+    "Exact update rejection predicate and transport/conversion latency budget",
+    "Strict 8 m/s speed limit (observed forest maximum 8.19249 m/s); acceleration acceptance",
+    "Long-term RoboPi clock drift or periodic calibration guarantees",
+    "Controlled backup-switch success rate",
+    "Real hardware flight"
+  ],
+  "source_provenance": "Per-run source-manifest.json hashes actual source (tested dirty worktree) and gitlinks; board-deployment.json hashes installed binaries; workstation/inputs.json hashes interface sources and image ID.",
+  "next_step": "Diagnose rejected update with submit/receive and validation-predicate evidence; minimal regression first, then affected flight stages. General project development-entry updates deferred per user.",
+  "implementation_commit": "ea3e6216ac8d780df9b1421555c7d9643ba1b005"
+}
