@@ -2,8 +2,12 @@
 ARG BASE_IMAGE=uav/apps-catora-open-field:humble
 FROM ${BASE_IMAGE}
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-COPY as2/airsim/aerostack2/ /root/aerostack2_ws/src/aerostack2/
+COPY as2/aerostack2/ /root/aerostack2_ws/src/aerostack2/
 COPY as2/as2_platform_pixhawk/ /root/aerostack2_ws/src/as2_platform_pixhawk/
+COPY deployment/platform/patches/as2-airsim-pr.patch /tmp/as2-airsim-pr.patch
+COPY deployment/platform/patches/as2-platform-px4-v1.18.patch /tmp/as2-platform-px4-v1.18.patch
+RUN git apply --unsafe-paths --directory=/root/aerostack2_ws/src/aerostack2 /tmp/as2-airsim-pr.patch && \
+    git apply --unsafe-paths --directory=/root/aerostack2_ws/src/as2_platform_pixhawk /tmp/as2-platform-px4-v1.18.patch
 RUN rm -rf /root/aerostack2_ws/build /root/aerostack2_ws/install /root/aerostack2_ws/log && \
     source /opt/ros/humble/setup.bash && source /opt/px4_ws/install/setup.bash && \
     cd /root/aerostack2_ws && MAKEFLAGS=-j2 colcon build --merge-install --parallel-workers 2 \

@@ -71,7 +71,7 @@ def main():
     (out/'source-manifest.json').write_text(json.dumps({'commit':subprocess.check_output(['git','-C',ROOT,'rev-parse','HEAD'],text=True).strip(),
         'super_commit':subprocess.check_output(['git','-C',ROOT/'src/planner/super/upstream','rev-parse','HEAD'],text=True).strip(),
         'submodules':{name:subprocess.check_output(['git','-C',ROOT/name,'rev-parse','HEAD'],text=True).strip()
-                      for name in ('as2/airsim/aerostack2','as2/as2_platform_pixhawk','src/planner/super/upstream')},
+                      for name in ('as2/aerostack2','as2/as2_platform_pixhawk','src/planner/super/upstream')},
         'source_hashes':hashes,'ports':{'rpc':43472,'tcp':4881,'relay':4981,'agent':8951},'ros_domain':94},indent=2)+'\n')
     relay=None
     try:

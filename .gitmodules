@@ -23,10 +23,6 @@
 	path = src/state_estimator/fast_livo2/upstream
 	url = https://github.com/hku-mars/FAST-LIVO2.git
 
-[submodule "airsim_as2"]
-	path = as2/airsim/aerostack2
-	url = https://github.com/Popc0rn7/aerostack2-aerohub.git
-
 [submodule "super"]
 	path = src/planner/super/upstream
 	url = https://github.com/Popc0rn7/SUPER-sim.git

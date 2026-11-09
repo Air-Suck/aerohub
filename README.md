@@ -14,10 +14,10 @@ AirSim / RoboPi 扩展与主线 Gazebo、FAST-LIVO2 入口并存：
 
 - 自建算法和适配器：`src/planner/`；基础执行：`src/behavior/`；导航输入整理：`src/perception/navigation_inputs/`。
 - AirSim 场景配置、模拟器启动与管理、传感器桥：`simulator/airsim/`；跨组件演示和 AS2 启动入口：`deployment/airsim/`；板端管理工具：`tools/robopi/`。
-- 主线 AS2 依赖仍在 `as2/aerostack2/` 和 `as2/as2_platform_pixhawk/`；Pixhawk 的 PX4 1.18 适配已转为构建补丁；AS2 核心 fork 暂留 `as2/airsim/` 等待缺失源码，不能混用两套版本的参数或补丁。
+- 主线 AS2 依赖仍在 `as2/aerostack2/` 和 `as2/as2_platform_pixhawk/`；Pixhawk 的 PX4 1.18 适配已转为构建补丁；AS2 核心也已转为 `as2-airsim-pr.patch`，只在 AirSim/OHOS 构建副本应用。
 - SUPER 上游子模块：`src/planner/super/upstream/`。运行产物进入被忽略的 `log/airsim/`。
 
-已有 Skill 集中在 `skill/`；历史运行证据保留在忽略的 `log/pr-history/`，复现过程记录在 `skill/temp/`。`docs/` 只跟踪三份主文档及其图片。AS2 fork 转为主线规定的构建补丁尚未完成：原 PR 锁定的 `f387e0d` 未在其远程仓库发布，不能用另一个提交代替。
+已有 Skill 集中在 `skill/`；历史运行证据保留在忽略的 `log/pr-history/`，复现过程记录在 `skill/temp/`。`docs/` 只跟踪三份主文档及其图片。原 PR 锁定的 AS2 `f387e0d` 已取得并转为构建补丁，官方子模块保持 main 锁定版本；这仍是构建时源码修改，不是无侵入插件替代。
 
 主线依赖准备入口仍为 `bash deployment/prepare_sources.sh`；AirSim / SUPER 使用 `bash tools/robopi/prepare_sources.sh`。
 两者都需从仓库根目录执行后续构建命令。AirSim 构建还依赖 PR 指定的基础镜像与外部仿真资源；目录迁移不表示它们已在当前机器上完成闭环验收。

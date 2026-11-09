@@ -1,10 +1,11 @@
-"""Sync active forks into the already prepared isolated OHOS workspace."""
+"""Sync patched AS2 sources into the already prepared isolated OHOS workspace."""
 import hashlib
 import json
 import os
 from pathlib import Path
 import shutil
 import subprocess
+import tempfile
 
 root = Path(__file__).resolve().parents[2]
 work_root = Path(os.environ.get('OHOS_WORK_ROOT', 'log/airsim/ohos-as2')).expanduser()
@@ -16,11 +17,18 @@ if not (workspace / 'rmw_fastrtps_shared_cpp/package.xml').exists():
 for dependency in ['px4_msgs', 'vision_msgs', 'mocap4r2_msgs']:
     if not any((workspace / dependency).glob('**/package.xml')):
         raise SystemExit(f'Missing {dependency}; initialize a complete workspace with prepare.sh first')
-paths = {name: root / 'as2/airsim/aerostack2' / name for name in
+# Patch an isolated source copy; never modify the official AS2 submodule.
+temporary = tempfile.TemporaryDirectory(prefix='as2-pr-', dir=work_root)
+as2_copy = Path(temporary.name) / 'aerostack2'
+shutil.copytree(root / 'as2/aerostack2', as2_copy,
+                ignore=shutil.ignore_patterns('.git', '__pycache__', 'build', 'install', 'log'))
+subprocess.run(['git', 'apply', '--unsafe-paths', '--directory=' + str(as2_copy.resolve()),
+                str(root / 'deployment/platform/patches/as2-airsim-pr.patch')], check=True)
+paths = {name: as2_copy / name for name in
          ['as2_core', 'as2_msgs', 'as2_motion_reference_handlers',
           'as2_state_estimator', 'as2_motion_controller']}
 for name in ['as2_behavior', 'as2_behaviors_motion']:
-    paths[name] = root / 'as2/airsim/aerostack2/as2_behaviors' / name
+    paths[name] = as2_copy / 'as2_behaviors' / name
 paths['as2_platform_pixhawk'] = root / 'as2/as2_platform_pixhawk'
 paths['uav_planner_interfaces'] = root / 'src/planner/interfaces'
 paths['uav_follow_path_execution'] = root / 'src/behavior/follow_path'
@@ -40,4 +48,5 @@ for name in [*paths, 'px4_msgs', 'vision_msgs', 'mocap4r2_msgs', 'rmw_fastrtps_s
         str(p.relative_to(workspace / name)): hashlib.sha256(p.read_bytes()).hexdigest()
         for p in (workspace / name).rglob('*') if p.is_file() and '.git' not in p.parts}
 (work_root / 'current-sources.json').write_text(json.dumps(record, indent=2) + '\n')
-print('Current AS2 forks and PX4 1.18 definitions synchronized into OHOS workspace')
+print('Patched AS2 sources and PX4 1.18 definitions synchronized into OHOS workspace')
+temporary.cleanup()

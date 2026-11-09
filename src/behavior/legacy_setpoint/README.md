@@ -56,9 +56,9 @@ SUPER 使用 `src/planner/super/upstream/super_planner/config/as2_trajectory_ros
 
 - `tests/test_trajectory.py`：真实 ROS 消息下的主/备用 PVA、固定/跟随航向、非法输入、
   公共桥仅位置与 NaN 保留、失流后禁止自动恢复。
-- `as2/airsim/aerostack2/as2_core/tests/trajectory/trajectory_contract_test.cpp`：
+- `as2/aerostack2/as2_core/tests/trajectory/trajectory_contract_test.cpp`：
   无 ROS 运行时的数值、单点和时间契约测试。
-- `as2/airsim/aerostack2/as2_motion_controller/tests/trajectory_stream_ros_test.py`：
+- `as2/aerostack2/as2_motion_controller/tests/trajectory_stream_ros_test.py`：
   实际控制器的 20/50/100 Hz 输入、50 Hz 输出、源时间戳、重复参考失流和恢复锁定。
   该驱动需要在隔离 ROS domain 中启动 namespace=stream 的控制器；它提供模拟平台服务。
 - `tools/robopi/smoke_ros2.sh`：公共桥端到端 smoke，任务侧显式请求轨迹模式。

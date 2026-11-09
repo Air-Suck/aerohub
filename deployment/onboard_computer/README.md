@@ -24,7 +24,7 @@ main 中的原 `deployment/platform/Dockerfile` 从第三方 Humble Desktop 镜�
 组件安装依赖。DDS Agent、PX4、传感器桥、时钟桥全部由 flight_board 提供，
 不在 onboard_computer 中安装或启动。源码和编译工具保留在镜像中，便于开发。
 
-AS2 核心暂来自 `as2/airsim/aerostack2/`；Pixhawk 使用官方 `as2/as2_platform_pixhawk/`，在构建副本应用 `deployment/platform/patches/as2-platform-px4-v1.18.patch`。AS2 核心因缺少原 PR 未发布提交，补丁化仍待完成。
+AS2 和 Pixhawk 使用 main 锁定的官方子模块，在构建副本分别应用 `as2-airsim-pr.patch`、`as2-platform-px4-v1.18.patch`；补丁位于 `deployment/platform/patches/`，源码来源见同目录的 provenance 文档。
 不再在 Docker 构建时应用 AS2/Pixhawk 补丁。主仓库通过 submodule 指针锁定版本；
 未提交的子仓库改动也会进入本地构建，分享版本时须先提交到对应 fork。
 迁移时的 fork 基础版本如下（不包含随后迁入的本地适配）：
@@ -65,10 +65,10 @@ AirSim 相机和 LiDAR 经独立传感器后端直接发布到同一架飞机的
   确保 GPS 和原点设置生效。
 
 namespace、FMU 前缀、系统 ID 和 `/clock` 形成同一份交互约定，与 AS2 运行
-在 PC 还是开发板无关。原生或交叉编译直接使用 `as2/airsim/aerostack2` 和
+在 PC 还是开发板无关。原生或交叉编译直接使用 `as2/aerostack2` 和
 `as2/as2_platform_pixhawk` 的源码，并提供相同消息定义的目标架构 px4_msgs。
-无需再次打补丁；PC 镜像里的 x86 库不能直接给 OpenHarmony 使用。
-源码路径和两套依赖的使用边界见[项目简介](../../docs/项目简介.md#pr-目录适配)。子模块改动需先在子仓库提交并推送，再提交主仓库指针。
+构建入口会在副本中应用对应补丁，不应手工修改官方子模块；PC 镜像里的 x86 库不能直接给 OpenHarmony 使用。
+源码路径和两条构建链的使用边界见[项目简介](../../docs/项目简介.md#pr-目录适配)。子模块改动需先在子仓库提交并推送，再提交主仓库指针。
 
 ## 加载交付镜像
 
@@ -95,7 +95,7 @@ docker compose -f deployment/onboard_computer/compose.yaml up -d
 ```
 
 构建脚本先初始化缺失的 submodule，再构建固定 PX4 消息依赖镜像，最后编译两个
-AS2 fork，不依赖宿主机已经安装 ROS。安装目录保留原工程路径
+应用补丁后的 AS2 包，不依赖宿主机已经安装 ROS。安装目录保留原工程路径
 `/root/aerostack2_ws/install`，供后续 App 镜像兼容使用。
 
 同一容器按 fleet.yaml 为每架飞机启动：
