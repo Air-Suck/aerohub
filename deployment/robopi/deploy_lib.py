@@ -168,7 +168,7 @@ def main():
                 shutil.copyfile(work/'current-sources.json', stage/'as2/source-manifest.json')
         if args.include_super:
             app=stage/'as2/super_app';app.mkdir()
-            for name in ('mission.py','task.json','planner.yaml','reference_origin.json','manage_mission.py'):
+            for name in ('mission.py','task.json','planner.yaml','reference_origin.json','manage_mission.py','compute_runtime.py'):
                 shutil.copyfile(ROOT/'deployment/airsim/demos/super_forest'/name,app/name)
             shutil.copyfile(ROOT/'src/perception/navigation_inputs/config/drone0.yaml',app/'navigation.yaml')
             deps=Path(os.environ['OHOS_SYSDEPS'])

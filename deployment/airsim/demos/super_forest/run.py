@@ -21,6 +21,7 @@ PREFIX='aerohub-super-migration-'
 NAMES=[PREFIX+'app',PREFIX+'clock',PREFIX+'vehicle']
 IMAGE=os.environ.get('SUPER_APP_IMAGE','uav/apps-super-forest:migration-main-behavior')
 BOARD='flight_board:v0.1.0'
+WORKSTATION_IMAGE='osrf/ros:humble-desktop-full-jammy'
 
 
 def run(command,**kwargs):return subprocess.run(list(map(str,command)),check=True,**kwargs)
@@ -81,16 +82,20 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('action',choices=['build','run','stop','status'])
     parser.add_argument('--case', choices=['ground','short','short-cancel','short-input-loss','short-takeover','forest8'], default='forest8')
-    parser.add_argument('--execution-location', choices=['pc','robopi','robopi-all'], default='pc')
+    parser.add_argument('--execution-location', choices=['pc','robopi','robopi-all','four-part'], default='pc')
+    parser.add_argument('--workstation-workspace',type=Path,default=ROOT/'log/airsim/super-four-part/workstation')
     parser.add_argument('--output',type=Path,default=ROOT/'log/airsim/super-migration-pc')
     args=parser.parse_args();out=args.output.resolve();out.mkdir(parents=True,exist_ok=True)
+    if args.action=='build' and args.execution_location=='four-part':
+        from workstation import prepare
+        prepare(args.workstation_workspace.resolve());return
     if args.action=='build':
         run(['docker','build','--network','none','--pull=false','-f',APP/'Dockerfile','-t',IMAGE,ROOT]);return
     if args.action=='stop':
         coordinator=out/'coordinator.json'
         if coordinator.exists():
             state=json.loads(coordinator.read_text())
-            if state.get('execution_location')=='robopi-all':
+            if state.get('execution_location') in ('robopi-all','four-part'):
                 try:
                     text=Path(f"/proc/{state['pid']}/stat").read_text();fields=text[text.rfind(')')+2:].split()
                     current=(fields[0]!='Z' and fields[19]==state['ticks'] and Path('/proc/sys/kernel/random/boot_id').read_text().strip()==state['boot_id'])
@@ -109,7 +114,9 @@ def main():
                 if time.monotonic()>deadline:raise RuntimeError('Mission recovery timed out; resources retained')
                 time.sleep(1)
         if (out/'execution.json').exists():
-            execution=BoardExecution(out);execution.started=True;execution.stop()
+            execution=BoardExecution(out);execution.started=True
+            if (out/'board-compute-start.json').exists():execution.stop_compute()
+            execution.stop()
         cleanup(out);return
     if args.action=='status':
         if (out/'execution.json').exists():
@@ -124,7 +131,7 @@ def main():
     for name in NAMES:
         if not subprocess.run(['docker','container','inspect',name],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL).returncode:
             raise RuntimeError('Reserved container already exists: '+name)
-    for image in ((BOARD,) if args.execution_location=='robopi-all' else (IMAGE,BOARD)):run(['docker','image','inspect',image],stdout=subprocess.DEVNULL)
+    for image in ((BOARD,WORKSTATION_IMAGE) if args.execution_location=='four-part' else ((BOARD,) if args.execution_location=='robopi-all' else (IMAGE,BOARD))):run(['docker','image','inspect',image],stdout=subprocess.DEVNULL)
     execution = BoardExecution(out) if args.execution_location != 'pc' else None
     settings=json.loads((ROOT/'simulator/airsim/scenarios/super_forest/settings.json').read_text())
     if args.execution_location=='robopi-all':settings['LocalHostIp']=execution.link.required('PC_IP')
@@ -149,7 +156,7 @@ def main():
                       for name in ('as2/aerostack2','as2/as2_platform_pixhawk','src/planner/super/upstream')},
         'source_hashes':hashes,'ports':{'rpc':43472,'tcp':4881,'relay':4981,'agent':8951},'ros_domain':94},indent=2)+'\n')
     if execution:
-        execution.require_super=args.execution_location=='robopi-all'
+        execution.require_super=args.execution_location in ('robopi-all','four-part')
         execution.prepare()
     # Refuse occupied independent ports before starting any simulation resources.
     for kind, ports in ((socket.SOCK_STREAM,(43472,4881,4981)),(socket.SOCK_DGRAM,(8951,15641,15681))):
@@ -180,15 +187,34 @@ def main():
             if time.monotonic()>deadline:raise RuntimeError('PX4 preflight did not become ready')
             time.sleep(.25)
         (out/'images.json').write_text(json.dumps({name:subprocess.check_output(['docker','image','inspect','--format','{{.Id}}',image],text=True).strip()
-            for name,image in ([('flight_board',BOARD)] if args.execution_location=='robopi-all' else [('application',IMAGE),('flight_board',BOARD)])},indent=2)+'\n')
+            for name,image in ([('workstation_base',WORKSTATION_IMAGE),('flight_board',BOARD)] if args.execution_location=='four-part' else ([('flight_board',BOARD)] if args.execution_location=='robopi-all' else [('application',IMAGE),('flight_board',BOARD)]))},indent=2)+'\n')
         if execution: execution.start()
         if args.execution_location=='robopi-all':
             execution.run_mission(args.case)
         else:
-            command=['docker','run','--rm','--init','--network','host','--name',PREFIX+'app','--label','aerohub.super.output='+str(out),
-                 '-e','ROS_DOMAIN_ID=94','-e','SUPER_EXECUTION_LOCATION='+args.execution_location,'-e','SUPER_CASE='+args.case,
-                 *(['-e','FASTRTPS_DEFAULT_PROFILES_FILE=/evidence/pc-dds.xml','-e','ROS_LOCALHOST_ONLY=0'] if execution else []),
-                 '-v',str(out)+':/evidence',IMAGE]
+            if args.execution_location=='four-part':
+                workspace=args.workstation_workspace.resolve()
+                if not (workspace/'ws/install/setup.bash').exists():raise RuntimeError('Prepare the workstation interface overlay first')
+                try:execution.start_compute()
+                except BaseException as exc:
+                    (out/'result.json').write_text(json.dumps({'success':False,'motion_requested':False,'error':str(exc),'failed_phase':'compute_startup'})+'\n')
+                    raise
+                command=['docker','run','--rm','--init','--network','host','--name',PREFIX+'app',
+                    '--label','aerohub.super.output='+str(out),'--user',f'{os.getuid()}:{os.getgid()}',
+                    '-e','ROS_DOMAIN_ID=94','-e','ROS_LOCALHOST_ONLY=0','-e','RMW_IMPLEMENTATION=rmw_fastrtps_cpp',
+                    '-e','FASTRTPS_DEFAULT_PROFILES_FILE=/evidence/pc-dds.xml',
+                    '-e','PYTHONDONTWRITEBYTECODE=1','-e','ROS_LOG_DIR=/evidence/workstation-roslog',
+                    '-e','SUPER_EXECUTION_LOCATION=four-part','-e','SUPER_CASE='+args.case,
+                    '-e','SUPER_APP_ROOT=/app','-e','PYTHONPATH=/work/runtime:/vendor',
+                    '-v',str(workspace)+':/work:ro','-v',str(APP)+':/app:ro',
+                    '-v',str(ROOT/'deployment/robopi/vendor')+':/vendor:ro','-v',str(out)+':/evidence',
+                    '--entrypoint','/bin/bash',WORKSTATION_IMAGE,'-lc',
+                    'source /opt/ros/humble/setup.bash && source /work/ws/install/setup.bash && exec python3 /app/mission.py']
+            else:
+                command=['docker','run','--rm','--init','--network','host','--name',PREFIX+'app','--label','aerohub.super.output='+str(out),
+                     '-e','ROS_DOMAIN_ID=94','-e','SUPER_EXECUTION_LOCATION='+args.execution_location,'-e','SUPER_CASE='+args.case,
+                     *(['-e','FASTRTPS_DEFAULT_PROFILES_FILE=/evidence/pc-dds.xml','-e','ROS_LOCALHOST_ONLY=0'] if execution else []),
+                     '-v',str(out)+':/evidence',IMAGE]
             app=subprocess.Popen(list(map(str,command)))
             try:
                 while app.poll() is None:
@@ -205,7 +231,9 @@ def main():
             if not result.get('success'):raise RuntimeError('SUPER mission did not pass')
     finally:
         # Retain simulator, clock and board control if recovery has not been confirmed.
-        if execution: execution.stop()
+        if execution:
+            if args.execution_location=='four-part':execution.stop_compute()
+            execution.stop()
         cleanup(out)
 
 if __name__=='__main__':main()

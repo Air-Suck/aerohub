@@ -7,12 +7,14 @@ import uuid
 
 import rclpy
 from rclpy.node import Node
+from rclpy.parameter import Parameter
 from rclpy.qos import qos_profile_sensor_data
 from nav_msgs.msg import Odometry
 from as2_msgs.msg import TrajectorySetpoints
 from mars_quadrotor_msgs.msg import PolynomialTrajectory, PositionCommand
 from std_msgs.msg import String
 from std_srvs.srv import SetBool
+from rcl_interfaces.msg import SetParametersResult
 from uav_planner_interfaces.msg import TimedTrajectorySegment, VehicleTrajectory, TimedTrajectoryPoint
 from uav_planner_framework.follow_path_client import FleetFollowPathClient
 from uav_planner_framework.ros_conversions import seconds_to_time, time_to_seconds
@@ -30,6 +32,7 @@ class SuperAdapter(Node):
         self.goal = self.get_parameter('goal').value
         if len(self.goal) != 3 or not all(math.isfinite(x) for x in self.goal):
             raise ValueError('invalid local ENU goal')
+        self.add_on_set_parameters_callback(self.update_task_parameters)
         self.config = {'vehicles':[self.vehicle], 'deployment':{self.vehicle:{
             'namespace':self.vehicle,'px4_origin_in_fleet_ned':[0.,0.,0.]}},
             'planner':{'parameters':{'max_velocity':self.get_parameter('max_speed').value}}}
@@ -55,6 +58,18 @@ class SuperAdapter(Node):
         self.create_service(SetBool,'super_adapter/enable',self.enable)
         self.publisher = self.create_publisher(String,'super_adapter/state',10)
         self.create_timer(.02,self.tick)
+
+    def update_task_parameters(self,parameters):
+        for parameter in parameters:
+            if parameter.name!='goal':continue
+            value=parameter.value
+            if self.enabled or (self.client and not self.client.quiescent):
+                return SetParametersResult(successful=False,reason='Stop the current execution before changing goal')
+            if parameter.type_!=Parameter.Type.DOUBLE_ARRAY or len(value)!=3 or not all(math.isfinite(x) for x in value):
+                return SetParametersResult(successful=False,reason='Goal must contain three finite ENU coordinates')
+        for parameter in parameters:
+            if parameter.name=='goal':self.goal=list(parameter.value)
+        return SetParametersResult(successful=True)
 
     def now_seconds(self):
         return self.get_clock().now().nanoseconds/1e9

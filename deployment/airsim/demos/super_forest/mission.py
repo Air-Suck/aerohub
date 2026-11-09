@@ -12,6 +12,7 @@ import rclpy
 from rclpy.node import Node
 from rclpy.action import ActionClient
 from rclpy.parameter import Parameter
+from rcl_interfaces.srv import SetParametersAtomically
 from rclpy.qos import qos_profile_sensor_data
 from as2_msgs.action import Takeoff,Land
 from as2_msgs.msg import ControllerInfo,ControlMode,PlatformInfo,PlatformStatus,TrajectorySetpoints
@@ -37,6 +38,7 @@ class Mission(Node):
             self.task['waypoints_enu_m']=[[0.,4.,2.]]
             self.task['leg_timeout_s']=60
         self.rpc=Rpc(os.environ.get('AIRSIM_RPC_HOST','127.0.0.1'),43472,timeout=5)
+        self.runtime={};self.four_part=os.environ.get('SUPER_EXECUTION_LOCATION')=='four-part'
         self.phase='initializing';self.odom=None;self.platform=None;self.controller=None
         self.state={};self.acks={};self.counts=collections.Counter();self.flags=collections.Counter()
         self.last_clock=None;self.input_ages={};self.received={};self._mission_clients=[];self.children=[];self.origin=None
@@ -57,8 +59,12 @@ class Mission(Node):
         self.create_subscription(PolynomialTrajectory,'/planning_cmd/poly_traj',self.on_plan,qos_profile_sensor_data)
         for key,topic in [('cloud','/drone0/navigation/points'),('map','/rog_map/occ'),('inflated','/rog_map/inf_occ')]:
             self.create_subscription(PointCloud2,topic,lambda m,k=key:self.on_cloud(k,m),qos_profile_sensor_data)
+        self.create_subscription(String,'/drone0/super_runtime/state',self.on_runtime,10)
         self.goal_pub=self.create_publisher(PoseStamped,'/goal_pose',1)
         self.create_timer(.1,self.record)
+
+    def on_runtime(self,msg):
+        self.runtime=json.loads(msg.data);self.touch('runtime')
 
     def on_clock(self,msg):
         stamp=msg.clock.sec+msg.clock.nanosec/1e9
@@ -131,6 +137,8 @@ class Mission(Node):
             if self.phase in ('stopping','landing') and name!='as2':continue
             if child.poll() is not None:raise RuntimeError(name+' exited: '+str(child.returncode))
         if self.phase in ('route','fault'):
+            if self.four_part and (not self.runtime.get('ready') or self.runtime.get('error') or time.monotonic()-self.received.get('runtime',0)>1.5):
+                raise RuntimeError('Compute capability readiness lost')
             if self.phase=='route' and self.state.get('error'):raise RuntimeError(self.state['error'])
             if time.monotonic()-self.received.get('controller',0)>1.5:
                 raise RuntimeError('controller feedback timeout')
@@ -158,6 +166,7 @@ class Mission(Node):
             rclpy.spin_once(self,timeout_sec=.02)
 
     def start(self,name,command):
+        if self.four_part:raise RuntimeError('Workstation mission cannot start compute processes')
         stream=(self.out/(name+'.log')).open('w')
         child=subprocess.Popen(command,stdout=stream,stderr=subprocess.STDOUT,start_new_session=True)
         self.children.append((name,child,stream))
@@ -176,6 +185,7 @@ class Mission(Node):
             raise RuntimeError('PX4 rejected command '+str(command)+': '+str(self.acks[command]))
 
     def emergency_land(self):
+        if self.four_part:raise RuntimeError('Four-part mode requires board-side recovery; workstation cannot command PX4 directly')
         # Recovery only: never count this fallback as native Behavior acceptance.
         pub=self.create_publisher(VehicleCommand,'/drone0/fmu/in/vehicle_command',qos_profile_sensor_data)
         self.wait(lambda:pub.get_subscription_count()>0,15)
@@ -202,6 +212,34 @@ class Mission(Node):
         if not getattr(result.result().result,field):raise RuntimeError(name+' failed')
 
     def prepare(self):
+        if self.four_part:
+            self.wait(lambda:self.runtime.get('ready') and self.odom is not None and self.platform is not None
+                and self.controller is not None and all(self.counts[k]>=3 for k in ('cloud','map','inflated')),90)
+            if self.platform.armed:raise RuntimeError('Workstation requires a disarmed platform before task start')
+            self.origin=list(self.runtime['origin'])
+            target=[a+b for a,b in zip(self.origin,self.task['waypoints_enu_m'][-1])]
+            parameters=self.create_client(SetParametersAtomically,'/drone0/super_timed_path_adapter/set_parameters_atomically')
+            self._mission_clients.append(parameters)
+            self.wait(parameters.service_is_ready,30)
+            request=SetParametersAtomically.Request(parameters=[Parameter('goal',value=list(map(float,target))).to_parameter_msg()])
+            future=parameters.call_async(request)
+            self.wait(future.done)
+            if not future.result().result.successful:raise RuntimeError('Compute goal configuration rejected: '+future.result().result.reason)
+            if not self.rpc.call('ping'):raise RuntimeError('Workstation simulator RPC unavailable')
+            collision=self.rpc.call('simGetCollisionInfo','PX4')
+            if not all(key in collision for key in ('has_collided','time_stamp')):raise RuntimeError('Simulator collision schema mismatch')
+            self.result['simulator_collision_preflight']=True
+            from uav_planner_interfaces.action import FollowTimedPath
+            clients=[ActionClient(self,kind,name) for kind,name in ((Takeoff,'/drone0/TakeoffBehavior'),
+                (Land,'/drone0/LandBehavior'),(FollowTimedPath,'/drone0/follow_timed_path'))]
+            self._mission_clients.extend(clients)
+            self.wait(lambda:all(client.server_is_ready() for client in clients),30)
+            enabler=self.create_client(SetBool,'/drone0/super_adapter/enable');self._mission_clients.append(enabler)
+            self.wait(enabler.service_is_ready,30)
+            (self.out/'origin-measured.json').write_text(json.dumps({'task_to_odom_translation_m':self.origin,'target':target},indent=2)+'\n')
+            (self.out/'compute-ready.json').write_text(json.dumps(self.runtime,indent=2)+'\n')
+            self.result.update(mission_location='workstation',algorithm_location='robopi',task_protocol='ROS parameters + enable service + goal topic + Behavior Actions')
+            return target
         os.environ.update(AS2_EXECUTION_BACKEND='follow_path',AS2_FLEET_FILE=str(self.out/'fleet.yaml'))
         if os.environ.get('SUPER_EXECUTION_LOCATION', 'pc') == 'pc':
             self.start('as2',['python3','/opt/onboard_computer/run.py'])
@@ -227,6 +265,7 @@ class Mission(Node):
 
     def run(self):
         try:
+            if self.four_part and self.case=='short-input-loss':raise RuntimeError('Four-part input-loss injection requires a board-side test interface; not implemented')
             self.phase='preparing';target=self.prepare()
             if self.case=='ground':
                 from uav_planner_interfaces.action import FollowTimedPath
@@ -341,7 +380,8 @@ class Mission(Node):
             self.result.update(success=bool(self.result.get('ground_ready') or ((self.result.get('arrived') or self.result.get('fault_validated')) and self.result.get('behavior_stop_confirmed') and
                  self.result.get('landed_and_disarmed') and not self.result.get('error') and not self.result.get('recovery_error'))),
                  max_speed_m_s=self.max_speed,bounds_observation_count=self.bound_violations,
-                 source_flags=dict(self.flags),counts=dict(self.counts),input_ages_s=self.input_ages,adapter=self.state)
+                 source_flags=dict(self.flags),counts=dict(self.counts),input_ages_s=self.input_ages,adapter=self.state,
+                 mission_owned_children=[name for name,_,_ in self.children])
             (self.out/'result.json').write_text(json.dumps(self.result,indent=2)+'\n')
             print(json.dumps(self.result,indent=2),flush=True)
 

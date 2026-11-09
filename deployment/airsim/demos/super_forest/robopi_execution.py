@@ -106,12 +106,61 @@ assert not active, 'Domain 94 already has board consumers: '+str(active)
         (self.out/'execution.json').write_text(json.dumps({'location':'robopi','root':CANDIDATE,
             'domain':94,'pc_interface':local,'board_interface':peer,'backend':'follow_path'},indent=2)+'\n')
 
+    def compute_command(self, action):
+        remote=CANDIDATE+'/runtime/super-runs/'+self.out.name
+        return self.env+'python3 super_app/manage_mission.py '+action+' --kind compute --output '+shlex.quote(remote)
+
+    def start_compute(self):
+        remote=CANDIDATE+'/runtime/super-runs/'+self.out.name
+        self.link.board('mkdir -p '+shlex.quote(remote))
+        state=self.link.board(self.compute_command('start'))
+        (self.out/'board-compute-start.json').write_text(state+'\n')
+        deadline=time.monotonic()+150
+        while True:
+            self.check()
+            status=json.loads(self.link.board(self.compute_command('status')))
+            if not status['alive']:raise RuntimeError('Compute startup exited; collect board logs')
+            code="import json;from pathlib import Path;p=Path("+repr(remote+'/ready.json')+");print(p.read_text() if p.exists() else '{}')"
+            ready=json.loads(self.link.board('python3 -c '+shlex.quote(code)))
+            if ready.get('ready'):
+                (self.out/'board-compute-ready.json').write_text(json.dumps(ready,indent=2)+'\n')
+                break
+            if time.monotonic()>deadline:raise RuntimeError('Compute capability did not become ready')
+            time.sleep(1)
+        topology=json.loads((self.out/'execution.json').read_text())
+        topology.update(location='four-part',mission_location='workstation',algorithm_location='robopi',
+            navigation_location='robopi',adapter_location='robopi',runtime_location='robopi',
+            task_control='ROS only',simulator_rpc_location='workstation-local',remote_compute_evidence=remote)
+        (self.out/'execution.json').write_text(json.dumps(topology,indent=2)+'\n')
+
+    def stop_compute(self):
+        if not (self.out/'board-compute-start.json').exists():return
+        result=json.loads((self.out/'result.json').read_text()) if (self.out/'result.json').exists() else {}
+        if not result.get('landed_and_disarmed') and result.get('motion_requested') is not False:
+            raise RuntimeError('Compute retained until task recovery is confirmed')
+        before=json.loads(self.link.board(self.compute_command('status')))
+        expected=json.loads((self.out/'board-compute-start.json').read_text())
+        if any(before.get(k)!=expected.get(k) for k in ('pid','ticks','boot_id')):raise RuntimeError('Compute identity changed; refusing stop')
+        (self.out/'capability-after-task.json').write_text(json.dumps(before)+'\n')
+        self.link.board(self.compute_command('stop'))
+        deadline=time.monotonic()+30
+        while time.monotonic()<deadline:
+            state=json.loads(self.link.board(self.compute_command('status')))
+            if not state['alive']:
+                (self.out/'board-compute-stop.json').write_text(json.dumps(state)+'\n')
+                self.collect_mission(destination=self.out/'compute')
+                return
+            time.sleep(.5)
+        raise RuntimeError('Compute runtime did not stop')
+
     def mission_command(self, action, case):
         remote=CANDIDATE+'/runtime/super-runs/'+self.out.name
         return (self.env+'python3 super_app/manage_mission.py '+action+' --output '+shlex.quote(remote)+
             ' --case '+shlex.quote(case)+' --rpc-host '+shlex.quote(self.link.required('PC_IP')))
 
-    def collect_mission(self):
+    def collect_mission(self, destination=None):
+        destination=destination or self.out
+        destination.mkdir(parents=True,exist_ok=True)
         remote=CANDIDATE+'/runtime/super-runs/'+self.out.name
         archive=CANDIDATE+'/runtime/'+self.out.name+'-evidence.tar.gz'
         code="""import tarfile,hashlib
@@ -124,15 +173,15 @@ with tarfile.open(archive,'w:gz') as output:
 print(hashlib.sha256(archive.read_bytes()).hexdigest())
 """.replace('ROOT',repr(remote)).replace('ARCHIVE',repr(archive))
         digest=self.link.board('python3 -c '+shlex.quote(code),timeout=60)
-        local=self.out/'board-evidence.tar.gz'
+        local=destination/'board-evidence.tar.gz'
         self.link.hdc('file','recv',archive,str(local))
         if hashlib.sha256(local.read_bytes()).hexdigest()!=digest:raise RuntimeError('Board evidence transfer hash mismatch')
         with tarfile.open(local) as bundle:
             for member in bundle.getmembers():
                 path=Path(member.name)
                 if path.is_absolute() or '..' in path.parts or member.issym() or member.islnk():raise RuntimeError('Unexpected board evidence member')
-            bundle.extractall(self.out,filter='data')
-        (self.out/'board-evidence-sha256.txt').write_text(digest+'\n')
+            bundle.extractall(destination,filter='data')
+        (destination/'board-evidence-sha256.txt').write_text(digest+'\n')
 
     def run_mission(self, case):
         manifest=json.loads((self.out/'board-deployment.json').read_text())
@@ -185,8 +234,9 @@ print(hashlib.sha256(archive.read_bytes()).hexdigest())
         if not state.get('alive') or any(state.get(k)!=owned.get(k) for k in ('pid','ticks','boot_id')):
             raise RuntimeError('Candidate AS2 process lost')
         roots=[state['pid']]
-        mission_state=self.out/'board-mission-start.json'
-        if mission_state.exists():roots.append(json.loads(mission_state.read_text())['pid'])
+        for name in ('board-mission-start.json','board-compute-start.json'):
+            mission_state=self.out/name
+            if mission_state.exists():roots.append(json.loads(mission_state.read_text())['pid'])
         sample = """import json,os,time
 from pathlib import Path
 rows={}
