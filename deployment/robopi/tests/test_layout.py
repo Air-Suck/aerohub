@@ -22,7 +22,7 @@ class LayoutTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
             source, payload, target = root/'source', root/'payload', root/'device'
-            names = set.union(*packager.APPLICATIONS.values()) | {'as2_core'}
+            names = set.union(*packager.APPLICATIONS.values()) | packager.AS2_PACKAGES
             for name in names:
                 share = source/name/'share'/name
                 share.mkdir(parents=True)
@@ -30,7 +30,7 @@ class LayoutTest(unittest.TestCase):
                 file = share/'path.sh'
                 file.write_text('/data/local/tmp/aerohub-as2/install/'+name+'/lib\n/work/ws/install/as2_core/lib\n')
             packager.package(source, payload, 'all')
-            for group, required in {'as2':{'as2_core'}, **packager.APPLICATIONS}.items():
+            for group, required in {'as2':packager.AS2_PACKAGES, **packager.APPLICATIONS}.items():
                 for name in required:
                     text=(payload/group/'install'/name/'share'/name/'path.sh').read_text()
                     prefix=packager.AS2 if group=='as2' else '/data/aerohub/lib/'+group
@@ -54,6 +54,39 @@ class LayoutTest(unittest.TestCase):
             with self.assertRaises(AssertionError): send()
             self.assertTrue((target/'as2/install/as2_core').is_dir())
             self.assertNotEqual((target/'as2/install/as2_core/share/as2_core/path.sh').read_text(),'corrupted')
+
+class CandidateTest(unittest.TestCase):
+    def test_candidate_relocation_and_install_preserves_default(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            source, payload, device = root/'source', root/'payload', root/'device'
+            prefix = '/data/aerohub/validation/super-follow-path/as2'
+            for name in packager.AS2_PACKAGES:
+                share = source/name/'share'/name
+                share.mkdir(parents=True)
+                (share/'package.xml').write_text('<package/>')
+                (share/'path.sh').write_text(packager.AS2+'/install/'+name+'/lib')
+            packager.package(source, payload, 'as2', prefix)
+            text = (payload/'as2/install/as2_core/share/as2_core/path.sh').read_text()
+            self.assertEqual(text, prefix+'/install/as2_core/lib')
+            (device/'.deploy').mkdir(parents=True)
+            (device/'as2').mkdir()
+            (device/'as2/sentinel').write_text('existing')
+            bundle = device/'.deploy/overlay.tar.gz'
+            with tarfile.open(bundle,'w:gz') as archive:
+                archive.add(payload/'as2', arcname='as2')
+            installer.install(device, bundle, device/'validation/super-follow-path/as2')
+            self.assertTrue((device/'validation/super-follow-path/as2/install/uav_follow_path_execution').is_dir())
+            self.assertEqual((device/'as2/sentinel').read_text(), 'existing')
+            with self.assertRaises(ValueError):
+                packager.package(source, root/'bad', 'all', prefix)
+
+    def test_incomplete_execution_install_is_rejected(self):
+        with tempfile.TemporaryDirectory() as folder:
+            source = Path(folder)/'source'
+            source.mkdir()
+            with self.assertRaisesRegex(RuntimeError, 'Missing packages'):
+                packager.package(source, Path(folder)/'payload', 'as2')
 
 class PythonFreshnessTest(unittest.TestCase):
     def test_newer_install_timestamp_does_not_hide_stale_module(self):

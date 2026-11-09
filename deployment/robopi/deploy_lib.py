@@ -60,17 +60,21 @@ def relocate_elf(path):
     path.write_bytes(data)
 
 
-def package(source, destination, component):
+def package(source, destination, component, as2_root=AS2):
+    if as2_root != AS2 and component != "as2":
+        raise ValueError("Non-default --as2-root requires --component as2")
+    if not as2_root.startswith("/data/aerohub/") or ".." in Path(as2_root).parts:
+        raise ValueError("AS2 root must be below /data/aerohub")
     packages = {p.name for p in source.iterdir() if (p/'share'/p.name/'package.xml').is_file()}
     groups = ['as2', *APPLICATIONS] if component == 'all' else [component]
     changed = []
     for group in groups:
         required = AS2_PACKAGES if group == 'as2' else APPLICATIONS[group]
         selected = sorted(packages & required)
-        if not selected or (group != 'as2' and set(selected) != required):
+        if set(selected) != required:
             raise RuntimeError('Missing packages for '+group+': '+str(sorted(required-packages)))
-        prefix = AS2 if group == 'as2' else '/data/aerohub/lib/'+group
-        mapping = {name: AS2+'/install/'+name for name in AS2_PACKAGES}
+        prefix = as2_root if group == 'as2' else '/data/aerohub/lib/'+group
+        mapping = {name: as2_root+'/install/'+name for name in AS2_PACKAGES}
         if group != 'as2': mapping.update({name:prefix+'/install/'+name for name in required})
         for name in selected:
             namespace = source.parent/'src'/name/name
@@ -121,17 +125,20 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--component', choices=['as2', *APPLICATIONS, 'all'], default='all')
     parser.add_argument('--install', type=Path)
+    parser.add_argument('--as2-root', default=AS2)
     parser.add_argument('--activate-config', action='store_true', help='Switch .env ROBOPI_ROOT after deployment; omit while old runtime is in use')
     parser.add_argument('--prepare-only', type=Path, help='Create a local bundle without contacting the device')
     args = parser.parse_args()
-    sys.path.insert(0, str(ROOT/'scripts'))
+    if args.as2_root != AS2 and (args.component != 'as2' or args.activate_config):
+        parser.error('Candidate root requires --component as2 without --activate-config')
+    sys.path.insert(0, str(ROOT/'tools/robopi'))
     from robopi import board, hdc
     work = Path(os.environ.get('OHOS_WORK_ROOT', ROOT/'log/airsim/ohos-as2'))
     if not work.is_absolute(): work = ROOT/work
     source = args.install or work/'ws/install'
     with tempfile.TemporaryDirectory(prefix='aerohub-deploy-') as temporary:
         stage = Path(temporary)
-        package(source, stage, args.component)
+        package(source, stage, args.component, args.as2_root)
         if (stage/'as2').exists():
             files = {'board_env.sh': ROOT/'deployment/robopi/board_env.sh',
                      'board_smoke.py': ROOT/'deployment/robopi/diagnostics/board_smoke.py',
@@ -145,6 +152,8 @@ def main():
                      'pid_speed_controller.yaml': ROOT/'deployment/airsim/config/as2/pid_speed_controller.yaml',
                      'settings.json': ROOT/'simulator/airsim/config/settings/px4-sensors.json'}
             for name, path in files.items(): shutil.copyfile(path, stage/'as2'/name)
+            env = stage/'as2/board_env.sh'
+            env.write_text(env.read_text().replace(AS2, args.as2_root))
             if os.environ.get('ROBOPI_IP'):
                 from robopi import profile
                 profile(stage/'as2/fastdds_udp.xml', os.environ['ROBOPI_IP'])
@@ -165,7 +174,7 @@ def main():
         return
     # The shell entrypoint holds the shared operation lock throughout deployment.
     check = """from pathlib import Path
-roots=('/data/aerohub/as2/','/data/aerohub/lib/')
+roots=ROOTS
 active=[]
 for p in Path('/proc').glob('[0-9]*'):
  try:
@@ -175,6 +184,8 @@ for p in Path('/proc').glob('[0-9]*'):
  except OSError: pass
 assert not active, 'Deployment consumers are running: '+str(active)
 """
+    roots = (args.as2_root+'/',) if args.component == 'as2' else (AS2+'/', '/data/aerohub/lib/')
+    check = check.replace('ROOTS', repr(roots))
     board('python3 -c '+shlex.quote(check))
     if args.component in APPLICATIONS:
         board('test -f /data/aerohub/as2/board_env.sh')
@@ -186,7 +197,7 @@ assert not active, 'Deployment consumers are running: '+str(active)
     board('python3 -c '+shlex.quote(verify))
     # Board-side extraction and replacement is shared by AS2 and application deployment.
     hdc('file', 'send', str(ROOT/'deployment/robopi/install_overlay.py'), '/data/aerohub/.deploy/install_overlay.py')
-    board('python3 /data/aerohub/.deploy/install_overlay.py')
+    board('python3 /data/aerohub/.deploy/install_overlay.py --as2-root '+shlex.quote(args.as2_root))
     if args.activate_config and args.component in ('all', 'as2'):
         env_file = ROOT/'.env'
         if env_file.exists():
