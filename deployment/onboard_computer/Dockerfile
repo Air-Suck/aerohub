@@ -18,9 +18,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-rosdep python3-vcstool python3-yaml \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /root/aerostack2_ws/src
-COPY as2/aerostack2/ aerostack2/
-COPY as2/as2_platform_pixhawk/ as2_platform_pixhawk/
-COPY runtime/navigation_inputs/ as2_navigation_inputs/
+COPY as2/airsim/aerostack2/ aerostack2/
+COPY as2/airsim/as2_platform_pixhawk/ as2_platform_pixhawk/
+COPY src/perception/navigation_inputs/ as2_navigation_inputs/
 WORKDIR /root/aerostack2_ws
 # Install only dependencies of the selected flight components, not unrelated
 # Gazebo/platform packages that happen to be present in the upstream monorepo.
@@ -58,15 +58,15 @@ RUN source /opt/ros/humble/setup.bash \
     && colcon build --merge-install --parallel-workers 2 \
        --cmake-args -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF
 COPY deployment/onboard_computer/entrypoint.sh /usr/local/bin/onboard-computer
-COPY runtime/as2/run.py /opt/onboard_computer/run.py
-COPY runtime/as2/selected_behaviors.launch.py /opt/onboard_computer/selected_behaviors.launch.py
-COPY runtime/as2/scoped_tf.launch.py /opt/onboard_computer/scoped_tf.launch.py
-COPY config/as2/config.yaml /opt/onboard_computer/config.yaml
-COPY config/as2/fleet.yaml /opt/onboard_computer/fleet.yaml
-COPY config/as2/pid_speed_controller.yaml /opt/onboard_computer/pid_speed_controller.yaml
+COPY deployment/airsim/as2/run.py /opt/onboard_computer/run.py
+COPY deployment/airsim/as2/selected_behaviors.launch.py /opt/onboard_computer/selected_behaviors.launch.py
+COPY deployment/airsim/as2/scoped_tf.launch.py /opt/onboard_computer/scoped_tf.launch.py
+COPY deployment/airsim/config/as2/config.yaml /opt/onboard_computer/config.yaml
+COPY deployment/airsim/config/as2/fleet.yaml /opt/onboard_computer/fleet.yaml
+COPY deployment/airsim/config/as2/pid_speed_controller.yaml /opt/onboard_computer/pid_speed_controller.yaml
 RUN chmod +x /usr/local/bin/onboard-computer
 ENTRYPOINT ["/usr/local/bin/onboard-computer"]
 CMD ["run"]
 
-COPY config/dds/fastdds_udp.xml /opt/fastdds_udp.xml
+COPY deployment/airsim/config/dds/fastdds_udp.xml /opt/fastdds_udp.xml
 ENV FASTRTPS_DEFAULT_PROFILES_FILE=/opt/fastdds_udp.xml

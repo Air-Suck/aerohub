@@ -24,7 +24,7 @@ Humble 算法、RoboPi/OHOS、AS2/Pixhawk 的 PVA 和失流保护必须保留并
 CAT-ORA PC 应用已支持显式 CATORA_EXECUTION_BACKEND=follow_path，基于
 onboard_computer:v0.1.0 的独立应用镜像已通过四机正常飞行场景。板端和 Swarm
 应用仍为旧链路；SUPER 的独立 PC 新链路结果见本文末节。不能据此宣称 OHOS/RoboPi 迁移完成。未导入依赖旧 Gazebo 部署的验收驱动。
-PC 复现方式和局限见 [应用说明](demos/catora_open_field/README.md#followtimedpath-迁移的-pc-验证入口)。
+PC 复现方式和局限见 [应用说明](deployment/airsim/demos/catora_open_field/README.md#followtimedpath-迁移的-pc-验证入口)。
 
 ## 接手执行顺序
 
@@ -72,12 +72,12 @@ CAT-ORA/Swarm 的板端入口仍使用旧应用流程，SUPER 缺少统一环境
 保留一轮首轨迹前失败及其恢复记录；原失败未记录具体 failure_reason，根因未确认。
 PC 首轨迹使用独立30秒冷启动预算，后续轨迹超时保持5秒。
 原始证据、准确镜像 ID、源码哈希和失败限制见
-[版本化摘要](demos/catora_open_field/migration-pc-validation.json)。
+[版本化摘要](deployment/airsim/demos/catora_open_field/migration-pc-validation.json)。
 本结果不覆盖 OHOS/RoboPi、混合部署、Behavior 断流、Swarm 或 SUPER。
 
 ## SUPER PC 迁移结果
 
-新增 src/planner/super/ros2_adapter 与 demos/super_forest 的独立PC构建、启动、
+新增 src/planner/super/ros2_adapter 与 deployment/airsim/demos/super_forest 的独立PC构建、启动、
 任务和分析入口；完整committed曲线（含备用拼接段）经 FollowTimedPath 执行。
 源算法仍在原fork子模块，不重启或替换原有SUPER运行。Adapter固定航向，未实现yaw曲线约束。
 
@@ -89,7 +89,7 @@ RoboPi/OHOS、混合部署、受控备用切换与可靠性复验仍未完成。
 客户端按当前Action反馈revision观察settling；运动参考保留真实采样时间。
 Action消息未改，原生FollowPath仍保留，未修改AirSim/PX4算法或保护参数。
 
-证据与失败限制见 [SUPER版本化摘要](demos/super_forest/migration-pc-validation.json)。
+证据与失败限制见 [SUPER版本化摘要](deployment/airsim/demos/super_forest/migration-pc-validation.json)。
 
 ## verify 合并与推送交接
 
@@ -106,7 +106,7 @@ framework 27 项、SUPER 8 项全部通过，无跳过；真实 Mission/Adapter 
 比其远端 main 多一个本地提交，必须先发布依赖，再推主仓库。以下为待执行命令，本轮没有执行 push：
 
 ```bash
-git -C as2/aerostack2 push origin HEAD:main
+git -C as2/airsim/aerostack2 push origin HEAD:main
 git push --recurse-submodules=check origin verify/px4-airsim-as2
 ```
 

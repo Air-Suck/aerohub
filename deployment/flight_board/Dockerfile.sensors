@@ -3,7 +3,7 @@ ARG BASE_IMAGE=flight_board:airsim-px4-humble-20261105-43632de22490
 FROM ${BASE_IMAGE}
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 WORKDIR /opt/platform_sensors
-COPY runtime/airsim_sensors/ src/as2_sensor_adapter/
+COPY simulator/airsim/sensors/ src/as2_sensor_adapter/
 RUN source /opt/ros/humble/setup.bash \
     && colcon build --merge-install --packages-select uav_as2_sensor_adapter \
     && ROS_DOMAIN_ID=175 ROS_LOCALHOST_ONLY=1 PYTHONPATH=src/as2_sensor_adapter:$PYTHONPATH \

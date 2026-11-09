@@ -1,9 +1,0 @@
-# Copy to config/resources.local.yaml or ~/.config/aerohub/resources.yaml.
-# Relative paths resolve from the YAML file's directory. Supports ~.
-resources:
-  airsim_nh:
-    path: ~/AirSim/scenes/nh/AirSimNH/Binaries/Linux/AirSimNH
-  airsim_town05:
-    path: ~/AirSim/scenes/town05/CarlaUE4/Binaries/Linux/CarlaUE4
-  racer_yolo_plant:
-    path: ~/AirSim/scenes/plant/SuperGridStarterpack/Binaries/Linux/SuperGridStarterpack-Linux-Shipping

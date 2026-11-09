@@ -2,7 +2,7 @@
 # Read-only acceptance against an existing real AirSim -> navigation input chain.
 set -euo pipefail
 repo=$(cd "$(dirname "$0")/../../../.." && pwd)
-results=${1:-$repo/artifacts/swarm-real-cloud}
+results=${1:-$repo/log/airsim/swarm-real-cloud}
 mkdir -p "$results"
 results=$(cd "$results" && pwd)
 dds=${SWARM_DDS_PROFILE:-$repo/config/dds/fastdds_udp.xml}

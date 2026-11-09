@@ -13,13 +13,13 @@ description: 使用现有 OHOS build Docker，将 AS2 和指定算法库部署�
 - `/data/aerohub/lib/<应用名>/install/`：算法及其必要应用包；CAT-ORA 使用 `catora`，Swarm-Formation 使用 `swarm-formation`；各自的 `env.sh` 先加载 AS2 再加载应用。
 - 配置和 `runtime/` 放在各自目录下。安装路径固定，新的部署替换对应 `install/`，成功后清理用于回退的临时旧安装，不积累时间戳版本目录。
 
-复用 `scripts/deploy_lib.sh --component as2|catora|swarm-formation|all` 分别更新。部署默认不切换本机 `.env`；需要切换时显式使用 `--activate-config`，成功后更新 `ROBOPI_ROOT`。迁移期间旧路径仍在被使用时，可先在独立新路径落盘，保留旧配置与运行，验收和旧目录清理另做；不停止旧消费者来腾出资源。
+复用 `tools/airsim/deploy_lib.sh --component as2|catora|swarm-formation|all` 分别更新。部署默认不切换本机 `.env`；需要切换时显式使用 `--activate-config`，成功后更新 `ROBOPI_ROOT`。迁移期间旧路径仍在被使用时，可先在独立新路径落盘，保留旧配置与运行，验收和旧目录清理另做；不停止旧消费者来腾出资源。
 
 ## 准备与构建
 
 - 从用户请求确定目标库，检查已有 AS2、算法包及必要依赖。复用匹配的 AS2 安装，只构建缺失或需要更新的包；不默认带上整套 Planner 应用。
 - 从 `.env` 和现有入口定位设备、builder、隔离 SDK、工作区及安装前缀。构建使用 [oh-ros-build](../oh-ros-build/SKILL.md)，板端交互使用 [hdc-helper](../hdc-helper/SKILL.md)。
-- 同步源码前检查共享锁、builder 的真实挂载及板端占用。`artifacts/robopi-runtime/cli.lock` 不能覆盖未遵守此锁的其他入口；不同容器名或 ROS 域也不能隔离同一可写 SDK、构建目录和 overlay。与其他任务冲突时报告并让出资源，不停止对方任务。
+- 同步源码前检查共享锁、builder 的真实挂载及板端占用。`log/airsim/robopi-runtime/cli.lock` 不能覆盖未遵守此锁的其他入口；不同容器名或 ROS 域也不能隔离同一可写 SDK、构建目录和 overlay。与其他任务冲突时报告并让出资源，不停止对方任务。
 - 记录本次源码版本和本地修改，确认工作区副本已同步，复用现有 build Docker 按依赖增量构建。具体入口见 [构建文档](../../../deployment/oh-ros-build/README.md)。
 
 ## 部署
@@ -28,7 +28,7 @@ description: 使用现有 OHOS build Docker，将 AS2 和指定算法库部署�
 
 归档格式、分包前缀和 Python 路径等已知问题见 [部署经验](references/robopi.md)。只处理本次程序及其必要依赖，不为简单验证额外部署仿真、传感器中继或完整控制链。
 
-构建入口为 `bash scripts/build_lib.sh catora` 或 `swarm-formation`，`all` 构建两者及必要接口包。AS2 缺失时仍使用其独立构建入口。
+构建入口为 `bash tools/airsim/build_lib.sh catora` 或 `swarm-formation`，`all` 构建两者及必要接口包。AS2 缺失时仍使用其独立构建入口。
 
 ## 简单验证与结束
 
@@ -36,7 +36,7 @@ description: 使用现有 OHOS build Docker，将 AS2 和指定算法库部署�
 2. 用最小配置启动相关程序，确认没有立即退出或加载错误，必要节点、话题或服务能发现。需要输入时使用有限的静态样例，避免启动完整应用。
 3. 对算法执行一个小型请求或一次消息输入，检查响应成功、数量/格式及基本数值合理；如有代理，仅在本次部署包含代理时验证。此步骤不发送解锁、起飞或运动指令。
 
-优先复用 `bash scripts/verify_lib.sh as2|catora|swarm-formation|all`；它在独立 ROS 域执行最小检查并回收日志。Swarm 的单节点合成输入检查只证明部署可运行，不等同于真实传感器或七机验收。
+优先复用 `bash tools/airsim/verify_lib.sh as2|catora|swarm-formation|all`；它在独立 ROS 域执行最小检查并回收日志。Swarm 的单节点合成输入检查只证明部署可运行，不等同于真实传感器或七机验收。
 
 记录命令、返回码和简短日志。缺少必要输入或同一错误没有新证据时停止重复尝试，报告具体缺项，不靠放宽超时扩大验证范围。
 

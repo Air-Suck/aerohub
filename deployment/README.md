@@ -25,7 +25,7 @@ RoboPi 原生运行 AS2，不运行 Docker。SDK、目标 ROS 和第三方依赖
 ## 首次使用顺序
 
 1. 完成官方指南，准备匹配的 SDK、目标依赖、官方 builder 和板端系统环境。
-2. 执行 `bash scripts/prepare_sources.sh` 初始化仓库锁定的活动 submodule。
+2. 执行 `bash tools/airsim/prepare_sources.sh` 初始化仓库锁定的活动 submodule。
 3. 按[项目适配说明](oh-ros-build/README.md#首次初始化项目工作区)准备隔离工作区，填写 `.env`。
 4. 按[固定镜像说明](flight_board/README.md#使用固定镜像)加载 flight_board tar 和校验文件，或按[GHCR 说明](releases/README.md#从-ghcr-获取)拉取固定镜像并设置 `.env`。
 5. 从 [AirSim 仓库 Releases](https://github.com/microsoft/AirSim/releases) 下载对应 Linux 场景，按[场景说明](../config/airsim/README.md)配置 AirSim binary 资源，准备 PC 与板端网络。
@@ -45,11 +45,11 @@ RoboPi：OHOS AS2 原生进程
 
 ## 配置与源码
 
-共享配置位于 `config/as2/` 和 `config/dds/`，AS2 启动器与交互检查位于
-`runtime/as2/`，传感器节点和订阅检查位于 `runtime/airsim_sensors/`。
+共享配置位于 `deployment/airsim/config/as2/` 和 `deployment/airsim/config/dds/`，AS2 启动器与交互检查位于
+`deployment/airsim/as2/`，传感器节点和订阅检查位于 `simulator/airsim/sensors/`。
 各部署入口复用这些文件，不维护另外一份实现。
 
-`.env` 保存设备、网络和构建目录，`config/resources.local.yaml` 保存外部场景路径。
+`.env` 保存设备、网络和构建目录，`deployment/airsim/config/resources.local.yaml` 保存外部场景路径。
 两者均由用户从模板创建，不提交 Git；已有本机文件不要覆盖。
 SDK、依赖快照、构建缓存与本机验收日志放在忽略目录，不属于源码交付。
 
@@ -67,5 +67,5 @@ AS2 单机飞行和相关 Library / App 集成；RoboPi 部署仍需独立板端
 
 已验证单机仿真飞行闭环：到点误差约 0.148 米、两秒悬停漂移约 0.408 米；
 600 秒 AS2 内存观察约 651.2–651.7 MiB，预热后最大增长 0.4 MiB。
-详细本机记录位于忽略目录 `artifacts/flight-board-humble-flight-acceptance/`。
+详细本机记录位于忽略目录 `log/airsim/flight-board-humble-flight-acceptance/`。
 这些结果不覆盖多机、长期耐久或算法 Library 接入。

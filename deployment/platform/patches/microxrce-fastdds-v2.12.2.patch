@@ -1,0 +1,76 @@
+diff --git a/cmake/SuperBuild.cmake b/cmake/SuperBuild.cmake
+--- a/cmake/SuperBuild.cmake
++++ b/cmake/SuperBuild.cmake
+@@ -31,11 +31,11 @@ if(UAGENT_P2P_PROFILE)
+     unset(microxrcedds_client_DIR CACHE)
+     find_package(microxrcedds_client ${_microxrcedds_client_version} EXACT QUIET)
+     if(NOT microxrcedds_client_FOUND)
+         ExternalProject_Add(microxrcedds_client
+-            GIT_REPOSITORY
+-                https://github.com/eProsima/Micro-XRCE-DDS-Client.git
+-            GIT_TAG
+-                ${_microxrcedds_client_tag}
++            URL
++                file:///opt/vendor/Micro-XRCE-DDS-Client-v2.4.2.tar.gz
++            URL_HASH
++                SHA256=4a2d4016ebfb3895c3e217fadbd3a3a03f0259c5280a83b1e85e993323eddb67
+             PREFIX
+                 ${PROJECT_BINARY_DIR}/microxrcedds_client
+             INSTALL_DIR
+@@ -61,11 +61,11 @@ if(NOT UAGENT_USE_SYSTEM_FASTCDR)
+     unset(fastcdr_DIR CACHE)
+     find_package(fastcdr ${_fastcdr_version} EXACT QUIET)
+     if(NOT fastcdr_FOUND)
+         ExternalProject_Add(fastcdr
+-            GIT_REPOSITORY
+-                https://github.com/eProsima/Fast-CDR.git
+-            GIT_TAG
+-                ${_fastcdr_tag}
++            URL
++                file:///opt/vendor/Fast-CDR-v1.1.1.tar.gz
++            URL_HASH
++                SHA256=5b5c1fc138a0d3092010158be0306c587da56bf406b0bfd45c20835e53839caf
+             PREFIX
+                 ${PROJECT_BINARY_DIR}/fastcdr
+             INSTALL_DIR
+@@ -94,11 +94,11 @@ if(UAGENT_FAST_PROFILE AND NOT UAGENT_USE_SYSTEM_FASTDDS)
+     unset(foonathan_memory_DIR CACHE)
+     find_package(foonathan_memory QUIET)
+     if (NOT foonathan_memory_FOUND)
+         ExternalProject_Add(foonathan_memory
+-            GIT_REPOSITORY
+-                https://github.com/foonathan/memory.git
+-            GIT_TAG
+-                ${_foonathan_memory_tag}
++            URL
++                file:///opt/vendor/foonathan-memory-v0.7-3.tar.gz
++            URL_HASH
++                SHA256=4203d15db22a94a3978eeb1afb59a37d35c57c0f148733f0f1a53a6281cb74dd
+             PREFIX
+                 ${PROJECT_BINARY_DIR}/foonathan_memory
+             INSTALL_DIR
+@@ -120,10 +120,12 @@ if(UAGENT_FAST_PROFILE AND NOT UAGENT_USE_SYSTEM_FASTDDS)
+     find_package(fastrtps ${_fastdds_version} EXACT QUIET)
+     if(NOT fastrtps_FOUND)
+         ExternalProject_Add(fastdds
+-            GIT_REPOSITORY
+-                https://github.com/eProsima/Fast-DDS.git
+-            GIT_TAG
+-                ${_fastdds_tag}
++            URL
++                file:///opt/vendor/Fast-DDS-v2.12.2.tar.gz
++            URL_HASH
++                SHA256=b31ea2d39e9af1a7e28af5809d48cfcc8d634bc1081e76fdee67f2f166ff9d7f
++            PATCH_COMMAND
++                tar -xzf /opt/vendor/tinyxml2-8c8293ba.tar.gz --strip-components=1 -C <SOURCE_DIR>/thirdparty/tinyxml2
+             PREFIX
+                 ${PROJECT_BINARY_DIR}/fastdds
+             INSTALL_DIR
+@@ -132,6 +134,7 @@ if(UAGENT_FAST_PROFILE AND NOT UAGENT_USE_SYSTEM_FASTDDS)
+                 -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
+                 -DCMAKE_PREFIX_PATH:PATH=${CMAKE_PREFIX_PATH};${PROJECT_BINARY_DIR}/temp_install
+                 -DBUILD_SHARED_LIBS:BOOL=${BUILD_SHARED_LIBS}
++                -DTHIRDPARTY_UPDATE:BOOL=OFF
+                 -DCMAKE_TOOLCHAIN_FILE:PATH=${CMAKE_TOOLCHAIN_FILE}
+                 ${CROSS_CMAKE_ARGS}
+                 -DCMAKE_FIND_ROOT_PATH:PATH=${PROJECT_BINARY_DIR}/temp_install

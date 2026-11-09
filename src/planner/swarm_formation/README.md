@@ -2,8 +2,7 @@
 
 源仓库 https://github.com/ZJU-FAST-Lab/Swarm-Formation ，固定提交
 `967a4bdfae949e994691f8ffc87dbb0147cbebb7`，原检出无本地修改。
-`../../thirdparty/swarm_formation_ros1/` 保留该版本的六个规划包、README 和 LICENSE，根目录
-`COLCON_IGNORE` 排除旧包；`humble/` 是本轮移植。
+`upstream/` 子模块保留上游源码、README 和 LICENSE；`humble/` 是 ROS 2 移植，构建时显式选择，避免与上游同名包混合。
 上游包清单的许可证填 `TODO`，README 和 LICENSE 明确 GPLv3；移植清单按
 GPL-3.0 标记，保留原作者与许可证。
 
@@ -17,7 +16,7 @@ L-BFGS、编队图、碰撞代价与 A* 算法计算；本轮不调整权重、�
 
 不包含旧 PX4/Gazebo 模拟器、`PositionCommand` 控制服务器、随机地图生成器
 和 UDP `swarm_bridge`。当前 adapter 直接采样 `PolyTraj`。默认七机 launch 保留本机代理转发；
-三机混合应用显式让各机原生规划器直接通过 DDS UDP 广播轨迹，见 `demos/swarm_open_field/`。
+三机混合应用显式让各机原生规划器直接通过 DDS UDP 广播轨迹，见 `deployment/airsim/demos/swarm_open_field/`。
 
 真实模式每台输入独立注册点云与完整里程计；原回归模式保留
 `/drone_<i>_visual_slam/odom`、`/map_generator/global_cloud`。输出
@@ -63,7 +62,7 @@ docker compose -f src/planner/swarm_formation/deployment/compose.yaml up --build
 镜像 `uav/aerostack2-swarm-formation:humble` 不需要 ROS 1、roscore 或旧代理。
 Compose 默认 ROS_DOMAIN_ID=81，可用同名环境变量覆盖；地图发布者需在相同
 domain。地图数据来自外部，Compose 不生成假地图。旧 `four_planner.launch`
-实际含七台节点，现归档在 `../../thirdparty/swarm_formation_ros1/aerohub/deployment/`，仅作历史参考。
+实际含七台节点，主线 ROS 1 部署保留在仓库 `deployment/swarm_formation_ros1/`。
 
 ## 真实注册点云与里程计
 
@@ -111,15 +110,15 @@ DDS domain、可达网卡/profile 必须与数据源一致；
 ```bash
 # 创建独立 PC AirSim/PX4/AS2 静态实例；不解锁、不起飞，结束后清理自身资源。
 python3 src/planner/swarm_formation/tests/verify_airsim_cloud.py \
-  --output artifacts/swarm-cloud-next
+  --output log/airsim/swarm-cloud-next
 # 已有健康数据源时，可指定 ROS_DOMAIN_ID / SWARM_DDS_PROFILE 只读验证：
-bash src/planner/swarm_formation/tests/verify_real_cloud.sh artifacts/swarm-cloud-existing
+bash src/planner/swarm_formation/tests/verify_real_cloud.sh log/airsim/swarm-cloud-existing
 ```
 
 独立 NH 实例使用 RPC 42472、PX4 TCP 4684、控制 UDP 14844/14984、实例 44、
 系统 ID 45、Agent 8905、ROS domain 92；不改变已有仿真或板端进程。
 版本化摘要见 `validation/real-point-cloud.json`，完整本机记录在
-`artifacts/swarm-airsim-cloud-final/result.json`：
+`log/airsim/swarm-airsim-cloud-final/result.json`：
 
 - 接收到 21 帧真实原始 LiDAR、16 帧共享系注册点云；非零平移/旋转后的最大
   点坐标误差 `1.43e-6 m`，字段、原始时间和 body twist 保留。
@@ -188,9 +187,9 @@ adapter 能从真实原生后端读取结果并发布七条 `TimedTrajectorySegm
 复用已准备的 OHOS 工作区和官方 build Docker：
 
 ```bash
-bash scripts/build_lib.sh swarm-formation
-bash scripts/deploy_lib.sh --component swarm-formation
-bash scripts/verify_lib.sh swarm-formation
+bash tools/airsim/build_lib.sh swarm-formation
+bash tools/airsim/deploy_lib.sh --component swarm-formation
+bash tools/airsim/verify_lib.sh swarm-formation
 ```
 
 板端安装于 `/data/aerohub/lib/swarm-formation/install`，环境入口为同目录上一层
@@ -200,7 +199,7 @@ bash scripts/verify_lib.sh swarm-formation
 简单验证只启动一个原生规划节点，以静态里程计、单点合成点云和手动目标检查
 首条有限五阶 PolyTraj；不代表真实点云、七机编队、JSON 七机输出或飞行验收。
 日志与结果保存在板端 `runtime/verification`，并取回本机
-`artifacts/robopi-lib-acceptance/swarm-formation/`。
+`log/airsim/robopi-lib-acceptance/swarm-formation/`。
 
 OHOS 编译使用标准 Eigen 头路径，并仅链接实际需要的 PCL common；
 `pcl_conversions` 的头文件与消息依赖单独声明，避免导出全部 PCL 库而拉入未使用的 IO/PNG。
@@ -217,7 +216,7 @@ OHOS 编译使用标准 Eigen 头路径，并仅链接实际需要的 PCL common
 PC 两个独立容器与 RoboPi 各一台，各自运行本机原生 Swarm、GridMap/ESDF、导航注册、
 adapter 和 AS2，三路真实 AirSim LiDAR，跨机原生轨迹通过 DDS UDP 直接广播。
 
-最终 `artifacts/swarm-hybrid-flight-04` 完成 SUCCEEDED、全部降落并解除武装；
+最终 `log/airsim/swarm-hybrid-flight-04` 完成 SUCCEEDED、全部降落并解除武装；
 最小真值间距 2.746 m，最大真值终点误差 0.524 m，无新碰撞。
 111 条公共 PVA 轨迹段和三机实际 AS2 参考均有效，实际执行期间三路输入与地图采样健康率均为 100%。
 板端总 CPU 中位 93.5%、最高 96.4%，含全局代理、公共采样与验收开销；不能当作纯单机算法负载。

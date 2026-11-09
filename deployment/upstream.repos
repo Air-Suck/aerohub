@@ -1,0 +1,13 @@
+repositories:
+  as2/aerostack2:
+    type: git
+    url: https://github.com/aerostack2/aerostack2.git
+    version: 19c397309c6a41b279e6b551818ec12605cfcecc
+  as2/as2_platform_pixhawk:
+    type: git
+    url: https://github.com/aerostack2/as2_platform_pixhawk.git
+    version: fcba062219935acef69dfa009c8be376c707ee8a
+  as2/px4_msgs:
+    type: git
+    url: https://github.com/PX4/px4_msgs.git
+    version: 86d8239e962f6939e05c3737784f60c02fa884db

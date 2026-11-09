@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sdf version="1.9">
+  <world name="catora_demo">
+    <physics type="ode">
+      <max_step_size>0.004</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+      <real_time_update_rate>250</real_time_update_rate>
+    </physics>
+    <gravity>0 0 -9.8</gravity>
+    <magnetic_field>6e-06 2.3e-05 -4.2e-05</magnetic_field>
+    <atmosphere type="adiabatic"/>
+    <scene>
+      <grid>false</grid>
+      <ambient>0.45 0.45 0.48 1</ambient>
+      <background>0.72 0.78 0.86 1</background>
+      <shadows>true</shadows>
+    </scene>
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><plane><normal>0 0 1</normal><size>500 500</size></plane></geometry></collision>
+        <visual name="visual">
+          <geometry><plane><normal>0 0 1</normal><size>500 500</size></plane></geometry>
+          <material><ambient>0.2 0.25 0.28 1</ambient><diffuse>0.32 0.38 0.42 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <light name="sun" type="directional">
+      <pose>0 0 500 0 0 0</pose><cast_shadows>true</cast_shadows><intensity>1.0</intensity>
+      <direction>-0.35 0.25 -0.9</direction><diffuse>0.95 0.95 0.92 1</diffuse><specular>0.2 0.2 0.2 1</specular>
+    </light>
+
+    <!-- Blue start field under the 4x4 square formation. -->
+    <model name="start_zone"><static>true</static><pose>-7.5 0 0.02 0 0 0</pose><link name="link">
+      <visual name="visual"><geometry><box><size>10.5 10.5 0.04</size></box></geometry>
+        <material><ambient>0.04 0.22 0.65 1</ambient><diffuse>0.04 0.30 0.85 1</diffuse></material></visual>
+    </link></model>
+
+    <!-- Orange target ring, centered on the square, radius 6 m. -->
+    <model name="goal_ring"><static>true</static><pose>-7.5 0 0.08 0 0 0</pose><link name="link">
+      <visual name="visual"><geometry><torus><radius>6.0</radius><tube_radius>0.18</tube_radius></torus></geometry>
+        <material><ambient>1 0.28 0.02 1</ambient><diffuse>1 0.42 0.04 1</diffuse><emissive>0.25 0.05 0 1</emissive></material></visual>
+    </link></model>
+
+    <model name="demo_camera"><static>true</static><pose>-7.5 -22 18 0 0.66 1.5708</pose><link name="link">
+      <sensor name="camera" type="camera">
+        <always_on>true</always_on><update_rate>10</update_rate><topic>/demo/camera/image</topic>
+        <camera><horizontal_fov>1.05</horizontal_fov><image><width>1280</width><height>720</height><format>R8G8B8</format></image><clip><near>0.1</near><far>120</far></clip></camera>
+      </sensor>
+    </link></model>
+    <spherical_coordinates><surface_model>EARTH_WGS84</surface_model><world_frame_orientation>ENU</world_frame_orientation><latitude_deg>47.3979710577</latitude_deg><longitude_deg>8.5461637398</longitude_deg><elevation>0</elevation></spherical_coordinates>
+  </world>
+</sdf>

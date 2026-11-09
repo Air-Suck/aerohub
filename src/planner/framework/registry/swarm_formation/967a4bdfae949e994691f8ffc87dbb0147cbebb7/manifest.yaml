@@ -1,7 +1,7 @@
 id: swarm_formation
 version: 967a4bdfae949e994691f8ffc87dbb0147cbebb7
 runtime:
-  image: uav/aerostack2-swarm-formation:humble
+  image: uav/aerostack2-swarm-formation:noetic
   adapter: swarm_formation_adapter
   command: [ros2, run, uav_swarm_formation_adapter, swarm_formation_adapter_node, --ros-args, -p, "resolved_config:={resolved_config}", -p, "use_sim_time:={use_sim_time}"]
 parameters:

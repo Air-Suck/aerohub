@@ -1,0 +1,5 @@
+<library path="fast_livo2_plugin">
+  <class type="fast_livo2::Plugin" base_class_type="as2_state_estimator_plugin_base::StateEstimatorBase">
+    <description>Validated FAST-LIVO2 odometry with IMU-to-base rigid transform.</description>
+  </class>
+</library>

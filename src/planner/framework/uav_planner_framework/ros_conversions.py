@@ -1,6 +1,7 @@
 """Conversions between ROS messages and the neutral trajectory model."""
 
 from __future__ import annotations
+from .registry import ConfigError
 
 from .trajectory import (
     Setpoint,
@@ -35,6 +36,8 @@ def duration_to_seconds(value) -> float:
 def segment_from_msg(message) -> TimedTrajectorySegment:
     trajectories = []
     for item in message.vehicle_trajectories:
+        if item.valid_fields & ~7:
+            raise ConfigError("unknown trajectory valid_fields bits")
         fields = set()
         if item.valid_fields & VELOCITY:
             fields.add("velocity")

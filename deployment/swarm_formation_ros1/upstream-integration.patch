@@ -1,0 +1,203 @@
+diff --git a/src/planner/plan_env/include/plan_env/grid_map.h b/src/planner/plan_env/include/plan_env/grid_map.h
+index 9062b6f..50675c3 100644
+--- a/src/planner/plan_env/include/plan_env/grid_map.h
++++ b/src/planner/plan_env/include/plan_env/grid_map.h
+@@ -382,7 +382,7 @@ inline int GridMap::getOccupancy(Eigen::Vector3d pos)
+ inline int GridMap::getInflateOccupancy(Eigen::Vector3d pos)
+ {
+   if (!isInMap(pos))
+-    return -1;
++    return 1;
+ 
+   Eigen::Vector3i id;
+   posToIndex(pos, id);
+diff --git a/src/planner/plan_manage/config/normal_hexagon.yaml b/src/planner/plan_manage/config/normal_hexagon.yaml
+index 4e90c5d..e991077 100644
+--- a/src/planner/plan_manage/config/normal_hexagon.yaml
++++ b/src/planner/plan_manage/config/normal_hexagon.yaml
+@@ -2,7 +2,7 @@
+ # global goal setting
+ global_goal:
+   swarm_central_pos: {x: 25.0, y: 0.0, z: 1.0}
+-  swarm_scale : 2.0
++  swarm_scale : 1.0
+   relative_pos_0 : {x: 0.0, y: 0.0, z: 0.0}
+   relative_pos_1 : {x: 1.7321, y: -1.0, z: 0.0}
+   relative_pos_2 : {x: 0.0, y: -2.0, z: 0.0}
+@@ -17,13 +17,13 @@ global_goal:
+ # map_size_z          : 3.0
+ optimization:
+   formation_type      : 1
+-  weight_obstacle     : 50000.0
++  weight_obstacle     : 100000.0
+   weight_swarm        : 50000.0
+   weight_feasibility  : 10000.0
+   weight_sqrvariance  : 10000.0
+   weight_time         : 80.0
+   weight_formation    : 15000.0
+-  obstacle_clearance  : 0.5
++  obstacle_clearance  : 0.9
+   swarm_clearance     : 0.5
+ 
+ fsm:
+diff --git a/src/planner/plan_manage/launch/advanced_param.xml b/src/planner/plan_manage/launch/advanced_param.xml
+index ee28e03..5217b60 100644
+--- a/src/planner/plan_manage/launch/advanced_param.xml
++++ b/src/planner/plan_manage/launch/advanced_param.xml
+@@ -59,8 +59,7 @@
+     <remap from="~planning/broadcast_traj_recv" to = "/broadcast_traj_to_planner"/>
+ 
+     <remap from="~grid_map/odom" to="/drone_$(arg drone_id)_$(arg odometry_topic)"/>
+-    <remap from="~grid_map/cloud" to="/drone_$(arg drone_id)_$(arg cloud_topic)"/>
+-    <!-- <remap from="~grid_map/cloud" to="/map_generator/global_cloud"/> -->
++    <remap from="~grid_map/cloud" to="/map_generator/global_cloud"/>
+     <remap from="~grid_map/pose"   to = "/drone_$(arg drone_id)_$(arg camera_pose_topic)"/> 
+     <remap from="~grid_map/depth" to = "/drone_$(arg drone_id)_$(arg depth_topic)"/>
+     
+@@ -73,7 +72,7 @@
+     <param name="fsm/planning_horizon"        value="$(arg planning_horizon)" type="double"/> <!--always set to 1.5 times grater than sensing horizen-->
+     <param name="fsm/planning_horizen_time"   value="3" type="double"/>
+     <param name="fsm/emergency_time"          value="1.0" type="double"/>
+-    <param name="fsm/realworld_experiment"    value="false"/>
++    <param name="fsm/realworld_experiment"    value="true"/>
+     <param name="fsm/fail_safe"               value="true"/>
+     <!-- <param name="fsm/replan_trajectory_time"  value="$(arg replan_trajectory_time)" type="double"/> -->
+ 
+diff --git a/src/planner/plan_manage/launch/run_in_sim.launch b/src/planner/plan_manage/launch/run_in_sim.launch
+index c751eb4..0fd7c9d 100644
+--- a/src/planner/plan_manage/launch/run_in_sim.launch
++++ b/src/planner/plan_manage/launch/run_in_sim.launch
+@@ -34,6 +34,7 @@
+     
+     <!-- topic of your odometry such as VIO or LIO -->
+     <arg name="odom_topic"/>
++    <arg name="use_fake_drone" default="true"/>
+     <!-- number of moving objects -->
+     <!-- <arg name="obj_num" value="8" /> -->
+     <!-- main algorithm params -->
+@@ -69,21 +70,21 @@
+         <arg name="fx" value="387.229248046875"/>
+         <arg name="fy" value="387.229248046875"/>
+         <!-- maximum velocity and acceleration the drone will reach -->
+-        <arg name="max_vel" value="1.5" />
+-        <arg name="max_acc" value="8.0" />
++        <arg name="max_vel" value="0.3" />
++        <arg name="max_acc" value="0.4" />
+         <!--always set to 1.5 times grater than sensing horizen-->
+         <arg name="planning_horizon" value="7.5" />
+         <arg name="use_distinctive_trajs" value="false" />
+         <!-- 3: use 2D Nav Goal to select goal  -->
+         <!-- 2: use global waypoints below  -->
+         <!-- need to add -->
+-        <arg name="flight_type" value="3" />
++        <arg name="flight_type" value="2" />
+         <!-- global waypoints -->
+         <!-- It generates a piecewise min-snap traj passing all waypoints -->
+         <arg name="point_num" value="1" />
+-        <arg name="point0_x" value="$(arg target_x)" />
+-        <arg name="point0_y" value="$(arg target_y)" />
+-        <arg name="point0_z" value="$(arg target_z)" />
++        <arg name="point0_x" value="24.0" />
++        <arg name="point0_y" value="0.0" />
++        <arg name="point0_z" value="1.2" />
+ 
+         <arg name="point1_x" value="0.0" />
+         <arg name="point1_y" value="0.0" />
+@@ -116,5 +117,6 @@
+         <arg name="init_y_" value="$(arg init_y)"/>
+         <arg name="init_z_" value="$(arg init_z)"/>
+         <arg name="odometry_topic" value="$(arg odom_topic)" />
++        <arg name="use_fake_drone" value="$(arg use_fake_drone)" />
+     </include>
+-</launch>
+\ No newline at end of file
++</launch>
+diff --git a/src/planner/plan_manage/launch/simulator.xml b/src/planner/plan_manage/launch/simulator.xml
+index a4e26aa..c724096 100755
+--- a/src/planner/plan_manage/launch/simulator.xml
++++ b/src/planner/plan_manage/launch/simulator.xml
+@@ -11,6 +11,7 @@
+   <arg name="min_dist"/>
+   <arg name="odometry_topic"/>
+   <arg name="drone_id"/>
++  <arg name="use_fake_drone" default="true"/>
+ 
+   <!-- There are two kinds of maps you can choose, just comment out the one you don’t need like the follow. Have a try. /-->
+ 
+@@ -103,7 +104,7 @@
+         <param name="gains/ang/z" value="0.1"/>        
+   </node> -->
+   
+-  <node pkg="poscmd_2_odom" name="drone_$(arg drone_id)_poscmd_2_odom" type="poscmd_2_odom" output="screen">
++  <node if="$(arg use_fake_drone)" pkg="poscmd_2_odom" name="drone_$(arg drone_id)_poscmd_2_odom" type="poscmd_2_odom" output="screen">
+         <param name="init_x" value="$(arg init_x_)"/>
+         <param name="init_y" value="$(arg init_y_)"/>
+         <param name="init_z" value="$(arg init_z_)"/>
+diff --git a/src/planner/plan_manage/src/ego_replan_fsm.cpp b/src/planner/plan_manage/src/ego_replan_fsm.cpp
+index e72ddb0..794a6a6 100644
+--- a/src/planner/plan_manage/src/ego_replan_fsm.cpp
++++ b/src/planner/plan_manage/src/ego_replan_fsm.cpp
+@@ -195,7 +195,7 @@ namespace ego_planner
+     {
+       bool success;
+       if (flag_relan_astar_)
+-        success = planFromLocalTraj(true, false);
++        success = planFromLocalTraj(true, true);
+       else
+         success = planFromLocalTraj(false, true);
+ 
+@@ -349,29 +349,17 @@ namespace ego_planner
+ 
+     if (occ)
+     {
+-      /* Handle the collided case immediately */
+-      ROS_INFO("Try to replan a safe trajectory");
+-      if (planFromLocalTraj(true, false)) // Make a chance
+-      // if (planFromLocalTraj(false, true))
++      if (t_temp - t_cur < emergency_time_) // 1.0s of emergency time
+       {
+-        ROS_INFO("Plan success when detect collision.");
+-        changeFSMExecState(EXEC_TRAJ, "SAFETY");
+-        return;
++        ROS_WARN("Emergency stop! time=%f", t_temp - t_cur);
++        changeFSMExecState(EMERGENCY_STOP, "SAFETY");
+       }
+       else
+       {
+-        if (t_temp - t_cur < emergency_time_) // 1.0s of emergency time
+-        {
+-          ROS_WARN("Emergency stop! time=%f", t_temp - t_cur);
+-          changeFSMExecState(EMERGENCY_STOP, "SAFETY");
+-        }
+-        else
+-        {
+-          ROS_WARN("current traj in collision, replan.");
+-          changeFSMExecState(REPLAN_TRAJ, "SAFETY");
+-        }
+-        return;
++        ROS_WARN("current traj in collision, replan.");
++        changeFSMExecState(REPLAN_TRAJ, "SAFETY");
+       }
++      return;
+     }
+   }
+ 
+@@ -699,6 +687,10 @@ namespace ego_planner
+         wps[i](0) = waypoints_[i][0];
+         wps[i](1) = waypoints_[i][1];
+         wps[i](2) = waypoints_[i][2];
++        Eigen::Vector3d relative_pos;
++        relative_pos << swarm_relative_pts_[planner_manager_->pp_.drone_id][0], swarm_relative_pts_[planner_manager_->pp_.drone_id][1],
++                        swarm_relative_pts_[planner_manager_->pp_.drone_id][2];
++        wps[i] += swarm_scale_ * relative_pos;
+       }
+       end_pt_ = wps.back();
+       for (size_t i = 0; i < (size_t)waypoint_num_; i++)
+@@ -799,6 +791,7 @@ namespace ego_planner
+     }
+     else
+     {
++      desired_start_time = ros::Time::now().toSec();
+       desired_start_pt = start_pt_;
+       desired_start_vel = start_vel_;
+       desired_start_acc = start_acc_;

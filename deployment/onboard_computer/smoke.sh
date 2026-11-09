@@ -2,7 +2,7 @@
 # Offline process/configuration test; no PX4, Agent, simulator or flight command.
 set -euo pipefail
 root=$(cd "$(dirname "$0")/../.." && pwd)
-out="${VERIFY_OUTPUT:-$root/artifacts/onboard-computer-verification}"
+out="${VERIFY_OUTPUT:-$root/log/airsim/onboard-computer-verification}"
 image="${ONBOARD_COMPUTER_IMAGE:-onboard_computer:v0.1.0}"
 mkdir -p "$out"
 name=aerohub-onboard-computer-smoke

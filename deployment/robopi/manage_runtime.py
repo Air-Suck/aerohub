@@ -48,7 +48,7 @@ def main():
         STATE.write_text(json.dumps(state) + '\n')
         time.sleep(3)
         if child.poll() is not None:
-            raise RuntimeError('AS2 exited; read runtime/as2.log')
+            raise RuntimeError('AS2 exited; read deployment/airsim/as2.log')
     elif args.action == 'stop' and alive(state):
         os.kill(state['pid'], signal.SIGTERM)
         deadline = time.monotonic() + 15

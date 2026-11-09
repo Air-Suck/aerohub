@@ -3,5 +3,5 @@
 set -euo pipefail
 root=$(cd "$(dirname "$0")/../.." && pwd)
 export VERIFY_AS2=1
-export VERIFY_OUTPUT="${VERIFY_OUTPUT:-$root/artifacts/as2-interaction-verification}"
+export VERIFY_OUTPUT="${VERIFY_OUTPUT:-$root/log/airsim/as2-interaction-verification}"
 bash "$root/deployment/flight_board/verify.sh"

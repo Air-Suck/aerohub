@@ -6,7 +6,7 @@ repo=${1:-/work}
 workspace=${2:-/results/noetic}
 mkdir -p "$workspace/src"
 for package in plan_env path_searching traj_opt traj_utils swarm_graph plan_manage; do
-  cp -r "$repo/thirdparty/swarm_formation_ros1/$package" "$workspace/src/"
+  cp -r "$repo/src/planner/swarm_formation/upstream/src/planner/$package" "$workspace/src/"
 done
 python3 - "$workspace" "$repo" <<'PY'
 import sys

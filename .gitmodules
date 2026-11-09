@@ -1,9 +1,36 @@
-[submodule "as2/aerostack2"]
+[submodule "as2"]
 	path = as2/aerostack2
-	url = https://github.com/Popc0rn7/aerostack2-aerohub.git
-[submodule "as2/as2_platform_pixhawk"]
+	url = https://github.com/aerostack2/aerostack2.git
+[submodule "pixhawk"]
 	path = as2/as2_platform_pixhawk
+	url = https://github.com/aerostack2/as2_platform_pixhawk.git
+[submodule "px4"]
+	path = px4
+	url = https://github.com/PX4/PX4-Autopilot.git
+[submodule "gazebo"]
+	path = simulator/gazebo
+	url = https://github.com/aerostack2/project_gazebo.git
+[submodule "cat_ora"]
+	path = src/planner/cat_ora/upstream
+	url = https://github.com/ctu-mrs/catora.git
+[submodule "swarm_formation"]
+	path = src/planner/swarm_formation/upstream
+	url = https://github.com/ZJU-FAST-Lab/Swarm-Formation.git
+[submodule "px4_msgs"]
+	path = as2/px4_msgs
+	url = https://github.com/PX4/px4_msgs.git
+[submodule "src/state_estimator/fast_livo2/upstream"]
+	path = src/state_estimator/fast_livo2/upstream
+	url = https://github.com/hku-mars/FAST-LIVO2.git
+
+[submodule "airsim_as2"]
+	path = as2/airsim/aerostack2
+	url = https://github.com/Popc0rn7/aerostack2-aerohub.git
+
+[submodule "airsim_pixhawk"]
+	path = as2/airsim/as2_platform_pixhawk
 	url = https://github.com/Popc0rn7/as2_platform-aerohub.git
-[submodule "thirdparty/SUPER-sim"]
-	path = thirdparty/SUPER-sim
+
+[submodule "super"]
+	path = src/planner/super/upstream
 	url = https://github.com/Popc0rn7/SUPER-sim.git

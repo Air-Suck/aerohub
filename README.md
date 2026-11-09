@@ -1,115 +1,243 @@
-# AeroHub
+# Aerostack2 统一 Planner 集成
 
-围绕 AS2 Runtime、算法 Library 与用户任务组织的无人机开发仓库。
-当前已通过 PC AirSim/PX4 1.18 → RoboPi AS2 的单机仿真闭环。
+本项目是**基于开源 Aerostack2 的独立集成与扩展工程**，复用其飞行执行框架，并针对所选 PX4 版本应用兼容补丁。Aerostack2 原有架构、组件及上游代码归各自版权持有人所有；本项目不是 Aerostack2 官方发行版，也不表示获得上游作者的认可或背书。
 
-## 交付与运行入口
+本工程把 CAT-ORA 和 Swarm-Formation 注册为同一类 `planner` 模块。任务配置每次选择一个 Planner，两者共用任务校验、项目内的 Planner 生命周期、`TimedTrajectorySegment`、Output Gateway、Aerostack2 和 PX4/Gazebo 执行链路。
 
-**OHOS / RoboPi 使用前提：先完成官方[设备开发环境搭建和开发指南](https://gitcode.com/openharmony-robot/docs/blob/main/device-dev/%E8%AE%BE%E5%A4%87%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA%E5%92%8C%E5%BC%80%E5%8F%91%E6%8C%87%E5%8D%97.md)，再执行本仓库的项目适配、编译和部署步骤。**
+任务生命周期由 `/planner/control` 管理；默认执行后端通过逐机 `FollowTimedPath` Actions 调用扩展的原生 `FollowPathBehavior`。扩展保留原生 FollowPath Action 和插件，新接口负责外部时间化轨迹；规划层不再直接发布运动参考。`execution_backend:=legacy_setpoint` 仅保留旧链路用于回归对照。
 
-交付包含 `flight_board` 和 `onboard_computer` 两个镜像。用户已有 RoboPi，
-开发流程以 RoboPi 为最终运行与验收目标；是否使用 `onboard_computer` 做 PC 开发可自行选择。
-两份镜像当前定版为 **v0.1.0**，准确镜像 ID 与验收范围见[发布清单](deployment/releases/README.md)。
-官方 builder 从官方指南所指网站获取，SDK 由用户自行检查准备。
+第一阶段不包含 Planner 并行协作、在线热切换、自动选优、远程 Model Hub、真机或国产操作系统验收。
 
-## 除源码外，需要准备什么
+## PR 功能与目录迁移
 
-| 资源 | 获取与检查 | 是否必须 |
+AirSim / RoboPi 扩展与主线 Gazebo、FAST-LIVO2 入口并存：
+
+- 自建算法和适配器：`src/planner/`；基础执行：`src/behavior/`；导航输入整理：`src/perception/navigation_inputs/`。
+- AirSim 配置、演示和 AS2 启动入口：`deployment/airsim/`；管理工具：`tools/airsim/`；传感器桥：`simulator/airsim/sensors/`。
+- 主线 AS2 依赖仍在 `as2/aerostack2/` 和 `as2/as2_platform_pixhawk/`；PR 的 PX4 1.18 / OHOS fork 独立放在 `as2/airsim/`，不能混用两套版本的参数或补丁。
+- SUPER 上游子模块：`src/planner/super/upstream/`。运行产物进入被忽略的 `log/airsim/`。
+
+主线依赖准备入口仍为 `bash deployment/prepare_sources.sh`；AirSim / SUPER 使用 `bash tools/airsim/prepare_sources.sh`。
+两者都需从仓库根目录执行后续构建命令。AirSim 构建还依赖 PR 指定的基础镜像与外部仿真资源；目录迁移不表示它们已在当前机器上完成闭环验收。
+迁移说明与验证边界见[项目简介](docs/项目简介.md#pr-目录适配)。
+
+## 上游来源、修改范围与许可
+
+本项目依赖并致谢以下上游项目：
+
+| 上游 | 本工程中的用途 | 锁定版本 |
 | --- | --- | --- |
-| Linux amd64 PC | 安装 Git、Docker Engine / Compose、Python 3 和 PyYAML；准备可运行 AirSim 的 GPU、驱动及图形环境 | 必须，承载仿真与交叉编译 |
-| `flight_board` 镜像 | 从交付包加载固定镜像，按[镜像说明](deployment/flight_board/README.md#使用固定镜像)校验 | 必须，提供 PX4 / DDS Agent / 传感器 / clock |
-| `onboard_computer` 镜像 | 从交付包加载；用于 PC 上的 AS2 / Library 开发及部分混合 Demo，见[开发环境](deployment/onboard_computer/README.md) | PC 开发可选；具体 Demo 依赖以其 README 为准 |
-| 官方 OHOS builder | 按[官方指南](deployment/oh-ros-build/README.md#前置条件)从网站获取；本仓库直接调用，不自行构建派生 builder | 必须，用于交叉编译 |
-| OHOS SDK 与目标依赖 | 自行确认已有匹配 SDK、目标 ROS Humble install 和第三方依赖 out；核对 AArch64 OHOS / Python 3.12，按[准备说明](deployment/oh-ros-build/README.md#首次初始化项目工作区)检查与初始化 | 必须；只下载 builder 不足以完成编译 |
-| RoboPi 与 HDC | 确认板端系统及 ROS 环境匹配，PC 可通过 HDC 访问；配置设备 ID 与 HDC 路径 | 必须，Library 必须完成板端验证 |
-| PC ↔ RoboPi 网络 | 准备有线 DDS 通信、可达 IP、对应网卡及时间同步；填写 `.env` | 必须，见[RoboPi 说明](deployment/robopi/README.md) |
-| AirSim 场景 | 自行到 [AirSim 仓库 Releases](https://github.com/microsoft/AirSim/releases) 下载对应 Linux 场景；当前 NH Demo 需要 AirSimNH，解压后按[资源说明](config/airsim/README.md)填写路径 | 必须，场景不随源码或镜像交付 |
+| [Aerostack2](https://github.com/aerostack2/aerostack2) | 状态估计、运动控制、运动 Behavior 及公共接口 | `19c397309c6a41b279e6b551818ec12605cfcecc` |
+| [as2_platform_pixhawk](https://github.com/aerostack2/as2_platform_pixhawk) | Aerostack2 与 PX4 的平台适配 | `fcba062219935acef69dfa009c8be376c707ee8a` |
+| [px4_msgs](https://github.com/PX4/px4_msgs) | PX4 的 ROS 2 消息定义 | `86d8239e962f6939e05c3737784f60c02fa884db` |
 
-选择与 Demo 匹配的场景，下载其他场景或版本不等于该 Demo 已验证。
-SDK、场景及个人设备路径不提交到仓库。
+Aerostack2 由 Universidad Politécnica de Madrid（UPM）的 Computer Vision and Aerial Robotics Group（CVAR）及其他贡献者开发。官方资料见 [Aerostack2 文档](https://aerostack2.github.io/)和[项目论文](https://arxiv.org/abs/2303.18237)。源码来源与版本由 [upstream.repos](deployment/upstream.repos) 和 [prepare_sources.sh](deployment/prepare_sources.sh)记录。
 
-## 首次使用与开发顺序
+本工程新增的集成层主要包括统一 Planner 消息与服务、本地 Registry、任务配置解析、项目级生命周期、Output Gateway、两个算法 adapter、AS2 setpoint adapter，以及多机部署与验收脚本。CAT-ORA、Swarm-Formation 的算法核心，以及 PX4、Gazebo 和通信依赖，均来自相应上游，不作为本项目原创成果声明。相关算法版本与复现来源见[统一 Planner 主文档](docs/项目简介.md#part-2)。
 
-1. 准备上表资源，加载交付的 `flight_board`；需要 PC 开发或混合 Demo 时再加载 `onboard_computer`。
-2. 初始化 submodule，按模板配置 `.env` 与 `config/resources.local.yaml`。
-3. 按[OHOS 工作区准备说明](deployment/oh-ros-build/README.md#首次初始化项目工作区)确认 SDK / 目标依赖、准备隔离工作区，并执行 `bash deployment/oh-ros-build/run.sh check`。
-4. 按[RoboPi 说明](deployment/robopi/README.md)构建、部署并验证 AS2 基础链路。
-5. 选择 [Demo](demos/README.md)，迁移或修改 Library，完成对应的板端接口验证和端到端验收，保留结果与实际源码版本。
+上游兼容修改集中保存在 [deployment/platform/patches/](deployment/platform/patches)：
 
-**RoboPi 验证是 Library 接入的必经步骤。** PC 构建、单元测试及 PC 仿真可用于开发，
-不能代替板端验收。板端导入或启动检查也不能代替 Demo 的端到端结果。
-SUPER 已新增独立 PC 镜像与 FollowTimedPath 场景入口；板端统一部署仍缺失，PC 结果不能代替 RoboPi 验收。
+- `as2-platform-px4-v1.17.patch`：适配 PX4 v1.17 的姿态、GPS、电池等消息字段。
+- `microxrce-fastdds-v2.12.2.patch`：适配 Micro XRCE-DDS Agent 与 Fast DDS 版本。
 
-## 详细运行入口
+这些补丁由构建流程应用；其存在不改变原代码的版权归属和许可证。
 
-- [容器配方与文档](deployment/README.md)：两个交付镜像、官方开发环境前提及项目适配。
-- [PC 机载计算开发环境](deployment/onboard_computer/README.md)：AS2、算法 Library 与应用的开发及仿真验证。
-- [RoboPi 运行](deployment/robopi/README.md)：配置、构建、部署、启动、验证与收尾。
-- [AirSim 场景](config/airsim/README.md)：binary 资源、场景 profile 与 settings。
-- [Library 注册表](libraries.yaml)：已收录算法与当前接入状态。
-- [端到端 Demo](demos/README.md)：各 Library 的完整调用、场景、运行拓扑与验收入口。
-- [SUPER forest8](demos/super_forest/README.md)：新 PC FollowTimedPath 长程场景、失败限制，以及历史 PC → RoboPi 单点桥记录。
-- [CAT-ORA 空旷场地应用](demos/catora_open_field/README.md)：PC AirSimNH 四机起飞、队形变化、到点和降落。
+**许可按组件分别适用。** 使用、修改或分发上游源码及构建产物时，应保留各组件要求的版权声明、许可证条件、免责声明及适用的 NOTICE。对于采用 BSD-3-Clause 的上游文件与组件，源码分发须保留相应声明，二进制分发须在附带文档或材料中重现要求的声明；未经许可不得用版权持有人或贡献者的名称为衍生产品背书。具体以所分发版本附带的许可证和文件头为准，不应将整个依赖集合一概视为同一许可证。
 
-## 分层与目录
+当前自建 ROS 2 包的 `package.xml` 声明为 Apache-2.0，但仓库根目录尚未提供完整的项目 LICENSE 文本；该声明不能覆盖第三方代码，也不代表整个交付物已完成许可证核查。历史审计还记录了 CAT-ORA 不同位置的许可声明差异，公开发布源码、镜像或二进制前需核实实际纳入版本的授权条件。
 
-| 层 / 目录 | 职责 |
+本节用于明确来源、贡献边界与许可责任；仅添加署名说明不能替代许可证要求，也不能单独保证不存在侵权。
+
+## docs 文档目录
+
+| 文档 | 内容 |
 | --- | --- |
-| 用户任务与 `scripts/` | 场景选择、任务编排及构建运行入口 |
-| `demos/` | 各 Library 的端到端示例、场景、任务、运行入口与验收记录 |
-| `src/planner/cat_ora/`、`src/planner/swarm_formation/`、`src/planner/super/` | 算法专用适配、代理及部署入口；SUPER 原生核心位于 `thirdparty/SUPER-sim` |
-| `src/behavior/` | FollowTimedPath 执行扩展与保留的旧执行适配器 |
-| `src/planner/framework/`、`src/planner/interfaces/` | 公共规划契约、生命周期及 Library → AS2 输出桥 |
-| `runtime/` | 共用 AS2 启动器、AirSim 传感器与时钟接入 |
-| `as2/` | 活动 AS2 / Pixhawk fork submodule |
-| `thirdparty/` | SUPER 等第三方算法源码 |
-| `config/` | 场景、AS2、DDS 与外部资源配置 |
-| `deployment/` | flight_board 仿真底座、onboard_computer 开发环境、官方 OHOS builder 调用及 RoboPi 部署 |
-| `artifacts/` | 本机运行记录、构建缓存与目标产物，不进入交付镜像 |
+| [AS2 简介](docs/as2简介.md) | 原生架构、执行流程及层间调用接口 |
+| [项目简介](docs/项目简介.md) | 项目目录、统一 Planner 设计、配置、使用与验收 |
+| [开发者贡献指导](docs/开发者贡献指导.md) | AS2 扩展点、Model Hub 适配设计与开发约束 |
 
-CAT-ORA 已在 PC AirSimNH 的指定空旷路口通过四机 Planner 飞行应用验收。
-后续 RoboPi 验收包括 [CAT-ORA 四机及混合部署](demos/catora_open_field/README.md)
-和 [Swarm-Formation 三机真实点云混合部署](demos/swarm_open_field/README.md)；
-性能负载、失败样例及适用边界分别保留在应用目录。
-各 Library 的可运行组合与验收边界见 [Demo 导航](demos/README.md)；PC 验收与 RoboPi 验收分别记录。
+## 目录
 
-## 源码与本机配置
+- `src/planner/interfaces`：统一 ROS 2 消息与 `ControlPlanner` 服务
+- `src/planner/framework`：Registry、配置解析、生命周期、完成判定和 Output Gateway
+- `src/behavior/follow_path`：兼容原生 FollowPath 的时间化轨迹扩展、ROS 回归与 SITL 验收入口
+- `src/planner/cat_ora/ros2_adapter`：CAT-ORA ROS 1 服务适配
+- `src/planner/swarm_formation/ros2_adapter`：Swarm-Formation ROS 1 滚动轨迹适配
+- `src/behavior/legacy_setpoint`：PX4 本地 NED setpoint 到 AS2 本地 ENU reference
+- `deployment/integration/compose.yaml`：完整七机仿真部署
+- `src/planner/framework/examples`：任务与机群部署配置
+- `log/resolved`：运行时生成的 resolved config 和进程日志
 
-```bash
-bash scripts/prepare_sources.sh
+## 前置镜像
+
+完整 Compose 使用以下本地镜像：
+
+```text
+uav/aerostack2-px4:humble-v1.17
+uav/px4-gazebo:v1.17.0-harmonic
+uav/catora:noetic-upstream
+uav/swarm-formation:noetic-px4
 ```
 
-该入口只初始化缺失的活动 submodule，不重置本地 fork 修改。
-源码版本、依赖镜像和修改约定见 [thirdparty/README.md](thirdparty/README.md)。
-
-首次按模板创建 `.env` 与 `config/resources.local.yaml`；已有文件不要覆盖。
-`.env` 保存设备、网络与构建路径，资源 YAML 保存场景 binary 位置，两者都被 Git 忽略。
-OHOS 操作以完成[官方开发环境准备](deployment/oh-ros-build/README.md#前置条件)为前提，
-随后按本仓库说明准备隔离 SDK、目标依赖和源码工作区。不要求 RoboPi 运行 Docker。
-
-## 当前单机运行流程
-
-已加载 flight_board tar、完成板端部署与本机配置后：
+全新环境可以用一个入口准备源码并构建平台、runtime 和两个 Planner 集成镜像：
 
 ```bash
-bash scripts/robopi.sh check
-bash scripts/robopi.sh up
-bash scripts/robopi.sh verify
-# 仿真飞行：解锁、起飞、到点、悬停、降落、解除解锁
-bash scripts/robopi.sh verify --flight
-bash scripts/robopi.sh down
+bash ./deployment/build_from_zero.sh
 ```
 
-PC 运行 AirSim、PX4/Agent 及 Humble 传感器/clock；RoboPi 原生运行 AS2。
-临时网络与时间校准命令、资源需求、验证范围见 [RoboPi 运行说明](deployment/robopi/README.md)。
+平台镜像无缓存构建使用 `NO_CACHE=1 bash ./deployment/build_from_zero.sh`；集成镜像无缓存构建使用 `docker compose -f deployment/integration/compose.yaml build --no-cache`。
 
-## 测试与历史
+PX4/Gazebo 和两个 ROS 1 算法基础镜像分别来自相邻的 `catora-px4-gazebo` 与 `swarm-formation-px4-gazebo` 复现工程。对应 README 记录了构建步骤。
+
+## 从零准备上游源码
+
+平台镜像使用三个锁定版本的上游仓库。若只需准备源码，执行：
 
 ```bash
-PYTHONPATH=src/planner/framework python3 -m unittest discover -s src/planner/framework/tests -v
-PYTHONPATH=runtime/airsim_sensors python3 -m unittest discover -s runtime/airsim_sensors/tests -v
+cd aerostack2-integration
+bash ./deployment/prepare_sources.sh
 ```
 
-旧 Gazebo/PX4 1.17 部署已移出当前分支，参考 main 的历史提交，
-见 [旧部署参考版本](docs/history/README.md#旧部署参考版本)。
-规划消息、算法实现和设计资料继续保留；完整索引见 [文档导航](docs/README.md)。
+脚本使用 `git submodule update --init --recursive` 初始化所有子模块；其中 AS2 构建使用以下锁定版本：
+
+```text
+aerostack2             19c397309c6a41b279e6b551818ec12605cfcecc
+as2_platform_pixhawk   fcba062219935acef69dfa009c8be376c707ee8a
+px4_msgs               86d8239e962f6939e05c3737784f60c02fa884db
+```
+
+子模块按外层仓库记录的 commit 检出；执行前应保留子模块中的本地修改，不使用强制覆盖选项。需要代理时，在运行脚本前设置 `HTTP_PROXY`、`HTTPS_PROXY` 和 Git 的代理配置。
+
+## 构建与启动
+
+在 Linux 仿真机执行：
+
+```bash
+cd aerostack2-integration
+docker compose -f deployment/integration/compose.yaml build
+docker compose -f deployment/integration/compose.yaml up -d --no-build
+docker compose -f deployment/integration/compose.yaml ps
+```
+
+应看到以下六个服务处于 `Up`：
+
+```text
+planner-as2-seven
+planner-px4-seven
+planner-clock
+planner-runtime
+planner-cat-ora
+planner-swarm-formation
+```
+
+Compose 使用 host network、`ROS_DOMAIN_ID=80` 和 Fast DDS UDP。Gazebo 原生时钟经 `planner-clock` 发布为 ROS 2 `/clock`，AS2 与 Planner runtime 均使用仿真时间。
+
+已有镜像时，可以用一条命令完成干净启动、七机顺序起飞、Planner 启动和终态验收：
+
+```bash
+bash ./deployment/integration/run_planner.sh cat_ora
+bash ./deployment/integration/run_planner.sh swarm_formation
+```
+
+脚本每次会先停止本工程的旧容器，因此两个命令应串行执行。失败时会自动汇总六个容器的末尾日志。
+
+## 七机起飞
+
+等待 PX4、AS2 和定位 topic 就绪后执行：
+
+```bash
+docker exec planner-runtime bash -lc '
+  source /opt/ros/humble/setup.bash
+  source /root/aerostack2_ws/install/setup.bash
+  source /opt/uav_planner_ws/install/setup.bash
+  exec fleet_takeoff.py \
+    --vehicles drone0 drone1 drone2 drone3 drone4 drone5 drone6 \
+    --height 1.5 --speed 0.5 --timeout 90
+'
+```
+
+脚本等待全部定位后，按机顺序执行 Arm、Offboard 和 Takeoff。七机高负载下不要并发发送 Takeoff action。
+
+## 运行 CAT-ORA
+
+CAT-ORA 示例使用 `drone0..drone3`。其余已起飞车辆继续由各自 AS2 控制器保持位置。
+
+```bash
+docker exec planner-runtime bash -lc '
+  source /opt/ros/humble/setup.bash
+  source /root/aerostack2_ws/install/setup.bash
+  source /opt/uav_planner_ws/install/setup.bash
+  ros2 service call /planner/control \
+    uav_planner_interfaces/srv/ControlPlanner \
+    "{command: 0, task_config_path: /opt/uav_planner_ws/install/share/uav_planner_framework/examples/cat_ora_four_px4.yaml, deployment_config_path: /opt/uav_planner_ws/install/share/uav_planner_framework/examples/deployment_four_px4.yaml}"
+'
+```
+
+CAT-ORA 会优化目标分配，但公共任务契约采用固定逐机目标。adapter 会核对每条轨迹终点；若算法改变车辆与目标的对应关系，任务以 `FAILED/NO_SOLUTION` 结束，不会执行换配后的轨迹。
+
+## 运行 Swarm-Formation
+
+验收时先重置仿真并重新执行七机起飞，再启动七机任务：
+
+```bash
+docker compose -f deployment/integration/compose.yaml down
+docker compose -f deployment/integration/compose.yaml up -d --no-build
+```
+
+```bash
+docker exec planner-runtime bash -lc '
+  source /opt/ros/humble/setup.bash
+  source /root/aerostack2_ws/install/setup.bash
+  source /opt/uav_planner_ws/install/setup.bash
+  ros2 service call /planner/control \
+    uav_planner_interfaces/srv/ControlPlanner \
+    "{command: 0, task_config_path: /opt/uav_planner_ws/install/share/uav_planner_framework/examples/swarm_formation_seven_px4.yaml, deployment_config_path: /opt/uav_planner_ws/install/share/uav_planner_framework/examples/deployment_seven_px4.yaml}"
+'
+```
+
+Swarm adapter 会把滚动 `PolyTraj` 转成短时 `TimedTrajectorySegment`，并在发布前校验机群完整性和轨迹首点连续性。
+
+当前 ROS 地图生成器使用 `obs_num=0`。这套验收覆盖真实 PX4/Gazebo 动力学和队形闭环，不代表虚拟点云障碍物已经与 Gazebo 碰撞体对齐。
+
+## 状态与控制
+
+查询当前任务：
+
+```bash
+docker exec planner-runtime bash -lc '
+  source /opt/ros/humble/setup.bash
+  source /root/aerostack2_ws/install/setup.bash
+  source /opt/uav_planner_ws/install/setup.bash
+  ros2 service call /planner/control \
+    uav_planner_interfaces/srv/ControlPlanner "{command: 4}"
+'
+```
+
+命令值为 `START=0`、`PAUSE=1`、`RESUME=2`、`CANCEL=3`、`GET_STATUS=4`。状态值为 `REJECTED=0`、`RUNNING=1`、`PAUSED=2`、`SUCCEEDED=3`、`FAILED=4`、`CANCELED=5`。
+
+暂停、取消、Planner 失败、轨迹超时和任务超时时，框架会丢弃旧轨迹并发布当前实际位置的机群悬停参考。失败后不会自动降落或解除武装。
+
+## 测试
+
+`deployment/runtime/Dockerfile` 在镜像构建阶段编译全部五个 ROS 2 包，并运行：
+
+- Planner framework：22 项
+- CAT-ORA adapter：3 项
+- Swarm-Formation adapter：5 项
+- AS2 setpoint adapter：2 项
+
+单独运行依赖无关测试：
+
+```bash
+python3 -m unittest discover -s src/planner/framework/tests -v
+```
+
+设计与验收边界见 [接口与配置设计](docs/项目简介.md#part-2)，最终构建和冷启动证据见 [最终验证](log/resolved/FINAL_VERIFICATION.md)。
+
+完整操作流程、任务配置说明和排障方法见 [使用指南](docs/项目简介.md#part-2)。三份主文档见本文的 [docs 文档目录](#docs-文档目录)。
+
+## 重组后的源码与产物
+
+目录说明见 [项目目录说明](docs/项目简介.md#part-1)。克隆时使用 `git clone --recurse-submodules`。AS2 子模块位于 `as2/`，PX4 位于 `px4/`，官方仿真工程位于 `simulator/gazebo/`。算法源码位于 `src/planner/cat_ora/upstream/` 和 `src/planner/swarm_formation/upstream/`，算法镜像构建会从这里重新编译。
+
+PX4 启动使用本仓库 `px4/`，构建目录挂载 `log/px4-build`，仿真缓存为 `log/px4-sim-cache`，运行日志为 `log/px4-runtime`。新环境需先准备 PX4 SITL 构建产物；本轮迁移保留已有相同 commit 的构建产物，不代表重新编译了 PX4。

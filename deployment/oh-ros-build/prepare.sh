@@ -2,5 +2,5 @@
 # First-time project adaptation after the official OHOS environment setup.
 set -euo pipefail
 root=$(cd "$(dirname "$0")/../.." && pwd)
-source "$root/scripts/load_env.sh"
-exec python3 "$root/scripts/prepare_ohos_workspace.py" "$@"
+source "$root/tools/airsim/load_env.sh"
+exec python3 "$root/tools/airsim/prepare_ohos_workspace.py" "$@"

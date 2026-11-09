@@ -11,7 +11,7 @@ def generate_launch_description():
         Node(
             package="uav_planner_framework",
             executable="planner_framework_node",
-            name="src/planner/framework",
+            name="planner_framework",
             output="screen",
             parameters=[{
                 "use_sim_time": True,

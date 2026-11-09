@@ -2,8 +2,8 @@
 
 上游：https://github.com/ctu-mrs/catora ，提交
 `4bc41f593eebde65dd74108a97e80430a145dfa0`。
-源码从现有 `uav/catora:noetic-upstream` 镜像提取，原始快照留在
-`../../../thirdparty/cat_ora_ros1`，以 `COLCON_IGNORE` 排除。核心 `catora.hpp` 原样保留；
+移植源码最初从 `uav/catora:noetic-upstream` 镜像提取；上游源码现在由
+`../upstream/` 子模块提供，构建时显式选择 Humble 包。核心 `catora.hpp` 原样保留；
 `formation_reshaper.cpp` 只替换日志，头文件移除未使用的 ROS 1 / MRS 类型。
 作者与版权保留上游约定。上游 `package.xml` 写 MIT，README 写 GPL-3.0；
 本移植沿用 README 声明的 GPL-3.0，未将算法重新授权。
@@ -63,7 +63,7 @@ AS2 输出 adapter，验证四辆车的 `/planner/trajectory` 和 `/planner/setp
 
 以上为服务与接线验证。后续 [CAT-ORA 空旷场地应用](../../../demos/catora_open_field/README.md)
 已在 PC AirSimNH 完成四机起飞、规划、到点和降落，并通过独立实际位置验收；
-适用范围以 `libraries.yaml` 的 `scenario_pass` 说明为准，不代表 RoboPi 多机已通过。
+适用范围以 `deployment/airsim/libraries.yaml` 的 `scenario_pass` 说明为准，不代表 RoboPi 多机已通过。
 
 ## RoboPi 原生服务验证
 
@@ -78,7 +78,7 @@ RoboPi 原生运行 C++ 服务及 Python JSON 代理，独立域 `179`、仅本�
 本次不包含跨机 adapter、AS2 轨迹执行、多机飞行或持续负载性能验收。
 
 摘要：[robopi-service.json](../validation/robopi-service.json)。原始构建、ELF、
-校验和、板端日志保存在本机 `artifacts/catora-robopi/`。
+校验和、板端日志保存在本机 `log/airsim/catora-robopi/`。
 复验使用 `tests/verify_board.py`，同目录放 `verify_service.py`、`cases.json` 和
 由 `tests/capture_ros1.py` 取得的 `baseline.json`；板端在同一 shell 加载
 `/data/local/tmp/aerohub-as2/board_env.sh`，设置 `ROS_DOMAIN_ID=179`
@@ -93,13 +93,13 @@ AS2 独立安装于 `/data/aerohub/as2`；CAT-ORA 应用安装于
 前述 tmp 路径属于历史验证位置。
 
 ```bash
-bash scripts/build_lib.sh catora
-bash scripts/deploy_lib.sh --component catora
-bash scripts/verify_lib.sh catora
+bash tools/airsim/build_lib.sh catora
+bash tools/airsim/deploy_lib.sh --component catora
+bash tools/airsim/verify_lib.sh catora
 ```
 
 此简单验证只调用一次原生轨迹服务并核对本地 JSON 响应，结束后停止测试进程。
-AS2 可通过 `bash scripts/verify_lib.sh as2` 单独做消息加载和估计器最小启动检查，
+AS2 可通过 `bash tools/airsim/verify_lib.sh as2` 单独做消息加载和估计器最小启动检查，
 不启动 PX4/AirSim 或发送运动指令。
 
 2026-11-05：上述持久目录中的板端简单验证通过，版本化摘要为 `../validation/robopi-smoke.json`。程序安装保留，验证进程已停止。

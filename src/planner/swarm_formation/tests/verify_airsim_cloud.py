@@ -18,20 +18,20 @@ def run(args,**kwargs):return subprocess.run(args,check=True,**kwargs)
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--output',type=Path,default=ROOT/'artifacts/swarm-airsim-cloud')
+    parser.add_argument('--output',type=Path,default=ROOT/'log/airsim/swarm-airsim-cloud')
     args=parser.parse_args();out=args.output.resolve();out.mkdir(parents=True,exist_ok=True)
     if (out/'result.json').exists():raise RuntimeError('choose a fresh output directory to preserve evidence')
     for name in NAMES:
         if subprocess.run(['docker','inspect',name],capture_output=True).returncode==0:
             raise RuntimeError('validation container already exists: '+name)
-    settings=json.loads((ROOT/'config/airsim/settings/px4-lidar.json').read_text())
+    settings=json.loads((ROOT/'deployment/airsim/config/airsim/settings/px4-lidar.json').read_text())
     settings['ApiServerPort']=42472
     settings['Vehicles']['PX4'].update(TcpPort=4684,ControlPortLocal=14844,ControlPortRemote=14984,X=0,Y=4,Z=0)
     (out/'settings.json').write_text(json.dumps(settings,indent=2)+'\n')
     (out/'fleet.yaml').write_text(yaml.safe_dump({'vehicles':{'drone0':{'fmu_prefix':'/drone0','target_system_id':45}}}))
-    profile=json.loads((ROOT/'config/airsim/nh.json').read_text());profile['settings']=str(out/'settings.json')
+    profile=json.loads((ROOT/'deployment/airsim/config/airsim/nh.json').read_text());profile['settings']=str(out/'settings.json')
     (out/'profile.json').write_text(json.dumps(profile,indent=2)+'\n')
-    manager=[sys.executable,str(ROOT/'scripts/airsim/manager.py')]
+    manager=[sys.executable,str(ROOT/'tools/airsim/airsim/manager.py')]
     run(manager+['start','--profile',str(out/'profile.json'),'--run-dir',str(out/'scene'),'--timeout','90'])
     try:
         run(['docker','run','--rm','--detach','--init','--network','host','--name',PREFIX+'vehicle',
@@ -50,12 +50,12 @@ set -e
 source /opt/ros/humble/setup.bash
 mkdir -p /results/workspace
 cd /results/workspace
-MAKEFLAGS=-j2 colcon build --base-paths /work/src/planner/swarm_formation/humble /work/runtime/navigation_inputs \
+MAKEFLAGS=-j2 colcon build --base-paths /work/src/planner/swarm_formation/humble /work/src/perception/navigation_inputs \
   --packages-up-to plan_env as2_navigation_inputs --parallel-workers 2 \
   --cmake-args -DCMAKE_BUILD_TYPE=Release -DSWARM_BUILD_VALIDATION=ON > build.log 2>&1
 source install/setup.bash
 ros2 run as2_navigation_inputs navigation_inputs_node --ros-args -r __ns:=/drone0 \
-  --params-file /work/runtime/navigation_inputs/config/drone0.yaml > /results/navigation.log 2>&1 & nav_pid=$!
+  --params-file /work/src/perception/navigation_inputs/config/drone0.yaml > /results/navigation.log 2>&1 & nav_pid=$!
 trap 'kill -TERM "$nav_pid" 2>/dev/null || true; wait "$nav_pid" || true' EXIT
 python3 /work/src/planner/swarm_formation/tests/verify_real_cloud.py --output /results
 '''])

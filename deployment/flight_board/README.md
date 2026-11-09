@@ -15,7 +15,7 @@ PX4、DDS Agent、传感器桥、supervisor 和默认 DDS 配置均已包含在�
 [版本验收](../releases/v0.1.0-validation.json)。
 AirSim 场景与车辆配置仍由宿主机提供；RoboPi 的 DDS 网络配置仍按运行环境挂载。
 
-本机校验及离线打包（默认输出到 `artifacts/images/`，不进入 Git）：
+本机校验及离线打包（默认输出到 `log/airsim/images/`，不进入 Git）：
 
 ```bash
 bash deployment/flight_board/image.sh check
@@ -107,7 +107,7 @@ status 输出 JSON：mode、各进程 alive/exit_code、healthy。仅表示必�
 进程身份校验参考 LeUAV 的 supervisor（PID + /proc 启动时间）。
 
 DDS 配置复用 LeUAV 的显式 UDPv4 profile，位于
-`config/dds/fastdds_udp.xml`。flight_board 和 onboard_computer 镜像均加载
+`deployment/airsim/config/dds/fastdds_udp.xml`。flight_board 和 onboard_computer 镜像均加载
 该文件，Compose 不再共享 host IPC；AS2 需使用更新后的配套镜像。
 Agent 仍使用镜像构建阶段编译的产物，无 builder 镜像依赖。
 
@@ -117,7 +117,7 @@ Agent 仍使用镜像构建阶段编译的产物，无 builder 镜像依赖。
 - `shell`：进入已加载 ROS 环境的 Bash，适合诊断。
 
 ```bash
-# 先用 config/airsim/settings/px4-sensors.json 启动 AirSim，再执行：
+# 先用 deployment/airsim/config/airsim/settings/px4-sensors.json 启动 AirSim，再执行：
 docker compose -f deployment/flight_board/compose.yaml up -d
 docker compose -f deployment/flight_board/compose.yaml logs -f
 docker compose -f deployment/flight_board/compose.yaml down
@@ -178,7 +178,7 @@ VERIFY_AS2_FLIGHT=1 VERIFY_MEMORY_SECONDS=600 \
 飞行流程包括解锁、Offboard、1.5 米起飞、约 1 米水平移动、2 秒悬停、降落和
 解除解锁。检查到点误差与悬停漂移均不超过 0.5 米。脚本记录实际反馈、传感器、
 内存、进程健康和镜像 ID；结束后清理其创建的 PC 场景与容器，保留既有板端 AS2。
-默认记录在 `artifacts/flight-board-robopi-verification/`，可用 `VERIFY_OUTPUT` 更换。
+默认记录在 `log/airsim/flight-board-robopi-verification/`，可用 `VERIFY_OUTPUT` 更换。
 
 ## 可选 PC 开发验收
 
@@ -190,7 +190,7 @@ bash deployment/flight_board/verify.sh
 ```
 
 验收前先加载固定 flight_board tar，并按[场景资源说明](../../config/airsim/README.md)
-配置 `airsim_nh`。验收使用 `config/airsim/nh.json`，也支持 `AIRSIM_BINARY`
+配置 `airsim_nh`。验收使用 `deployment/airsim/config/airsim/nh.json`，也支持 `AIRSIM_BINARY`
 覆盖可执行文件位置；不会读取开发者的固定场景目录。
 
 默认订阅端使用 `onboard_computer:v0.1.0`，包含 Humble
@@ -202,7 +202,7 @@ bash deployment/flight_board/verify.sh
 脚本先检查所需镜像是否已存在，再启动独立 AirSimNH 场景、逐机容器和 clock
 容器，订阅传感器和时钟，并检查 PX4 DDS 连接。不会解锁或发送运动指令。
 `VERIFY_AS2=1` 时改用 `onboard_computer:v0.1.0` 执行 AS2 交互验收。
-结果保存在 `artifacts/flight-board-verification`，退出时清理验证资源。
+结果保存在 `log/airsim/flight-board-verification`，退出时清理验证资源。
 传感器/时钟接收与完整 AS2 飞行控制链路是两项独立验收。
 
 ## Humble 单镜像完整验收（2026-11-05）
@@ -220,7 +220,7 @@ AS2 进程未重启，观察 600.5 秒，进程树 RSS
 
 入口：`deployment/flight_board/verify_robopi.sh`，本次设置
 `VERIFY_AS2_FLIGHT=1 VERIFY_MEMORY_SECONDS=600`。证据位于
-`artifacts/flight-board-humble-flight-acceptance/`，含飞行反馈、前后数据接收、
+`log/airsim/flight-board-humble-flight-acceptance/`，含飞行反馈、前后数据接收、
 内存样本、进程健康、镜像 ID、日志与场景记录。
 
 ## 此前的被动检查（2026-11-05）
@@ -229,8 +229,8 @@ AS2 进程未重启，观察 600.5 秒，进程树 RSS
 RoboPi 接收定位、时钟、IMU、GPS、电池、7 路图像和 CameraInfo、LiDAR 与静态 TF。
 现有 AS2 进程未重启，观察 180.5 秒，进程树 RSS 为
 651.2–651.3 MiB，预热后最大增长 0.0 MiB。
-记录在 `artifacts/flight-board-humble-robopi/`；PC 被动验收记录在
-`artifacts/flight-board-humble-verification-final/`。未发送运动命令，未重新验收飞行，
+记录在 `log/airsim/flight-board-humble-robopi/`；PC 被动验收记录在
+`log/airsim/flight-board-humble-verification-final/`。未发送运动命令，未重新验收飞行，
 该观察窗口不代表长期耐久或多机负载验证。
 
 ## 历史验证记录
@@ -240,7 +240,7 @@ RoboPi 接收定位、时钟、IMU、GPS、电池、7 路图像和 CameraInfo、
 2026-11-05：更新后的独立被动验收入口通过实测，使用资源配置解析 AirSimNH、
 固定 flight_board 和有仓库配方的消息依赖镜像；传感器、静态 TF、`/clock`、
 PX4 里程计及 DDS 连接均通过，容器健康检查通过。记录位于
-`artifacts/flight-board-portable-verification-2/`。本轮未发送飞行命令。
+`log/airsim/flight-board-portable-verification-2/`。本轮未发送飞行命令。
 
 2026-11-04 本机已成功构建 `flight_board:airsim-px4`，并通过 AirSimNH
 实测：逐机 PX4/Agent 连接、7 路图像、7 路 CameraInfo、非空 LiDAR、

@@ -10,7 +10,7 @@ from robopi import board,hdc
 
 component=sys.argv[1]
 components=['as2','catora','swarm-formation'] if component=='all' else [component]
-out=ROOT/'artifacts/robopi-lib-acceptance'
+out=ROOT/'log/airsim/robopi-lib-acceptance'
 out.mkdir(parents=True,exist_ok=True)
 hdc('file','send',str(ROOT/'deployment/robopi/verify_lib.py'),'/data/aerohub/as2/verify_lib.py')
 failed=[]

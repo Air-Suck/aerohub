@@ -74,14 +74,14 @@ COPY --from=payload /opt/px4-gazebo/ /opt/px4-gazebo/
 COPY --from=payload /opt/xrce/ /opt/xrce/
 COPY --from=payload /opt/px4-runtime/ /opt/px4-runtime/
 WORKDIR /opt/platform_sensors
-COPY runtime/airsim_sensors/ src/as2_sensor_adapter/
+COPY simulator/airsim/sensors/ src/as2_sensor_adapter/
 RUN source /opt/ros/humble/setup.bash \
     && colcon build --merge-install --packages-select uav_as2_sensor_adapter \
     && PYTHONPATH=src/as2_sensor_adapter python3 -m unittest discover -s src/as2_sensor_adapter/tests -v \
     && PYTHONPATH=src/as2_sensor_adapter:$PYTHONPATH python3 -c 'import uav_as2_sensor_adapter.clock; import uav_as2_sensor_adapter.node'
 COPY deployment/flight_board/entrypoint.sh /usr/local/bin/flight-board
 COPY deployment/flight_board/supervisor.py /opt/flight_board/supervisor.py
-COPY config/airsim/settings/px4-sensors.json /opt/flight_board/settings.example.json
+COPY deployment/airsim/config/airsim/settings/px4-sensors.json /opt/flight_board/settings.example.json
 RUN chmod +x /usr/local/bin/flight-board
 ENV RUNS_IN_DOCKER=true PX4_SIM_MODEL=none_iris PX4_SYS_AUTOSTART=10016 \
     ROS_DOMAIN_ID=81 VEHICLE_NAME=PX4 VEHICLE_NAMESPACE=drone0 \
@@ -91,6 +91,6 @@ ENV RUNS_IN_DOCKER=true PX4_SIM_MODEL=none_iris PX4_SYS_AUTOSTART=10016 \
 WORKDIR /var/lib/flight_board
 ENTRYPOINT ["/usr/local/bin/flight-board"]
 CMD ["vehicle"]
-COPY config/dds/fastdds_udp.xml /opt/fastdds_udp.xml
+COPY deployment/airsim/config/dds/fastdds_udp.xml /opt/fastdds_udp.xml
 ENV FASTRTPS_DEFAULT_PROFILES_FILE=/opt/fastdds_udp.xml
 HEALTHCHECK --interval=5s --timeout=3s --start-period=15s --retries=3 CMD ["python3", "/opt/flight_board/supervisor.py", "healthcheck"]

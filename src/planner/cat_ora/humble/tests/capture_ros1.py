@@ -7,7 +7,7 @@ from pathlib import Path
 import rospy
 
 root = Path(__file__).resolve().parents[5]
-spec = importlib.util.spec_from_file_location("proxy", root / "thirdparty/cat_ora_ros1/aerohub/ros1_proxy.py")
+spec = importlib.util.spec_from_file_location("proxy", root / "src/planner/cat_ora/ros1_proxy/ros1_proxy.py")
 proxy = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(proxy)
 rospy.init_node("capture_catora_baseline")

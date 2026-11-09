@@ -1,6 +1,6 @@
 # SUPER 的时间化 Behavior 接入
 
-算法仍来自锁定的 `thirdparty/SUPER-sim` fork；本目录只保存本仓库适配包。
+算法仍来自锁定的 `src/planner/super/upstream` fork；本目录只保存本仓库适配包。
 原生输入、优化与主/备用轨迹计算不搬入 Behavior。当前验证对象是 PC forest8，
 不表示 ROS/OHOS 算法部署或 RoboPi 闭环已完成。
 
@@ -41,7 +41,7 @@ Yaw polynomial 约束适配，不宣称支持要求跟随航向轨迹的任务�
 
 ## 构建与验证
 
-完整PC场景入口见 `demos/super_forest/run.py`。镜像基于现有 onboard_computer，
+完整PC场景入口见 `deployment/airsim/demos/super_forest/run.py`。镜像基于现有 onboard_computer，
 原生算法在现有 ROS Humble desktop 镜像离线编译，运行层携带所需非ROS动态依赖。
 
 数学测试可直接运行；真实ROS消息转换、重复/过期样本、备用命令及节点构造

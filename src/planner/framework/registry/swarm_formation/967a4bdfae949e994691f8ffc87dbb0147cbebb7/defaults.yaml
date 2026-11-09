@@ -2,7 +2,7 @@ sample_dt: 0.1
 horizon: 1.0
 trajectory_timeout: 5.0
 update_period: 0.2
-valid_from_lead: 0.2
+valid_from_lead: 0.5
 max_start_distance: 1.5
 formation_scale: 1.0
 wait_for_output: false

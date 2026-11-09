@@ -100,7 +100,7 @@ bash deployment/oh-ros-build/prepare.sh \
   --ros-base /path/to/ros_ros2_base \
   --ros-install /path/to/target/deps/install \
   --sysdeps /path/to/target/deps/out \
-  --work-root artifacts/ohos-as2
+  --work-root log/airsim/ohos-as2
 ```
 
 入口会先检查输入，再创建全新的隔离工作区，已有工作区会拒绝覆盖。
@@ -116,7 +116,7 @@ bash deployment/oh-ros-build/prepare.sh \
 首次准备需要 Git 网络访问；随后容器编译使用 `--network none`。
 已有离线 Git 仓库时可加 `--source-cache /path/to/cache`，目录内应包含
 `px4_msgs`、`vision_msgs`、`mocap4r2_msgs`、`pid_controller` 四个 Git 仓库，
-且含锁定提交。具体提交记录在 `scripts/prepare_ohos_workspace.py` 的 `SOURCES`。
+且含锁定提交。具体提交记录在 `tools/airsim/prepare_ohos_workspace.py` 的 `SOURCES`。
 
 若提示缺少目标 GeographicLib、Python/NumPy、libyaml 或其他文件，应补齐
 对应的 OHOS 目标依赖；不能用宿主机 Linux 库代替，也不能创建空文件绕过检查。
@@ -130,7 +130,7 @@ bash deployment/oh-ros-build/prepare.sh \
 
 ```bash
 OHOS_BUILDER_IMAGE=voxelsky/ohos-ros-humble-builder@sha256:3312006a50a2a7f4a26e1c92afcfbb0fd2296989b7e6d22e71b1f77caad0d25f
-OHOS_WORK_ROOT=artifacts/ohos-as2
+OHOS_WORK_ROOT=log/airsim/ohos-as2
 OHOS_SYSDEPS=/absolute/path/to/ros-target/deps/out
 ```
 
@@ -153,7 +153,7 @@ bash deployment/oh-ros-build/run.sh shell
 
 ```bash
 # 同步活动 fork 和 PX4 消息后，编译 platform、estimator、controller、Behavior
-bash scripts/robopi.sh build
+bash tools/airsim/robopi.sh build
 
 # 已同步源码时，直接使用 AS2 Runtime 包集合（包含 RMW 修复包）
 bash deployment/oh-ros-build/build_as2.sh runtime
@@ -181,10 +181,10 @@ Python 扩展还需核对目标 SOABI；不要在 PC 上直接执行 OHOS 产物
 
 首次准备入口已使用本机 SDK、目标 ROS/第三方依赖和本地 Git 缓存验证：
 生成新的隔离工作区，检查缺项拒绝与已有目录保护，再执行 Runtime 编译。
-验证记录位于 `artifacts/ohos-prepare-verification/`，不包含板端重新部署验收。
+验证记录位于 `log/airsim/ohos-prepare-verification/`，不包含板端重新部署验收。
 
 2026-11-05：直接使用固定摘要的官方 builder，项目脚本与 CMake 适配只读挂载，
 输入检查通过，AS2 Runtime 12 包增量交叉编译通过。日志位于本机忽略目录
-`artifacts/ohos-official-builder-verification.log`。本轮未构建镜像、未部署或启动应用。
+`log/airsim/ohos-official-builder-verification.log`。本轮未构建镜像、未部署或启动应用。
 没有把已有工作区的成功扩大为“全新机器零准备即可运行”。实际构建与运行
 记录见 [交付总入口](../README.md#验证记录)。

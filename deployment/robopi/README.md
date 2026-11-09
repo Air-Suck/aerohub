@@ -7,7 +7,7 @@
 再按[首次初始化步骤](../oh-ros-build/README.md#首次初始化项目工作区)执行
 `prepare.sh`。下文操作均以此为前提。
 
-本机操作统一从仓库根目录的 `scripts/robopi.sh` 进入。设备、网卡和运行参数
+本机操作统一从仓库根目录的 `tools/airsim/robopi.sh` 进入。设备、网卡和运行参数
 读取被忽略的 `.env`，公开模板见 [../../.env.example](../../.env.example)。
 
 ```text
@@ -47,15 +47,15 @@ Swarm 环境入口为 `/data/aerohub/lib/swarm-formation/env.sh`。
 
 ```bash
 # 部署到新目录，保持当前 .env 与旧运行不变
-bash scripts/deploy_lib.sh --component all
+bash tools/airsim/deploy_lib.sh --component all
 # 后续仅更新对应一侧
-bash scripts/deploy_lib.sh --component as2
-bash scripts/deploy_lib.sh --component catora
-bash scripts/deploy_lib.sh --component swarm-formation
+bash tools/airsim/deploy_lib.sh --component as2
+bash tools/airsim/deploy_lib.sh --component catora
+bash tools/airsim/deploy_lib.sh --component swarm-formation
 # 需要编译时同步对应算法与最小接口源码，复用官方 OHOS builder
-bash scripts/build_lib.sh all
+bash tools/airsim/build_lib.sh all
 # 仅板端加载、启动和小型接口验证，不解锁、不飞行
-bash scripts/verify_lib.sh all
+bash tools/airsim/verify_lib.sh all
 ```
 
 部署先 staging 解包并核对哈希，再替换本次组件；临时旧安装只用于失败回退，
@@ -64,7 +64,7 @@ bash scripts/verify_lib.sh all
 检查 AArch64 与动态依赖不变，不直接搬移未处理的 install。
 
 需要切换本机配置时在 AS2 部署命令追加 `--activate-config`，成功后才把 `.env`
-中的 `ROBOPI_ROOT` 更新为 `/data/aerohub/as2`；`scripts/robopi.sh deploy` 包含该步骤。
+中的 `ROBOPI_ROOT` 更新为 `/data/aerohub/as2`；`tools/airsim/robopi.sh deploy` 包含该步骤。
 默认配置已切换到 `/data/aerohub/as2`；历史路径 `/data/local/tmp/aerohub-as2`
 中的进程已通过管理入口停止，历史文件暂留，不再作为活动安装。
 下文早期验收记录中的 tmp 路径是历史位置。
@@ -80,7 +80,7 @@ bash scripts/verify_lib.sh all
 | Swarm-Formation | 应用模块导入、单节点接收静态里程计/合成点云/手动目标，输出 2 段五阶 PolyTraj | `../../src/planner/swarm_formation/validation/robopi-smoke.json` |
 
 本次使用官方 builder 交叉编译算法，复用已有 AS2 产物；原始构建、调试和最终
-验收日志保存在本机 `artifacts/robopi-lib-acceptance/`。板端每个组件的
+验收日志保存在本机 `log/airsim/robopi-lib-acceptance/`。板端每个组件的
 `runtime/verification/result.json` 保存最新结果，`deployment.json` 保存部署文件哈希。
 验证进程、专用调试器和转发均已清理，程序保留安装；没有启动仿真或发送运动命令。
 这次不覆盖真实点云、七机编队/代理完整输出或飞行闭环。
@@ -91,16 +91,16 @@ bash scripts/verify_lib.sh all
 # 首次填写配置；已有 .env 不要覆盖
 cp .env.example .env
 
-bash scripts/robopi.sh check       # HDC 与 IP 连通性
-bash scripts/robopi.sh network     # 仅恢复板端临时 /24 地址，不修改 PC 网卡
-bash scripts/robopi.sh sync-time   # 临时校准板端系统时钟到 PC，不改 RTC / 时区 / NTP 配置
-bash scripts/robopi.sh build       # 同步当前 fork 与 1.18 消息，交叉编译 Runtime
-bash scripts/robopi.sh deploy      # 校验传输、解压后切换私有 overlay，保留 install 备份
-bash scripts/robopi.sh up          # PC 底座 + RoboPi AS2
-bash scripts/robopi.sh status
-bash scripts/robopi.sh verify      # 定位、时钟、传感器；不解锁
-bash scripts/robopi.sh verify --flight  # 仿真：起飞、到点、悬停、降落、解除解锁
-bash scripts/robopi.sh down        # 停止本入口拥有的进程与容器
+bash tools/airsim/robopi.sh check       # HDC 与 IP 连通性
+bash tools/airsim/robopi.sh network     # 仅恢复板端临时 /24 地址，不修改 PC 网卡
+bash tools/airsim/robopi.sh sync-time   # 临时校准板端系统时钟到 PC，不改 RTC / 时区 / NTP 配置
+bash tools/airsim/robopi.sh build       # 同步当前 fork 与 1.18 消息，交叉编译 Runtime
+bash tools/airsim/robopi.sh deploy      # 校验传输、解压后切换私有 overlay，保留 install 备份
+bash tools/airsim/robopi.sh up          # PC 底座 + RoboPi AS2
+bash tools/airsim/robopi.sh status
+bash tools/airsim/robopi.sh verify      # 定位、时钟、传感器；不解锁
+bash tools/airsim/robopi.sh verify --flight  # 仿真：起飞、到点、悬停、降落、解除解锁
+bash tools/airsim/robopi.sh down        # 停止本入口拥有的进程与容器
 ```
 
 `.env` 必须填写 HDC_BIN、HDC_TARGET、PC_IP、ROBOPI_IP、网卡、ROS_DOMAIN_ID
@@ -119,7 +119,7 @@ OHOS 与 PC 产物隔离，部署前须停止板端 AS2。
 
 ## 当前组合与诊断
 
-生成的 PC Compose 与两端 DDS 配置保存在 `artifacts/robopi-runtime/`；
+生成的 PC Compose 与两端 DDS 配置保存在 `log/airsim/robopi-runtime/`；
 DDS 只使用 `.env` 指定 IP 的接口，ROS 域默认 83，独立 Compose 项目为
 `aerohub-robopi`。PC 仅使用固定 flight_board 镜像：vehicle 同时运行
 PX4、Agent 和 Humble 传感器，clock 使用同一镜像单独运行全局时钟。
@@ -134,9 +134,9 @@ Humble 版本 tar；旧 Jazzy 版本不适用于此入口。
 运行传感器和时钟发布端时，可检查 AS2 进程树内存：
 
 ```bash
-source scripts/load_env.sh
-python3 scripts/diagnostics/verify_sensor_memory.py \
-  --duration 180 --output artifacts/sensor-memory.json
+source tools/airsim/load_env.sh
+python3 tools/airsim/diagnostics/verify_sensor_memory.py \
+  --duration 180 --output log/airsim/sensor-memory.json
 ```
 
 检查先预热 15 秒，随后允许最多 64 MiB 增长；进程退出、重启或超限均报错。
@@ -168,7 +168,7 @@ AS2 进程未重启，观察 600.5 秒，进程树 RSS
 
 入口：`deployment/flight_board/verify_robopi.sh`，本次设置
 `VERIFY_AS2_FLIGHT=1 VERIFY_MEMORY_SECONDS=600`。证据位于
-`artifacts/flight-board-humble-flight-acceptance/`，含飞行反馈、前后数据接收、
+`log/airsim/flight-board-humble-flight-acceptance/`，含飞行反馈、前后数据接收、
 内存样本、进程健康、镜像 ID、日志与场景记录。
 
 ## 此前的被动检查（2026-11-05）
@@ -177,8 +177,8 @@ AS2 进程未重启，观察 600.5 秒，进程树 RSS
 RoboPi 接收定位、时钟、IMU、GPS、电池、7 路图像和 CameraInfo、LiDAR 与静态 TF。
 现有 AS2 进程未重启，观察 180.5 秒，进程树 RSS 为
 651.2–651.3 MiB，预热后最大增长 0.0 MiB。
-记录在 `artifacts/flight-board-humble-robopi/`；PC 被动验收记录在
-`artifacts/flight-board-humble-verification-final/`。未发送运动命令，未重新验收飞行，
+记录在 `log/airsim/flight-board-humble-robopi/`；PC 被动验收记录在
+`log/airsim/flight-board-humble-verification-final/`。未发送运动命令，未重新验收飞行，
 该观察窗口不代表长期耐久或多机负载验证。
 
 ## 2026-11-05 本机跨机验收（原分离传感器方案）
@@ -188,7 +188,7 @@ RoboPi 接收定位、时钟、IMU、GPS、电池、7 路图像和 CameraInfo、
 七路图像及 CameraInfo、LiDAR、静态 TF 检查；解锁、Offboard、起飞、
 到点、悬停、降落及解除解锁全部通过。
 到点误差约 0.154 米，两秒悬停漂移约 0.395 米，均低于 0.5 米验收阈值。
-证据：`artifacts/robopi-runtime/interaction.json`、`sensors.json`；
+证据：`log/airsim/robopi-runtime/interaction.json`、`sensors.json`；
 本轮诊断已确认并处理发布端运行环境与系统时钟偏差两个问题。
 AS2 进程树内存约 648 MiB，继续保留 1536 MiB 保护阈值。
 这次通过不扩展为多机、长时间耐久或算法 Library 的验收。
@@ -199,8 +199,8 @@ AS2 进程树内存约 648 MiB，继续保留 1536 MiB 保护阈值。
 这不是 PC Linux 安装目录复制上板，也未替换板端系统 ROS。
 
 以下记录早期独立构建工作区的准备过程。当前活动源码已迁到 `thirdparty/` 的两个
-fork，`uint` 可移植性修复已直接进入 `as2/aerostack2/as2_core`，无需重复应用。
-当前入口由 `scripts/prepare_ohos_sources.py` 同步该工作区的活动 AS2 源码与
+fork，`uint` 可移植性修复已直接进入 `as2/airsim/aerostack2/as2_core`，无需重复应用。
+当前入口由 `tools/airsim/prepare_ohos_sources.py` 同步该工作区的活动 AS2 源码与
 PX4 1.18 消息；首次准备目标工具链仍参考下文。
 
 ## 实际环境
@@ -213,7 +213,7 @@ PX4 1.18 消息；首次准备目标工具链仍参考下文。
 - 设备：通过 `.env` 的 `HDC_TARGET` 指定；已验证系统为 OHOS Linux 6.6.86、aarch64。
 - 系统 ROS：`/sys_prod/robot/{install,out}`，Python 3.12。
 - 私有部署：`/data/local/tmp/aerohub-as2`；SDK/构建副本在仓库忽略目录
-  `artifacts/ohos-as2`。
+  `log/airsim/ohos-as2`。
 
 AS2 基线沿用仓库锁定源码，Pixhawk 本轮使用原 v1.17 补丁；没有宣称完成
 PX4 1.18 的完整消息/控制适配。工作区其他同时开发的 v1.18 文件不属于本轮输入。
@@ -232,7 +232,7 @@ mocap4r2_msgs 为 `2bce86f38b7129d235d58ebd8977beadb0a83123`；PID 使用上游 
 本轮目录布局：
 
 ```text
-artifacts/ohos-as2/
+log/airsim/ohos-as2/
   root/
     ohos-robot-toolchain/18/native/  # SDK 副本
     ros_ros2_base/                 # 官方源码与工具链副本
@@ -308,7 +308,7 @@ bash deployment/oh-ros-build/build_as2.sh rmw_fastrtps_shared_cpp
 
 board_smoke.py、tf_probe.py、dds_probe.py 可在该目录运行。
 full_smoke.py 需要同目录 run_as2.py（来自 onboard_computer/run.py，将临时目录
-改到 `/data/local/tmp/aerohub-as2/runtime`）及 config/fleet/pid_speed_controller。
+改到 `/data/local/tmp/aerohub-as2/runtime`）及 deployment/airsim/config/fleet/pid_speed_controller。
 通过 AS2_CONFIG_FILE、AS2_FLEET_FILE、AS2_CONTROLLER_CONFIG_FILE 指向这些文件。
 测试使用 ROS_DOMAIN_ID=83，与正常运行隔离。
 
@@ -319,7 +319,7 @@ full_smoke.py 需要同目录 run_as2.py（来自 onboard_computer/run.py，将�
 - 修正私有 RMW 后标准 TF listener/broadcaster/static broadcaster 均成功。
 - 板端完整启动发现 platform、state_estimator、controller_manager 和四类行为，
   launcher 退出码 0，测试进程已清理。
-- 原始证据在 artifacts/ohos-as2 的 build、board-*.log 与 manifest.json。
+- 原始证据在 log/airsim/ohos-as2 的 build、board-*.log 与 manifest.json。
 
 尚未验证 PC AirSim/PX4 → 板端 AS2 定位和时钟接收、控制 ACK、起飞或任务。
 板端只有 loopback 获得 IP，eth0 无地址；不能直接假设跨机 UDP DDS 可用。

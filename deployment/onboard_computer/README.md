@@ -4,8 +4,8 @@ AeroHub 正式维护的 PC 机载计算开发与仿真验证环境，承载 AS2�
 及应用任务，并作为 RoboPi 原生运行的功能参考基线。PC 验收与 RoboPi 板端验收分别记录。
 
 基础镜像提供 ROS 2 Humble、PX4 消息接口、AS2 与开发工具；Library 和应用
-通过派生镜像加入各自的算法及任务依赖，例如 `demos/catora_open_field/Dockerfile`。
-通用运行代码与配置继续由 `runtime/`、`config/` 共享。该镜像随项目交付，用户可选择是否使用 PC 开发；
+通过派生镜像加入各自的算法及任务依赖，例如 `deployment/airsim/demos/catora_open_field/Dockerfile`。
+通用运行代码与配置继续由 `runtime/`、`deployment/airsim/config/` 共享。该镜像随项目交付，用户可选择是否使用 PC 开发；
 修改源码后可按需本地重建。Library 接入仍必须完成 RoboPi 验证。
 
 镜像：`onboard_computer:v0.1.0`，与[固定 flight_board 镜像](../flight_board/README.md#使用固定镜像)配套。
@@ -24,7 +24,7 @@ main 中的原 `deployment/platform/Dockerfile` 从第三方 Humble Desktop 镜�
 组件安装依赖。DDS Agent、PX4、传感器桥、时钟桥全部由 flight_board 提供，
 不在 onboard_computer 中安装或启动。源码和编译工具保留在镜像中，便于开发。
 
-AS2 源码现在来自 `thirdparty/` 下的两个个人 fork submodule，直接编译本地源码，
+AS2 源码来自 `as2/airsim/` 下的两个个人 fork submodule，直接编译本地源码，
 不再在 Docker 构建时应用 AS2/Pixhawk 补丁。主仓库通过 submodule 指针锁定版本；
 未提交的子仓库改动也会进入本地构建，分享版本时须先提交到对应 fork。
 迁移时的 fork 基础版本如下（不包含随后迁入的本地适配）：
@@ -65,10 +65,10 @@ AirSim 相机和 LiDAR 经独立传感器后端直接发布到同一架飞机的
   确保 GPS 和原点设置生效。
 
 namespace、FMU 前缀、系统 ID 和 `/clock` 形成同一份交互约定，与 AS2 运行
-在 PC 还是开发板无关。原生或交叉编译直接使用 `thirdparty/aerostack2` 和
-`thirdparty/as2_platform_pixhawk` 的源码，并提供相同消息定义的目标架构 px4_msgs。
+在 PC 还是开发板无关。原生或交叉编译直接使用 `as2/airsim/aerostack2` 和
+`as2/airsim/as2_platform_pixhawk` 的源码，并提供相同消息定义的目标架构 px4_msgs。
 无需再次打补丁；PC 镜像里的 x86 库不能直接给 OpenHarmony 使用。
-源码归属及 submodule 提交流程见 [thirdparty 说明](../../thirdparty/README.md)。
+源码路径和两套依赖的使用边界见[项目简介](../../docs/项目简介.md#pr-目录适配)。子模块改动需先在子仓库提交并推送，再提交主仓库指针。
 
 ## 加载交付镜像
 
@@ -132,7 +132,7 @@ CAT-ORA、Swarm 及 adapter 在该通用镜像中编译 12 包并加载通过，
 完整多机算法验收仍以各 Demo 记录的实际镜像为准，本轮不扩展为新镜像的多机或长期验收。
 
 [发布清单](../releases/v0.1.0.json)、[版本验收](../releases/v0.1.0-validation.json)。
-原始日志在 `artifacts/release-v0.1.0/`，测试资源已清理。校验已加载的固定交付镜像：
+原始日志在 `log/airsim/release-v0.1.0/`，测试资源已清理。校验已加载的固定交付镜像：
 
 ```bash
 python3 deployment/check_images.py
@@ -156,13 +156,13 @@ bash deployment/onboard_computer/smoke.sh
 已通过无网络的离线启动检查：platform、state_estimator、controller_manager
 可发现，三者 use_sim_time 均为 true；四类飞行行为已启动，未发现启动异常；
 容器不包含 MicroXRCEAgent。验证容器已清理。
-证据保存在 `artifacts/companion-as2-verification`。
+证据保存在 `log/airsim/companion-as2-verification`。
 以上为早期构建和启动记录；完整交互验收结果见下文。
 
 ## 实际交互验收
 
 迁移到 thirdparty fork 后已重新编译并完成单机 AirSimNH/PX4 验收，退出码为 0。
-证据位于 `artifacts/submodule-migration`，其中 `source-state.json` 和两个 `.diff`
+证据位于 `log/airsim/submodule-migration`，其中 `source-state.json` 和两个 `.diff`
 记录本次未提交源码的基础提交和准确变更，`live/as2-image.txt` 记录实际运行镜像。
 本次定位、GPS 原点、7 路图像、7 路 CameraInfo、LiDAR 和静态 TF 全部通过；
 解锁、Offboard、1.5 米起飞、1 米水平到点、2 秒悬停、降落、解除解锁全部通过。
@@ -178,12 +178,12 @@ VERIFY_AS2_FLIGHT=1 bash deployment/onboard_computer/verify.sh
 
 只使用脚本创建的独立仿真资源；第二条命令会在该仿真中发送飞行指令。
 飞行验收同时要求新的 PX4 ACK、固件状态回传、AS2 action 结果和实际高度变化。
-证据默认在 `artifacts/as2-interaction-verification`，可用 VERIFY_OUTPUT 更换目录。
+证据默认在 `log/airsim/as2-interaction-verification`，可用 VERIFY_OUTPUT 更换目录。
 
 迁移前的旧 AS2 基线（`19c3973`）在 2026-11-04 已通过真实 AirSimNH + PX4 1.18
 单机完整验收，脚本退出码为 0。该历史镜像 ID：
 `sha256:76f376978ea60ec9c0126b378820b35eec2db298957a5de16a82dcde178c4fa4`。
-证据位于 `artifacts/as2-acceptance-final`：
+证据位于 `log/airsim/as2-acceptance-final`：
 
 - `as2-interaction.json`：里程计、IMU、GPS、电池、定位、平台状态、全局时钟均收到；
   GPS 参数实际生效且原点已建立。静止时 NED→ENU 对照误差约 0.00023 米。

@@ -1,0 +1,16 @@
+<launch>
+  <!-- Upstream sample calibration is only valid for its corresponding dataset. -->
+  <arg name="config" default="/opt/fast_livo_ws/src/fast_livo/config/avia.yaml"/>
+  <arg name="camera" default="/opt/fast_livo_ws/src/fast_livo/config/camera_pinhole.yaml"/>
+  <arg name="use_sim_time" default="false"/>
+  <arg name="port" default="18761"/>
+  <param name="use_sim_time" value="$(arg use_sim_time)"/>
+  <rosparam command="load" file="$(arg config)"/>
+  <param name="uav/imu_rate_odom" value="true"/>
+  <node pkg="fast_livo" type="fastlivo_mapping" name="laserMapping" output="screen" required="true">
+    <rosparam command="load" file="$(arg camera)"/>
+  </node>
+  <node pkg="fast_livo" type="output_bridge.py" name="fast_livo2_output_bridge" output="screen" required="true">
+    <param name="port" value="$(arg port)"/>
+  </node>
+</launch>

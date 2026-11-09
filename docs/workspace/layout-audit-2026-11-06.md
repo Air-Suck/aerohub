@@ -9,12 +9,12 @@
 | 内容 | 判断与处理 |
 | --- | --- |
 | `deployment/companion_as2` → `deployment/onboard_computer` | 保留新布局。目录、标签、入口、消息路径及运行默认值应成套提交。补齐 Dockerfile 漏掉的两个 launch 辅助文件。 |
-| `apps/catora_open_field` → `demos/catora_open_field` | 保留迁移，26 个原跟踪文件均存在；算法与任务行为未因迁移改变。 |
-| `apps/swarm_open_field` → `demos/swarm_open_field` | 保留迁移，18 个原跟踪文件均存在；跨 Demo 引用已更新。 |
-| SUPER forest8 证据 → `demos/super_forest` | 保留迁移，14 个原跟踪文件均存在。三份原始 `.log` 增加精确 gitignore 例外，避免入仓漏失。 |
+| `apps/catora_open_field` → `deployment/airsim/demos/catora_open_field` | 保留迁移，26 个原跟踪文件均存在；算法与任务行为未因迁移改变。 |
+| `apps/swarm_open_field` → `deployment/airsim/demos/swarm_open_field` | 保留迁移，18 个原跟踪文件均存在；跨 Demo 引用已更新。 |
+| SUPER forest8 证据 → `deployment/airsim/demos/super_forest` | 保留迁移，14 个原跟踪文件均存在。三份原始 `.log` 增加精确 gitignore 例外，避免入仓漏失。 |
 | `tools/planner-demo` | ROS 1 / Gazebo 录制与演示工具已退出活动运行链，不复制到新 Demo。由 `02ed54d:tools/planner-demo/` 保留源码，历史复现文档指明查阅方式。 |
 | 旧多仓工作区索引 | 保留为历史记录，明确仓库外路径不保证在当前 checkout 存在；不作为当前运行指南。 |
-| skill、交接文档与导航 | 活动入口改为 `demos/`、`onboard_computer`；交接版本表标为历史基线，实际版本以 submodule 指针为准。 |
+| skill、交接文档与导航 | 活动入口改为 `deployment/airsim/demos/`、`onboard_computer`；交接版本表标为历史基线，实际版本以 submodule 指针为准。 |
 
 ## 已通过的检查
 

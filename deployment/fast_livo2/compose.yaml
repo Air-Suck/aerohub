@@ -1,0 +1,36 @@
+name: aerohub-fast-livo2
+services:
+  algorithm:
+    build:
+      context: ../..
+      dockerfile: deployment/fast_livo2/Dockerfile.ros1
+    image: uav/fast-livo2:noetic
+    network_mode: host
+    init: true
+    environment:
+      ROS_MASTER_URI: http://127.0.0.1:11331
+      ROS_IP: 127.0.0.1
+    volumes:
+      - ../../log/fast_livo2:/results
+      - ../../log/fast_livo2/datasets:/datasets:ro
+      - ../../src/state_estimator/fast_livo2/tests:/tests:ro
+    command:
+      - bash
+      - -lc
+      - source /opt/fast_livo_ws/devel/setup.bash && exec roslaunch -p 11331 fast_livo as2_mapping.launch config:=${FAST_LIVO_CONFIG:-/opt/fast_livo_ws/src/fast_livo/config/avia.yaml} camera:=${FAST_LIVO_CAMERA:-/opt/fast_livo_ws/src/fast_livo/config/camera_pinhole.yaml} use_sim_time:=${FAST_LIVO_SIM_TIME:-false}
+  estimator:
+    build:
+      context: ../..
+      dockerfile: deployment/fast_livo2/Dockerfile.as2
+    image: uav/fast-livo2-as2:humble
+    network_mode: host
+    init: true
+    environment:
+      ROS_DOMAIN_ID: ${FAST_LIVO_DOMAIN:-182}
+    volumes:
+      - ../../log/fast_livo2:/results
+      - ../../src/state_estimator/fast_livo2/tests:/tests:ro
+    command:
+      - bash
+      - -lc
+      - source /opt/ros/humble/setup.bash && source /root/aerostack2_ws/install/setup.bash && source /opt/fast_livo2_as2_ws/install/setup.bash && exec ros2 launch uav_fast_livo2 fast_livo2.launch.py namespace:=${FAST_LIVO_NAMESPACE:-drone0} use_sim_time:=${FAST_LIVO_SIM_TIME:-false} config:=${FAST_LIVO_ESTIMATOR_CONFIG:-/opt/fast_livo2_as2_ws/install/share/uav_fast_livo2/config/estimator.yaml}

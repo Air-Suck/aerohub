@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
-source "$root/scripts/load_env.sh"
+source "$root/tools/airsim/load_env.sh"
 if [[ ${1:---help} == --help || ${1:-} == -h ]]; then
   echo 'Usage: deployment/oh-ros-build/run.sh {check|build [package ...]|shell}'
   exit 0
 fi
 : "${OHOS_SYSDEPS:?Set OHOS_SYSDEPS in .env to the prepared target deps/out directory}"
-work=${OHOS_WORK_ROOT:-$root/artifacts/ohos-as2}
+work=${OHOS_WORK_ROOT:-$root/log/airsim/ohos-as2}
 [[ "$work" == /* ]] || work="$root/$work"
 deps=$OHOS_SYSDEPS
 [[ "$deps" == /* ]] || deps="$root/$deps"

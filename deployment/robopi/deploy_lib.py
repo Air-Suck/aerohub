@@ -78,7 +78,7 @@ def package(source, destination, component):
                 for module in namespace.rglob('*.py'):
                     installed = source/name/'lib/python3.12/site-packages'/module.relative_to(namespace.parent)
                     if not installed.exists() or module.read_bytes()!=installed.read_bytes():
-                        raise RuntimeError('Stale Python installation; run scripts/build_lib.sh: '+str(installed))
+                        raise RuntimeError('Stale Python installation; run tools/airsim/build_lib.sh: '+str(installed))
             target = destination/group/'install'/name
             shutil.copytree(source/name, target, symlinks=False, ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
             for path in target.rglob('*'):
@@ -126,7 +126,7 @@ def main():
     args = parser.parse_args()
     sys.path.insert(0, str(ROOT/'scripts'))
     from robopi import board, hdc
-    work = Path(os.environ.get('OHOS_WORK_ROOT', ROOT/'artifacts/ohos-as2'))
+    work = Path(os.environ.get('OHOS_WORK_ROOT', ROOT/'log/airsim/ohos-as2'))
     if not work.is_absolute(): work = ROOT/work
     source = args.install or work/'ws/install'
     with tempfile.TemporaryDirectory(prefix='aerohub-deploy-') as temporary:
@@ -136,27 +136,27 @@ def main():
             files = {'board_env.sh': ROOT/'deployment/robopi/board_env.sh',
                      'board_smoke.py': ROOT/'deployment/robopi/diagnostics/board_smoke.py',
                      'manage_runtime.py': ROOT/'deployment/robopi/manage_runtime.py',
-                     'run_as2.py': ROOT/'runtime/as2/run.py',
-                     'selected_behaviors.launch.py': ROOT/'runtime/as2/selected_behaviors.launch.py',
-                     'scoped_tf.launch.py': ROOT/'runtime/as2/scoped_tf.launch.py',
-                     'verify_interaction.py': ROOT/'runtime/as2/scripts/verify_interaction.py',
-                     'verify_sensors.py': ROOT/'runtime/airsim_sensors/scripts/verify_ros2.py',
-                     'config.yaml': ROOT/'config/as2/config.yaml', 'fleet.yaml': ROOT/'config/as2/fleet.yaml',
-                     'pid_speed_controller.yaml': ROOT/'config/as2/pid_speed_controller.yaml',
-                     'settings.json': ROOT/'config/airsim/settings/px4-sensors.json'}
+                     'run_as2.py': ROOT/'deployment/airsim/as2/run.py',
+                     'selected_behaviors.launch.py': ROOT/'deployment/airsim/as2/selected_behaviors.launch.py',
+                     'scoped_tf.launch.py': ROOT/'deployment/airsim/as2/scoped_tf.launch.py',
+                     'verify_interaction.py': ROOT/'deployment/airsim/as2/scripts/verify_interaction.py',
+                     'verify_sensors.py': ROOT/'simulator/airsim/sensors/scripts/verify_ros2.py',
+                     'config.yaml': ROOT/'deployment/airsim/config/as2/config.yaml', 'fleet.yaml': ROOT/'deployment/airsim/config/as2/fleet.yaml',
+                     'pid_speed_controller.yaml': ROOT/'deployment/airsim/config/as2/pid_speed_controller.yaml',
+                     'settings.json': ROOT/'deployment/airsim/config/airsim/settings/px4-sensors.json'}
             for name, path in files.items(): shutil.copyfile(path, stage/'as2'/name)
             if os.environ.get('ROBOPI_IP'):
                 from robopi import profile
                 profile(stage/'as2/fastdds_udp.xml', os.environ['ROBOPI_IP'])
             else:
-                shutil.copyfile(ROOT/'config/dds/fastdds_udp.xml', stage/'as2/fastdds_udp.xml')
+                shutil.copyfile(ROOT/'deployment/airsim/config/dds/fastdds_udp.xml', stage/'as2/fastdds_udp.xml')
             if (work/'current-sources.json').exists():
                 shutil.copyfile(work/'current-sources.json', stage/'as2/source-manifest.json')
         for app in APPLICATIONS:
             if (stage/app).exists():
                 text = (ROOT/'deployment/robopi/catora_env.sh').read_text().replace('/lib/catora/', '/lib/'+app+'/')
                 (stage/app/'env.sh').write_text(text)
-        bundle = args.prepare_only or ROOT/'artifacts/robopi-runtime/persistent-overlay.tar.gz'
+        bundle = args.prepare_only or ROOT/'log/airsim/robopi-runtime/persistent-overlay.tar.gz'
         bundle.parent.mkdir(parents=True, exist_ok=True)
         with tarfile.open(bundle, 'w:gz', format=tarfile.GNU_FORMAT) as archive:
             for child in stage.iterdir(): archive.add(child, arcname=child.name)

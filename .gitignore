@@ -44,16 +44,7 @@ CMakeCache.txt
 Testing/
 compile_commands.json
 
-# Unmanaged local source checkouts; old Gazebo deployment is retained in Git history.
-# Active AS2 forks are tracked submodules under thirdparty/.
-/aerostack2/
-/as2_platform_pixhawk/
-/px4_msgs/
-
-# Historical patch workspaces and migrated local support data
-/.tmp_patch_audit/
-/.tmp_patch_original/
-/workspace-support/
+# Upstream source is tracked via .gitmodules.
 
 # Runtime logs, flight recordings and simulation caches
 *.log
@@ -68,31 +59,40 @@ compile_commands.json
 .simulation-gazebo/
 rosbag2_*/
 
-# Per-task resolved configs and logs are generated.
-# Retain the curated final verification report, configs and evidence logs.
-/artifacts/resolved/*
-!/artifacts/resolved/.gitkeep
-!/artifacts/resolved/*.md
-!/artifacts/resolved/final-cat-resolved.yaml
-!/artifacts/resolved/final-swarm-resolved.yaml
-!/artifacts/resolved/final-cat-planner.log
-!/artifacts/resolved/final-cat-takeoff.log
-!/artifacts/resolved/final-swarm-planner.log
-!/artifacts/resolved/final-swarm-takeoff.log
-!/artifacts/resolved/final-runtime-build.log
+# Demo recordings, browser profiles, captured frames and review output.
+# Keep scripts, source, scene/config files and the README.
+/tools/planner-demo/deliverables/
+/tools/planner-demo/downloaded/
+/tools/planner-demo/inspection/
+/tools/planner-demo/qa_*/
+/tools/planner-demo/review_*/
+/tools/planner-demo/.qa_*/
+/tools/planner-demo/.review_*/
+/tools/planner-demo/.frames_*/
+/tools/planner-demo/capture_gz_images
+/tools/planner-demo/**/*.mp4
+/tools/planner-demo/**/*.avi
+/tools/planner-demo/**/*.mov
+/tools/planner-demo/**/*.mkv
+/tools/planner-demo/**/*.ppm
 
-# Curated historical SUPER flight evidence; other runtime logs stay ignored.
-!/demos/super_forest/board-final.log
-!/demos/super_forest/mission.log
-!/demos/super_forest/px4-final-state.log
-
-# vendor/ is optional local input for rebuilding the retained Dockerfile.
-# Runtime images are delivered separately; source archives are not shipped.
+# Deliberately keep vendor/*.tar.gz: platform Dockerfile consumes and hashes them.
 # Keep project documentation, references, task YAML, manifests and test fixtures.
 
-artifacts/
-vendor/
+# All generated logs, caches and migration backups
+/log/
 
-# Machine-specific AirSim launch profiles
-/config/airsim/*.local.json
-/config/resources.local.yaml
+# Local-only documents: Survey, discussions, handoffs and operations
+/docs/local/
+
+# Temporary reproduction records used to derive reusable Skills
+/skill/temp/
+
+# AirSim/RoboPi local deployment secrets and runtime products
+.env
+.env.*
+!.env.example
+.aws/
+.venv/
+/artifacts/
+/skills/temp/

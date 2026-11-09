@@ -1,7 +1,7 @@
 id: cat_ora
 version: 4bc41f593eebde65dd74108a97e80430a145dfa0
 runtime:
-  image: uav/aerostack2-cat-ora:humble
+  image: uav/aerostack2-cat-ora:noetic
   adapter: cat_ora_adapter
   command: [ros2, run, uav_cat_ora_adapter, cat_ora_adapter_node, --ros-args, -p, "resolved_config:={resolved_config}", -p, "use_sim_time:={use_sim_time}"]
 parameters:

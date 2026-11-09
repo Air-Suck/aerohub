@@ -4,11 +4,10 @@
 .tmp_patch_audit
 .tmp_patch_original
 artifacts/resolved/*.log
-artifacts/
-.env
-.env.*
-.aws/
-.codex/
-.agents/
-.venv/
 
+
+log
+px4
+simulator/*
+!simulator/airsim
+workspace-support

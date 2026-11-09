@@ -48,7 +48,7 @@ ros2 run uav_as2_setpoint_adapter super_as2_mission --ros-args \
 SUPER 和 adapter 应提前启动，避免模式进入后的 500 ms 等待窗口耗在启动进程。
 同机同时只能启用一个参考来源，CAT-ORA / Swarm 桥与 SUPER adapter 不同时激活。
 
-SUPER 使用 `thirdparty/SUPER-sim/super_planner/config/as2_trajectory_ros2.yaml`：
+SUPER 使用 `src/planner/super/upstream/super_planner/config/as2_trajectory_ros2.yaml`：
 执行定时器开启，速度限制 1 m/s，保留主/备用轨迹和重规划。
 虚拟地面与天花板也是局部 odom 坐标，必须覆盖当前定位原点和目标。
 
@@ -56,19 +56,19 @@ SUPER 使用 `thirdparty/SUPER-sim/super_planner/config/as2_trajectory_ros2.yaml
 
 - `tests/test_trajectory.py`：真实 ROS 消息下的主/备用 PVA、固定/跟随航向、非法输入、
   公共桥仅位置与 NaN 保留、失流后禁止自动恢复。
-- `as2/aerostack2/as2_core/tests/trajectory/trajectory_contract_test.cpp`：
+- `as2/airsim/aerostack2/as2_core/tests/trajectory/trajectory_contract_test.cpp`：
   无 ROS 运行时的数值、单点和时间契约测试。
-- `as2/aerostack2/as2_motion_controller/tests/trajectory_stream_ros_test.py`：
+- `as2/airsim/aerostack2/as2_motion_controller/tests/trajectory_stream_ros_test.py`：
   实际控制器的 20/50/100 Hz 输入、50 Hz 输出、源时间戳、重复参考失流和恢复锁定。
   该驱动需要在隔离 ROS domain 中启动 namespace=stream 的控制器；它提供模拟平台服务。
-- `scripts/smoke_ros2.sh`：公共桥端到端 smoke，任务侧显式请求轨迹模式。
+- `tools/airsim/smoke_ros2.sh`：公共桥端到端 smoke，任务侧显式请求轨迹模式。
 
 构建时显式列出嵌套包及 SUPER 消息：
 
 ```bash
 colcon build --paths src/planner/interfaces src/planner/framework \
   src/behavior/legacy_setpoint \
-  thirdparty/SUPER-sim/mars_uav_sim/mars_quadrotor_msgs
+  src/planner/super/upstream/mars_uav_sim/mars_quadrotor_msgs
 ```
 
 需要已有 ROS 2 Humble 与 AS2 安装环境。传感器线程及相机配置不由本包修改。

@@ -32,14 +32,14 @@ GHCR 镜像按下方远端 digest 核对；本地 image ID 不等同于 registry
 ```bash
 bash deployment/onboard_computer/smoke.sh
 AS2_BEHAVIORS=takeoff,land AS2_TF_SCOPE=per-vehicle \
-  VERIFY_OUTPUT=artifacts/onboard-scoped-check bash deployment/onboard_computer/smoke.sh
+  VERIFY_OUTPUT=log/airsim/onboard-scoped-check bash deployment/onboard_computer/smoke.sh
 ```
 
 独立单机飞行复验（会发送仿真飞行指令）：
 
 ```bash
 VERIFY_ROS_DOMAIN_ID=181 VERIFY_PX4_INSTANCE=46 VERIFY_XRCE_AGENT_PORT=8896 \
-  VERIFY_AS2_FLIGHT=1 VERIFY_OUTPUT=artifacts/runtime-v010-flight-new \
+  VERIFY_AS2_FLIGHT=1 VERIFY_OUTPUT=log/airsim/runtime-v010-flight-new \
   bash deployment/onboard_computer/verify.sh
 ```
 
