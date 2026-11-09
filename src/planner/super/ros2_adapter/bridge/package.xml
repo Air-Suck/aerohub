@@ -6,7 +6,7 @@
   <buildtool_depend>ament_python</buildtool_depend>
   <exec_depend>rclpy</exec_depend><exec_depend>nav_msgs</exec_depend>
   <exec_depend>std_msgs</exec_depend><exec_depend>std_srvs</exec_depend>
-  <exec_depend>mars_quadrotor_msgs</exec_depend>
+  <exec_depend>mars_quadrotor_msgs</exec_depend><exec_depend>as2_msgs</exec_depend>
   <exec_depend>uav_planner_interfaces</exec_depend><exec_depend>uav_planner_framework</exec_depend>
   <export><build_type>ament_python</build_type></export>
 </package>

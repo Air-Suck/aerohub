@@ -9,6 +9,7 @@ import rclpy
 from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
 from nav_msgs.msg import Odometry
+from as2_msgs.msg import TrajectorySetpoints
 from mars_quadrotor_msgs.msg import PolynomialTrajectory, PositionCommand
 from std_msgs.msg import String
 from std_srvs.srv import SetBool
@@ -32,6 +33,8 @@ class SuperAdapter(Node):
         self.config = {'vehicles':[self.vehicle], 'deployment':{self.vehicle:{
             'namespace':self.vehicle,'px4_origin_in_fleet_ned':[0.,0.,0.]}},
             'planner':{'parameters':{'max_velocity':self.get_parameter('max_speed').value}}}
+        self.first_start = None
+        self.reference_ready = False
         self.client = None
         self.enabled = False
         self.error = ''
@@ -45,6 +48,7 @@ class SuperAdapter(Node):
         self.task = ''
         self.late_updates = 0
         self.last_curve = {}
+        self.create_subscription(TrajectorySetpoints,'motion_reference/trajectory',self.on_reference,qos_profile_sensor_data)
         self.create_subscription(Odometry,'sensor_measurements/odom',self.on_pose,qos_profile_sensor_data)
         self.create_subscription(PolynomialTrajectory,'/planning_cmd/poly_traj',self.on_plan,qos_profile_sensor_data)
         self.create_subscription(PositionCommand,'/planning/pos_cmd',self.on_command,qos_profile_sensor_data)
@@ -54,6 +58,14 @@ class SuperAdapter(Node):
 
     def now_seconds(self):
         return self.get_clock().now().nanoseconds/1e9
+
+    def on_reference(self,msg):
+        # Mode acquisition in the native handler can block its executor for 100 ms.
+        # Keep the accepted initial plan until it actually emits a trajectory reference.
+        if (self.enabled and self.client and self.client.revision>0 and self.first_start is not None
+            and msg.header.frame_id==self.frame and len(msg.setpoints)==1
+            and time_to_seconds(msg.header.stamp)>=self.first_start):
+            self.reference_ready=True
 
     def on_pose(self,msg):
         p = msg.pose.pose.position
@@ -114,6 +126,8 @@ class SuperAdapter(Node):
             self.error = ''
             self.queued = None
             self.last_plan = self.last_command = self.last_wall = 0.
+            self.first_start = None
+            self.reference_ready = False
             self.started = time.monotonic()
             response.success = True
         return response
@@ -132,6 +146,7 @@ class SuperAdapter(Node):
         if msg.piece_num_pos != len(curve.durations):
             raise ValueError('piece count mismatch')
         start = max(self.now_seconds()+self.get_parameter('lead_time').value,curve.start)
+        if self.client.revision==0:self.first_start=start
         segment = TimedTrajectorySegment(interface_version=1,task_id=self.task)
         segment.generated_at = copy.deepcopy(msg.header.stamp)
         seconds_to_time(start,segment.valid_from)
@@ -162,7 +177,7 @@ class SuperAdapter(Node):
                 self.fail('SUPER command stream expired')
             elif self.client.revision == 0 and time.monotonic()-self.started > 10:
                 self.fail('SUPER initial planning timeout')
-            elif self.queued is not None and self.client.ready and not self.client.pending and time_to_seconds(self.queued.header.stamp) <= self.now_seconds():
+            elif self.queued is not None and (self.client.revision==0 or self.reference_ready) and self.client.ready and not self.client.pending and time_to_seconds(self.queued.header.stamp) <= self.now_seconds():
                 msg,self.queued = self.queued,None
                 try:
                     self.client.submit(self.convert(msg))
@@ -178,7 +193,7 @@ class SuperAdapter(Node):
             'complete':self.client.complete if self.client else False,
             'settling':self.vehicle in self.client.settling_vehicles if self.client else False,
             'stop_confirmed':self.client.quiescent if self.client and self.client.cancel_started else False,
-            'source_flags':self.flags,'late_updates':self.late_updates,'last_curve':self.last_curve})))
+            'reference_ready':self.reference_ready,'source_flags':self.flags,'late_updates':self.late_updates,'last_curve':self.last_curve})))
 
 
 def main(args=None):
