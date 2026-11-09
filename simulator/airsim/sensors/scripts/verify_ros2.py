@@ -26,8 +26,10 @@ def main():
     def on_tf(msg):
         tf_frames.update(t.child_frame_id for t in msg.transforms if t.header.frame_id == 'drone0/base_link')
 
+    # Aggregate latched transforms from every static broadcaster. A depth of one
+    # can retain only the state estimator sample and discard sensor extrinsics.
     subscriptions.append(node.create_subscription(TFMessage, '/tf_static', on_tf,
-        QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL)))
+        QoSProfile(depth=100, durability=DurabilityPolicy.TRANSIENT_LOCAL)))
 
     def subscribe(topic, kind):
         expected[topic] = kind

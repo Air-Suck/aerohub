@@ -103,6 +103,7 @@ class SwarmFormationAdapter(Node):
             raise RuntimeError("vehicles must be a contiguous drone0..droneN prefix, 3..7 vehicles")
         self.goal_center = formation_center(self.config)
         self.poses = {}
+        self.final_sent = False
         qos = QoSProfile(
             depth=1,
             reliability=ReliabilityPolicy.RELIABLE,
@@ -134,6 +135,8 @@ class SwarmFormationAdapter(Node):
         )
 
     def _update(self):
+        if self.final_sent:
+            return
         if len(self.poses) != len(self.vehicles):
             return
         parameters = self.config["planner"]["parameters"]
@@ -189,10 +192,14 @@ class SwarmFormationAdapter(Node):
             failure.detail = str(exc)
             self.failure_publisher.publish(failure)
             return
-        self.publisher.publish(self._message(trajectories, response.get("valid_from"),
-            response.get("velocities_enu"), response.get("accelerations_enu")))
+        message = self._message(trajectories, response.get("valid_from"),
+            response.get("velocities_enu"), response.get("accelerations_enu"),
+            response.get("is_final", False))
+        self.publisher.publish(message)
+        self.final_sent = message.is_final
 
-    def _message(self, trajectories, valid_from=None, velocities=None, accelerations=None):
+    def _message(self, trajectories, valid_from=None, velocities=None, accelerations=None,
+                 is_final=False):
         if len(trajectories) != len(self.vehicles) or any(len(points) < 2 for points in trajectories):
             raise RuntimeError("Swarm-Formation returned invalid trajectories")
         derivatives = velocities is not None and accelerations is not None
@@ -211,7 +218,7 @@ class SwarmFormationAdapter(Node):
         message.task_id = self.config["task"]["task_id"]
         set_time(message.generated_at, now)
         set_time(message.valid_from, now + float(parameters["valid_from_lead"]) if valid_from is None else float(valid_from))
-        message.is_final = False
+        message.is_final = bool(is_final)
         for vehicle_index, (vehicle, points) in enumerate(zip(self.vehicles, trajectories)):
             trajectory = VehicleTrajectory()
             trajectory.vehicle_id = vehicle

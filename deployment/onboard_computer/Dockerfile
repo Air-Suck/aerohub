@@ -5,6 +5,9 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ARG DEBIAN_FRONTEND=noninteractive
 ARG IMAGE_VERSION=v0.1.0
 ARG SOURCE_REVISION=unknown
+ARG UBUNTU_APT_MIRROR=https://archive.ubuntu.com/ubuntu
+ARG UBUNTU_SECURITY_MIRROR=https://security.ubuntu.com/ubuntu
+ARG ROS_APT_MIRROR=https://mirrors.tuna.tsinghua.edu.cn/ros2/ubuntu
 LABEL org.opencontainers.image.version=$IMAGE_VERSION \
       org.opencontainers.image.revision=$SOURCE_REVISION \
       org.opencontainers.image.source="https://github.com/Air-Suck/aerohub"
@@ -13,6 +16,11 @@ ENV ROS_DISTRO=humble \
     AEROSTACK2_PATH=/root/aerostack2_ws/src/aerostack2 \
     ROS_DOMAIN_ID=81 \
     FASTDDS_BUILTIN_TRANSPORTS=UDPv4
+RUN find /etc/apt -type f \( -name '*.list' -o -name '*.sources' \) -print0 \
+    | xargs -0 sed -i \
+      -e "s|http://archive.ubuntu.com/ubuntu|${UBUNTU_APT_MIRROR}|g" \
+      -e "s|http://security.ubuntu.com/ubuntu|${UBUNTU_SECURITY_MIRROR}|g" \
+      -e "s|http://packages.ros.org/ros2/ubuntu|${ROS_APT_MIRROR}|g"
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential cmake git patch python3-colcon-common-extensions \
     python3-rosdep python3-vcstool python3-yaml \

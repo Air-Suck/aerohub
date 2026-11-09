@@ -4,6 +4,14 @@ FROM ${BASE_IMAGE}
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ARG DEBIAN_FRONTEND=noninteractive
 ARG PX4_MSGS_COMMIT=86d8239e962f6939e05c3737784f60c02fa884db
+ARG UBUNTU_APT_MIRROR=https://archive.ubuntu.com/ubuntu
+ARG UBUNTU_SECURITY_MIRROR=https://security.ubuntu.com/ubuntu
+ARG ROS_APT_MIRROR=https://mirrors.tuna.tsinghua.edu.cn/ros2/ubuntu
+RUN find /etc/apt -type f \( -name '*.list' -o -name '*.sources' \) -print0 \
+    | xargs -0 sed -i \
+      -e "s|http://archive.ubuntu.com/ubuntu|${UBUNTU_APT_MIRROR}|g" \
+      -e "s|http://security.ubuntu.com/ubuntu|${UBUNTU_SECURITY_MIRROR}|g" \
+      -e "s|http://packages.ros.org/ros2/ubuntu|${ROS_APT_MIRROR}|g"
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential cmake git python3-colcon-common-extensions \
     && rm -rf /var/lib/apt/lists/*

@@ -12,11 +12,14 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument('namespace', default_value='drone0'),
         DeclareLaunchArgument('use_sim_time', default_value='false'),
+        DeclareLaunchArgument('forward_clock', default_value='false'),
         DeclareLaunchArgument('port', default_value='18761'),
         DeclareLaunchArgument('config', default_value=PathJoinSubstitution([
             FindPackageShare('uav_fast_livo2'), 'config', 'estimator.yaml'])),
         Node(package='uav_fast_livo2', executable='bridge.py', namespace=namespace,
-             parameters=[{'use_sim_time': sim, 'forward_clock': sim, 'cloud_frame': cloud_frame,
+             parameters=[{'use_sim_time': sim,
+                          'forward_clock': ParameterValue(LaunchConfiguration('forward_clock'), value_type=bool),
+                          'cloud_frame': cloud_frame,
                           'port': ParameterValue(LaunchConfiguration('port'), value_type=int)}], output='screen'),
         Node(package='as2_state_estimator', executable='as2_state_estimator_node', namespace=namespace,
              parameters=[LaunchConfiguration('config'), {'use_sim_time': sim,

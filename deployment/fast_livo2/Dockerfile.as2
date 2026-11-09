@@ -6,4 +6,10 @@ COPY src/state_estimator/fast_livo2/plugin/ src/uav_fast_livo2/
 RUN source /opt/ros/humble/setup.bash \
     && source /root/aerostack2_ws/install/setup.bash \
     && colcon build --merge-install --cmake-args -DCMAKE_BUILD_TYPE=Release
+COPY deployment/airsim/as2/run.py /opt/onboard_computer/run.py
+COPY deployment/fast_livo2/airsim_mission.py /opt/fast_livo2_as2_ws/airsim_mission.py
+COPY deployment/fast_livo2/airsim_entrypoint.sh /opt/fast_livo2_as2_ws/airsim_entrypoint.sh
+COPY simulator/airsim/sensors/uav_as2_sensor_adapter/rpc.py /opt/fast_livo2_as2_ws/airsim_rpc.py
+COPY --from=flight_board:v0.1.0 /usr/lib/python3/dist-packages/msgpack /usr/lib/python3/dist-packages/msgpack
+RUN chmod +x /opt/fast_livo2_as2_ws/airsim_entrypoint.sh
 CMD ["bash", "-lc", "source /opt/ros/humble/setup.bash && source /root/aerostack2_ws/install/setup.bash && source /opt/fast_livo2_as2_ws/install/setup.bash && exec ros2 launch uav_fast_livo2 fast_livo2.launch.py"]

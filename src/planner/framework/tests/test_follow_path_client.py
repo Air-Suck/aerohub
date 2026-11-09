@@ -6,6 +6,7 @@ from concurrent.futures import Future
 try:
     from uav_planner_interfaces.msg import TimedTrajectorySegment, VehicleTrajectory, TimedTrajectoryPoint
     from uav_planner_framework.follow_path_client import make_goal, FleetFollowPathClient
+    from uav_planner_framework.ros_node import PlannerFrameworkNode
 except ImportError:
     TimedTrajectorySegment = None
 
@@ -116,3 +117,19 @@ class ExecutionFeedbackTest(unittest.TestCase):
         self.assertEqual(coordinator.settling_vehicles,{"a"})
         coordinator.closed=True
         self.assertEqual(coordinator.settling_vehicles,set())
+
+
+@unittest.skipIf(TimedTrajectorySegment is None, "requires generated ROS messages")
+class RuntimeStartupTest(unittest.TestCase):
+    def test_follow_path_runtime_is_deferred_until_executor_tick(self):
+        node = Mock(execution_backend="follow_path")
+        PlannerFrameworkNode._start_runtime(node, Mock())
+        node._start_output_adapter.assert_not_called()
+        node._start_planner_adapter.assert_not_called()
+
+    def test_legacy_runtime_still_starts_both_processes(self):
+        resolved = Mock()
+        node = Mock(execution_backend="legacy_setpoint")
+        PlannerFrameworkNode._start_runtime(node, resolved)
+        node._start_output_adapter.assert_called_once_with(resolved)
+        node._start_planner_adapter.assert_called_once_with(resolved)

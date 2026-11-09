@@ -27,11 +27,20 @@ goal_publisher = None
 broadcast_publisher = None
 last_task_id = None
 map_health = {}
+finished = set()
 
 
 def trajectory_callback(message):
     with lock:
         latest["drone%d" % message.drone_id] = message
+
+
+def finish_callback(message, vehicle):
+    with lock:
+        if message.data:
+            finished.add(vehicle)
+        else:
+            finished.discard(vehicle)
 
 
 def broadcast_callback(message):
@@ -114,6 +123,7 @@ def update(payload):
             return {"ok": False, "reason": "WAITING_FOR_TRAJECTORIES"}
         with lock:
             latest.clear()
+            finished.clear()
         goal = PoseStamped()
         goal.header.stamp = stamp
         goal.header.frame_id = node.get_parameter("map_frame").value
@@ -126,6 +136,7 @@ def update(payload):
 
     with lock:
         messages = [latest.get(vehicle) for vehicle in VEHICLES]
+        all_finished = all(vehicle in finished for vehicle in VEHICLES)
     if any(message is None for message in messages):
         return {"ok": False, "reason": "WAITING_FOR_TRAJECTORIES"}
 
@@ -139,6 +150,7 @@ def update(payload):
         "trajectories_enu": sampled(0),
         "velocities_enu": sampled(1),
         "accelerations_enu": sampled(2),
+        "is_final": all_finished,
     }
 
 
@@ -178,6 +190,9 @@ def main():
                 Odometry, f"/drone_{index}_visual_slam/odom", 20)
         subscriptions.append(node.create_subscription(
             PolyTraj, f"/drone_{index}_planning/trajectory", trajectory_callback, 10))
+        subscriptions.append(node.create_subscription(
+            Bool, f"/drone_{index}_planning/finish",
+            lambda message, vehicle_id=vehicle: finish_callback(message, vehicle_id), 10))
         if not publish_odometry:
             def receive_health(message, vehicle_id=vehicle):
                 with lock:

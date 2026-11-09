@@ -1,0 +1,246 @@
+#!/usr/bin/env python3
+"""Publish one AirSim vehicle's physical sensor samples to FAST-LIVO2 ROS 1 inputs."""
+import json
+import math
+import os
+from pathlib import Path
+import signal
+import threading
+import time
+
+import rospy
+from rosgraph_msgs.msg import Clock
+from sensor_msgs.msg import Image, Imu, PointField
+from sensor_msgs import point_cloud2
+from std_msgs.msg import Header
+
+from airsim_rpc import Rpc
+
+
+def vector(value):
+    return value['x_val'], -value['y_val'], -value['z_val']
+
+
+def stamp(nanoseconds):
+    nanoseconds = int(nanoseconds)
+    if nanoseconds <= 0:
+        raise ValueError('AirSim returned a non-positive sensor timestamp')
+    return rospy.Time(nanoseconds // 1_000_000_000, nanoseconds % 1_000_000_000)
+
+
+class Bridge:
+    def __init__(self):
+        self.host = os.environ.get('AIRSIM_HOST', '127.0.0.1')
+        self.port = int(os.environ.get('AIRSIM_RPC_PORT', '41471'))
+        self.vehicle = os.environ.get('AIRSIM_VEHICLE', 'PX4')
+        self.imu_name = os.environ.get('AIRSIM_IMU', 'imu')
+        self.lidar_name = os.environ.get('AIRSIM_LIDAR', 'Lidar')
+        self.camera_name = os.environ.get('AIRSIM_CAMERA', 'FrontCamera')
+        self.channels = int(os.environ.get('AIRSIM_LIDAR_CHANNELS', '16'))
+        self.vertical_lower = float(os.environ.get('AIRSIM_LIDAR_VERTICAL_LOWER', '-25'))
+        self.vertical_upper = float(os.environ.get('AIRSIM_LIDAR_VERTICAL_UPPER', '20'))
+        if self.channels < 2 or not self.vertical_lower < self.vertical_upper:
+            raise ValueError('invalid AirSim LiDAR model')
+        self.stop = threading.Event()
+        self.lock = threading.Lock()
+        self.last = {'imu': 0, 'lidar': 0, 'image': 0, 'clock': 0}
+        self.counts = {'imu': 0, 'lidar': 0, 'image': 0, 'clock': 0}
+        self.first = {}
+        self.last_ring_counts = []
+        self.lidar_summaries = []
+        self.imu_trace = []
+        self.imu_accumulator = {'samples': 0, 'raw_sum': [0.0, 0.0, 0.0],
+                                'flu_sum': [0.0, 0.0, 0.0], 'first_raw': None}
+        self.started = time.time()
+        self.output = Path(os.environ.get('FAST_LIVO_RESULTS', '/results'))
+        self.output.mkdir(parents=True, exist_ok=True)
+        self.imu_pub = rospy.Publisher('/airsim/imu', Imu, queue_size=200)
+        self.lidar_pub = rospy.Publisher('/airsim/lidar', point_cloud2.PointCloud2, queue_size=2)
+        self.image_pub = rospy.Publisher('/airsim/image', Image, queue_size=2)
+        self.clock_pub = rospy.Publisher('/clock', Clock, queue_size=20)
+        self.fields = [
+            PointField('x', 0, PointField.FLOAT32, 1),
+            PointField('y', 4, PointField.FLOAT32, 1),
+            PointField('z', 8, PointField.FLOAT32, 1),
+            PointField('intensity', 12, PointField.FLOAT32, 1),
+            # AirSim raycasts the whole output frame at one vehicle pose.
+            PointField('time', 16, PointField.FLOAT32, 1),
+            PointField('ring', 20, PointField.UINT16, 1),
+        ]
+
+    def rpc(self, method, *args):
+        return Rpc(self.host, self.port, timeout=3).call(method, *args)
+
+    def accept(self, kind, nanoseconds):
+        nanoseconds = int(nanoseconds)
+        with self.lock:
+            if nanoseconds <= self.last[kind]:
+                return False
+            self.last[kind] = nanoseconds
+            self.first.setdefault(kind, nanoseconds)
+            self.counts[kind] += 1
+        self.publish_clock(nanoseconds)
+        return True
+
+    def publish_clock(self, nanoseconds):
+        with self.lock:
+            if nanoseconds <= self.last['clock']:
+                return
+            self.last['clock'] = nanoseconds
+            self.first.setdefault('clock', nanoseconds)
+            self.counts['clock'] += 1
+        self.clock_pub.publish(Clock(clock=stamp(nanoseconds)))
+
+    def imu(self):
+        while not self.stop.is_set() and not rospy.is_shutdown():
+            try:
+                sample = self.rpc('getImuData', self.imu_name, self.vehicle)
+                t = int(sample['time_stamp'])
+                if self.accept('imu', t):
+                    msg = Imu(header=Header(stamp=stamp(t), frame_id='fast_livo_imu'))
+                    q = sample['orientation']
+                    msg.orientation.x = q['x_val']
+                    msg.orientation.y = -q['y_val']
+                    msg.orientation.z = -q['z_val']
+                    msg.orientation.w = q['w_val']
+                    angular = vector(sample['angular_velocity'])
+                    msg.angular_velocity.x, msg.angular_velocity.y, msg.angular_velocity.z = angular
+                    raw = tuple(float(sample['linear_acceleration'][key]) for key in ('x_val','y_val','z_val'))
+                    converted = vector(sample['linear_acceleration'])
+                    msg.linear_acceleration.x, msg.linear_acceleration.y, msg.linear_acceleration.z = converted
+                    with self.lock:
+                        self.imu_accumulator['samples'] += 1
+                        sample_number = self.imu_accumulator['samples']
+                        self.imu_accumulator['first_raw'] = self.imu_accumulator['first_raw'] or raw
+                        for index in range(3):
+                            self.imu_accumulator['raw_sum'][index] += raw[index]
+                            self.imu_accumulator['flu_sum'][index] += converted[index]
+                        if sample_number % 20 == 1:
+                            self.imu_trace.append({
+                                'timestamp_ns': t, 'linear_acceleration_raw_frd': raw,
+                                'linear_acceleration_flu': converted, 'angular_velocity_flu': angular,
+                                'orientation_airsim': [q[key] for key in ('x_val','y_val','z_val','w_val')],
+                            })
+                    self.imu_pub.publish(msg)
+            except Exception as exc:
+                rospy.logwarn_throttle(5, 'AirSim IMU read failed: %s', exc)
+            self.stop.wait(0.002)
+
+    def lidar(self):
+        while not self.stop.is_set() and not rospy.is_shutdown():
+            try:
+                sample = self.rpc('getLidarData', self.lidar_name, self.vehicle)
+                t = int(sample['time_stamp'])
+                raw = sample['point_cloud']
+                if raw and self.accept('lidar', t):
+                    points, rings = [], [0] * self.channels
+                    bounds = [[math.inf, -math.inf] for _ in range(3)]
+                    sums = [0.0, 0.0, 0.0]
+                    for index in range(0, len(raw) - 2, 3):
+                        x, y, z = float(raw[index]), -float(raw[index + 1]), -float(raw[index + 2])
+                        for axis, value in enumerate((x, y, z)):
+                            bounds[axis][0] = min(bounds[axis][0], value)
+                            bounds[axis][1] = max(bounds[axis][1], value)
+                            sums[axis] += value
+                        horizontal = math.hypot(x, y)
+                        elevation = math.degrees(math.atan2(z, horizontal))
+                        ring = round((elevation - self.vertical_lower) * (self.channels - 1) /
+                                     (self.vertical_upper - self.vertical_lower))
+                        ring = max(0, min(self.channels - 1, ring))
+                        rings[ring] += 1
+                        points.append((x, y, z, 0.0, 0.0, ring))
+                    self.last_ring_counts = rings
+                    count = len(points)
+                    pose = sample.get('pose', {})
+                    position = pose.get('position', {})
+                    orientation = pose.get('orientation', {})
+                    self.lidar_summaries.append({
+                        'timestamp_ns': t,
+                        'point_count': count,
+                        'min_flu': [item[0] for item in bounds],
+                        'max_flu': [item[1] for item in bounds],
+                        'mean_flu': [value / count for value in sums],
+                        'sensor_position_ned': [position.get(key) for key in ('x_val', 'y_val', 'z_val')],
+                        'sensor_orientation_ned': [orientation.get(key) for key in ('x_val','y_val','z_val','w_val')],
+                    })
+                    header = Header(stamp=stamp(t), frame_id='fast_livo_lidar')
+                    self.lidar_pub.publish(point_cloud2.create_cloud(header, self.fields, points))
+            except Exception as exc:
+                rospy.logwarn_throttle(5, 'AirSim LiDAR read failed: %s', exc)
+            self.stop.wait(0.02)
+
+    def image(self):
+        request = {'camera_name': self.camera_name, 'image_type': 0,
+                   'pixels_as_float': False, 'compress': False}
+        while not self.stop.is_set() and not rospy.is_shutdown():
+            try:
+                samples = self.rpc('simGetImages', [request], self.vehicle, False)
+                if len(samples) != 1:
+                    raise ValueError('AirSim returned an incomplete image response')
+                sample = samples[0]
+                t = int(sample['time_stamp'])
+                payload = bytes(sample['image_data_uint8'])
+                width, height = int(sample['width']), int(sample['height'])
+                if len(payload) != width * height * 3:
+                    raise ValueError('AirSim RGB payload has unexpected size')
+                if self.accept('image', t):
+                    msg = Image(header=Header(stamp=stamp(t), frame_id='fast_livo_camera'))
+                    msg.width, msg.height = width, height
+                    msg.encoding, msg.is_bigendian, msg.step, msg.data = 'rgb8', 0, width * 3, payload
+                    self.image_pub.publish(msg)
+            except Exception as exc:
+                rospy.logwarn_throttle(5, 'AirSim image read failed: %s', exc)
+            self.stop.wait(0.05)
+
+    def write_stats(self):
+        with self.lock:
+            samples = self.imu_accumulator['samples']
+            imu_measurement = {
+                'samples': samples, 'first_raw_frd': self.imu_accumulator['first_raw'],
+                'mean_raw_frd': [value/samples for value in self.imu_accumulator['raw_sum']] if samples else [],
+                'mean_converted_flu': [value/samples for value in self.imu_accumulator['flu_sum']] if samples else [],
+            }
+            result = {
+                'source': 'AirSim MessagePack RPC', 'vehicle': self.vehicle,
+                'wall_seconds': time.time() - self.started, 'counts': self.counts,
+                'first_timestamp_ns': self.first, 'last_timestamp_ns': self.last,
+                'lidar_contract': {
+                    'channels': self.channels, 'vertical_lower_deg': self.vertical_lower,
+                    'vertical_upper_deg': self.vertical_upper,
+                    'fields': ['x', 'y', 'z', 'intensity', 'time', 'ring'],
+                    'time_semantics': 'zero for all points; upstream instantaneous_scan disables synthesized offsets',
+                    'last_ring_counts': self.last_ring_counts,
+                },
+                'coordinates': 'AirSim FRD converted to co-located FLU; camera remains optical',
+                'imu_measurement': imu_measurement,
+                'imu_trace_10hz': self.imu_trace,
+                'lidar_frame_summaries': self.lidar_summaries,
+            }
+        (self.output / 'airsim-input-stats.json').write_text(json.dumps(result, indent=2) + '\n')
+
+    def run(self):
+        workers = [threading.Thread(target=fn, daemon=True) for fn in (self.imu, self.lidar, self.image)]
+        for worker in workers:
+            worker.start()
+        while not self.stop.wait(0.2) and not rospy.is_shutdown():
+            pass
+        for worker in workers:
+            worker.join(timeout=4)
+        self.write_stats()
+
+
+def main():
+    rospy.init_node('airsim_fast_livo2_input', disable_signals=True)
+    bridge = Bridge()
+    def stop(*_):
+        bridge.stop.set()
+    signal.signal(signal.SIGTERM, stop)
+    signal.signal(signal.SIGINT, stop)
+    try:
+        bridge.run()
+    finally:
+        bridge.stop.set()
+
+
+if __name__ == '__main__':
+    main()

@@ -51,7 +51,7 @@ docker run --rm --name aerohub-fb-vehicle --network host \
   -v "$root/simulator/airsim/config/settings/px4-sensors.json:/config/settings.json:ro" \
   "$image" vehicle > "$out/vehicle.log" 2>&1 &
 for ((i=0; i<45; i++)); do
-  if rg -q 'Startup script returned successfully' "$out/vehicle.log"; then
+  if grep -q 'Startup script returned successfully' "$out/vehicle.log"; then
     break
   fi
   sleep 1
@@ -69,8 +69,8 @@ if [[ ${VERIFY_AS2:-0} == 1 ]]; then
   docker run --rm --name aerohub-fb-as2 --network host \
     -e ROS_DOMAIN_ID="$domain" \
     -e VERIFY_AS2_FLIGHT="${VERIFY_AS2_FLIGHT:-0}" \
-    -v "$root/runtime/as2/scripts:/verification:ro" \
-    -v "$root/runtime/airsim_sensors/scripts:/sensor-verification:ro" \
+    -v "$root/deployment/airsim/as2/scripts:/verification:ro" \
+    -v "$root/simulator/airsim/sensors/scripts:/sensor-verification:ro" \
     -v "$root/simulator/airsim/config/settings/px4-sensors.json:/config/settings.json:ro" \
     "$as2_image" > "$out/as2.log" 2>&1 &
   for ((i=0; i<15; i++)); do
@@ -95,7 +95,7 @@ docker run --rm --network host -e ROS_DOMAIN_ID="$domain" \
   -v "$root/simulator/airsim/config/settings/px4-sensors.json:/config/settings.json:ro" \
   -v "$root/config/dds/fastdds_udp.xml:/opt/fastdds_udp.xml:ro" \
   -e FASTRTPS_DEFAULT_PROFILES_FILE=/opt/fastdds_udp.xml \
-  -v "$root/runtime/airsim_sensors/scripts:/verification:ro" \
+  -v "$root/simulator/airsim/sensors/scripts:/verification:ro" \
   --entrypoint bash "$ros_image" -lc '
     set -eo pipefail
     source /opt/ros/humble/setup.bash

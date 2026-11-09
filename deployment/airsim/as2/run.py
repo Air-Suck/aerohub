@@ -16,6 +16,12 @@ def main():
     memory_limit = int(os.environ.get('AS2_MAX_RSS_MB', '0')) * 1024
     config = os.environ.get('AS2_CONFIG_FILE', '/opt/onboard_computer/config.yaml')
     controller = os.environ.get('AS2_CONTROLLER_CONFIG_FILE', '/opt/onboard_computer/pid_speed_controller.yaml')
+    estimator_plugin = os.environ.get('AS2_STATE_ESTIMATOR_PLUGIN', 'raw_odometry')
+    estimator_config = os.environ.get('AS2_STATE_ESTIMATOR_CONFIG_FILE', config)
+    estimator_launch_package = os.environ.get(
+        'AS2_STATE_ESTIMATOR_LAUNCH_PACKAGE', 'as2_state_estimator')
+    estimator_launch_file = os.environ.get(
+        'AS2_STATE_ESTIMATOR_LAUNCH_FILE', 'state_estimator_launch.py')
     fleet = yaml.safe_load(Path(os.environ.get('AS2_FLEET_FILE', '/opt/onboard_computer/fleet.yaml')).read_text())
     vehicles = fleet['vehicles']
     if not vehicles:
@@ -37,9 +43,9 @@ def main():
         commands.extend([
             ['ros2', 'launch', 'as2_platform_pixhawk', 'pixhawk_launch.py',
              f'namespace:={namespace}', f'platform_config_file:={platform_config}'],
-            ['ros2', 'launch', 'as2_state_estimator', 'state_estimator_launch.py',
-             f'namespace:={namespace}', f'config_file:={config}', 'plugin_name:=raw_odometry',
-             f'plugin_config_file:={config}',
+            ['ros2', 'launch', estimator_launch_package, estimator_launch_file,
+             f'namespace:={namespace}', f'config_file:={config}', f'plugin_name:={estimator_plugin}',
+             f'plugin_config_file:={estimator_config}',
              'use_sim_time:=true'],
             ['ros2', 'launch', 'as2_motion_controller', 'controller_launch.py',
              f'namespace:={namespace}', f'config_file:={config}', 'plugin_name:=pid_speed_controller',
@@ -59,6 +65,18 @@ def main():
         for command in commands:
             if command[1:4] == ['launch', 'as2_behaviors_motion', 'motion_behaviors_launch.py']:
                 command[2:4] = ['uav_follow_path_execution', 'motion_behaviors.launch.py']
+                tolerance = os.environ.get('AS2_TIMED_CONTINUITY_TOLERANCE')
+                if tolerance:
+                    value = float(tolerance)
+                    if not 0.0 < value <= 1.0:
+                        raise ValueError('AS2_TIMED_CONTINUITY_TOLERANCE must be in (0, 1]')
+                    command.append(f'timed_continuity_tolerance:={value}')
+                acceleration = os.environ.get('AS2_TIMED_ACCELERATION_CONTINUITY_TOLERANCE')
+                if acceleration:
+                    value = float(acceleration)
+                    if not 0.0 < value <= 20.0:
+                        raise ValueError('AS2_TIMED_ACCELERATION_CONTINUITY_TOLERANCE must be in (0, 20]')
+                    command.append(f'timed_acceleration_continuity_tolerance:={value}')
             elif len(command) > 2 and command[2].endswith('selected_behaviors.launch.py'):
                 raise ValueError('AS2_BEHAVIORS subset is incompatible with follow_path backend')
     if os.environ.get('AS2_TF_SCOPE')=='per-vehicle':

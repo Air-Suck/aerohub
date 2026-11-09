@@ -169,7 +169,10 @@ class Mission(Node):
         if not getattr(result.result().result,field):raise RuntimeError(name+' failed')
 
     def prepare(self):
-        os.environ.update(AS2_EXECUTION_BACKEND='follow_path',AS2_FLEET_FILE='/evidence/fleet.yaml')
+        # SUPER initializes paths on the 0.2 m map voxel centers. The half-cell
+        # diagonal can exceed FollowTimedPath's generic 0.15 m start tolerance.
+        os.environ.update(AS2_EXECUTION_BACKEND='follow_path',AS2_FLEET_FILE='/evidence/fleet.yaml',
+            AS2_TIMED_CONTINUITY_TOLERANCE='0.25')
         self.start('as2',['python3','/opt/onboard_computer/run.py'])
         self.start('navigation',['ros2','run','as2_navigation_inputs','navigation_inputs_node','--ros-args',
             '-r','__ns:=/drone0','--params-file',str(self.root/'navigation.yaml')])

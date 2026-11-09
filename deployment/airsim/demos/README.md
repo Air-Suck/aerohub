@@ -37,17 +37,4 @@ python3 deployment/airsim/demos/swarm_open_field/run_robopi.py --preflight-only 
 - 在根目录 `deployment/airsim/libraries.yaml` 的对应 binding 中登记 Demo 文档与验收索引，并更新本表。
 - 不为运行 Demo 放宽 AS2 的参考新鲜度、失流保护或绕过控制权交接。
 
-## 目录迁移与历史证据
-
-原 `apps/catora_open_field/`、`apps/swarm_open_field/` 现分别位于本目录同名子目录。
-使用新路径重新构建 Demo 镜像。
-容器标签、板端安装目录与 `log/airsim/` 输出命名保持原值。
-
-已有验收 JSON 保留当时的源码路径、哈希与运行记录，未改写成新版本验收。
-其中 `apps/...` 路径按上述映射查找；目录迁移后的版本仍需重新运行端到端验收。
 Swarm 当前复用 CAT-ORA Demo 的部分任务与测量辅助代码，尚未提取为公共模块。
-
-旧 `tools/planner-demo/` 是已退出活动运行链的 ROS 1 / Gazebo 录制与演示工具，
-不作为 Humble / AirSim Demo 搬入本目录。源码仍可从目录整理前的 `02ed54d` 读取，
-例如 `git show 02ed54d:tools/planner-demo/README.md`；原复现说明保留在
-[历史复现文档](../../../docs/项目简介.md)。

@@ -67,6 +67,7 @@ def header(m):
 def main():
     rospy.init_node('fast_livo2_output_bridge')
     port = rospy.get_param('~port', 18761)
+    odom_topic = rospy.get_param('~odom_topic', '/LIVO2/imu_propagate')
     odom, cloud, clock = [Stream(port+i) for i in range(3)]
     def on_odom(m):
         q = m.pose.pose.orientation
@@ -79,7 +80,7 @@ def main():
                        fields=[[f.name,f.offset,f.datatype,f.count] for f in m.fields],
                        is_bigendian=m.is_bigendian, point_step=m.point_step, row_step=m.row_step,
                        is_dense=m.is_dense, data=base64.b64encode(bytes(m.data)).decode()))
-    rospy.Subscriber('/LIVO2/imu_propagate', Odometry, on_odom, queue_size=1)
+    rospy.Subscriber(odom_topic, Odometry, on_odom, queue_size=1)
     rospy.Subscriber('/cloud_registered', PointCloud2, on_cloud, queue_size=1, buff_size=32*1024*1024)
     rospy.Subscriber('/clock', Clock, lambda m: clock.push(dict(kind='clock', stamp=[m.clock.secs,m.clock.nsecs])), queue_size=1)
     rospy.spin()

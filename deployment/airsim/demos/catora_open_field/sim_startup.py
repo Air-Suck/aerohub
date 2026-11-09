@@ -1,5 +1,6 @@
 """Application-local AirSim TCP startup guard; leaves all MAVLink payloads unchanged."""
 import json
+import os
 from pathlib import Path
 import select
 import socket
@@ -55,12 +56,20 @@ def launch_vehicles(image,app,output,prefix,dds,delay=.1,sensors=False):
                 '-e',f'PX4_INSTANCE={40+index}','-e',f'PX4_SYSTEM_ID={41+index}','-e',f'XRCE_AGENT_PORT={8901+index}',
                 '-e','AIRSIM_RPC_PORT=42471','-e','FLIGHT_BOARD_SENSORS='+('1' if sensors else '0'),'-e','FLIGHT_BOARD_CAMERAS=0',
                 '-v',str(path)+':/config/settings.json:ro','-v',str(dds)+':/opt/fastdds_udp.xml:ro',image,'vehicle'],check=True,stdout=subprocess.DEVNULL)
-        deadline=time.monotonic()+25
+        startup_timeout=float(os.environ.get('PX4_STARTUP_TIMEOUT','25'))
+        if not 1 <= startup_timeout <= 300:
+            raise ValueError('PX4_STARTUP_TIMEOUT must be in [1, 300] seconds')
+        started=time.monotonic()
+        deadline=started+startup_timeout
         while True:
             logs={i:subprocess.check_output(['docker','logs',prefix+f'vehicle{i}'],stderr=subprocess.STDOUT,text=True) for i in range(count)}
             ready=[i for i,text in logs.items() if 'Ready for takeoff!' in text]
             if len(ready)==count:
-                (output/'px4-startup.json').write_text(json.dumps({'ready_vehicles':ready,'initial_tcp_buffer_seconds':delay,'tcp_nodelay':True,'relay_ports':list(range(4780,4780+count))},indent=2)+'\n')
+                (output/'px4-startup.json').write_text(json.dumps({
+                    'ready_vehicles':ready,'initial_tcp_buffer_seconds':delay,'tcp_nodelay':True,
+                    'relay_ports':list(range(4780,4780+count)),
+                    'startup_timeout_seconds':startup_timeout,
+                    'startup_wall_seconds':time.monotonic()-started},indent=2)+'\n')
                 return relays
             if time.monotonic()>deadline:raise RuntimeError('PX4 startup handshake incomplete; ready vehicles='+str(ready))
             time.sleep(.25)

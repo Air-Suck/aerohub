@@ -14,8 +14,9 @@ from rosgraph_msgs.msg import Clock
 from sensor_msgs.msg import Imu, NavSatFix, BatteryState
 from std_srvs.srv import SetBool
 from as2_msgs.action import Takeoff, Land, GoToWaypoint
-from px4_msgs.msg import (VehicleCommandAck, VehicleControlMode, VehicleOdometry,
-                          OffboardControlMode, TimesyncStatus)
+from px4_msgs.msg import (FailsafeFlags, OffboardControlMode, TimesyncStatus,
+                          VehicleCommandAck, VehicleControlMode, VehicleOdometry,
+                          VehicleStatus)
 from rclpy.action import ActionClient
 from rcl_interfaces.srv import GetParameters
 from as2_msgs.srv import GetOrigin
@@ -76,9 +77,18 @@ def verify_flight(node, latest, acknowledgements):
             raise RuntimeError('AS2 action failed: ' + name)
         print('AS2 action succeeded:', name, file=sys.stderr, flush=True)
 
-    # Allow the simulated EKF/GPS to settle; no forced arm or disabled checks.
-    settle = time.monotonic() + 15
-    spin_until(node, lambda: time.monotonic() >= settle)
+    # Require PX4's own preflight gate; do not force arm or disable checks.
+    try:
+        spin_until(node, lambda: latest['/drone0/fmu/out/vehicle_status_v4']
+                   .pre_flight_checks_pass, timeout=120)
+    except TimeoutError as exc:
+        flags = latest['/drone0/fmu/out/failsafe_flags']
+        failures = [name for name in (
+            'local_position_invalid', 'local_position_invalid_relaxed',
+            'local_velocity_invalid', 'global_position_invalid',
+            'manual_control_signal_lost', 'remote_id_unhealthy')
+                    if getattr(flags, name)]
+        raise RuntimeError('PX4 preflight checks did not pass: ' + ','.join(failures)) from exc
     call('set_arming_state', 400,
          lambda: latest['/drone0/fmu/out/vehicle_control_mode'].flag_armed)
     call('set_offboard_mode', 176,
@@ -141,6 +151,8 @@ def main():
         '/drone0/platform/info': PlatformInfo,
         '/drone0/fmu/out/vehicle_control_mode': VehicleControlMode,
         '/drone0/fmu/out/vehicle_odometry': VehicleOdometry,
+        '/drone0/fmu/out/vehicle_status_v4': VehicleStatus,
+        '/drone0/fmu/out/failsafe_flags': FailsafeFlags,
     }
 
     def callback(topic, msg):

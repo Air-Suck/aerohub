@@ -42,7 +42,8 @@ class Mission:
         self.root = Path(os.environ.get('CATORA_APP_ROOT', '/opt/catora_app'))
         self.output = Path(os.environ.get('CATORA_OUTPUT', '/results'))
         self.output.mkdir(parents=True, exist_ok=True)
-        self.task = yaml.safe_load((self.root/'task.yaml').read_text())
+        self.task_path = Path(os.environ.get('PLANNER_TASK_CONFIG', self.root/'task.yaml'))
+        self.task = yaml.safe_load(self.task_path.read_text())
         self.deployment = yaml.safe_load((self.root/'deployment.yaml').read_text())
         self.spawns = {v:list(d['px4_origin_in_fleet_ned']) for v,d in self.deployment.items()}
         self.vehicles = list(self.deployment)
@@ -216,6 +217,47 @@ class Mission:
             if time.monotonic()>deadline: raise TimeoutError(f'timed out during {self.phase}')
             self.executor.spin_once(timeout_sec=.05)
 
+    def planner_call(self,client,request,timeout=10):
+        future=client.call_async(request)
+        try:
+            self.wait(future.done,timeout)
+        except TimeoutError:
+            client.remove_pending_request(future)
+            return None
+        return future.result()
+
+    def start_planner(self,client):
+        request=ControlPlanner.Request(command=ControlPlanner.Request.START,
+            task_config_path=str(self.task_path),deployment_config_path=str(self.output/'deployment.yaml'))
+        clock_deadline=time.monotonic()+20
+        uncertain_attempts=0
+        while True:
+            response=self.planner_call(client,request)
+            if response is None:
+                uncertain_attempts+=1
+                # START may already have taken effect. Reconcile before any
+                # retry so an uncertain response cannot duplicate a task.
+                status=self.planner_call(client,ControlPlanner.Request(command=ControlPlanner.Request.GET_STATUS))
+                if status is None:
+                    if uncertain_attempts>=3:raise TimeoutError('Planner START and status reconciliation timed out')
+                    continue
+                if status.result.task_id:
+                    if status.result.overall_status in (BehaviorResult.RUNNING,BehaviorResult.PAUSED):
+                        return status
+                    raise RuntimeError('Planner entered terminal state after START timeout: '+status.result.failure_reason)
+                if status.result.failure_reason!='NOT_STARTED':
+                    raise RuntimeError('Planner START state is ambiguous: '+status.result.failure_reason)
+                if uncertain_attempts>=3:
+                    raise TimeoutError('Planner START retries exhausted after confirmed NOT_STARTED')
+                print('Planner confirmed NOT_STARTED after request timeout; retrying',flush=True)
+                continue
+            if response.accepted:return response
+            if response.message!='CLOCK_NOT_READY' or time.monotonic()>=clock_deadline:
+                raise RuntimeError(response.message)
+            print('Waiting for Planner first /clock sample',flush=True)
+            settle=time.monotonic()+.2
+            self.wait(lambda:time.monotonic()>=settle)
+
     def fleet_positions(self):
         result={}
         for vehicle,msg in self.local_poses.items():
@@ -359,18 +401,7 @@ class Mission:
         self.wait(client.service_is_ready)
         self.phase='preflight_pipeline' if os.environ.get('CATORA_PREFLIGHT_ONLY')=='1' else 'planning'
         begin=time.monotonic()
-        clock_deadline=time.monotonic()+20
-        while True:
-            future=client.call_async(ControlPlanner.Request(command=ControlPlanner.Request.START,
-                task_config_path=str(self.root/'task.yaml'),deployment_config_path=str(self.output/'deployment.yaml')))
-            self.wait(future.done)
-            response=future.result()
-            if response.accepted: break
-            if response.message!='CLOCK_NOT_READY' or time.monotonic()>=clock_deadline:
-                raise RuntimeError(response.message)
-            print('Waiting for Planner first /clock sample',flush=True)
-            settle=time.monotonic()+.2
-            self.wait(lambda:time.monotonic()>=settle)
+        response=self.start_planner(client)
         self.task_id=response.result.task_id
         self.status=response.result
         self.reference_counts = {v:0 for v in self.vehicles}
@@ -476,6 +507,7 @@ class Mission:
         self.phase='stop_validation'
         self.trajectory_mode_claimed=False
         stopped_pid=None
+        fault={}
         started=time.monotonic()
         try:
             if scenario=='stream-loss':
@@ -491,13 +523,32 @@ class Mission:
                 self.loss_observed_seconds=time.monotonic()-started
                 # Exercise the same stop-before-cleanup path as an unexpected failure.
                 raise VerifiedStreamLoss('output paused; AS2 stream-loss HOVER observed')
-            future=client.call_async(ControlPlanner.Request(command=ControlPlanner.Request.CANCEL))
-            self.wait(future.done,5)
-            if not future.result().accepted:raise RuntimeError('Planner rejected cancel')
+            if scenario=='planner-exit':
+                marker=(str(self.output/'resolved'/f'{self.task_id}.yaml')).encode()
+                matches=[]
+                for path in Path('/proc').glob('[0-9]*'):
+                    try:
+                        command=(path/'cmdline').read_bytes()
+                        if b'/lib/uav_cat_ora_adapter/cat_ora_adapter_node' in command and marker in command:
+                            matches.append(int(path.name))
+                    except OSError:pass
+                if len(matches)!=1:raise RuntimeError('ambiguous planner adapter process: '+str(matches))
+                fault={'injection':'planner_adapter_sigterm','pid':matches[0]}
+                os.kill(matches[0],signal.SIGTERM)
+                self.wait(lambda:self.status.overall_status==BehaviorResult.FAILED,5)
+                if self.status.failure_reason!='PLANNER_ERROR':
+                    raise RuntimeError('unexpected planner failure reason: '+self.status.failure_reason)
+            else:
+                future=client.call_async(ControlPlanner.Request(command=ControlPlanner.Request.CANCEL))
+                self.wait(future.done,5)
+                if not future.result().accepted:raise RuntimeError('Planner rejected cancel')
         finally:
             if stopped_pid is not None:os.kill(stopped_pid,signal.SIGCONT)
-        self.wait(lambda:self.status.overall_status==BehaviorResult.CANCELED,5)
+        expected=BehaviorResult.FAILED if scenario=='planner-exit' else BehaviorResult.CANCELED
+        self.wait(lambda:self.status.overall_status==expected,5)
         self.wait_as2_stop()
+        self.wait(lambda:all(self.controllers[v].input_control_mode.control_mode in (ControlMode.HOVER,ControlMode.POSITION)
+                             for v in self.vehicles),5)
         stop_seconds=time.monotonic()-started
         self.collision_check()
         self.screenshot('stopped')
@@ -506,10 +557,13 @@ class Mission:
             self.action(vehicle,Land,'LandBehavior',Land.Goal(land_speed=.5),'land_success')
             self.wait(lambda v=vehicle:not self.modes[v].flag_armed)
         self.screenshot('landed')
-        result={'execution_backend':self.execution_backend,'scenario':scenario,'planner_status':'CANCELED','as2_hover_confirmed':True,
+        result={'execution_backend':self.execution_backend,'scenario':scenario,
+                'planner_status':'FAILED' if expected==BehaviorResult.FAILED else 'CANCELED',
+                'failure_reason':self.status.failure_reason,'fault':fault,'as2_hover_confirmed':True,
                 'stop_wall_seconds':stop_seconds,'stop_state':self.bridge_state,
                 'landed_and_disarmed':True,'execution_arch':os.uname().machine,
-                'as2_trajectory_reference_counts':self.reference_counts}
+                'as2_trajectory_reference_counts':self.reference_counts,
+                'controller_modes':{v:self.controllers[v].input_control_mode.control_mode for v in self.vehicles}}
         (self.output/'result.json').write_text(json.dumps(result,indent=2)+'\n')
         print(json.dumps(result),flush=True)
 

@@ -232,6 +232,17 @@ class PlannerFrameworkNode(Node):
         self._fail(reason, message.detail)
 
     def _tick(self) -> None:
+        snapshot = self.lifecycle.snapshot
+        if (
+            snapshot is not None
+            and snapshot.status == BehaviorStatus.RUNNING
+            and self.execution_backend == "follow_path"
+            and self.execution is None
+        ):
+            # Creating the action and service clients may wait on DDS graph
+            # resources under a loaded multi-vehicle deployment. Keep that
+            # work out of START so its response is sent before discovery.
+            self._new_execution()
         if self.execution is not None:
             confirmed = self.execution.quiescent if self.execution.cancel_started else False
             state = {"task_id": self.lifecycle.snapshot.task_id,
@@ -360,7 +371,8 @@ class PlannerFrameworkNode(Node):
     def _start_runtime(self, resolved_path: Path) -> None:
         if self.execution_backend == "legacy_setpoint":
             self._start_output_adapter(resolved_path)
-        self._start_planner_adapter(resolved_path)
+            self._start_planner_adapter(resolved_path)
+        # FollowPath starts from _tick after all execution servers are ready.
 
     def _start_planner_adapter(self, resolved_path: Path | None = None) -> None:
         if self.execution is not None and not self.execution.ready:

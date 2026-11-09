@@ -6,7 +6,7 @@ source "$root/tools/robopi/load_env.sh"
 action=${1:-help}
 if [[ "$action" == help || "$action" == --help || "$action" == -h ]]; then
   echo "Usage: simulator/airsim/airsim.sh {check|start|status|stop} [manager options]"
-  echo "Environment: AIRSIM_PROFILE, AIRSIM_BINARY, AIRSIM_RUN_DIR"
+  echo "Environment: AIRSIM_PROFILE, AIRSIM_BINARY, AIRSIM_RUN_DIR, AIRSIM_RENDER_MODE"
   exit 0
 fi
 shift

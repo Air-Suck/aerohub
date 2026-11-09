@@ -4,6 +4,8 @@
   <arg name="camera" default="/opt/fast_livo_ws/src/fast_livo/config/camera_pinhole.yaml"/>
   <arg name="use_sim_time" default="false"/>
   <arg name="port" default="18761"/>
+  <arg name="odom_topic" default="/LIVO2/imu_propagate"/>
+  <arg name="airsim" default="false"/>
   <param name="use_sim_time" value="$(arg use_sim_time)"/>
   <rosparam command="load" file="$(arg config)"/>
   <param name="uav/imu_rate_odom" value="true"/>
@@ -12,5 +14,7 @@
   </node>
   <node pkg="fast_livo" type="output_bridge.py" name="fast_livo2_output_bridge" output="screen" required="true">
     <param name="port" value="$(arg port)"/>
+    <param name="odom_topic" value="$(arg odom_topic)"/>
   </node>
+  <node if="$(arg airsim)" pkg="fast_livo" type="airsim_input_bridge.py" name="airsim_fast_livo2_input" output="screen" required="true"/>
 </launch>

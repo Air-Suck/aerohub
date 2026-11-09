@@ -79,11 +79,13 @@ bash deployment/fast_livo2/smoke.sh
 
 ## 数据集回放或传感器接入
 
-### AirSim 接入尚缺的条件
+### AirSim 输入桥与验收状态
 
-当前 AirSim 传感器桥 `simulator/airsim/sensors/uav_as2_sensor_adapter/node.py` 输出 XYZ-only PointCloud2（point_step=12），并保留整帧时间。FAST-LIVO2 的 Velodyne 预处理使用 `intensity/time/ring`，缺少逐点时间时会按扫描角速度推算。两者消息类型相同不等于测量语义兼容；不能通过补零字段或复用 `tests/synthetic.yaml` 宣称已完成适配。
+`src/state_estimator/fast_livo2/ros1_proxy/airsim_input_bridge.py` 直接读取 AirSim RPC 的 IMU、RGB 图像和 LiDAR，发布算法所需 ROS 1 输入。Velodyne 兼容点云包含 `intensity/time/ring`；AirSim 1.8.1 不提供逐点时间，因此 `time=0`，并由上游构建补丁的 `preprocess/instantaneous_scan=true` 禁止伪造旋转扫描偏移。FRD→FLU、相机光学系、内外参及图像通道已按实际消费者核对。
 
-接入前须核查 AirSim 扫描模型、顺序、逐点时间可获得性及单位，选择匹配的预处理入口，或者明确修改仿真传感器输出。还需提供 ROS 2 原始 IMU/图像/点云到 ROS 1 算法的输入桥、时钟及标定配置；现有输出桥并不覆盖这个方向。上述条件完成后，再验证运动场景定位精度、地图和下游消费。当前合成输入与插件测试不能替代 AirSim 三传感器闭环。
+有屏 AirSim + PX4 SITL shadow 测试已经证明三种实际测量进入真实算法，ROS 2 状态输出和配准点云可被消费，失败后可安全降落并解除武装。但 LIO 和完整 LIVO 的空中/水平误差均超过预设 `0.5 m` 门限，并观察到航向跳变；因此 FAST-LIVO2 定位精度未通过，authority 状态源测试按安全门未执行。证据位于 `log/main-gpu-e2e-20261109/`，过程结论位于 `skill/temp/main-gpu-e2e-20261109/README.md`。
+
+复验入口为 `deployment/fast_livo2/run_airsim.py`。必须先运行 `--scenario shadow`，仅在生成成功 `result.json` 后才可运行 `--scenario authority`；不得以点云非空、合成输入冒烟或其他 PX4 飞行成功替代定位门限。
 
 先准备实际传感器对应的上游配置、相机标定及 AS2 安装外参，放入 `log/fast_livo2/`（或修改 Compose 挂载）；样例 Avia 标定只适用于其对应设备／数据集。原始 bag 放在 `log/fast_livo2/datasets/`。
 
@@ -100,4 +102,4 @@ docker compose -f deployment/fast_livo2/compose.yaml down
 
 话题须与 sensor.yaml 对应。若 bag 只有压缩图像，先在同一 ROS master 启动 `image_transport republish`，输出配置要求的原始 Image。真实传感器模式使用 `FAST_LIVO_SIM_TIME=false`，由 ROS 1 驱动代替 rosbag；Livox 驱动、硬件同步和标定由设备部署提供。
 
-当前不自动向 PX4 EKF 回灌状态；这需另行处理坐标、协方差、延迟和飞控融合配置。真实数据集、仿真飞行及真机验收进度见 `skill/temp/fast_livo2/README.md`，不得把合成输入测试当作这些验收。
+当前不自动向 PX4 EKF 回灌状态；这需另行处理坐标、协方差、延迟和飞控融合配置。AirSim shadow 已执行但精度失败，真实数据集、权威仿真飞行及真机验收仍未通过；不得把合成输入测试或 shadow 中由 PX4 定位完成的飞行当作这些验收。

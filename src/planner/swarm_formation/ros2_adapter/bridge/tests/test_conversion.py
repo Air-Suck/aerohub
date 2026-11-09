@@ -91,6 +91,7 @@ class ThreeVehicleContractTest(unittest.TestCase):
         node = Mock()
         node.vehicles = ['drone0','drone1','drone2']
         node.poses = dict.fromkeys(node.vehicles, [0,0,3])
+        node.final_sent = False
         node.config = {'planner': {'parameters': {'wait_for_output': True}},
                        'deployment': {v:{'namespace':v} for v in node.vehicles}}
         from types import SimpleNamespace
@@ -118,6 +119,17 @@ class ThreeVehicleContractTest(unittest.TestCase):
         self.assertEqual((point.acceleration.x,point.acceleration.y,point.acceleration.z),(8,7,-9))
         with self.assertRaises(ValueError):
             SwarmFormationAdapter._message(node,[[[1,2,3],[2,3,4]]],100.2,[],None)
+
+    def test_native_fleet_completion_marks_one_final_segment(self):
+        from types import SimpleNamespace
+        from unittest.mock import Mock
+        from uav_swarm_formation_adapter.node import SwarmFormationAdapter
+        node=Mock();node.vehicles=['drone0']
+        node.config={'task':{'task_id':'final'},'planner':{'parameters':{'sample_dt':.1,'valid_from_lead':.2}}}
+        node.get_clock.return_value.now.return_value=SimpleNamespace(nanoseconds=100_000_000_000)
+        message=SwarmFormationAdapter._message(node,[[[1,2,3],[1,2,3]]],100.2,
+            [[[0,0,0],[0,0,0]]],[[[0,0,0],[0,0,0]]],True)
+        self.assertTrue(message.is_final)
 
 
 if __name__ == "__main__":

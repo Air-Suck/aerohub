@@ -113,9 +113,22 @@ def load_profile(profile_path, binary_override=None):
     arguments = profile.get('args', ['-RenderOffscreen', '-vulkan', '-nosound'])
     if not isinstance(arguments, list) or any(not isinstance(arg, str) for arg in arguments):
         raise ValueError('profile args must be a list of strings')
+    render_mode = os.environ.get('AIRSIM_RENDER_MODE', 'profile').lower()
+    if render_mode not in ('profile', 'windowed', 'offscreen'):
+        raise ValueError('AIRSIM_RENDER_MODE must be profile, windowed or offscreen')
+    if render_mode == 'windowed':
+        if not os.environ.get('DISPLAY'):
+            raise ValueError('windowed AirSim requires DISPLAY')
+        arguments = [arg for arg in arguments if arg.lower() != '-renderoffscreen']
+        if not any(arg.lower() == '-windowed' for arg in arguments):
+            arguments.append('-windowed')
+    elif render_mode == 'offscreen' and not any(
+            arg.lower() == '-renderoffscreen' for arg in arguments):
+        arguments.append('-RenderOffscreen')
     if any(arg.startswith(('-settings', '-userdir')) for arg in arguments):
         raise ValueError('settings and userdir are managed by the lifecycle manager')
     profile['args'] = arguments
+    profile['render_mode'] = render_mode
     profile['settings'] = str(settings_path)
     return profile, settings, ports
 
