@@ -1,0 +1,32 @@
+name: Gallery checks
+
+on:
+  pull_request:
+    paths: ['gallery/**', '.github/workflows/gallery-*.yml']
+  push:
+    paths: ['gallery/**', '.github/workflows/gallery-*.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: gallery
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: gallery/.nvmrc
+          cache: npm
+          cache-dependency-path: gallery/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - name: Verify project subpath build
+        run: npm run build
+        env:
+          SITE_URL: https://example.github.io
+          BASE_PATH: /aerohub/

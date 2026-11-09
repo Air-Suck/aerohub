@@ -1,0 +1,27 @@
+---
+import '../styles/global.css';
+import { sitePath } from '../lib/algorithms';
+interface Props { title: string; description?: string }
+const { title, description = 'Aerohub：分层运行、Skill 迁移与验证、算法预览。' } = Astro.props;
+---
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="description" content={description} />
+    <title>{title} · Aerohub</title>
+  </head>
+  <body>
+    <a class="skip" href="#main">跳转到正文</a>
+    <header>
+      <a href={sitePath()} class="brand">Aerohub</a>
+      <nav aria-label="主导航">
+        <a href={sitePath()}>项目主页</a>
+        <a href={sitePath('gallery/')}>Gallery</a>
+      </nav>
+    </header>
+    <main id="main"><slot /></main>
+    <footer>Gallery 框架预览 · 验证范围以各算法证据为准</footer>
+  </body>
+</html>

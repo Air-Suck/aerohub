@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="800" viewBox="0 0 1080 800" role="img" aria-labelledby="title description">
+  <title id="title">CAT-ORA：lib 实现与四机 runtime 绑定</title>
+  <desc id="description">上层 lib 包括一次共享的 CAT-ORA 批量规划、ROS 1 proxy、ROS 2 adapter 和机群协调。下层 runtime 是 drone0 到 drone3 各自的扩展 FollowPath，通过 FollowTimedPath 接收保留相同 valid_from 的执行请求。TakeoffBehavior 由部署入口单独调用，作为前置条件。此图表示源码调用关系，不是实际飞行回放。</desc>
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto-start-reverse"><path d="M0 0 L8 4 L0 8" fill="#175da5"/></marker>
+    <g id="behavior">
+      <rect width="220" height="146" rx="8" fill="white" stroke="#175da5"/>
+      <text x="110" y="72" text-anchor="middle" font-size="19" font-weight="600">ExtendedFollowPath</text>
+      <text x="110" y="104" text-anchor="middle" font-size="18">FollowTimedPath</text>
+      <text x="110" y="130" text-anchor="middle" font-size="16" fill="#53657a">AS2 Behavior 实例</text>
+    </g>
+  </defs>
+  <g font-family="system-ui, sans-serif" fill="#202d3a">
+    <rect width="1080" height="800" fill="#f8fafc"/>
+    <text x="30" y="44" font-size="28" font-weight="700">CAT-ORA · 一个 lib 算法，四机执行</text>
+    <text x="30" y="75" font-size="18" fill="#53657a">源码与配置视图 · 不表示实时运行状态或飞行结果</text>
+
+    <rect x="24" y="102" width="1032" height="236" rx="10" fill="white" stroke="#dbe2e9"/>
+    <text x="44" y="138" font-size="24" font-weight="700">LIB</text>
+    <text x="112" y="138" font-size="18" fill="#53657a">独立算法实现 + 接入 + 共享协调</text>
+    <text x="44" y="171" font-size="17" fill="#53657a">输入：四机位姿、逐机目标、速度/加速度约束</text>
+
+    <g text-anchor="middle">
+      <rect x="40" y="200" width="220" height="92" rx="8" fill="#f8fafc" stroke="#dbe2e9"/>
+      <text x="150" y="235" font-size="21" font-weight="600">CAT-ORA</text>
+      <text x="150" y="267" font-size="17">ROS 1 批量规划服务</text>
+      <rect x="300" y="200" width="220" height="92" rx="8" fill="#f8fafc" stroke="#dbe2e9"/>
+      <text x="410" y="235" font-size="21" font-weight="600">ROS 1 proxy</text>
+      <text x="410" y="267" font-size="17">服务映射 / JSON</text>
+      <rect x="560" y="200" width="220" height="92" rx="8" fill="#f8fafc" stroke="#dbe2e9"/>
+      <text x="670" y="235" font-size="21" font-weight="600">ROS 2 adapter</text>
+      <text x="670" y="267" font-size="17">车辆 / 坐标 / 时间</text>
+      <rect x="820" y="200" width="220" height="92" rx="8" fill="#f8fafc" stroke="#175da5"/>
+      <text x="930" y="235" font-size="21" font-weight="600">机群协调器</text>
+      <text x="930" y="267" font-size="17">逐机 Action / 失败收口</text>
+    </g>
+    <g fill="none" stroke="#175da5" stroke-width="2" marker-end="url(#arrow)">
+      <path d="M260 246 H295"/><path d="M520 246 H555"/><path d="M780 246 H815"/>
+    </g>
+    <text x="44" y="318" font-size="16" fill="#53657a">箭头表示规划结果的数据流；上游求解器内部暂作黑盒。</text>
+
+    <path d="M930 292 V385 H150" fill="none" stroke="#175da5" stroke-width="2"/>
+    <text x="40" y="369" font-size="18" fill="#175da5">逐机提交完整轨迹 · 相同 valid_from · 各自 vehicle_id</text>
+
+    <rect x="24" y="418" width="1032" height="338" rx="10" fill="white" stroke="#dbe2e9"/>
+    <text x="44" y="451" font-size="20" font-weight="700">RUNTIME</text>
+    <g fill="none" stroke="#175da5" stroke-width="2" marker-end="url(#arrow)">
+      <path d="M150 385 V474"/><path d="M410 385 V474"/>
+      <path d="M670 385 V474"/><path d="M930 385 V474"/>
+    </g>
+    <g transform="translate(40 480)"><use href="#behavior"/><text x="110" y="33" text-anchor="middle" font-size="22" font-weight="700">drone0</text></g>
+    <g transform="translate(300 480)"><use href="#behavior"/><text x="110" y="33" text-anchor="middle" font-size="22" font-weight="700">drone1</text></g>
+    <g transform="translate(560 480)"><use href="#behavior"/><text x="110" y="33" text-anchor="middle" font-size="22" font-weight="700">drone2</text></g>
+    <g transform="translate(820 480)"><use href="#behavior"/><text x="110" y="33" text-anchor="middle" font-size="22" font-weight="700">drone3</text></g>
+    <text x="44" y="660" font-size="18">执行地址：/drone0/follow_timed_path … /drone3/follow_timed_path</text>
+    <text x="44" y="697" font-size="18">起飞前置：原生 TakeoffBehavior，由部署/测试入口另行调用</text>
+    <text x="44" y="729" font-size="17" fill="#53657a">Behavior 内部采样 → Motion Reference → AS2 控制器 / 平台 → PX4</text>
+    <text x="30" y="786" font-size="16" fill="#53657a">一个共享 lib 实现 + N 个 runtime 执行实例；本图 N = 4（来自四机示例配置）。</text>
+  </g>
+</svg>

@@ -1,0 +1,12 @@
+{
+  "items": [
+    {
+      "id": "cat_ora",
+      "markdown": "content/algorithms/cat_ora/index.md"
+    },
+    {
+      "id": "example_algorithm",
+      "markdown": "content/algorithms/example_algorithm/index.md"
+    }
+  ]
+}

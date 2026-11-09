@@ -1,0 +1,17 @@
+---
+import Base from '../layouts/Base.astro';
+import { sitePath } from '../lib/algorithms';
+import { getEntry } from 'astro:content';
+const homepage = await getEntry('homepage', 'homepage');
+if (!homepage) throw new Error('Missing homepage Markdown');
+const { data } = homepage;
+---
+<Base title="项目主页">
+  <p class="eyebrow">{data.eyebrow}</p>
+  <h1>{data.title}</h1>
+  <p class="lead">{data.lead}</p>
+  <div class="grid">
+    {data.features.map((feature) => <section class="card"><h2>{feature.title}</h2><p>{feature.description}</p></section>)}
+  </div>
+  <p><a href={sitePath('gallery/')}>{data.galleryLinkLabel}</a></p>
+</Base>

@@ -1,0 +1,13 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { integrationLabels, validationLabels, sitePath } from '../lib/algorithms';
+interface Props { algorithm: CollectionEntry<'algorithms'> }
+const { algorithm } = Astro.props;
+const { data } = algorithm;
+---
+<article class="card">
+  <p class="eyebrow">{data.category}</p>
+  <h2><a href={sitePath(`gallery/${algorithm.id}/`)}>{data.title}</a></h2>
+  <p>{data.summary}</p>
+  <p class="status">{integrationLabels[data.integration]} · {validationLabels[data.validation]}</p>
+</article>
