@@ -362,5 +362,12 @@
     "native_regression": "Run deployment/airsim/demos/super_forest/tests/verify_native_start.py in the built SUPER image after sourcing native and app setup; isolated ROS domain and no network.",
     "run": "SUPER_APP_IMAGE=uav/apps-super-forest:super-main-pc-20261109-startfix python3 deployment/airsim/demos/super_forest/run.py run --output <fresh-output-directory>",
     "analysis": "python3 deployment/airsim/demos/super_forest/analyze.py <fresh-output-directory>"
+  },
+  "source_fix_delivery": {
+    "super_source_commit": "148116eee43112b2bee242b2480d147a2c1f4e3d",
+    "previous_pc_validation_code_equivalent": true,
+    "native_file_sha256": "7e573ecce4dd5b737828cd44cb25ed1332e0abf088eebcbaad9fd454f4af944c",
+    "source_change": "Same PlanFromRest fix now committed in SUPER; Docker startup patch removed",
+    "requires_dependency_publication_before_parent_push": true
   }
 }
