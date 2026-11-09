@@ -79,6 +79,12 @@ bash deployment/fast_livo2/smoke.sh
 
 ## 数据集回放或传感器接入
 
+### AirSim 接入尚缺的条件
+
+当前 AirSim 传感器桥 `simulator/airsim/sensors/uav_as2_sensor_adapter/node.py` 输出 XYZ-only PointCloud2（point_step=12），并保留整帧时间。FAST-LIVO2 的 Velodyne 预处理使用 `intensity/time/ring`，缺少逐点时间时会按扫描角速度推算。两者消息类型相同不等于测量语义兼容；不能通过补零字段或复用 `tests/synthetic.yaml` 宣称已完成适配。
+
+接入前须核查 AirSim 扫描模型、顺序、逐点时间可获得性及单位，选择匹配的预处理入口，或者明确修改仿真传感器输出。还需提供 ROS 2 原始 IMU/图像/点云到 ROS 1 算法的输入桥、时钟及标定配置；现有输出桥并不覆盖这个方向。上述条件完成后，再验证运动场景定位精度、地图和下游消费。当前合成输入与插件测试不能替代 AirSim 三传感器闭环。
+
 先准备实际传感器对应的上游配置、相机标定及 AS2 安装外参，放入 `log/fast_livo2/`（或修改 Compose 挂载）；样例 Avia 标定只适用于其对应设备／数据集。原始 bag 放在 `log/fast_livo2/datasets/`。
 
 ```bash

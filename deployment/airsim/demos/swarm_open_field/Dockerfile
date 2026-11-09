@@ -1,4 +1,5 @@
-FROM uav/catora-hybrid-compute:local
+ARG BASE_IMAGE=uav/catora-hybrid-compute:local
+FROM ${BASE_IMAGE}
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 COPY src/planner/swarm_formation/ros2_adapter/native /opt/swarm_ws/src/swarm
 COPY src/perception/navigation_inputs /opt/swarm_ws/src/navigation_inputs

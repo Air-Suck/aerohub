@@ -1,5 +1,7 @@
 # Compile native SUPER unchanged, offline, against the existing Humble toolchain.
-FROM osrf/ros:humble-desktop-full-jammy AS native
+ARG NATIVE_BASE_IMAGE=osrf/ros:humble-desktop-full-jammy
+ARG BASE_IMAGE=onboard_computer:v0.1.0
+FROM ${NATIVE_BASE_IMAGE} AS native
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 COPY src/planner/super/upstream/mars_uav_sim/mars_quadrotor_msgs /opt/super_ws/src/mars_quadrotor_msgs
 COPY src/planner/super/upstream/rog_map /opt/super_ws/src/rog_map
@@ -13,7 +15,7 @@ RUN source install/setup.bash && mkdir -p /opt/super_deps/lib && \
     ldd install/super_planner/lib/super_planner/fsm_node > /tmp/super-ldd && \
     python3 -c 'import pathlib,shutil; lines=pathlib.Path("/tmp/super-ldd").read_text().splitlines(); core=("libc.so", "libm.so", "libpthread.so", "libdl.so", "librt.so", "libstdc++", "libgcc_s", "ld-linux"); paths=[line.split("=>",1)[1].strip().split()[0] for line in lines if "=> /" in line]; [shutil.copy2(p,"/opt/super_deps/lib/"+pathlib.Path(p).name,follow_symlinks=True) for p in paths if not p.startswith(("/opt/ros/","/opt/super_ws/")) and not pathlib.Path(p).name.startswith(core)]'
 
-FROM onboard_computer:v0.1.0
+FROM ${BASE_IMAGE}
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 COPY --from=native /opt/super_ws/install /opt/super_ws/install
 COPY --from=native /opt/super_deps /opt/super_deps

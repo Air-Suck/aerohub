@@ -4,4 +4,4 @@ services:
       PX4_GZ_WORLD: default
   planner:
     volumes:
-      - /home/noah/code/UAV/demo:/demo
+      - ${PLANNER_DEMO_DIR:?Set PLANNER_DEMO_DIR to the absolute demo directory}:/demo

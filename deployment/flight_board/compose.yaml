@@ -16,7 +16,7 @@ services:
       AIRSIM_HOST: "127.0.0.1"
       AIRSIM_RPC_PORT: "41471"
     volumes:
-      - ../../config/airsim/settings/px4-sensors.json:/config/settings.json:ro
+      - ../../simulator/airsim/config/settings/px4-sensors.json:/config/settings.json:ro
     command: [vehicle]
     stop_grace_period: 10s
 

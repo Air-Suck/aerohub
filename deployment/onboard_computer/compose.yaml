@@ -12,6 +12,6 @@ services:
       AS2_FLEET_FILE: /config/fleet.yaml
       AS2_CONFIG_FILE: /config/as2.yaml
     volumes:
-      - ../../config/as2/fleet.yaml:/config/fleet.yaml:ro
-      - ../../config/as2/config.yaml:/config/as2.yaml:ro
+      - ../airsim/config/as2/fleet.yaml:/config/fleet.yaml:ro
+      - ../airsim/config/as2/config.yaml:/config/as2.yaml:ro
     stop_grace_period: 10s

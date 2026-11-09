@@ -3,7 +3,7 @@ import ast
 import pathlib
 import unittest
 
-source = pathlib.Path(__file__).resolve().parents[2] / "adapters/swarm_formation/ros1_proxy.py"
+source = pathlib.Path(__file__).resolve().parents[4] / "src/planner/swarm_formation/ros1_proxy/ros1_proxy.py"
 tree = ast.parse(source.read_text())
 functions = [node for node in tree.body if isinstance(node, ast.FunctionDef)
              and node.name in {"evaluate", "sample"}]

@@ -5,7 +5,7 @@ import tempfile
 import unittest
 import xml.etree.ElementTree as ET
 
-source = Path(__file__).resolve().parents[3] / "deployment/swarm_formation_ros1/configure_waypoints.py"
+source = Path(__file__).resolve().parents[4] / "deployment/swarm_formation_ros1/configure_waypoints.py"
 spec = importlib.util.spec_from_file_location("waypoints", source)
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)

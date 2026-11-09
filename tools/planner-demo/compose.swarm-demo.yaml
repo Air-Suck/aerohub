@@ -6,8 +6,8 @@ services:
       LIBGL_ALWAYS_SOFTWARE: "1"
       MESA_LOADER_DRIVER_OVERRIDE: llvmpipe
     volumes:
-      - /home/noah/code/UAV/demo:/demo
-      - /home/noah/code/UAV/demo/swarm_formation_demo.sdf:/workspace/PX4-Autopilot/Tools/simulation/gz/worlds/swarm_formation_demo.sdf:ro
+      - ${PLANNER_DEMO_DIR:?Set PLANNER_DEMO_DIR to the absolute demo directory}:/demo
+      - ${PLANNER_DEMO_DIR:?Set PLANNER_DEMO_DIR to the absolute demo directory}/swarm_formation_demo.sdf:/workspace/PX4-Autopilot/Tools/simulation/gz/worlds/swarm_formation_demo.sdf:ro
   planner:
     volumes:
-      - /home/noah/code/UAV/demo:/demo
+      - ${PLANNER_DEMO_DIR:?Set PLANNER_DEMO_DIR to the absolute demo directory}:/demo

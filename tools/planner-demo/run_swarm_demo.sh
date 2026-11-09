@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-demo_dir=/home/noah/code/UAV/demo
-project_dir=/home/noah/code/UAV/swarm-formation-px4-gazebo/deployment/stage2
+demo_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+export PLANNER_DEMO_DIR="$demo_dir"
+project_dir=${SWARM_STAGE2_DIR:?Set SWARM_STAGE2_DIR to the historical stage-2 deployment directory}
+[[ "$project_dir" = /* && -f "$project_dir/compose.seven.yaml" ]] || { echo "Invalid SWARM_STAGE2_DIR" >&2; exit 2; }
 base=$project_dir/compose.seven.yaml
 override=$demo_dir/compose.swarm-demo.yaml
 frames=$demo_dir/.frames_swarm

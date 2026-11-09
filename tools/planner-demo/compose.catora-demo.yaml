@@ -6,5 +6,5 @@ services:
       LIBGL_ALWAYS_SOFTWARE: "1"
       MESA_LOADER_DRIVER_OVERRIDE: llvmpipe
     volumes:
-      - /home/noah/code/UAV/demo:/demo
-      - /home/noah/code/UAV/demo/catora_demo.sdf:/workspace/PX4-Autopilot/Tools/simulation/gz/worlds/catora_demo.sdf:ro
+      - ${PLANNER_DEMO_DIR:?Set PLANNER_DEMO_DIR to the absolute demo directory}:/demo
+      - ${PLANNER_DEMO_DIR:?Set PLANNER_DEMO_DIR to the absolute demo directory}/catora_demo.sdf:/workspace/PX4-Autopilot/Tools/simulation/gz/worlds/catora_demo.sdf:ro

@@ -6,7 +6,7 @@ if (($# < 2 || $# > 3)); then
   exit 2
 fi
 
-demo_dir=/home/noah/code/UAV/demo
+demo_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 image=uav/demo-ffmpeg:22.04
 input=$(basename "$1")
 output=$(basename "$2")

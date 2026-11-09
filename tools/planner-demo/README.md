@@ -13,10 +13,14 @@ then interpolates the safe 3 fps capture to 12 fps. Temporary frames and the
 intermediate file are removed only after the final video has passed a complete
 FFmpeg decode.
 
-Run on RKOH:
+Historical Gazebo recording utilities (not the current AirSim acceptance entry).
+Provide absolute `CATORA_STAGE2_DIR` and `SWARM_STAGE2_DIR` paths to compatible
+historical stage-2 deployments before running. These external deployments are
+not bootstrapped by these scripts; missing configuration fails before starting containers.
+Run from the repository root:
 
 ```bash
-cd /home/noah/code/UAV/demo
+cd tools/planner-demo
 ./run_catora_demo.sh
 ./run_swarm_demo.sh
 ```
@@ -38,7 +42,7 @@ rendering, the camera is activated after takeoff at `640×360`, 3 fps.
 Validate existing outputs without rerunning the simulations:
 
 ```bash
-docker run --rm -v /home/noah/code/UAV/demo:/demo --entrypoint python3 \
+docker run --rm -v "$PWD:/demo" --entrypoint python3 \
   uav/catora:noetic-px4 /demo/verify_videos.py \
   /demo/catora_px4_gazebo_headless.mp4 \
   /demo/swarm_formation_px4_gazebo_headless.mp4
@@ -47,3 +51,6 @@ docker run --rm -v /home/noah/code/UAV/demo:/demo --entrypoint python3 \
 The scripts use the existing stage-2 verification programs as their pass/fail
 criterion. They run serially because both stacks use host networking and the
 same ROS/MAVLink/Gazebo ports.
+
+The launch scripts export `PLANNER_DEMO_DIR` from their own location. When
+using the Compose overrides directly, set it to the absolute path of this directory.

@@ -6,6 +6,18 @@
 
 ## 新迁移链路的 PC 入口
 
+验收当前源码时可显式选择本次构建的机载镜像与原生算法工具链，避免沿用旧发布镜像。以下命令只构建，不启动飞行；先从当前 main 构建并记录 `onboard_computer:main-e2e` 的 ID，同时准备 Dockerfile 使用的 `flight_board:v0.1.0`：
+
+```bash
+docker build --network none --pull=false \
+  --build-arg BASE_IMAGE=onboard_computer:main-e2e \
+  --build-arg NATIVE_BASE_IMAGE=onboard_computer:main-e2e \
+  -f deployment/airsim/demos/super_forest/Dockerfile \
+  -t uav/apps-super-forest:main-e2e .
+```
+
+`NATIVE_BASE_IMAGE` 必须提供 Humble、PCL 和算法编译依赖；`BASE_IMAGE` 必须提供兼容的 AS2/PX4 消息运行环境。镜像构建成功不代表真实传感器或飞行通过。运行时还须确认启动入口实际选用了该新镜像，而非默认标签。
+
 本目录新增 `run.py`，基于现有 `onboard_computer:v0.1.0` 构建独立应用镜像，
 使用完整 committed polynomial → FollowTimedPath → AS2 → PX4/AirSim。
 当前旧 RoboPi 记录与下方 `forest8_as2_mission.py` 仍属于历史单点桥链路，不能互换验收。
@@ -68,7 +80,7 @@ ROS_DOMAIN_ID=83 python3 deployment/airsim/demos/super_forest/forest8_as2_missio
 
 ## 找到的既有任务
 
-- 原入口：`/home/wqy/uav/leuav/profiles/super.forest8-ab.yaml`。
+- 原入口：旧工程的 `profiles/super.forest8-ab.yaml`。
 - 任务：`cases/super/config/task.forest8-ab.json`，完整字节快照为 [source-task.json](../../../../log/pr-history/deployment/airsim/demos/super_forest/source-task.json)。
 - 原规划配置：`super.search150-forward250ms.yaml`；本轮有效配置为 [planner.yaml](planner.yaml)。
 - 出生 NED `[42.6,160.11,0]`；B 为任务局部 ENU `[-37.57,231.76,6]`，直发单目标。

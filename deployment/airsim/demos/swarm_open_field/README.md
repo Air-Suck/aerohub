@@ -13,6 +13,17 @@ AirSim 真值 API 仅用于标定和验收；起飞、轨迹、停止、降落�
 
 ## 运行
 
+测试当前 main 时可覆盖 Dockerfile 的基础镜像，使用本次编译的 AS2/PX4 环境：
+
+```bash
+docker build --network none --pull=false \
+  --build-arg BASE_IMAGE=onboard_computer:main-e2e \
+  -f deployment/airsim/demos/swarm_open_field/Dockerfile \
+  -t uav/swarm-hybrid-compute:main-e2e .
+```
+
+该基础镜像须先从当前 main 构建，具备 Humble、PCL、AS2 和 PX4 消息依赖，记录镜像 ID。此命令只生成 PC 计算镜像，不提供 RoboPi 环境，也不将下方混合部署自动变为纯 PC 验收；启动配置仍须显式选择新镜像。
+
 复用已验证的 `uav/catora-hybrid-compute:local` AS2 和现有本地 ROS/PCL 依赖，离线编译：
 
 ```bash
