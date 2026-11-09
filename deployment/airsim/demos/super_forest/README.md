@@ -1,13 +1,62 @@
-# SUPER forest8：PC 验收与历史 RoboPi 链路
+# SUPER forest8：四方运行入口
 
-四方职责主说明见[项目简介](../../../../docs/项目简介.md#deployment-roles)。
-当前 `robopi-all` 的历史验证将 `mission.py` 也放在板端，尚未符合“工作站编排、
-算力板提供就绪 ROS 能力”的目标；本页运行方式按其实际实现描述。
+职责定义见[项目简介](../../../../docs/项目简介.md#deployment-roles)。当前四方入口为
+`four-part`：PC 宿主运行 AirSim，flight_board 容器提供 PX4 SITL、传感器和时钟，
+RoboPi 提供 SUPER、导航、Adapter 与 AS2/FollowTimedPath，工作站运行 `mission.py`。
+默认模式仍是 `pc`，请显式选择执行位置。
 
-当前 PC 验收链为实际 AirSim LiDAR / PX4 状态 → SUPER → 时间化 Adapter →
-FollowTimedPath → onboard_computer 中的 AS2 → PX4 SITL / AirSim。
-历史 `forest8_as2_mission.py` 属于单点轨迹桥 → RoboPi AS2 的不同运行组合，
-保留用于追溯，不与下方 PC 新链路混用。
+<a id="four-part"></a>
+
+## 四方入口：准备、运行与停止
+
+先按[部署说明](../../../README.md)完成官方 OHOS builder、目标依赖、场景资源及
+本地 `.env` 配置。候选构建还需现有 SUPER/PCL 目标依赖，详见
+[构建说明](../../../oh-ros-build/README.md)。使用现有 `flight_board:v0.1.0` 与
+`osrf/ros:humble-desktop-full-jammy`；工作站 build 只补编译外部接口，不重建镜像。
+
+```bash
+# 更新板端当前源码与隔离候选；默认安装和本机配置保持不变。
+bash tools/robopi/build_lib.sh super
+bash tools/robopi/deploy_lib.sh --component as2 --include-super \
+  --as2-root /data/aerohub/validation/super-follow-path/as2
+# 复用已准备的 OHOS 接口源，生成工作站 Linux 类型支持。
+python3 deployment/airsim/demos/super_forest/run.py build --execution-location four-part
+# 以下运行必须顺序执行，且每轮输出目录必须全新。
+python3 deployment/airsim/demos/super_forest/run.py run --execution-location four-part \
+  --case ground --output log/airsim/super-four-part/NEW-ground
+python3 deployment/airsim/demos/super_forest/run.py run --execution-location four-part \
+  --case short --output log/airsim/super-four-part/NEW-short
+python3 deployment/airsim/demos/super_forest/run.py run --execution-location four-part \
+  --case forest8 --output log/airsim/super-four-part/NEW-forest8
+python3 deployment/airsim/demos/super_forest/run.py status \
+  --output log/airsim/super-four-part/NEW-forest8
+python3 deployment/airsim/demos/super_forest/run.py stop \
+  --output log/airsim/super-four-part/NEW-forest8
+```
+
+`ground` 不解锁；short 与 forest8 会发送仿真飞行指令。使用 domain94、drone0、
+system61 和独立端口组，占用时拒绝启动。工作站 overlay 默认在
+`log/airsim/super-four-part/workstation/`，可用 `--workstation-workspace` 显式选择。
+`workstation.py` 核对接口源哈希后编译；`compute_runtime.py` 在板端启动导航、SUPER
+和 Adapter，发布就绪状态；`mission.py` 等待能力就绪后经 ROS 配置目标并调用行为。
+HDC 负责部署、生命周期诊断与取证，任务调用不依赖板端 AirSim RPC。
+
+任务结束后先确认停止和降落解除解锁，再由部署层回收本轮服务。`stop` 请求所属
+任务恢复；恢复未确认时保留板端执行、独立中继和仿真。候选安装、overlay 与证据保留。
+本模式没有失流注入接口，取消/外部接管用例尚未完成验收。
+
+[四方 Validation（2026-11-09）](VALIDATION-four-part-20261109.md)：地面与4m短程通过，
+误差0.115m；原 forest8 飞行约245m后滚动更新被拒，未到达终点，已停止并降落解除解锁。
+拒绝根因尚未确定，不影响四方职责和入口说明，也不提升为完整原任务或长期可靠性通过。
+
+| 执行位置 | 算法/导航/Adapter | AS2 | Mission |
+| --- | --- | --- | --- |
+| `four-part`（四方职责入口） | RoboPi | RoboPi | 工作站固定 ROS 镜像 |
+| `pc`（兼容默认） | PC 应用容器 | PC | PC 应用容器 |
+| `robopi`（旧混合） | PC 应用容器 | RoboPi | PC 应用容器 |
+| `robopi-all`（历史全板端） | RoboPi | RoboPi | RoboPi |
+
+下文保留旧模式的构建、参数和验证记录。原单点桥与 FollowTimedPath 的历史证据分别适用。
 
 ## 新迁移链路的 PC 入口
 
@@ -220,7 +269,7 @@ python3 deployment/airsim/demos/super_forest/analyze.py log/airsim/super-migrati
 ```
 
 本轮没有更新 RoboPi 安装，没有验证 OHOS 编译或板端执行。现有
-`build_lib.sh`/`deploy_lib.sh` 的组件列表不包含SUPER，不应将PC镜像当作板端产物。
+`build_lib.sh super` 与 `deploy_lib.sh --component as2 --include-super` 已提供板端构建/候选安装；不应将PC镜像当作板端产物。
 
 ### PC 规划、RoboPi 执行候选入口
 
