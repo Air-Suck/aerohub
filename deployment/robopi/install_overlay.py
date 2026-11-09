@@ -28,26 +28,31 @@ def install(root, bundle, as2_root=None):
         for name, digest in manifest['files'].items():
             assert hashlib.sha256((component/'install'/name).read_bytes()).hexdigest() == digest, name
     switched=[]
+    rollback=stage/'.rollback'
+    rollback.mkdir()
     try:
         for name in ('as2','catora','swarm-formation'):
             incoming = stage/name
             if not incoming.exists(): continue
             target = as2_root if name == 'as2' else root/('lib/'+name)
             target.mkdir(parents=True, exist_ok=True)
-            previous = stage/(name+'.old')
-            if (target/'install').exists(): os.rename(target/'install', previous)
-            try:
-                os.rename(incoming/'install', target/'install')
-            except BaseException:
-                if previous.exists(): os.rename(previous, target/'install')
-                raise
-            switched.append((target, previous))
-            for file in incoming.iterdir(): os.replace(file, target/file.name)
+            (rollback/name).mkdir()
+            # Include directories such as super_app; retain runtime evidence outside payload.
+            for child in sorted(incoming.iterdir(),key=lambda p:(p.name=='deployment.json',p.name)):
+                destination=target/child.name
+                previous=rollback/name/child.name
+                if destination.exists():os.rename(destination,previous)
+                try:os.rename(child,destination)
+                except BaseException:
+                    if previous.exists():os.rename(previous,destination)
+                    raise
+                switched.append((destination,previous))
             (target/'runtime').mkdir(exist_ok=True)
     except BaseException:
-        for target, previous in reversed(switched):
-            shutil.rmtree(target/'install')
-            if previous.exists(): os.rename(previous, target/'install')
+        for destination, previous in reversed(switched):
+            if destination.is_dir():shutil.rmtree(destination)
+            else:destination.unlink()
+            if previous.exists():os.rename(previous,destination)
         raise
     shutil.rmtree(stage)
     bundle.unlink()

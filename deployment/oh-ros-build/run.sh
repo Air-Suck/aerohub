@@ -28,6 +28,7 @@ fi
 exec docker run --rm --pull never "${terminal[@]}" --name aerohub-oh-ros-build --network none \
   -v "$work:/work" -v "$deps:/target-out:ro" \
   -v "$root/deployment/oh-ros-build:/opt/aerohub/ohos:ro" \
+  -e ROS_DISTRO=humble \
   -e WS_ROOT=/work/root -e OHOS_SDK=/work/root/ohos-robot-toolchain/18 \
   -e OHOS_WORKSPACE=/work/ws -e OHOS_SYSDEPS=/target-out \
   -e OHOS_INSTALL_PREFIX="${OHOS_INSTALL_PREFIX:-/data/aerohub/as2/install}" \

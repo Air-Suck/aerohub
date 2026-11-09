@@ -33,6 +33,7 @@ include_directories(BEFORE
 )
 
 
+set(SUPER_PNG_LIBRARY "" CACHE FILEPATH "Optional target libpng matching PCL IO symbol versions")
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rog_map REQUIRED)
@@ -114,6 +115,7 @@ endif()
 target_link_libraries(fsm_node PUBLIC
         super
         ${third_party_libs}
+        ${SUPER_PNG_LIBRARY}
 )
 ament_target_dependencies(fsm_node PUBLIC
         ${ros_libs}

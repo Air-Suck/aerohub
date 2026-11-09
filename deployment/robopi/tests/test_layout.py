@@ -37,6 +37,8 @@ class LayoutTest(unittest.TestCase):
                     self.assertIn(prefix+'/install/'+name+'/lib',text)
                     self.assertIn('/data/aerohub/as2/install/as2_core/lib',text)
                     self.assertNotIn('/data/local/tmp/',text)
+            (payload/'as2/super_app').mkdir()
+            (payload/'as2/super_app/mission.py').write_text('current mission')
             (target/'.deploy').mkdir(parents=True)
             bundle = target/'.deploy/overlay.tar.gz'
             def send():
@@ -45,8 +47,13 @@ class LayoutTest(unittest.TestCase):
                 installer.install(target,bundle)
             send()
             (target/'as2/install/obsolete').write_text('old')
+            (target/'as2/super_app/obsolete.py').write_text('old')
+            (target/'as2/runtime/keep.log').write_text('evidence')
             send()
             self.assertFalse((target/'as2/install/obsolete').exists())
+            self.assertFalse((target/'as2/super_app/obsolete.py').exists())
+            self.assertEqual((target/'as2/super_app/mission.py').read_text(),'current mission')
+            self.assertEqual((target/'as2/runtime/keep.log').read_text(),'evidence')
             self.assertFalse((target/'.deploy/stage').exists())
             self.assertTrue((target/'lib/catora/install/mrs_formation_reshaping').is_dir())
             # A corrupt payload fails before replacing either installed component.
@@ -80,6 +87,18 @@ class CandidateTest(unittest.TestCase):
             self.assertEqual((device/'as2/sentinel').read_text(), 'existing')
             with self.assertRaises(ValueError):
                 packager.package(source, root/'bad', 'all', prefix)
+
+    def test_super_candidate_includes_native_and_bridge_at_same_prefix(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder);source=root/'source'
+            for name in packager.AS2_PACKAGES | packager.SUPER_PACKAGES:
+                share=source/name/'share'/name;share.mkdir(parents=True)
+                (share/'package.xml').write_text('<package/>')
+                (share/'path.sh').write_text('/work/ws/install/'+name+'/lib')
+            prefix='/data/aerohub/validation/super-follow-path/as2'
+            packager.package(source,root/'payload','as2',prefix,include_super=True)
+            for name in packager.SUPER_PACKAGES:
+                self.assertEqual((root/'payload/as2/install'/name/'share'/name/'path.sh').read_text(),prefix+'/install/'+name+'/lib')
 
     def test_incomplete_execution_install_is_rejected(self):
         with tempfile.TemporaryDirectory() as folder:
