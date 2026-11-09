@@ -1,0 +1,154 @@
+{
+  "date": "2026-11-09",
+  "scope": "PC SUPER native/bridge → RoboPi candidate FollowTimedPath → PX4/AirSim; not accepted for flight",
+  "source_base": "b32eaea8f2d13c08012f4548f7f4fbd8442740a7",
+  "candidate_root": "/data/aerohub/validation/super-follow-path/as2",
+  "build": {
+    "ohos_runtime_packages": 14,
+    "target": "aarch64 / cpython-312-aarch64-linux-ohos",
+    "evidence": "log/airsim/super-robopi/build.log"
+  },
+  "candidate_archive_sha256": "88cbbd54b25f835cdbd292e15f310dc2c8aff9eb2741c9e58677d9ea01a2ae80",
+  "candidate_source_manifest": "log/airsim/super-robopi/ground-06/board-deployment.json",
+  "ground_image_ids": {
+    "application": "sha256:919018f5ae55fe9a440e9b5cdb836365bfcf493f14b3eb322d072e4a5ba15dbb",
+    "flight_board": "sha256:8c33881fde6985fe5a43a894bde075471df85064e45ac8e5de28efebcc737cd2"
+  },
+  "runs": {
+    "ground-01": {
+      "success": false,
+      "case": "ground",
+      "error": "timeout during preparing",
+      "phase": "preparing",
+      "counts": {
+        "odom": 6327,
+        "controller": 633
+      },
+      "motion_requested": null,
+      "landed_and_disarmed": null,
+      "evidence": "log/airsim/super-robopi/ground-01/result.json",
+      "sha256": "058dd8c9f21f71d9a9f5b379644088641d1b1d03c2029471e55a1113934fa294"
+    },
+    "ground-02": {
+      "success": false,
+      "error": "Port preflight rejected before launch",
+      "evidence": "log/airsim/super-robopi/ground-02.log"
+    },
+    "ground-03": {
+      "success": false,
+      "case": "ground",
+      "error": "timeout during preparing",
+      "phase": "preparing",
+      "counts": {
+        "odom": 6304,
+        "controller": 631
+      },
+      "motion_requested": false,
+      "landed_and_disarmed": null,
+      "evidence": "log/airsim/super-robopi/ground-03/result.json",
+      "sha256": "0d70f2767bb5081bf45e79f0e0ff199a1db44392ebac13e6cb5e659197878095"
+    },
+    "ground-04": {
+      "success": false,
+      "case": "ground",
+      "error": "timeout during preparing",
+      "phase": "preparing",
+      "counts": {
+        "clock": 3533,
+        "odom": 5272,
+        "controller": 527,
+        "cloud": 486
+      },
+      "motion_requested": false,
+      "landed_and_disarmed": null,
+      "evidence": "log/airsim/super-robopi/ground-04/result.json",
+      "sha256": "e41bf3eb6494d236a5ea4402755e405d02d33bbf0678d3d9ca7f2f0209d95422"
+    },
+    "ground-05": {
+      "success": true,
+      "case": "ground",
+      "error": null,
+      "phase": null,
+      "counts": {
+        "odom": 1443,
+        "clock": 971,
+        "controller": 145,
+        "cloud": 133,
+        "map": 9,
+        "inflated": 3
+      },
+      "motion_requested": false,
+      "landed_and_disarmed": true,
+      "evidence": "log/airsim/super-robopi/ground-05/result.json",
+      "sha256": "b2feb0b128a5537ae6b4a1d551940fd5bdb183e5da4b77fdbc2778134b917c99"
+    },
+    "ground-06": {
+      "success": true,
+      "case": "ground",
+      "error": null,
+      "phase": null,
+      "counts": {
+        "controller": 130,
+        "clock": 879,
+        "odom": 1299,
+        "cloud": 118,
+        "map": 5,
+        "inflated": 3
+      },
+      "motion_requested": false,
+      "landed_and_disarmed": true,
+      "evidence": "log/airsim/super-robopi/ground-06/result.json",
+      "sha256": "bcc0aa76f68a0f10e75cfe3e3704544132bc537628b19e5c13785198b0ea8618"
+    },
+    "short-01": {
+      "success": false,
+      "case": "short",
+      "error": "PX4 rejected command 176: 1",
+      "phase": "arming",
+      "counts": {
+        "odom": 1346,
+        "controller": 142,
+        "clock": 946,
+        "cloud": 120,
+        "map": 6,
+        "inflated": 4
+      },
+      "motion_requested": true,
+      "landed_and_disarmed": true,
+      "evidence": "log/airsim/super-robopi/short-01/result.json",
+      "sha256": "f83e286ded0cb785102f5bef9ed894d9a78f69f63cb8ef3f693960958fcc7494"
+    }
+  },
+  "clock_offset_samples_seconds": [
+    -2.77886299,
+    -2.77251282,
+    -2.771119674
+  ],
+  "blocker": "PX4 command 176 temporarily rejected in short-01. Board wall clock differs ~-2.77 s; existing runtime requires <=0.5 s. System clock change rejected by automatic approval review; user authorization pending. Clock skew is a likely cause, not yet confirmed by synchronized regression.",
+  "not_covered": [
+    "short normal trajectory execution",
+    "cancel fault flight",
+    "SUPER input-loss fault flight",
+    "external mode takeover fault flight",
+    "forest8 first run",
+    "forest8 second run",
+    "cross-machine trajectory PVA scoring",
+    "long-term reliability"
+  ],
+  "cleanup": {
+    "candidate_processes": [],
+    "pc_run_containers": [],
+    "candidate_install_preserved": true,
+    "evidence": "log/airsim/super-robopi/cleanup-processes.json"
+  },
+  "test_counts": {
+    "layout": 4,
+    "execution_configuration": 3,
+    "ros_construction": "passed, current image; no motion"
+  },
+  "limits": "Ground success does not prove flight. Short failure retained; no retry-filtered acceptance. Input ages include source cadence and transport, not pure network latency.",
+  "implementation_commit": "8f994b8ef1c9ad25ef8a42e72b8399e29e732100",
+  "transferred_archive_sha256": "7ecbff98d898dc715969d1732418ed55db061c67f1107a23d764f4c9b29359b2",
+  "installed_file_manifest_sha256": "a737cb192aca6a03af06b68d4ded3693f4ed70c2087a8eea5c07bf684524b4c8",
+  "diagnostic_update": "After installation, board_smoke.py was replaced with the repository path-relative diagnostic; install package contents unchanged."
+}

@@ -17,3 +17,7 @@ description: 为 OpenHarmony 交叉编译 ROS 2 包时使用，涵盖构建条�
 - 使用目标工具链检查产物架构、动态依赖及适用的 ABI，不在 PC 上直接执行目标程序。分别报告编译、静态检查和板端运行验证结果。
 
 当前仓库的构建经验按需查阅 [OHOS 构建记录](../../deployment/robopi/README.md)；需要板端交互时使用 [hdc-helper](../hdc-helper/SKILL.md)。
+
+## 工作区版本与补丁冲突
+
+主仓库 gitlink 与本地 AS2/Pixhawk checkout 不同时，先记录两者及 dirty 状态。当前构建契约使用 gitlink 加兼容补丁：从子仓 `git archive <gitlink>` 导出隔离副本再应用补丁，保留用户 checkout；不要向已经包含补丁的 checkout 再应用同一补丁。`tools/robopi/prepare_ohos_sources.py` 按此导出并在 current-sources.json 记录锁定提交和实际同步源码哈希。导出成功不证明目标编译或板端加载成功。

@@ -11,7 +11,7 @@ description: 使用现有 OHOS build Docker，将 AS2 和指定算法库部署�
 
 - `/data/aerohub/as2/install/`：AS2 与公共运行依赖；环境入口为 `/data/aerohub/as2/board_env.sh`。
 - `/data/aerohub/lib/<应用名>/install/`：算法及其必要应用包；CAT-ORA 使用 `catora`，Swarm-Formation 使用 `swarm-formation`；各自的 `env.sh` 先加载 AS2 再加载应用。
-- 配置和 `runtime/` 放在各自目录下。安装路径固定，新的部署替换对应 `install/`，成功后清理用于回退的临时旧安装，不积累时间戳版本目录。
+- 配置和 `runtime/` 放在各自目录下。默认安装路径固定，隔离候选 AS2 见下节；新的部署替换对应 `install/`，成功后清理用于回退的临时旧安装，不积累时间戳版本目录。
 
 复用 `tools/robopi/deploy_lib.sh --component as2|catora|swarm-formation|all` 分别更新。部署默认不切换本机 `.env`；需要切换时显式使用 `--activate-config`，成功后更新 `ROBOPI_ROOT`。迁移期间旧路径仍在被使用时，可先在独立新路径落盘，保留旧配置与运行，验收和旧目录清理另做；不停止旧消费者来腾出资源。
 
@@ -43,3 +43,9 @@ description: 使用现有 OHOS build Docker，将 AS2 和指定算法库部署�
 停止本次验证进程，复查 wrapper 的子进程、端口与锁均已释放；HDC 返回或超时后另查板端。保留已部署程序和验证日志。用户要求保留运行时按其要求交接进程身份和停止方法。
 
 交接只报告部署位置、版本、启动及最小接口结果、未通过项；不将这些结果描述为完整集成或飞行验收。用户暂停时清理本任务后等待恢复指令。
+
+## 隔离候选 AS2
+
+AS2 可显式使用 `--component as2 --as2-root /data/aerohub/validation/<任务>/as2`；默认前缀不变。非默认路径只接受 AS2，且不与 `--activate-config` 共用。先用 `--prepare-only <归档>` 检查完整包集（包括 uav_follow_path_execution），再核对 ELF、Python ABI 和内容哈希。候选 board_env.sh、逐包文本前缀、manifest 与安装器使用同一前缀；仅改变解包目录不够。替换前只检查该候选路径的消费者，保留其他安装和任务。候选模式的布局单元测试不等于板端加载或飞行验收。
+
+在已安装候选中运行诊断时，诊断脚本应由自身位置定位 install 和日志，避免继续加载默认 AS2。候选 Python 类型支持和 FollowTimedPath 可发现性均须在实际目标解释器检查；PC 构造通过不能代替 OHOS 加载。系统 ROS、默认安装和默认配置均保持原样。
