@@ -1,8 +1,9 @@
-# Forest 8 m/s：PC SUPER → RoboPi AS2 → PX4
+# SUPER forest8：PC 验收与历史 RoboPi 链路
 
-这是 SUPER 的端到端样例：真实 LiDAR / AS2 定位 → SUPER → 单点轨迹 adapter
-→ RoboPi AS2 → PX4 / AirSim。任务入口为 `forest8_as2_mission.py`，算法源码仍在
-`src/planner/super/upstream/`，公共执行桥仍在 `src/behavior/legacy_setpoint/`。
+当前 PC 验收链为实际 AirSim LiDAR / PX4 状态 → SUPER → 时间化 Adapter →
+FollowTimedPath → onboard_computer 中的 AS2 → PX4 SITL / AirSim。
+历史 `forest8_as2_mission.py` 属于单点轨迹桥 → RoboPi AS2 的不同运行组合，
+保留用于追溯，不与下方 PC 新链路混用。
 
 ## 新迁移链路的 PC 入口
 
@@ -51,6 +52,39 @@ Adapter说明与测试见 [SUPER接入](../../../../src/planner/super/README.md)
 本轮原镜像已复现首点偏移 0.1622m 导致接管拒绝，随后正常降落；隔离回归脚本
 `tests/verify_native_start.py` 使用真实 SUPER 节点和明确的合成里程计/平面点云检查
 首条原生多项式起点。该检查只是启动边界回归，不能代替完整 AirSim/PX4 飞行。
+
+### 2026-11-09 合并后 PC 验收
+
+基线 `a9ddf15` 的本机首轮在初始连续性检查处失败；加入 `dc4a8d9` 的原生启动
+修复后，第二轮完成原 forest8 任务。完整版本、预设判据、失败、镜像 ID 和关键证据
+哈希见 [版本化验收摘要](pc-acceptance-20261109.json)。这是修复后单次功能通过。
+
+| 指标 | 本轮结果 |
+| --- | --- |
+| 实际执行环境 | 新构建的 onboard_computer 派生应用容器；PX4/传感器使用固定 flight_board |
+| 接管、Action 完成、到点保持、停止确认 | 通过 |
+| 降落解除解锁 | 通过；随后回收本轮容器和场景 |
+| 到点误差 | 0.221 m，门槛 1.5 m；速度低于 0.3 m/s 保持 2 仿真秒 |
+| 航段时长 / 观测路径 | 42.35 仿真秒 / 270.22 m |
+| 观测边界 | 0 个越界样本；不作连续时间内无遗漏的保证 |
+| 碰撞 | 本轮未检测到新碰撞 |
+| 峰值速度 | 8.94 m/s；高于名义 8 m/s，严格限速未通过 |
+| 原生计划与执行参考 | 记录 499 条计划、2538 条参考；2538 条参考均有源曲线候选 |
+| 接口和回归 | 框架 27 项、SUPER 8 项无跳过；真实原生启动、节点构造、Behavior 生命周期及采样器检查通过 |
+
+应用镜像为 `uav/apps-super-forest:super-main-pc-20261109-startfix`，ID
+`sha256:b30487573240725517560a8a72ee4b60f00f5bc448cfb1a18a0792365f5d379b`。
+机载基底由本轮官方 AS2/Pixhawk gitlink 与当前补丁重编，并非旧 v0.1.0 安装直接冒充。
+固定 PX4 消息工具链和场景仍是明确的既有前置依赖，不宣称空机无外部资源复现。
+
+原始证据保留在 `log/airsim/super-main-pc-20261109/`，包括两轮结果、DDS 连接与
+真实传感器样本、计划/参考、构建与测试日志、`artifact-index.json` 和轨迹/速度图。
+原始工件和镜像不随 Git 打包；上述精简摘要受版本管理。重复运行请显式设置
+`SUPER_APP_IMAGE` 并使用新输出目录，不能覆盖首次失败。
+
+本轮没有进行重复成功率、受控备用切换、独立占据起点逃逸、RoboPi/OHOS 或混合
+部署验收；备用 flag=2 的 15 条消息不代表 15 次独立切换。PVA 候选最佳匹配也不证明
+唯一 revision 绑定或所有输入的插值误差上界。
 
 ## 历史链路的运行前提与任务入口
 

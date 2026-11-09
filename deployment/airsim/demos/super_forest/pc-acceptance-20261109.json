@@ -1,0 +1,366 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-09",
+  "scope": "Single PC Docker AirSimNH forest8 run through native SUPER -> timed Adapter -> FollowTimedPath -> AS2 -> PX4 SITL",
+  "baseline_commit": "a9ddf15006a6a36d53fa0316b87a8da590fd7253",
+  "accepted_code_commit": "dc4a8d9ab5e4bc7f9b760f1b8751464751188d6a",
+  "fix_branch": "fix/super-main-pc-acceptance",
+  "conclusion": {
+    "baseline_main": "failed initial trajectory continuity before route; recovered by stopping and landing",
+    "patched_functional_mission": "passed once",
+    "observed_bounds": "no out-of-bounds route samples",
+    "strict_speed_limit": "not passed; original task uses observe",
+    "overall_unqualified_readiness": false
+  },
+  "build": {
+    "source": "Git archive of baseline commit plus startup patch and test; exact gitlink dependency archives; existing worktree fork checkouts preserved",
+    "dependency_commits": {
+      "as2/aerostack2": "19c397309c6a41b279e6b551818ec12605cfcecc",
+      "as2/as2_platform_pixhawk": "fcba062219935acef69dfa009c8be376c707ee8a",
+      "src/planner/super/upstream": "3bfa4033361bbdc7cd814c94aff826e6e1679018"
+    },
+    "images": {
+      "onboard_computer:super-main-pc-20261109": "sha256:bef412e3ee00ed55287bc4f5da617a1d310cd201b40d2ccae9f38ea4a906b2bf",
+      "uav/apps-super-forest:super-main-pc-20261109": "sha256:e4c18ba14b64773225faed46953cb5bf4dbba0a9abe71619f59531b327179e0e",
+      "uav/apps-super-forest:super-main-pc-20261109-startfix": "sha256:b30487573240725517560a8a72ee4b60f00f5bc448cfb1a18a0792365f5d379b",
+      "flight_board:airsim-px4-humble-threaded-20261105": "sha256:8c33881fde6985fe5a43a894bde075471df85064e45ac8e5de28efebcc737cd2"
+    },
+    "native_base_image": "sha256:592f97da6b871a438fdb97f86b422ab9f80657e80efa7b98d258894738c8a0c0",
+    "px4_message_dependency_image": "sha256:bbec0217f06d563aabbd86606d1107439fd7ad53f0c11eb1e9998b9b00a0d100",
+    "as2_patch_sha256": "5bd9a5c9e546289929d61757fab3771c538ef15f1e2326a56bebd5f4b5a2a89f",
+    "super_patch_sha256": "9233eabcbd38795b762160fadc4c24bcbd45147fd3e15efa9deff1d1489bef08",
+    "scene_settings_sha256": "941ee9c23343e95ffaee1c07ee56175392b58f44947f3cef5f4bdec7622424b7",
+    "task_sha256": "914cfa2283f8ec7ffd9cf5f3e5be16644346fa9632ccd607d2b073049ab6c982"
+  },
+  "preset_acceptance": {
+    "scene": "AirSimNH forest8",
+    "backend": "follow_path",
+    "goal_error_m": 1.5,
+    "goal_speed_m_s": 0.3,
+    "goal_hold_sim_s": 2,
+    "required": [
+      "Action success",
+      "arrival hold",
+      "stop confirmation",
+      "landed and disarmed",
+      "no new collision"
+    ],
+    "observed_constraints": [
+      "original bounds",
+      "8 m/s nominal speed"
+    ],
+    "not_covered": [
+      "RoboPi",
+      "OHOS",
+      "controlled backup switching",
+      "repeat reliability"
+    ]
+  },
+  "attempts": [
+    {
+      "name": "attempt1",
+      "image": "uav/apps-super-forest:super-main-pc-20261109",
+      "success": false,
+      "error": "EXECUTION_FAILED:FOLLOW_PATH_REJECTED:drone0",
+      "native_warning": "initial point is not continuous with vehicle position",
+      "stop_confirmed": true,
+      "landed_and_disarmed": true,
+      "root_cause": "Native PlanFromRest snapped an already nonoccupied measured start to the 0.2m voxel center; the initial displacement exceeded the unchanged 0.15m Behavior guard."
+    },
+    {
+      "name": "attempt2",
+      "image": "uav/apps-super-forest:super-main-pc-20261109-startfix",
+      "success": true
+    }
+  ],
+  "regression": {
+    "method": "Real native SUPER process, fixed odometry and explicitly synthetic plane cloud, no flight",
+    "before_start_error_m": 0.16220108649028747,
+    "after_start_error_m": 0.0,
+    "guard_tolerance_m": 0.15,
+    "occupied_start_handling": "Original nearest nonoccupied-cell search remains in the fallback branch; occupied-start behavior was not independently exercised in this run."
+  },
+  "tests": {
+    "framework": {
+      "passed": 27,
+      "skipped": 0
+    },
+    "super": {
+      "passed": 8,
+      "skipped": 0
+    },
+    "actual_node_construction": "passed",
+    "actual_cpp_behavior_actions": "passed future start, legacy exclusion, updates, pause/replan, cancel, expiration and derivative feedforward",
+    "actual_cpp_terminal_and_external_takeover": "passed",
+    "cpp_timeline": "passed",
+    "cpp_interpolation": "passed; seventh-order fixture max P/V/A errors 6.93e-12, 1.17e-9, 4.16e-7",
+    "native_start_regression": "red before patch, green after patch"
+  },
+  "result": {
+    "execution_backend": "follow_path",
+    "arrived": true,
+    "execution_completed": true,
+    "arrival_error_m": 0.22092067109269373,
+    "route_sim_seconds": 42.34890341758728,
+    "final_task_enu_m": [
+      -37.63351136975871,
+      231.89523894916056,
+      5.8372650146484375
+    ],
+    "behavior_stop_confirmed": true,
+    "landed_and_disarmed": true,
+    "success": true,
+    "max_speed_m_s": 8.94440227788446,
+    "bounds_observation_count": 0,
+    "source_flags": {
+      "1": 5495,
+      "2": 15
+    },
+    "counts": {
+      "clock": 4845,
+      "controller": 764,
+      "odom": 7531,
+      "cloud": 683,
+      "map": 172,
+      "inflated": 132,
+      "reference": 2538
+    }
+  },
+  "final_adapter_state": {
+    "enabled": false,
+    "error": "",
+    "task_id": "0613fa0f-e560-4f5b-a311-724dcd31b5c3",
+    "revision": 500,
+    "complete": false,
+    "settling": false,
+    "stop_confirmed": true,
+    "source_flags": {
+      "1": 2008,
+      "2": 8
+    },
+    "late_updates": 2,
+    "last_curve": {
+      "source_start": 1794216054.0631692,
+      "source_end": 1794216056.2802024,
+      "submitted_from": 1794216056.362216,
+      "endpoint": [
+        -37.5,
+        231.70000000000002,
+        6.1000000000000005
+      ],
+      "end_velocity": [
+        1.021405182655144e-14,
+        -1.4210854715202004e-14,
+        2.789435349370706e-15
+      ],
+      "is_final": true,
+      "pieces": 5
+    }
+  },
+  "analysis": {
+    "result_success": true,
+    "axis_min_max_task_enu_m": [
+      [
+        -37.843266313606364,
+        18.149192029899496
+      ],
+      [
+        0.00037236668867990375,
+        232.40614898334024
+      ],
+      [
+        2.002593994140625,
+        8.517654418945312
+      ]
+    ],
+    "observed_route_length_m": 270.2203053198313,
+    "bounds_policy": "observe",
+    "out_of_bounds_samples": 0,
+    "sampled_out_of_bounds_seconds_estimate": 0,
+    "strict_bounds_pass_for_observed_samples": true,
+    "source_flag_counts": {
+      "1": 5495,
+      "2": 15
+    },
+    "native_plans_recorded": 499,
+    "references_recorded": 2538,
+    "references_with_source_curve_candidate": 2538,
+    "max_best_match_pva_difference": [
+      1.905830305938525e-06,
+      5.83259267236963e-06,
+      0.0018183141938806387
+    ],
+    "matching_note": "Best match across received native plans at reference header time; includes interpolation and publication timing error, and does not prove a unique revision mapping."
+  },
+  "connection_evidence": {
+    "nodes_observed": 16,
+    "sample_counts": {
+      "/drone0/navigation/odom": 363,
+      "/drone0/sensor_measurements/DownCamera/depth_perspective/image": 38,
+      "/drone0/sensor_measurements/Lidar/points": 68,
+      "/drone0/navigation/points": 68
+    },
+    "samples": {
+      "/drone0/navigation/odom": {
+        "frame": "drone0/odom",
+        "stamp": 1794216019.3974297
+      },
+      "/drone0/sensor_measurements/DownCamera/depth_perspective/image": {
+        "frame": "drone0/DownCamera_optical",
+        "stamp": 1794216019.2654269,
+        "width": 256,
+        "height": 256,
+        "encoding": "32FC1",
+        "data_bytes": 262144
+      },
+      "/drone0/sensor_measurements/Lidar/points": {
+        "frame": "drone0/Lidar",
+        "stamp": 1794216019.2654269,
+        "points": 11024,
+        "fields": [
+          "x",
+          "y",
+          "z"
+        ],
+        "point_step": 12
+      },
+      "/drone0/navigation/points": {
+        "frame": "drone0/odom",
+        "stamp": 1794216019.2654269,
+        "points": 11024,
+        "fields": [
+          "x",
+          "y",
+          "z"
+        ],
+        "point_step": 12
+      }
+    },
+    "raw_cloud_frame": "drone0/Lidar",
+    "registered_cloud_frame": "drone0/odom",
+    "clock_publishers": [
+      {
+        "name": "platform_clock_bridge",
+        "namespace": "/",
+        "type": "rosgraph_msgs/msg/Clock",
+        "reliability": "ReliabilityPolicy.BEST_EFFORT",
+        "durability": "DurabilityPolicy.VOLATILE"
+      }
+    ],
+    "polynomial_publishers": [
+      {
+        "name": "fsm_node",
+        "namespace": "/",
+        "type": "mars_quadrotor_msgs/msg/PolynomialTrajectory",
+        "reliability": "ReliabilityPolicy.BEST_EFFORT",
+        "durability": "DurabilityPolicy.VOLATILE"
+      }
+    ],
+    "polynomial_consumers": [
+      {
+        "name": "super_forest_migration",
+        "namespace": "/",
+        "type": "mars_quadrotor_msgs/msg/PolynomialTrajectory",
+        "reliability": "ReliabilityPolicy.BEST_EFFORT",
+        "durability": "DurabilityPolicy.VOLATILE"
+      },
+      {
+        "name": "super_timed_path_adapter",
+        "namespace": "/drone0",
+        "type": "mars_quadrotor_msgs/msg/PolynomialTrajectory",
+        "reliability": "ReliabilityPolicy.BEST_EFFORT",
+        "durability": "DurabilityPolicy.VOLATILE"
+      }
+    ],
+    "motion_reference_publishers": [
+      {
+        "name": "TakeoffBehavior",
+        "namespace": "/drone0",
+        "type": "as2_msgs/msg/TrajectorySetpoints",
+        "reliability": "ReliabilityPolicy.BEST_EFFORT",
+        "durability": "DurabilityPolicy.VOLATILE"
+      },
+      {
+        "name": "TakeoffBehavior",
+        "namespace": "/drone0",
+        "type": "as2_msgs/msg/TrajectorySetpoints",
+        "reliability": "ReliabilityPolicy.BEST_EFFORT",
+        "durability": "DurabilityPolicy.VOLATILE"
+      },
+      {
+        "name": "LandBehavior",
+        "namespace": "/drone0",
+        "type": "as2_msgs/msg/TrajectorySetpoints",
+        "reliability": "ReliabilityPolicy.BEST_EFFORT",
+        "durability": "DurabilityPolicy.VOLATILE"
+      },
+      {
+        "name": "LandBehavior",
+        "namespace": "/drone0",
+        "type": "as2_msgs/msg/TrajectorySetpoints",
+        "reliability": "ReliabilityPolicy.BEST_EFFORT",
+        "durability": "DurabilityPolicy.VOLATILE"
+      },
+      {
+        "name": "GoToBehavior",
+        "namespace": "/drone0",
+        "type": "as2_msgs/msg/TrajectorySetpoints",
+        "reliability": "ReliabilityPolicy.BEST_EFFORT",
+        "durability": "DurabilityPolicy.VOLATILE"
+      },
+      {
+        "name": "GoToBehavior",
+        "namespace": "/drone0",
+        "type": "as2_msgs/msg/TrajectorySetpoints",
+        "reliability": "ReliabilityPolicy.BEST_EFFORT",
+        "durability": "DurabilityPolicy.VOLATILE"
+      },
+      {
+        "name": "FollowPathBehavior",
+        "namespace": "/drone0",
+        "type": "as2_msgs/msg/TrajectorySetpoints",
+        "reliability": "ReliabilityPolicy.BEST_EFFORT",
+        "durability": "DurabilityPolicy.VOLATILE"
+      }
+    ],
+    "interpretation": "Registered endpoint presence alone is not active-publisher identity; recorded PVA references were also compared against native curves. Adapter is absent from the motion-reference publisher list."
+  },
+  "cleanup": {
+    "runner_exit_code": 0,
+    "owned_scene_processes_alive": false,
+    "owned_docker_containers_remaining": 0,
+    "preexisting_five_containers_preserved": true
+  },
+  "evidence": {
+    "root": "log/airsim/super-main-pc-20261109",
+    "artifact_index": "log/airsim/super-main-pc-20261109/artifact-index.json",
+    "key_file_hashes": {
+      "baseline.json": "5428954d1e9a6bc03297028617615201a799e40b3760b2e0f369513dfe73dca0",
+      "attempt1/result.json": "0f3760bf9e6c750c7dac2af2a7099203ea187b9083dda906bd1dfd7c67b89bb1",
+      "attempt2/result.json": "2e4143a59a8e66b12d7a78195784338b78cb865cd9074ea469e7722c70b81e6c",
+      "attempt2/flight.jsonl": "f96ce1c4ecf9f08fb7bda6561972de8d5b807ee9943ff6cad96c7d5a3f80847f",
+      "attempt2/analysis.json": "fe52b5fec2f0d64bc67e7bc24e6753fc87c169f54969c2de6eb79a3e813ebde1",
+      "attempt2/dds-connection-evidence.json": "daa2f523ceef1cba8df47a0269dfc63b76893d2dfb6c3af2f7bc4631a893c4f4",
+      "start-replay-red.log": "0b59e7daac53f761d0d7c5dcb052ddca81255858c430df912c3e549024068edb",
+      "start-replay-green.log": "bc0a4eaaf0ac6b96faa5617d3071993739c786add71a4cb1d336f2bba642cc7b",
+      "startfix-interfaces-and-lifecycle.log": "23ebb25623b293a92dc164fb09255f6f2320919ebf6ab81c1ecaa2d604bc3142",
+      "final-binary-checksums.log": "2cc270b7d77c0750b46ba09c9091618c758b9ac2b0ed083eae9645e334737b92",
+      "super-pc-acceptance.png": "d249af4b240ffd74e110c1ce59fd253fc4eb393f81c4ce3dc3d059de03f04891"
+    },
+    "raw_availability": "Retained on the validation workspace under the relative root above; ignored raw artifacts and images are not bundled with Git. This compact summary is tracked."
+  },
+  "uncovered": [
+    "Repeat-run reliability",
+    "Controlled backup switching or fault injection",
+    "Independent occupied-start escape regression",
+    "RoboPi/OHOS or mixed deployment",
+    "Strict 8m/s speed-bound guarantee",
+    "General curve interpolation error bound or unique revision-to-reference binding"
+  ],
+  "reproduction": {
+    "image_build": "On a clean checkout with gitlink dependencies: build deployment/onboard_computer/Dockerfile from existing matching PX4 dependency image; then build the SUPER Dockerfile with BASE_IMAGE pointing to that new onboard image and explicit NATIVE_BASE_IMAGE. Record their actual IDs.",
+    "native_regression": "Run deployment/airsim/demos/super_forest/tests/verify_native_start.py in the built SUPER image after sourcing native and app setup; isolated ROS domain and no network.",
+    "run": "SUPER_APP_IMAGE=uav/apps-super-forest:super-main-pc-20261109-startfix python3 deployment/airsim/demos/super_forest/run.py run --output <fresh-output-directory>",
+    "analysis": "python3 deployment/airsim/demos/super_forest/analyze.py <fresh-output-directory>"
+  }
+}
