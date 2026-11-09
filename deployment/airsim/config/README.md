@@ -27,10 +27,10 @@ library 的注册不代表它支持所有场景。场景启动配置与 library 
 
 | 配置 | 用途 |
 | --- | --- |
-| [resources.example.yaml](resources.example.yaml) | 场景 binary 等外部资源路径示例 |
-| `resources.local.yaml` | 被 Git 忽略的本机资源路径，覆盖用户级映射 |
+| [resources.example.yaml](../../../simulator/airsim/config/resources.example.yaml) | 场景 binary 等外部资源路径示例，归 simulator 管理 |
+| `simulator/airsim/config/resources.local.yaml` | 被 Git 忽略的本机资源路径，覆盖用户级映射 |
 | [as2/](as2/README.md) | AS2 节点、机群与 PID 配置 |
 | [dds/](dds/README.md) | 公共 DDS UDP 配置 |
-| [airsim/](airsim/README.md) | 场景 profile、PX4 与传感器 settings |
+| [airsim/](../../../simulator/airsim/config/README.md) | 场景 profile、PX4 与传感器 settings |
 
 现有 Planner 任务与部署参数仍在 `src/planner/framework/examples/`，注册表引用它们。

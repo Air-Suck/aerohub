@@ -6,7 +6,7 @@ from rclpy.time import Time
 from rclpy.clock import ClockType
 from traj_utils.msg import PolyTraj
 
-path=Path(__file__).resolve().parents[2]/'humble/plan_manage/scripts/ros2_proxy.py'
+path=Path(__file__).resolve().parents[1]/'native/plan_manage/scripts/ros2_proxy.py'
 spec=importlib.util.spec_from_file_location('swarm_proxy_under_test',path)
 proxy=importlib.util.module_from_spec(spec);spec.loader.exec_module(proxy)
 

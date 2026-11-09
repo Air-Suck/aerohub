@@ -116,7 +116,7 @@ bash deployment/oh-ros-build/prepare.sh \
 首次准备需要 Git 网络访问；随后容器编译使用 `--network none`。
 已有离线 Git 仓库时可加 `--source-cache /path/to/cache`，目录内应包含
 `px4_msgs`、`vision_msgs`、`mocap4r2_msgs`、`pid_controller` 四个 Git 仓库，
-且含锁定提交。具体提交记录在 `tools/airsim/prepare_ohos_workspace.py` 的 `SOURCES`。
+且含锁定提交。具体提交记录在 `tools/robopi/prepare_ohos_workspace.py` 的 `SOURCES`。
 
 若提示缺少目标 GeographicLib、Python/NumPy、libyaml 或其他文件，应补齐
 对应的 OHOS 目标依赖；不能用宿主机 Linux 库代替，也不能创建空文件绕过检查。
@@ -153,7 +153,7 @@ bash deployment/oh-ros-build/run.sh shell
 
 ```bash
 # 同步活动 fork 和 PX4 消息后，编译 platform、estimator、controller、Behavior
-bash tools/airsim/robopi.sh build
+bash tools/robopi/robopi.sh build
 
 # 已同步源码时，直接使用 AS2 Runtime 包集合（包含 RMW 修复包）
 bash deployment/oh-ros-build/build_as2.sh runtime

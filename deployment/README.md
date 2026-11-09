@@ -25,10 +25,10 @@ RoboPi 原生运行 AS2，不运行 Docker。SDK、目标 ROS 和第三方依赖
 ## 首次使用顺序
 
 1. 完成官方指南，准备匹配的 SDK、目标依赖、官方 builder 和板端系统环境。
-2. 执行 `bash tools/airsim/prepare_sources.sh` 初始化仓库锁定的活动 submodule。
+2. 执行 `bash tools/robopi/prepare_sources.sh` 初始化仓库锁定的活动 submodule。
 3. 按[项目适配说明](oh-ros-build/README.md#首次初始化项目工作区)准备隔离工作区，填写 `.env`。
 4. 按[固定镜像说明](flight_board/README.md#使用固定镜像)加载 flight_board tar 和校验文件，或按[GHCR 说明](releases/README.md#从-ghcr-获取)拉取固定镜像并设置 `.env`。
-5. 从 [AirSim 仓库 Releases](https://github.com/microsoft/AirSim/releases) 下载对应 Linux 场景，按[场景说明](../config/airsim/README.md)配置 AirSim binary 资源，准备 PC 与板端网络。
+5. 从 [AirSim 仓库 Releases](https://github.com/microsoft/AirSim/releases) 下载对应 Linux 场景，按[场景说明](../simulator/airsim/config/README.md)配置 AirSim binary 资源，准备 PC 与板端网络。
 6. 需要 PC 开发或混合 Demo 时加载交付的 onboard_computer 镜像。
 7. 按[RoboPi 文档](robopi/README.md)编译、部署、启动和验收；Library 接入必须完成 RoboPi 验证，PC 验证不能替代。
 
@@ -49,11 +49,11 @@ RoboPi：OHOS AS2 原生进程
 `deployment/airsim/as2/`，传感器节点和订阅检查位于 `simulator/airsim/sensors/`。
 各部署入口复用这些文件，不维护另外一份实现。
 
-`.env` 保存设备、网络和构建目录，`deployment/airsim/config/resources.local.yaml` 保存外部场景路径。
+`.env` 保存设备、网络和构建目录，`simulator/airsim/config/resources.local.yaml` 保存外部场景路径。
 两者均由用户从模板创建，不提交 Git；已有本机文件不要覆盖。
 SDK、依赖快照、构建缓存与本机验收日志放在忽略目录，不属于源码交付。
 
-历史 Gazebo/PX4 1.17 部署见[固定历史参考](../docs/history/README.md#旧部署参考版本)。
+历史 Gazebo/PX4 1.17 部署见[固定历史参考](../docs/项目简介.md)。
 历史命令和路径不作为当前使用入口。
 
 ## 仓库验收与运行验收

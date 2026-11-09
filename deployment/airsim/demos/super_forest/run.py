@@ -24,7 +24,7 @@ def run(command,**kwargs):return subprocess.run(list(map(str,command)),check=Tru
 
 
 def manager(action,out):
-    return [sys.executable,str(ROOT/'tools/airsim/airsim/manager.py'),action,
+    return [sys.executable,str(ROOT/'simulator/airsim/manager/manager.py'),action,
             '--profile',str(out/'profile.json'),'--run-dir',str(out/'scene')]
 
 
@@ -53,25 +53,25 @@ def main():
         if not subprocess.run(['docker','container','inspect',name],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL).returncode:
             raise RuntimeError('Reserved container already exists: '+name)
     for image in (IMAGE,BOARD):run(['docker','image','inspect',image],stdout=subprocess.DEVNULL)
-    settings=json.loads((APP/'settings.json').read_text())
+    settings=json.loads((ROOT/'simulator/airsim/scenarios/super_forest/settings.json').read_text())
     settings['ApiServerPort']=43472
     vehicle=settings['Vehicles']['PX4']
     vehicle.update(TcpPort=4881,ControlPortLocal=15641,ControlPortRemote=15681)
     (out/'settings.json').write_text(json.dumps(settings,indent=2)+'\n')
     px4_settings=json.loads(json.dumps(settings));px4_settings['Vehicles']['PX4']['TcpPort']=4981
     (out/'px4-settings.json').write_text(json.dumps(px4_settings,indent=2)+'\n')
-    profile=json.loads((ROOT/'deployment/airsim/demos/catora_open_field/profile.json').read_text())
+    profile=json.loads((ROOT/'simulator/airsim/scenarios/catora_open_field/profile.json').read_text())
     profile['settings']=str(out/'settings.json')
     (out/'profile.json').write_text(json.dumps(profile,indent=2)+'\n')
     (out/'fleet.yaml').write_text(yaml.safe_dump({'vehicles':{'drone0':{'fmu_prefix':'/drone0','target_system_id':61}}}))
     hashes={str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest() for directory in
             (APP,ROOT/'src/planner/super/ros2_adapter',ROOT/'src/behavior/follow_path',
-             ROOT/'src/planner/framework',ROOT/'deployment/airsim/as2',ROOT/'deployment/airsim/config/as2') for p in directory.rglob('*')
+             ROOT/'src/planner/framework',ROOT/'deployment/airsim/as2',ROOT/'deployment/airsim/config/as2',ROOT/'deployment/platform/patches') for p in directory.rglob('*')
             if p.is_file() and '__pycache__' not in p.parts and p.suffix not in ('.png','.log')}
     (out/'source-manifest.json').write_text(json.dumps({'commit':subprocess.check_output(['git','-C',ROOT,'rev-parse','HEAD'],text=True).strip(),
         'super_commit':subprocess.check_output(['git','-C',ROOT/'src/planner/super/upstream','rev-parse','HEAD'],text=True).strip(),
         'submodules':{name:subprocess.check_output(['git','-C',ROOT/name,'rev-parse','HEAD'],text=True).strip()
-                      for name in ('as2/airsim/aerostack2','as2/airsim/as2_platform_pixhawk','src/planner/super/upstream')},
+                      for name in ('as2/airsim/aerostack2','as2/as2_platform_pixhawk','src/planner/super/upstream')},
         'source_hashes':hashes,'ports':{'rpc':43472,'tcp':4881,'relay':4981,'agent':8951},'ros_domain':94},indent=2)+'\n')
     relay=None
     try:

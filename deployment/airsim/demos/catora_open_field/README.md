@@ -9,7 +9,7 @@ CAT-ORA 不负责避让场景障碍。首次运行前应查看本应用的俯视
 
 ## 运行
 
-按 `deployment/airsim/config/airsim/README.md` 配置 `airsim_nh` 资源，准备本地固定
+按 `simulator/airsim/config/README.md` 配置 `airsim_nh` 资源，准备本地固定
 `flight_board` 和 `onboard_computer:v0.1.0` 镜像。仓库根目录：
 
 ```bash
@@ -29,7 +29,7 @@ PC 保留 AirSim、四个 PX4/Agent Docker 和 `/clock`，CAT-ORA 原生服务�
 Planner、轨迹桥和四机 AS2 均运行在 RoboPi。先配置 `.env` 的 HDC、网络和工作区。
 
 ```bash
-bash tools/airsim/build_lib.sh catora
+bash tools/robopi/build_lib.sh catora
 python3 deployment/airsim/demos/catora_open_field/run_robopi.py --preflight-only --output log/airsim/catora-ground-new
 python3 deployment/airsim/demos/catora_open_field/run_robopi.py --output log/airsim/catora-flight-new
 ```
@@ -38,7 +38,7 @@ python3 deployment/airsim/demos/catora_open_field/run_robopi.py --output log/air
 完整运行会发送四机起降和轨迹接管指令；只有 `result.json` 的完整验收条件
 通过才算飞行成功。启动成功或 `pipeline-probe.json` 不代表飞行通过。
 运行入口会替换 CAT-ORA 安装；AS2 需提前构建并用
-`bash tools/airsim/deploy_lib.sh --component as2` 部署，已有消费者时拒绝替换。
+`bash tools/robopi/deploy_lib.sh --component as2` 部署，已有消费者时拒绝替换。
 
 板端应用使用 `/data/aerohub/lib/catora/validation/run-<编号>` 保存本次辅助文件，
 程序仍加载 `/data/aerohub/as2/install` 和 `/data/aerohub/lib/catora/install`。
@@ -85,7 +85,7 @@ AirSim 保留 TCP 4680..4683；本应用通过回环 TCP 4780..4783 转发 MAVLi
 避免只验证 TCP 能通却影响 HIL 传感器节拍。
 
 ```bash
-source tools/airsim/load_env.sh
+source tools/robopi/load_env.sh
 python3 deployment/airsim/demos/catora_open_field/verify_sim_startup.py --output log/airsim/catora-startup-new
 ```
 
@@ -109,7 +109,7 @@ AS2 源年龄、未来偏差及失流保护没有放宽。后续增加节点或�
 `cat_ora_as2_adapter_node` 复用 PVA 转换，取消／暂停／失败／成功时将停止意图
 转为真实 AS2 HOVER 服务请求，要求响应成功和模式反馈；停止确认完成后保留结果，
 不因随后的降落模式撤销确认。Swarm 继续使用原公共输出入口。
-接口与测试说明见 [CAT-ORA adapter](../../src/planner/cat_ora/ros2_adapter/README.md)。
+接口与测试说明见 [CAT-ORA adapter](../../../../src/planner/cat_ora/ros2_adapter/bridge/README.md)。
 
 应用异常时先请求 AS2 悬停，尝试取消规划，再通过 AS2 降落；失败结果写入
 `results/failure-stop.json`，不会把清理进程当作停止成功。AS2 本身的失流保护仍启用。
@@ -152,7 +152,7 @@ AS2/GPS 高度原点偏差让自身反馈通过而实际目标未到达。
 
 ## 当前适配验收（2026-11-06）
 
-最终验收索引为 [stability-validation.json](stability-validation.json)，三次使用相同
+最终验收索引为 [stability-validation.json](../../../../log/pr-history/deployment/airsim/demos/catora_open_field/stability-validation.json)，三次使用相同
 板端安装清单、当前应用脚本、`.env` 指定的 PC 镜像和逐机 TF 配置：
 
 | 路径 | 结果 | 本机证据 |

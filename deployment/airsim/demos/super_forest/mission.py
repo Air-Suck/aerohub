@@ -31,7 +31,7 @@ class Mission(Node):
     def __init__(self):
         super().__init__('super_forest_migration',parameter_overrides=[Parameter('use_sim_time',value=True)])
         self.root=Path('/opt/super_app');self.out=Path('/evidence')
-        self.task=json.loads((self.root/'source-task.json').read_text())
+        self.task=json.loads((self.root/'task.json').read_text())
         self.rpc=Rpc('127.0.0.1',43472,timeout=5)
         self.phase='initializing';self.odom=None;self.platform=None;self.controller=None
         self.state={};self.acks={};self.counts=collections.Counter();self.flags=collections.Counter()
@@ -178,7 +178,7 @@ class Mission(Node):
         self.origin=self.position()
         target=[a+b for a,b in zip(self.origin,self.task['waypoints_enu_m'][-1])]
         config=yaml.safe_load((self.root/'planner.yaml').read_text())
-        historical=json.loads((self.root/'origin.json').read_text())['task_to_odom_translation_m']
+        historical=json.loads((self.root/'reference_origin.json').read_text())['task_to_odom_translation_m']
         config['rog_map']['fix_map_origin']=[a+b-c for a,b,c in zip(config['rog_map']['fix_map_origin'],self.origin,historical)]
         config['rog_map']['virtual_ground_height']=self.task['virtual_ground_height_m']+self.origin[2]
         config['rog_map']['virtual_ceil_height']=self.task['virtual_ceil_height_m']+self.origin[2]

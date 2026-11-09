@@ -16,7 +16,7 @@ AirSim、四个 PX4/Agent 与全局仿真时钟仍在 PC。
 docker image inspect uav/apps-catora-open-field:humble
 docker build --network none --pull=false -f deployment/airsim/demos/catora_open_field/hybrid/Dockerfile \
   -t uav/catora-hybrid-compute:local .
-bash tools/airsim/build_lib.sh catora
+bash tools/robopi/build_lib.sh catora
 python3 deployment/airsim/demos/catora_open_field/run_robopi.py --mixed --preflight-only --output log/airsim/hybrid-ground-new
 python3 deployment/airsim/demos/catora_open_field/run_robopi.py --mixed --output log/airsim/hybrid-flight-new
 ```
@@ -32,7 +32,7 @@ AS2 和 CAT-ORA 仍使用约定板端持久安装。运行入口自动部署当�
 
 ## 实测（2026-11-06）
 
-索引：[hybrid-validation.json](../hybrid-validation.json)。原始数据：
+索引：[hybrid-validation.json](../../../../../log/pr-history/deployment/airsim/demos/catora_open_field/hybrid-validation.json)。原始数据：
 `log/airsim/catora-hybrid-ground-01/`、`log/airsim/catora-hybrid-flight-01/`。
 
 - 四机正常任务 SUCCEEDED，全部降落并解除解锁；最大真值终点误差 0.107 m，最小实际机间距 5.886 m，无新碰撞。

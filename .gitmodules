@@ -27,10 +27,6 @@
 	path = as2/airsim/aerostack2
 	url = https://github.com/Popc0rn7/aerostack2-aerohub.git
 
-[submodule "airsim_pixhawk"]
-	path = as2/airsim/as2_platform_pixhawk
-	url = https://github.com/Popc0rn7/as2_platform-aerohub.git
-
 [submodule "super"]
 	path = src/planner/super/upstream
 	url = https://github.com/Popc0rn7/SUPER-sim.git

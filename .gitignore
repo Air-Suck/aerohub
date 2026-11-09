@@ -96,3 +96,6 @@ rosbag2_*/
 .venv/
 /artifacts/
 /skills/temp/
+
+# Local AirSim executable/resource selection
+/simulator/airsim/config/resources.local.yaml

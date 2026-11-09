@@ -11,14 +11,14 @@ PREFIX='aerohub-swarm-field-'
 NAMES=[PREFIX+'clock',PREFIX+'audit']+[PREFIX+f'{kind}{i}' for kind in ('vehicle','sensor','compute') for i in range(3) if kind!='compute' or i>0]
 
 def execute(cmd,**kw):return subprocess.run(list(map(str,cmd)),check=True,**kw)
-def manager(action,out):return [sys.executable,ROOT/'tools/airsim/airsim/manager.py',action,'--profile',APP/'profile.json','--run-dir',out/'scene']
+def manager(action,out):return [sys.executable,ROOT/'simulator/airsim/manager/manager.py',action,'--profile',ROOT/'simulator/airsim/scenarios/swarm_open_field/profile.json','--run-dir',out/'scene']
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--output',type=Path,required=True);parser.add_argument('--preflight-only',action='store_true');parser.add_argument('--compute-image',default='uav/swarm-hybrid-compute:local');args=parser.parse_args()
     out=args.output.resolve();out.mkdir(parents=True,exist_ok=True)
     if any((out/n).exists() for n in ('mission.log','result.json','failure.json')):raise RuntimeError('choose fresh output directory')
     lock=(ROOT/'log/airsim/robopi-runtime/cli.lock').open('a');fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
-    loaded=subprocess.check_output(['bash','-c','source "$1/tools/airsim/load_env.sh"; env -0','env',str(ROOT)])
+    loaded=subprocess.check_output(['bash','-c','source "$1/tools/robopi/load_env.sh"; env -0','env',str(ROOT)])
     os.environ.update(dict(item.decode().split('=',1) for item in loaded.split(b'\0') if b'=' in item))
     sys.path.insert(0,str(ROOT/'scripts'));from robopi import board,hdc,clock_offset,profile
     image=os.environ['FLIGHT_BOARD_IMAGE'];remote='/data/aerohub/lib/swarm-formation/validation/run-'+str(time.time_ns())
@@ -38,7 +38,7 @@ def main():
     for binary in vendor.rglob('*.so'):binary.unlink()
     fleet=yaml.safe_load((APP/'fleet.yaml').read_text());(out/'board-fleet.yaml').write_text(yaml.safe_dump({'vehicles':{'drone0':fleet['vehicles']['drone0']}}))
     with tarfile.open(out/'app.tar.gz','w:gz',dereference=True,format=tarfile.GNU_FORMAT) as archive:
-        for name in ('mission.py','task.yaml','deployment.yaml','settings.json','planner.yaml'):archive.add(APP/name,arcname=name)
+        for name in ('mission.py','task.yaml','deployment.yaml','settings.json','planner.yaml'):archive.add((ROOT/'simulator/airsim/scenarios/swarm_open_field'/name if name=='settings.json' else APP/name),arcname=name)
         for source,target in [('deployment/airsim/demos/catora_open_field/mission.py','common/flight_mission.py'),('deployment/airsim/demos/catora_open_field/stop_board.py','stop_board.py'),
             ('deployment/airsim/demos/catora_open_field/hybrid/metrics.py','metrics.py'),('deployment/airsim/as2/run.py','run_as2.py'),('deployment/airsim/as2/selected_behaviors.launch.py','selected_behaviors.launch.py'),
             ('deployment/airsim/as2/scoped_tf.launch.py','scoped_tf.launch.py'),('simulator/airsim/sensors/uav_as2_sensor_adapter/rpc.py','airsim_rpc.py'),
@@ -76,13 +76,13 @@ def main():
     workers=Workers(out,APP,PREFIX,args.compute_image,remote,board,hdc);relays=[]
     try:
         execute(manager('start',out)+['--timeout','90'])
-        relays=launch_vehicles(image,APP,out,PREFIX,out/'pc-dds.xml')
+        relays=launch_vehicles(image,ROOT/'simulator/airsim/scenarios/swarm_open_field',out,PREFIX,out/'pc-dds.xml')
         execute(['docker','run','--rm','--detach','--init','--network','host','--name',PREFIX+'clock','-e','ROS_DOMAIN_ID=91','-e','VEHICLE_NAME=Drone0','-e','AIRSIM_RPC_PORT=42471',
             '-v',str(out/'pc-dds.xml')+':/opt/fastdds_udp.xml:ro',image,'clock'],stdout=subprocess.DEVNULL)
         for i in range(3):
             command='source /opt/ros/humble/setup.bash; source /opt/platform_sensors/install/setup.bash; exec ros2 run uav_as2_sensor_adapter airsim_sensor_node --ros-args -p use_sim_time:=true -p rpc_port:=42471 -p vehicle_name:=Drone'+str(i)+' -p vehicle_namespace:=drone'+str(i)+' -p settings_file:=/config/settings.json -p camera_enabled:=false -r /tf_static:=/drone'+str(i)+'/tf_static'
             execute(['docker','run','--rm','--detach','--init','--network','host','--name',PREFIX+f'sensor{i}','-e','ROS_DOMAIN_ID=91','-e','FASTRTPS_DEFAULT_PROFILES_FILE=/run/dds.xml',
-                '-v',str(out/'pc-dds.xml')+':/run/dds.xml:ro','-v',str(APP/'settings.json')+':/config/settings.json:ro','--entrypoint','bash',image,'-c',command],stdout=subprocess.DEVNULL)
+                '-v',str(out/'pc-dds.xml')+':/run/dds.xml:ro','-v',str(ROOT/'simulator/airsim/scenarios/swarm_open_field/settings.json')+':/config/settings.json:ro','--entrypoint','bash',image,'-c',command],stdout=subprocess.DEVNULL)
         if not args.preflight_only:
             execute(['docker','run','--rm','--detach','--init','--network','host','--name',PREFIX+'audit',
                 '-e','ROS_DOMAIN_ID=91','-e','FASTRTPS_DEFAULT_PROFILES_FILE=/run/dds.xml',

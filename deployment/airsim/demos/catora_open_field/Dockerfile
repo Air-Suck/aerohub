@@ -1,8 +1,8 @@
 ARG BASE_IMAGE=onboard_computer:v0.1.0
 FROM ${BASE_IMAGE}
 SHELL ["/bin/bash", "-c"]
-COPY src/planner/cat_ora/humble /opt/catora_app_ws/src/cat_ora
-COPY src/planner/cat_ora/ros2_adapter /opt/catora_app_ws/src/cat_ora_adapter
+COPY src/planner/cat_ora/ros2_adapter/native /opt/catora_app_ws/src/cat_ora
+COPY src/planner/cat_ora/ros2_adapter/bridge /opt/catora_app_ws/src/cat_ora_adapter
 COPY src/planner/interfaces /opt/catora_app_ws/src/interfaces
 COPY src/planner/framework /opt/catora_app_ws/src/framework
 COPY src/behavior/follow_path /opt/catora_app_ws/src/follow_path

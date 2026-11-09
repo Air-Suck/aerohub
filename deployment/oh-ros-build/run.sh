@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
-source "$root/tools/airsim/load_env.sh"
+source "$root/tools/robopi/load_env.sh"
 if [[ ${1:---help} == --help || ${1:-} == -h ]]; then
   echo 'Usage: deployment/oh-ros-build/run.sh {check|build [package ...]|shell}'
   exit 0

@@ -42,7 +42,7 @@ AirSim 内部相机模型，传感器安装 TF 仍会发布。flight_board 对�
   pose 转回局部坐标。不会把世界坐标点错误标记为传感器坐标。
 - 保留 AirSim 原始纳秒采样时间；同一图像及其 CameraInfo 使用相同时间戳，
   重复采样不重复发布。传感器节点本身不发布 `/clock`；
-  [flight_board](../../deployment/flight_board/README.md) 的独立 clock 模式提供
+  [flight_board](../../../deployment/flight_board/README.md) 的独立 clock 模式提供
   AirSim 全局时间桥，不能同时沿用 Gazebo 时钟桥。完整 AS2/PX4 时间映射仍需验收。
 - CameraInfo 由配置 FOV、实际图像尺寸计算，假设无畸变、方形像素的针孔模型。
   当前不支持镜头畸变、运行时云台运动或运行时变焦；不要将此静态 TF/标定
@@ -55,11 +55,11 @@ AirSim 内部相机模型，传感器安装 TF 仍会发布。flight_board 对�
 ## 运行
 
 传感器和时钟已包含在固定的 Humble flight_board 镜像中，不需要独立镜像。
-按[flight_board 说明](../../deployment/flight_board/README.md#使用固定镜像)
+按[flight_board 说明](../../../deployment/flight_board/README.md#使用固定镜像)
 加载 tar，再启动 vehicle 与 clock 容器。RoboPi 场景由
-`tools/airsim/robopi.sh up` 统一启动，板端继续原生运行 AS2。
+`tools/robopi/robopi.sh up` 统一启动，板端继续原生运行 AS2。
 
-传感器与 AirSim 必须读取同一份 `deployment/airsim/config/airsim/settings/px4-sensors.json`。
+传感器与 AirSim 必须读取同一份 `simulator/airsim/config/settings/px4-sensors.json`。
 
 示例融合 stage3 的五向相机和 racer 的 16 线 LiDAR：前/下 RGB +
 DepthPerspective，左/右/后 DepthPerspective，图像均为 256×256；
@@ -68,7 +68,7 @@ LiDAR 为 16 线、25 米、10 转/秒、80000 点/秒，使用 SensorLocalFrame
 ## 真实场景验证
 
 ```bash
-bash tools/airsim/robopi.sh verify
+bash tools/robopi/robopi.sh verify
 ```
 
 独立 ROS 订阅节点只读取平台 topic 和 TF，不调用 AirSim。已验证 7 路图像、
@@ -76,7 +76,7 @@ bash tools/airsim/robopi.sh verify
 证据见 `log/airsim/airsim-verification/sensor-result.json`。
 该验收是单机静止状态的数据通路验证，尚未验证 SLAM、避障、飞行闭环、
 频率/延迟指标或多机负载。
-后续已在 [AS2 完整交互验收](../../deployment/onboard_computer/README.md) 中，直接使用
+后续已在 [AS2 完整交互验收](../../../deployment/onboard_computer/README.md) 中，直接使用
 AS2 运行环境接收全部示例传感器，并通过 PX4 1.18 单机飞行控制闭环。
 
 ## 多线程采集对照（2026-11-05）

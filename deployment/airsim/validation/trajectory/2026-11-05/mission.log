@@ -1,7 +1,0 @@
-not found: "/opt/catora_ws/install/local_setup.bash"
-[INFO] [1793885968.488192040] [drone0.super_as2_mission]: Starting AS2 takeoff
-[INFO] [1793885973.534364118] [drone0.super_as2_mission]: Establishing trajectory mode
-[INFO] [1793885973.589981623] [drone0.super_as2_mission]: SUPER goal submitted
-[INFO] [1793885979.104257557] [drone0.super_as2_mission]: Switching to hover
-[INFO] [1793885979.114365759] [drone0.super_as2_mission]: Starting AS2 landing
-[INFO] [1793885985.254597943] [drone0.super_as2_mission]: SUPER mission landed and disarmed

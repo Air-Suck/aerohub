@@ -24,7 +24,7 @@ main 中的原 `deployment/platform/Dockerfile` 从第三方 Humble Desktop 镜�
 组件安装依赖。DDS Agent、PX4、传感器桥、时钟桥全部由 flight_board 提供，
 不在 onboard_computer 中安装或启动。源码和编译工具保留在镜像中，便于开发。
 
-AS2 源码来自 `as2/airsim/` 下的两个个人 fork submodule，直接编译本地源码，
+AS2 核心暂来自 `as2/airsim/aerostack2/`；Pixhawk 使用官方 `as2/as2_platform_pixhawk/`，在构建副本应用 `deployment/platform/patches/as2-platform-px4-v1.18.patch`。AS2 核心因缺少原 PR 未发布提交，补丁化仍待完成。
 不再在 Docker 构建时应用 AS2/Pixhawk 补丁。主仓库通过 submodule 指针锁定版本；
 未提交的子仓库改动也会进入本地构建，分享版本时须先提交到对应 fork。
 迁移时的 fork 基础版本如下（不包含随后迁入的本地适配）：
@@ -66,7 +66,7 @@ AirSim 相机和 LiDAR 经独立传感器后端直接发布到同一架飞机的
 
 namespace、FMU 前缀、系统 ID 和 `/clock` 形成同一份交互约定，与 AS2 运行
 在 PC 还是开发板无关。原生或交叉编译直接使用 `as2/airsim/aerostack2` 和
-`as2/airsim/as2_platform_pixhawk` 的源码，并提供相同消息定义的目标架构 px4_msgs。
+`as2/as2_platform_pixhawk` 的源码，并提供相同消息定义的目标架构 px4_msgs。
 无需再次打补丁；PC 镜像里的 x86 库不能直接给 OpenHarmony 使用。
 源码路径和两套依赖的使用边界见[项目简介](../../docs/项目简介.md#pr-目录适配)。子模块改动需先在子仓库提交并推送，再提交主仓库指针。
 
@@ -131,7 +131,7 @@ CAT-ORA、Swarm 及 adapter 在该通用镜像中编译 12 包并加载通过，
 到点误差 0.173 m，两秒保持漂移 0.436 m；七路图像、七路 CameraInfo、非空 LiDAR 和必需 TF 均收到。
 完整多机算法验收仍以各 Demo 记录的实际镜像为准，本轮不扩展为新镜像的多机或长期验收。
 
-[发布清单](../releases/v0.1.0.json)、[版本验收](../releases/v0.1.0-validation.json)。
+[发布清单](../releases/v0.1.0.json)、[版本验收](../../log/pr-history/deployment/releases/v0.1.0-validation.json)。
 原始日志在 `log/airsim/release-v0.1.0/`，测试资源已清理。校验已加载的固定交付镜像：
 
 ```bash
@@ -198,7 +198,7 @@ VERIFY_AS2_FLIGHT=1 bash deployment/onboard_computer/verify.sh
 刚返回成功就立即假设其他行为节点已更新状态；验收脚本包含这一等待。
 仍可观察到 Humble/Jazzy/PX4 混合发现阶段的 `sequence size exceeds remaining buffer`
 诊断，但该次历史单机验收的实际消息接收、回执和飞行均通过。
-该次记录不覆盖多机和 Planner；后续算法场景验收见 [Demo 导航](../../demos/README.md)，
+该次记录不覆盖多机和 Planner；后续算法场景验收见 [Demo 导航](../airsim/demos/README.md)，
 也不能替代本次更名配方的构建验收。
 
 其中 Offboard 心跳的要求参见 [PX4 Offboard 文档](https://docs.px4.io/main/en/flight_modes/offboard)。

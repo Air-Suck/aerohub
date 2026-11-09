@@ -25,7 +25,7 @@ ROS domain94、RPC43472、TCP4881/4981、DDS Agent8951及容器前缀
 原生SUPER保持自身规划、重规划及备用轨迹；Adapter只转换执行请求，不发布运动参考。
 成功须同时满足 FollowTimedPath 成功、原任务1.5m到点与低速保持2秒、停止确认及降落解除解锁。
 
-Adapter说明与测试见 [SUPER接入](../../src/planner/super/README.md)。
+Adapter说明与测试见 [SUPER接入](../../../../src/planner/super/README.md)。
 结果写入新输出目录的 result.json；失败、镜像ID和源码哈希均保留。
 这不是 RoboPi、混合部署或固定扰动下备用切换成功率验收。
 
@@ -41,7 +41,7 @@ Adapter说明与测试见 [SUPER接入](../../src/planner/super/README.md)。
   此脚本固定访问本机 RPC 41472，使用 ROS domain 83 和 `drone0`。
 - 启动 RoboPi AS2、PC 导航输入和 SUPER，使用本目录 `planner.yaml`。
   导航输入为 `/drone0/navigation/odom`、`/drone0/navigation/points`。
-- 按[轨迹桥说明](../../src/behavior/legacy_setpoint/README.md#super)
+- 按[轨迹桥说明](../../../../src/behavior/legacy_setpoint/README.md#super)
   提前启动 `super_as2_adapter_node`，保持禁用，使用 `drone0/odom` 和仿真时钟。
 - 为每次任务准备独立输出目录，在执行环境中挂载为可写 `/evidence`；复制
   `source-task.json` 到该目录，并根据本次地面定位重新生成 `origin.json` 中的
@@ -69,7 +69,7 @@ ROS_DOMAIN_ID=83 python3 deployment/airsim/demos/super_forest/forest8_as2_missio
 ## 找到的既有任务
 
 - 原入口：`/home/wqy/uav/leuav/profiles/super.forest8-ab.yaml`。
-- 任务：`cases/super/config/task.forest8-ab.json`，完整字节快照为 [source-task.json](source-task.json)。
+- 任务：`cases/super/config/task.forest8-ab.json`，完整字节快照为 [source-task.json](../../../../log/pr-history/deployment/airsim/demos/super_forest/source-task.json)。
 - 原规划配置：`super.search150-forward250ms.yaml`；本轮有效配置为 [planner.yaml](planner.yaml)。
 - 出生 NED `[42.6,160.11,0]`；B 为任务局部 ENU `[-37.57,231.76,6]`，直发单目标。
 - 速度 8 m/s、加速度 8 m/s²；A* 150 ms、前视 250 ms、规划范围 20 m；起飞 2 m，悬停 6 s。
@@ -115,8 +115,8 @@ AS2 的 `navigation/odom` / `navigation/points`，不运行旧 LeUAV PX4 控制�
 保持运行，adapter 已禁用，没有活动任务参考。原停止的 SUPER 容器保留为
 `aerohub-nh-super-inputs-pre-forest8`，配置快照在原始目录，未触碰其他部署或任务。
 
-完整原始 DDS / SUPER 日志：`/tmp/aerohub-forest8-as2-20261105T141215Z`；主要证据见 [summary.json](summary.json)、
-[mission.log](mission.log)、[px4-final-state.log](px4-final-state.log)。
+完整原始 DDS / SUPER 日志：`/tmp/aerohub-forest8-as2-20261105T141215Z`；主要证据见 [summary.json](../../../../log/pr-history/deployment/airsim/demos/super_forest/summary.json)、
+[mission.log](../../../../log/pr-history/deployment/airsim/demos/super_forest/mission.log)、[px4-final-state.log](../../../../log/pr-history/deployment/airsim/demos/super_forest/px4-final-state.log)。
 
 
 ## 新链路 PC 场景验证结果
@@ -134,7 +134,7 @@ X最大26.96m，超过任务20m观测边界约6.96m，采样估计持续5.20秒�
 该分析包含插值与发布时序误差，不证明唯一revision绑定或所有输入的误差上界。
 
 完整结果、失败轮次、准确版本和证据哈希见
-[migration-pc-validation.json](migration-pc-validation.json)。原始记录保存在
+[migration-pc-validation.json](../../../../log/pr-history/deployment/airsim/demos/super_forest/migration-pc-validation.json)。原始记录保存在
 `log/airsim/super-migration-pc-attempt7/`，运行后可执行：
 
 ```bash

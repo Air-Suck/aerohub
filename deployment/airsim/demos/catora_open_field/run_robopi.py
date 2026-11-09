@@ -43,7 +43,7 @@ def main():
     fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
     if any((output/name).exists() for name in ('result.json', 'failure.json', 'mission.log')):
         raise RuntimeError('Use a fresh output directory')
-    loaded = subprocess.check_output(['bash', '-c', 'source "$1/tools/airsim/load_env.sh"; env -0', 'env', str(ROOT)])
+    loaded = subprocess.check_output(['bash', '-c', 'source "$1/tools/robopi/load_env.sh"; env -0', 'env', str(ROOT)])
     os.environ.update(dict(item.decode().split('=', 1) for item in loaded.split(b'\0') if b'=' in item))
     BOARD=os.environ.get('FLIGHT_BOARD_IMAGE',BOARD)
     sys.path.insert(0, str(ROOT/'scripts'))
@@ -56,7 +56,7 @@ def main():
             raise RuntimeError('Existing app container: '+name)
     offset = clock_offset()
     if abs(offset) > .5:
-        raise RuntimeError(f'Board clock offset {offset:.3f}s; run tools/airsim/robopi.sh sync-time')
+        raise RuntimeError(f'Board clock offset {offset:.3f}s; run tools/robopi/robopi.sh sync-time')
     board(f'test ! -e {REMOTE}/active && mkdir -p {REMOTE}')
     profile(output/'pc-dds.xml', os.environ['PC_IP'])
     profile(output/'board-dds.xml', os.environ['ROBOPI_IP'])
@@ -77,7 +77,8 @@ def main():
             path=output/('mixed-'+name);path.write_text(yaml.safe_dump(value,sort_keys=False));mixed_configs[name]=path
     with tarfile.open(output/'app.tar.gz', 'w:gz', dereference=True, format=tarfile.GNU_FORMAT) as archive:
         for name in ('mission.py', 'stop_board.py', 'task.yaml', 'deployment.yaml', 'fleet.yaml', 'settings.json'):
-            archive.add(mixed_configs.get(name,APP/name), arcname=name)
+            default=ROOT/'simulator/airsim/scenarios/catora_open_field'/name if name=='settings.json' else APP/name
+            archive.add(mixed_configs.get(name,default), arcname=name)
         if args.mixed:
             archive.add(mixed_configs['board-deployment.yaml'],arcname='board-deployment.yaml')
             archive.add(APP/'hybrid/metrics.py',arcname='metrics.py')
@@ -158,7 +159,7 @@ def main():
         execute(manager('start', output)+['--timeout', '90'])
         probe = f'cd {REMOTE} && python3 -c '+shlex.quote("from airsim_rpc import Rpc; print(Rpc("+repr(os.environ['PC_IP'])+",42473).call('simGetVehiclePose','Drone0'))")
         board(probe, timeout=20)
-        sim_relays=launch_vehicles(BOARD,APP,output,PREFIX,output/'pc-dds.xml')
+        sim_relays=launch_vehicles(BOARD,ROOT/'simulator/airsim/scenarios/catora_open_field',output,PREFIX,output/'pc-dds.xml')
         execute(['docker', 'run', '--rm', '--detach', '--init', '--network', 'host', '--name', PREFIX+'clock',
             '-e', 'ROS_DOMAIN_ID=91', '-e', 'VEHICLE_NAME=Drone0', '-e', 'AIRSIM_RPC_PORT=42471',
             '-v', str(output/'pc-dds.xml')+':/opt/fastdds_udp.xml:ro', BOARD, 'clock'], stdout=subprocess.DEVNULL)

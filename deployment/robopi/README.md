@@ -7,7 +7,7 @@
 再按[首次初始化步骤](../oh-ros-build/README.md#首次初始化项目工作区)执行
 `prepare.sh`。下文操作均以此为前提。
 
-本机操作统一从仓库根目录的 `tools/airsim/robopi.sh` 进入。设备、网卡和运行参数
+本机操作统一从仓库根目录的 `tools/robopi/robopi.sh` 进入。设备、网卡和运行参数
 读取被忽略的 `.env`，公开模板见 [../../.env.example](../../.env.example)。
 
 ```text
@@ -47,15 +47,15 @@ Swarm 环境入口为 `/data/aerohub/lib/swarm-formation/env.sh`。
 
 ```bash
 # 部署到新目录，保持当前 .env 与旧运行不变
-bash tools/airsim/deploy_lib.sh --component all
+bash tools/robopi/deploy_lib.sh --component all
 # 后续仅更新对应一侧
-bash tools/airsim/deploy_lib.sh --component as2
-bash tools/airsim/deploy_lib.sh --component catora
-bash tools/airsim/deploy_lib.sh --component swarm-formation
+bash tools/robopi/deploy_lib.sh --component as2
+bash tools/robopi/deploy_lib.sh --component catora
+bash tools/robopi/deploy_lib.sh --component swarm-formation
 # 需要编译时同步对应算法与最小接口源码，复用官方 OHOS builder
-bash tools/airsim/build_lib.sh all
+bash tools/robopi/build_lib.sh all
 # 仅板端加载、启动和小型接口验证，不解锁、不飞行
-bash tools/airsim/verify_lib.sh all
+bash tools/robopi/verify_lib.sh all
 ```
 
 部署先 staging 解包并核对哈希，再替换本次组件；临时旧安装只用于失败回退，
@@ -64,7 +64,7 @@ bash tools/airsim/verify_lib.sh all
 检查 AArch64 与动态依赖不变，不直接搬移未处理的 install。
 
 需要切换本机配置时在 AS2 部署命令追加 `--activate-config`，成功后才把 `.env`
-中的 `ROBOPI_ROOT` 更新为 `/data/aerohub/as2`；`tools/airsim/robopi.sh deploy` 包含该步骤。
+中的 `ROBOPI_ROOT` 更新为 `/data/aerohub/as2`；`tools/robopi/robopi.sh deploy` 包含该步骤。
 默认配置已切换到 `/data/aerohub/as2`；历史路径 `/data/local/tmp/aerohub-as2`
 中的进程已通过管理入口停止，历史文件暂留，不再作为活动安装。
 下文早期验收记录中的 tmp 路径是历史位置。
@@ -76,8 +76,8 @@ bash tools/airsim/verify_lib.sh all
 | 组件 | 检查 | 版本化记录 |
 | --- | --- | --- |
 | AS2 | `as2_core` 导入、PlatformInfo CDR 往返、加载默认配置后估计器存活 5 秒 | `validation/startup.json` |
-| CAT-ORA | 应用模块导入、一次原生服务请求及 JSON 代理一致性，生成 16 点 | `../../src/planner/cat_ora/validation/robopi-smoke.json` |
-| Swarm-Formation | 应用模块导入、单节点接收静态里程计/合成点云/手动目标，输出 2 段五阶 PolyTraj | `../../src/planner/swarm_formation/validation/robopi-smoke.json` |
+| CAT-ORA | 应用模块导入、一次原生服务请求及 JSON 代理一致性，生成 16 点 | `../../log/pr-history/src/planner/cat_ora/validation/robopi-smoke.json` |
+| Swarm-Formation | 应用模块导入、单节点接收静态里程计/合成点云/手动目标，输出 2 段五阶 PolyTraj | `../../log/pr-history/src/planner/swarm_formation/validation/robopi-smoke.json` |
 
 本次使用官方 builder 交叉编译算法，复用已有 AS2 产物；原始构建、调试和最终
 验收日志保存在本机 `log/airsim/robopi-lib-acceptance/`。板端每个组件的
@@ -91,16 +91,16 @@ bash tools/airsim/verify_lib.sh all
 # 首次填写配置；已有 .env 不要覆盖
 cp .env.example .env
 
-bash tools/airsim/robopi.sh check       # HDC 与 IP 连通性
-bash tools/airsim/robopi.sh network     # 仅恢复板端临时 /24 地址，不修改 PC 网卡
-bash tools/airsim/robopi.sh sync-time   # 临时校准板端系统时钟到 PC，不改 RTC / 时区 / NTP 配置
-bash tools/airsim/robopi.sh build       # 同步当前 fork 与 1.18 消息，交叉编译 Runtime
-bash tools/airsim/robopi.sh deploy      # 校验传输、解压后切换私有 overlay，保留 install 备份
-bash tools/airsim/robopi.sh up          # PC 底座 + RoboPi AS2
-bash tools/airsim/robopi.sh status
-bash tools/airsim/robopi.sh verify      # 定位、时钟、传感器；不解锁
-bash tools/airsim/robopi.sh verify --flight  # 仿真：起飞、到点、悬停、降落、解除解锁
-bash tools/airsim/robopi.sh down        # 停止本入口拥有的进程与容器
+bash tools/robopi/robopi.sh check       # HDC 与 IP 连通性
+bash tools/robopi/robopi.sh network     # 仅恢复板端临时 /24 地址，不修改 PC 网卡
+bash tools/robopi/robopi.sh sync-time   # 临时校准板端系统时钟到 PC，不改 RTC / 时区 / NTP 配置
+bash tools/robopi/robopi.sh build       # 同步当前 fork 与 1.18 消息，交叉编译 Runtime
+bash tools/robopi/robopi.sh deploy      # 校验传输、解压后切换私有 overlay，保留 install 备份
+bash tools/robopi/robopi.sh up          # PC 底座 + RoboPi AS2
+bash tools/robopi/robopi.sh status
+bash tools/robopi/robopi.sh verify      # 定位、时钟、传感器；不解锁
+bash tools/robopi/robopi.sh verify --flight  # 仿真：起飞、到点、悬停、降落、解除解锁
+bash tools/robopi/robopi.sh down        # 停止本入口拥有的进程与容器
 ```
 
 `.env` 必须填写 HDC_BIN、HDC_TARGET、PC_IP、ROBOPI_IP、网卡、ROS_DOMAIN_ID
@@ -134,8 +134,8 @@ Humble 版本 tar；旧 Jazzy 版本不适用于此入口。
 运行传感器和时钟发布端时，可检查 AS2 进程树内存：
 
 ```bash
-source tools/airsim/load_env.sh
-python3 tools/airsim/diagnostics/verify_sensor_memory.py \
+source tools/robopi/load_env.sh
+python3 tools/robopi/diagnostics/verify_sensor_memory.py \
   --duration 180 --output log/airsim/sensor-memory.json
 ```
 
@@ -147,8 +147,8 @@ python3 tools/airsim/diagnostics/verify_sensor_memory.py \
 `up` 表示启动了进程，是否业务就绪以 `verify` 为准。
 
 当前入口覆盖单机 AS2 跨机执行链；两库的简单加载与消息调用使用上文独立验证入口。
-完整飞行使用独立应用：[CAT-ORA 四机及 PC/RoboPi 混合部署](../../demos/catora_open_field/README.md)、
-[Swarm-Formation 三机真实点云混合部署](../../demos/swarm_open_field/README.md)。
+完整飞行使用独立应用：[CAT-ORA 四机及 PC/RoboPi 混合部署](../airsim/demos/catora_open_field/README.md)、
+[Swarm-Formation 三机真实点云混合部署](../airsim/demos/swarm_open_field/README.md)。
 两者都已完成指定场景板端执行验收，不扩展为七机、无线或长期稳定性结论。
 
 需要用独立场景复验整合后的 flight_board 时，见[单机闭环验收入口](../flight_board/README.md#robopi-单机闭环验收)。
@@ -200,7 +200,7 @@ AS2 进程树内存约 648 MiB，继续保留 1536 MiB 保护阈值。
 
 以下记录早期独立构建工作区的准备过程。当前活动源码已迁到 `thirdparty/` 的两个
 fork，`uint` 可移植性修复已直接进入 `as2/airsim/aerostack2/as2_core`，无需重复应用。
-当前入口由 `tools/airsim/prepare_ohos_sources.py` 同步该工作区的活动 AS2 源码与
+当前入口由 `tools/robopi/prepare_ohos_sources.py` 同步该工作区的活动 AS2 源码与
 PX4 1.18 消息；首次准备目标工具链仍参考下文。
 
 ## 实际环境

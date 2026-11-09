@@ -7,11 +7,11 @@ environments:
     simulator: airsim
     flight_controller: px4
     lifecycle: development
-    setup: deployment/airsim/config/airsim/README.md
+    setup: simulator/airsim/config/README.md
     scene_profiles:
-      nh: deployment/airsim/config/airsim/nh.json
-      town05: deployment/airsim/config/airsim/town05.json
-      plant: deployment/airsim/config/airsim/plant.json
+      nh: simulator/airsim/config/nh.json
+      town05: simulator/airsim/config/town05.json
+      plant: simulator/airsim/config/plant.json
 libraries:
   cat_ora:
     name: CAT-ORA
@@ -20,16 +20,16 @@ libraries:
     status: registered
     manifest: src/planner/framework/registry/cat_ora/4bc41f593eebde65dd74108a97e80430a145dfa0/manifest.yaml
     implementation:
-      adapter: src/planner/cat_ora/ros2_adapter
-      proxy: src/planner/cat_ora/humble/scripts/ros2_proxy.py
-      native: src/planner/cat_ora/humble
+      adapter: src/planner/cat_ora/ros2_adapter/bridge
+      proxy: src/planner/cat_ora/ros2_adapter/native/scripts/ros2_proxy.py
+      native: src/planner/cat_ora/ros2_adapter/native
     bindings:
       airsim_px4:
         validation: scenario_pass
         reason: NH 四机 PC、RoboPi 原生执行及三 PC 一 RoboPi 混合部署通过；包含取消与断流悬停验证，未覆盖其他场景或长期稳定性
         application: deployment/airsim/demos/catora_open_field/README.md
-        evidence: deployment/airsim/demos/catora_open_field/hybrid-validation.json
-        stability_evidence: deployment/airsim/demos/catora_open_field/stability-validation.json
+        evidence: log/pr-history/deployment/airsim/demos/catora_open_field/hybrid-validation.json
+        stability_evidence: log/pr-history/deployment/airsim/demos/catora_open_field/stability-validation.json
     docs: deployment/airsim/libraries.md
     history:
       ref: main
@@ -44,17 +44,17 @@ libraries:
     status: registered
     manifest: src/planner/framework/registry/swarm_formation/967a4bdfae949e994691f8ffc87dbb0147cbebb7/manifest.yaml
     implementation:
-      adapter: src/planner/swarm_formation/ros2_adapter
-      proxy: src/planner/swarm_formation/humble/plan_manage/scripts/ros2_proxy.py
-      native: src/planner/swarm_formation/humble
+      adapter: src/planner/swarm_formation/ros2_adapter/bridge
+      proxy: src/planner/swarm_formation/ros2_adapter/native/plan_manage/scripts/ros2_proxy.py
+      native: src/planner/swarm_formation/ros2_adapter/native
     bindings:
       airsim_px4:
         validation: scenario_pass
         reason: NH 三机真实 LiDAR、独立规划/建图/AS2 与两 PC 一 RoboPi 混合飞行通过；未覆盖七机或其他场景
         application: deployment/airsim/demos/swarm_open_field/README.md
-        evidence: deployment/airsim/demos/swarm_open_field/hybrid-validation.json
+        evidence: log/pr-history/deployment/airsim/demos/swarm_open_field/hybrid-validation.json
         point_cloud_validation: real_sensor_map_pass
-        point_cloud_evidence: src/planner/swarm_formation/validation/real-point-cloud.json
+        point_cloud_evidence: log/pr-history/src/planner/swarm_formation/validation/real-point-cloud.json
     docs: deployment/airsim/libraries.md
     history:
       ref: main

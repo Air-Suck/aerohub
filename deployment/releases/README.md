@@ -8,7 +8,7 @@
 | `onboard_computer:v0.1.0` | 当前 AS2、导航输入及算法编译开发环境 | `a99a9c1df2ca` |
 
 完整 ID、来源和依赖见 [v0.1.0.json](v0.1.0.json)，结果见
-[v0.1.0-validation.json](v0.1.0-validation.json)。两份镜像已上传到个人账号 `Popc0rn7` 的 GHCR。
+[v0.1.0-validation.json](../../log/pr-history/deployment/releases/v0.1.0-validation.json)。两份镜像已上传到个人账号 `Popc0rn7` 的 GHCR。
 这些是 PC 镜像；RoboPi 仍运行独立交叉编译的 AArch64 原生程序。
 
 `flight_board` 沿用已验收的相同镜像内容。`onboard_computer` 从当前源码重新编译，

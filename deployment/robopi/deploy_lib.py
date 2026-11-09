@@ -78,7 +78,7 @@ def package(source, destination, component):
                 for module in namespace.rglob('*.py'):
                     installed = source/name/'lib/python3.12/site-packages'/module.relative_to(namespace.parent)
                     if not installed.exists() or module.read_bytes()!=installed.read_bytes():
-                        raise RuntimeError('Stale Python installation; run tools/airsim/build_lib.sh: '+str(installed))
+                        raise RuntimeError('Stale Python installation; run tools/robopi/build_lib.sh: '+str(installed))
             target = destination/group/'install'/name
             shutil.copytree(source/name, target, symlinks=False, ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
             for path in target.rglob('*'):
@@ -143,7 +143,7 @@ def main():
                      'verify_sensors.py': ROOT/'simulator/airsim/sensors/scripts/verify_ros2.py',
                      'config.yaml': ROOT/'deployment/airsim/config/as2/config.yaml', 'fleet.yaml': ROOT/'deployment/airsim/config/as2/fleet.yaml',
                      'pid_speed_controller.yaml': ROOT/'deployment/airsim/config/as2/pid_speed_controller.yaml',
-                     'settings.json': ROOT/'deployment/airsim/config/airsim/settings/px4-sensors.json'}
+                     'settings.json': ROOT/'simulator/airsim/config/settings/px4-sensors.json'}
             for name, path in files.items(): shutil.copyfile(path, stage/'as2'/name)
             if os.environ.get('ROBOPI_IP'):
                 from robopi import profile

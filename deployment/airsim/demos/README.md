@@ -15,10 +15,10 @@
 不解锁；去掉 `--preflight-only` 会实际发送仿真飞行指令。
 
 ```bash
-bash tools/airsim/build_lib.sh catora
+bash tools/robopi/build_lib.sh catora
 python3 deployment/airsim/demos/catora_open_field/run_robopi.py --preflight-only --output log/airsim/catora-ground-new
 
-bash tools/airsim/build_lib.sh swarm-formation
+bash tools/robopi/build_lib.sh swarm-formation
 python3 deployment/airsim/demos/swarm_open_field/run_robopi.py --preflight-only --output log/airsim/swarm-ground-new
 ```
 
@@ -30,8 +30,8 @@ python3 deployment/airsim/demos/swarm_open_field/run_robopi.py --preflight-only 
 - 每个示例放在 `deployment/airsim/demos/<library>_<scenario>/`，包含 README、运行入口、任务与场景配置。
 - README 声明前置资源、运行拓扑、地面检查、完整运行、停止方式、通过条件和未覆盖范围。
 - Demo 负责场景、任务编排、控制权交接、观测和验收；可复用算法、输入输出转换及
-  算法专有 adapter 放在 `libraries/<name>/`。公共执行能力归 `runtime/` 和 AS2。
-- 通用构建、部署与设备工具继续放在 `tools/airsim/`、`deployment/`；完整示例入口放在本目录，
+  算法专有 adapter 放在 `src/planner/<name>/ros2_adapter/`。公共执行能力归 `src/behavior/` 和 AS2。
+- 通用构建、部署与设备工具继续放在 `tools/robopi/`、`deployment/`；完整示例入口放在本目录，
   不在这些工具目录中另起一套任务。
 - 结果、日志、截图及生成配置写入 `log/airsim/`，不得覆盖已有成功或失败记录。
 - 在根目录 `deployment/airsim/libraries.yaml` 的对应 binding 中登记 Demo 文档与验收索引，并更新本表。
@@ -50,4 +50,4 @@ Swarm 当前复用 CAT-ORA Demo 的部分任务与测量辅助代码，尚未提
 旧 `tools/planner-demo/` 是已退出活动运行链的 ROS 1 / Gazebo 录制与演示工具，
 不作为 Humble / AirSim Demo 搬入本目录。源码仍可从目录整理前的 `02ed54d` 读取，
 例如 `git show 02ed54d:tools/planner-demo/README.md`；原复现说明保留在
-[历史复现文档](../docs/workspace/reproductions/CAT-ORA与Swarm-Formation的PX4-Gazebo复现说明.md)。
+[历史复现文档](../../../docs/项目简介.md)。

@@ -2,7 +2,7 @@
 
 源仓库 https://github.com/ZJU-FAST-Lab/Swarm-Formation ，固定提交
 `967a4bdfae949e994691f8ffc87dbb0147cbebb7`，原检出无本地修改。
-`upstream/` 子模块保留上游源码、README 和 LICENSE；`humble/` 是 ROS 2 移植，构建时显式选择，避免与上游同名包混合。
+`upstream/` 子模块保留上游源码、README 和 LICENSE；`ros2_adapter/native/` 是 ROS 2 移植，构建时显式选择，避免与上游同名包混合。
 上游包清单的许可证填 `TODO`，README 和 LICENSE 明确 GPLv3；移植清单按
 GPL-3.0 标记，保留原作者与许可证。
 
@@ -45,7 +45,7 @@ TCP `127.0.0.1:28501` 保留原 adapter 的逐行 JSON 契约、`drone0..drone6`
 
 ```bash
 source /opt/ros/humble/setup.bash
-colcon build --base-paths src/planner/swarm_formation/humble \
+colcon build --base-paths src/planner/swarm_formation/ros2_adapter/native \
   --cmake-args -DCMAKE_BUILD_TYPE=Release
 source install/setup.bash
 ros2 launch ego_planner seven_planners.launch.py input_mode:=navigation \
@@ -56,7 +56,7 @@ ros2 launch ego_planner seven_planners.launch.py input_mode:=navigation \
 
 ```bash
 export SWARM_FLEET_CONFIG=/absolute/path/to/calibrated-navigation-fleet.yaml
-docker compose -f src/planner/swarm_formation/deployment/compose.yaml up --build -d
+docker compose -f deployment/swarm_formation_humble/compose.yaml up --build -d
 ```
 
 镜像 `uav/aerostack2-swarm-formation:humble` 不需要 ROS 1、roscore 或旧代理。
@@ -109,10 +109,10 @@ DDS domain、可达网卡/profile 必须与数据源一致；
 
 ```bash
 # 创建独立 PC AirSim/PX4/AS2 静态实例；不解锁、不起飞，结束后清理自身资源。
-python3 src/planner/swarm_formation/tests/verify_airsim_cloud.py \
+python3 src/planner/swarm_formation/ros2_adapter/tests/verify_airsim_cloud.py \
   --output log/airsim/swarm-cloud-next
 # 已有健康数据源时，可指定 ROS_DOMAIN_ID / SWARM_DDS_PROFILE 只读验证：
-bash src/planner/swarm_formation/tests/verify_real_cloud.sh log/airsim/swarm-cloud-existing
+bash src/planner/swarm_formation/ros2_adapter/tests/verify_real_cloud.sh log/airsim/swarm-cloud-existing
 ```
 
 独立 NH 实例使用 RPC 42472、PX4 TCP 4684、控制 UDP 14844/14984、实例 44、
@@ -140,7 +140,7 @@ bash src/planner/swarm_formation/tests/verify_real_cloud.sh log/airsim/swarm-clo
 `osrf/ros:humble-desktop-full-jammy` 镜像，仓库根目录执行：
 
 ```bash
-bash src/planner/swarm_formation/tests/verify.sh
+bash src/planner/swarm_formation/ros2_adapter/tests/verify.sh
 ```
 
 脚本先构建两版，再顺序运行基准；结果默认位于
@@ -187,9 +187,9 @@ adapter 能从真实原生后端读取结果并发布七条 `TimedTrajectorySegm
 复用已准备的 OHOS 工作区和官方 build Docker：
 
 ```bash
-bash tools/airsim/build_lib.sh swarm-formation
-bash tools/airsim/deploy_lib.sh --component swarm-formation
-bash tools/airsim/verify_lib.sh swarm-formation
+bash tools/robopi/build_lib.sh swarm-formation
+bash tools/robopi/deploy_lib.sh --component swarm-formation
+bash tools/robopi/verify_lib.sh swarm-formation
 ```
 
 板端安装于 `/data/aerohub/lib/swarm-formation/install`，环境入口为同目录上一层
@@ -211,8 +211,8 @@ OHOS 编译使用标准 Eigen 头路径，并仅链接实际需要的 PCL common
 
 ## 三机 PC/RoboPi 真实应用验收（2026-11-06）
 
-[应用与复现](../../demos/swarm_open_field/README.md)，
-[版本化验收](../../demos/swarm_open_field/hybrid-validation.json)。
+[应用与复现](../../../deployment/airsim/demos/swarm_open_field/README.md)，
+[版本化验收](../../../log/pr-history/deployment/airsim/demos/swarm_open_field/hybrid-validation.json)。
 PC 两个独立容器与 RoboPi 各一台，各自运行本机原生 Swarm、GridMap/ESDF、导航注册、
 adapter 和 AS2，三路真实 AirSim LiDAR，跨机原生轨迹通过 DDS UDP 直接广播。
 
@@ -226,7 +226,7 @@ adapter 和 AS2，三路真实 AirSim LiDAR，跨机原生轨迹通过 DDS UDP �
 原生 PVA 解析导数与同一 valid_from、Swarm 自身的 AS2 停止 adapter、
 缺失的导航输入交叉编译和嵌套输出桥构建。默认七机优化公式与权重保持不变。
 
-保留失败证据：[默认间距验收](../../demos/swarm_open_field/default-clearance-validation.json)。
+保留失败证据：[默认间距验收](../../../log/pr-history/deployment/airsim/demos/swarm_open_field/default-clearance-validation.json)。
 原生默认 swarm_clearance=0.5 与应用最小 2 m 不一致；应用显式配置 2.0 后复验通过，
 没有降低验收阈值。另修正外层 95 s 墙钟保护早于 90 s 仿真任务截止的问题；
 本场景实时因子约 0.81，墙钟保护改为 180 s，任务仍为 90 s 仿真时间。

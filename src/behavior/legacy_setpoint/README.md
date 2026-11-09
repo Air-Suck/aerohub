@@ -8,7 +8,7 @@
 
 CAT-ORA 当前使用其自有 `cat_ora_as2_adapter_node` 入口复用本包转换实现，
 并将任务的暂停、取消、失败和完成转为 AS2 HOVER 请求及确认；仍不自动申请
-TRAJECTORY。输入、停止与故障回归见 [CAT-ORA adapter](../../../src/planner/cat_ora/ros2_adapter/README.md)。
+TRAJECTORY。输入、停止与故障回归见 [CAT-ORA adapter](../../planner/cat_ora/ros2_adapter/bridge/README.md)。
 其他算法的原有入口保持兼容，不要求串联 CAT-ORA 的适配节点。
 
 每条 `TrajectorySetpoints` 必须恰好一个点，frame 为 `<namespace>/odom`。
@@ -61,7 +61,7 @@ SUPER 使用 `src/planner/super/upstream/super_planner/config/as2_trajectory_ros
 - `as2/airsim/aerostack2/as2_motion_controller/tests/trajectory_stream_ros_test.py`：
   实际控制器的 20/50/100 Hz 输入、50 Hz 输出、源时间戳、重复参考失流和恢复锁定。
   该驱动需要在隔离 ROS domain 中启动 namespace=stream 的控制器；它提供模拟平台服务。
-- `tools/airsim/smoke_ros2.sh`：公共桥端到端 smoke，任务侧显式请求轨迹模式。
+- `tools/robopi/smoke_ros2.sh`：公共桥端到端 smoke，任务侧显式请求轨迹模式。
 
 构建时显式列出嵌套包及 SUPER 消息：
 

@@ -2,7 +2,7 @@
 # Build fixed PX4 interfaces once, then compile the editable AS2 forks.
 set -euo pipefail
 root=$(cd "$(dirname "$0")/../.." && pwd)
-bash "$root/tools/airsim/prepare_sources.sh"
+bash "$root/tools/robopi/prepare_sources.sh"
 args=(--network host)
 for variable in HTTP_PROXY HTTPS_PROXY NO_PROXY; do
   if [[ -v $variable ]]; then

@@ -7,6 +7,8 @@ artifacts/resolved/*.log
 
 
 log
+skill/temp
+docs/local
 px4
 simulator/*
 !simulator/airsim

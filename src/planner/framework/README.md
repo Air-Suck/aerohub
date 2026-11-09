@@ -15,7 +15,7 @@ CAT-ORA PC Demo 可显式选择 follow_path；旧板端及 Swarm Demo 仍选择 
 
 AS2 启动器通过 `AS2_EXECUTION_BACKEND=follow_path` 选择扩展节点；未设置时保留
 既有 Demo 的启动行为。使用新模式前必须构建安装扩展和接口包。
-迁移状态与验证边界见 [交接文档](../../../migration.md)。
+迁移状态与验证边界见 [交接文档](../../../skill/temp/pr-main-layout/history/migration.md)。
 
 ## 执行状态观察
 

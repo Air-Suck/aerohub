@@ -18,7 +18,7 @@ AirSim 真值 API 仅用于标定和验收；起飞、轨迹、停止、降落�
 ```bash
 docker build --network none --pull=false -f deployment/airsim/demos/swarm_open_field/Dockerfile \
   -t uav/swarm-hybrid-compute:local .
-bash tools/airsim/build_lib.sh swarm-formation
+bash tools/robopi/build_lib.sh swarm-formation
 python3 deployment/airsim/demos/swarm_open_field/run_robopi.py --preflight-only --output log/airsim/swarm-ground-new
 python3 deployment/airsim/demos/swarm_open_field/run_robopi.py --output log/airsim/swarm-flight-new
 ```
@@ -64,7 +64,7 @@ RSS 为进程相加，包含共享页重复计数。输入年龄含仿真时钟�
 
 ```bash
 python3 deployment/airsim/demos/swarm_open_field/analyze.py --ground log/airsim/swarm-ground-new \
-  --flight log/airsim/swarm-flight-new --output deployment/airsim/demos/swarm_open_field/hybrid-validation.json
+  --flight log/airsim/swarm-flight-new --output log/pr-history/deployment/airsim/demos/swarm_open_field/hybrid-validation.json
 ```
 
 应用最小间距验收为 2 m，三台原生规划器均显式配置
@@ -75,8 +75,8 @@ python3 deployment/airsim/demos/swarm_open_field/analyze.py --ground log/airsim/
 
 ## 实测结果（2026-11-06）
 
-[完整验收](hybrid-validation.json) 对应 `log/airsim/swarm-hybrid-ground-04` 和
-`log/airsim/swarm-hybrid-flight-04`；[默认 0.5 m 间距失败记录](default-clearance-validation.json)
+[完整验收](../../../../log/pr-history/deployment/airsim/demos/swarm_open_field/hybrid-validation.json) 对应 `log/airsim/swarm-hybrid-ground-04` 和
+`log/airsim/swarm-hybrid-flight-04`；[默认 0.5 m 间距失败记录](../../../../log/pr-history/deployment/airsim/demos/swarm_open_field/default-clearance-validation.json)
 保留在调整应用参数之前，没有用新结果覆盖原始失败日志。
 
 | 指标 | 结果 |

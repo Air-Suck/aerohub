@@ -13,7 +13,7 @@ from uav_super_adapter.polynomial import Polynomial
 def analyze(folder):
     rows=[json.loads(line) for line in (folder/'flight.jsonl').read_text().splitlines()]
     origin=json.loads((folder/'origin-measured.json').read_text())['task_to_odom_translation_m']
-    task=json.loads((Path(__file__).parent/'source-task.json').read_text())
+    task=json.loads((Path(__file__).parent/'task.json').read_text())
     route=[r for r in rows if r.get('phase')=='route']
     if not route:raise ValueError('no route observations')
     points=[[a-b for a,b in zip(r['position'],origin)] for r in route]

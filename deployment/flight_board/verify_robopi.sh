@@ -2,7 +2,7 @@
 # Dedicated SITL verification with the already deployed, running RoboPi AS2.
 set -euo pipefail
 root=$(cd "$(dirname "$0")/../.." && pwd)
-source "$root/tools/airsim/load_env.sh"
+source "$root/tools/robopi/load_env.sh"
 out=${VERIFY_OUTPUT:-$root/log/airsim/flight-board-robopi-verification}
 image=${FLIGHT_BOARD_IMAGE:-flight_board:v0.1.0}
 memory_seconds=${VERIFY_MEMORY_SECONDS:-180}
@@ -28,7 +28,7 @@ from robopi import board, board_environment, clock_offset, profile
 state = json.loads(board(board_environment()+'python3 manage_runtime.py status'))
 offset = clock_offset()
 if abs(offset) > 0.5:
-    raise RuntimeError('Board/PC clocks differ; run tools/airsim/robopi.sh sync-time first')
+    raise RuntimeError('Board/PC clocks differ; run tools/robopi/robopi.sh sync-time first')
 out = Path(sys.argv[2])
 profile(out/'pc-dds.xml', os.environ['PC_IP'])
 (out/'preflight.json').write_text(json.dumps(dict(board=state, clock_offset_s=offset), indent=2)+'\n')
@@ -42,21 +42,21 @@ cleanup() {
   docker logs "${names[0]}" > "$out/vehicle.log" 2>&1 || true
   docker logs "${names[1]}" > "$out/clock.log" 2>&1 || true
   docker stop -t 7 "${names[@]}" >/dev/null 2>&1 || true
-  bash "$root/tools/airsim/airsim.sh" stop --run-dir "$out/scene" || true
+  bash "$root/simulator/airsim/airsim.sh" stop --run-dir "$out/scene" || true
 }
 trap cleanup EXIT
-bash "$root/tools/airsim/airsim.sh" start --profile "$root/deployment/airsim/config/airsim/nh.json" \
+bash "$root/simulator/airsim/airsim.sh" start --profile "$root/simulator/airsim/config/nh.json" \
   --run-dir "$out/scene" > "$out/scene-start.json"
 docker run -d --rm --name "${names[0]}" --network host \
   -e ROS_DOMAIN_ID="${ROS_DOMAIN_ID:?Configure .env first}" \
   -e PX4_INSTANCE=20 -e PX4_SYSTEM_ID=21 -e XRCE_AGENT_PORT=8891 \
-  -v "$root/deployment/airsim/config/airsim/settings/px4-sensors.json:/config/settings.json:ro" \
+  -v "$root/simulator/airsim/config/settings/px4-sensors.json:/config/settings.json:ro" \
   -v "$out/pc-dds.xml:/opt/fastdds_udp.xml:ro" "$image" vehicle
 docker run -d --rm --name "${names[1]}" --network host \
   -e ROS_DOMAIN_ID="$ROS_DOMAIN_ID" \
   -v "$out/pc-dds.xml:/opt/fastdds_udp.xml:ro" "$image" clock
 sleep 10
-python3 "$root/tools/airsim/diagnostics/verify_sensor_memory.py" --duration "$memory_seconds" \
+python3 "$root/tools/robopi/diagnostics/verify_sensor_memory.py" --duration "$memory_seconds" \
   --output "$out/memory.json" > "$out/memory.log" &
 monitor_pid=$!
 python3 - "$root" "$out" <<'PY'

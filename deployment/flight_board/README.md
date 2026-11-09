@@ -12,7 +12,7 @@ Agent、Humble AirSim 传感器桥和全局时钟桥。镜像保留原 PX4 所�
 `v0.1.0` 固定为已验收的 `airsim-px4-humble-threaded-20261105` 相同镜像内容，旧标签保留。
 PX4、DDS Agent、传感器桥、supervisor 和默认 DDS 配置均已包含在镜像内。
 本镜像与 `onboard_computer:v0.1.0` 的新一次单机闭环也已通过，见
-[版本验收](../releases/v0.1.0-validation.json)。
+[版本验收](../../log/pr-history/deployment/releases/v0.1.0-validation.json)。
 AirSim 场景与车辆配置仍由宿主机提供；RoboPi 的 DDS 网络配置仍按运行环境挂载。
 
 本机校验及离线打包（默认输出到 `log/airsim/images/`，不进入 Git）：
@@ -90,7 +90,7 @@ PX4 及 Agent 保留 Noble 构建产物；其动态加载器和系统库放在
 Agent 2.4.2 及其依赖的重建输入为 `vendor/` 中的固定版本源码归档，
 文件名和 SHA256 保留在 Dockerfile。归档不随源码交付；日常加载 tar 无需这些文件。
 如需重建，须自行准备对应归档后再执行 Dockerfile。
-传感器接口见 [接口说明](../../runtime/airsim_sensors/README.md)。
+传感器接口见 [接口说明](../../simulator/airsim/sensors/README.md)。
 
 ## 运行模式
 
@@ -117,7 +117,7 @@ Agent 仍使用镜像构建阶段编译的产物，无 builder 镜像依赖。
 - `shell`：进入已加载 ROS 环境的 Bash，适合诊断。
 
 ```bash
-# 先用 deployment/airsim/config/airsim/settings/px4-sensors.json 启动 AirSim，再执行：
+# 先用 simulator/airsim/config/settings/px4-sensors.json 启动 AirSim，再执行：
 docker compose -f deployment/flight_board/compose.yaml up -d
 docker compose -f deployment/flight_board/compose.yaml logs -f
 docker compose -f deployment/flight_board/compose.yaml down
@@ -189,8 +189,8 @@ VERIFY_AS2_FLIGHT=1 VERIFY_MEMORY_SECONDS=600 \
 bash deployment/flight_board/verify.sh
 ```
 
-验收前先加载固定 flight_board tar，并按[场景资源说明](../../config/airsim/README.md)
-配置 `airsim_nh`。验收使用 `deployment/airsim/config/airsim/nh.json`，也支持 `AIRSIM_BINARY`
+验收前先加载固定 flight_board tar，并按[场景资源说明](../../simulator/airsim/config/README.md)
+配置 `airsim_nh`。验收使用 `simulator/airsim/config/nh.json`，也支持 `AIRSIM_BINARY`
 覆盖可执行文件位置；不会读取开发者的固定场景目录。
 
 默认订阅端使用 `onboard_computer:v0.1.0`，包含 Humble

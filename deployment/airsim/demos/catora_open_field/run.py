@@ -22,8 +22,8 @@ def execute(command,**kwargs):
 
 
 def manager(action,output):
-    return [sys.executable,str(ROOT/'tools/airsim/airsim/manager.py'),action,
-            '--profile',str(APP/'profile.json'),'--run-dir',str(output/'scene')]
+    return [sys.executable,str(ROOT/'simulator/airsim/manager/manager.py'),action,
+            '--profile',str(ROOT/'simulator/airsim/scenarios/catora_open_field/profile.json'),'--run-dir',str(output/'scene')]
 
 
 def cleanup(output):
@@ -70,7 +70,7 @@ def main():
     (output/'source-manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
     relays=[]
     try:
-        relays=launch_vehicles(BOARD,APP,output,PREFIX,ROOT/'deployment/airsim/config/dds/fastdds_udp.xml')
+        relays=launch_vehicles(BOARD,ROOT/'simulator/airsim/scenarios/catora_open_field',output,PREFIX,ROOT/'deployment/airsim/config/dds/fastdds_udp.xml')
         execute(['docker','run','--rm','--detach','--init','--network','host','--name',PREFIX+'clock',
                  '-e','ROS_DOMAIN_ID=91','-e','VEHICLE_NAME=Drone0','-e','AIRSIM_RPC_PORT=42471',BOARD,'clock'],stdout=subprocess.DEVNULL)
         # Record the actual image identities alongside simulation evidence.

@@ -81,7 +81,7 @@ RUN source /opt/ros/humble/setup.bash \
     && PYTHONPATH=src/as2_sensor_adapter:$PYTHONPATH python3 -c 'import uav_as2_sensor_adapter.clock; import uav_as2_sensor_adapter.node'
 COPY deployment/flight_board/entrypoint.sh /usr/local/bin/flight-board
 COPY deployment/flight_board/supervisor.py /opt/flight_board/supervisor.py
-COPY deployment/airsim/config/airsim/settings/px4-sensors.json /opt/flight_board/settings.example.json
+COPY simulator/airsim/config/settings/px4-sensors.json /opt/flight_board/settings.example.json
 RUN chmod +x /usr/local/bin/flight-board
 ENV RUNS_IN_DOCKER=true PX4_SIM_MODEL=none_iris PX4_SYS_AUTOSTART=10016 \
     ROS_DOMAIN_ID=81 VEHICLE_NAME=PX4 VEHICLE_NAMESPACE=drone0 \

@@ -13,11 +13,13 @@
 AirSim / RoboPi 扩展与主线 Gazebo、FAST-LIVO2 入口并存：
 
 - 自建算法和适配器：`src/planner/`；基础执行：`src/behavior/`；导航输入整理：`src/perception/navigation_inputs/`。
-- AirSim 配置、演示和 AS2 启动入口：`deployment/airsim/`；管理工具：`tools/airsim/`；传感器桥：`simulator/airsim/sensors/`。
-- 主线 AS2 依赖仍在 `as2/aerostack2/` 和 `as2/as2_platform_pixhawk/`；PR 的 PX4 1.18 / OHOS fork 独立放在 `as2/airsim/`，不能混用两套版本的参数或补丁。
+- AirSim 场景配置、模拟器启动与管理、传感器桥：`simulator/airsim/`；跨组件演示和 AS2 启动入口：`deployment/airsim/`；板端管理工具：`tools/robopi/`。
+- 主线 AS2 依赖仍在 `as2/aerostack2/` 和 `as2/as2_platform_pixhawk/`；Pixhawk 的 PX4 1.18 适配已转为构建补丁；AS2 核心 fork 暂留 `as2/airsim/` 等待缺失源码，不能混用两套版本的参数或补丁。
 - SUPER 上游子模块：`src/planner/super/upstream/`。运行产物进入被忽略的 `log/airsim/`。
 
-主线依赖准备入口仍为 `bash deployment/prepare_sources.sh`；AirSim / SUPER 使用 `bash tools/airsim/prepare_sources.sh`。
+已有 Skill 集中在 `skill/`；历史运行证据保留在忽略的 `log/pr-history/`，复现过程记录在 `skill/temp/`。`docs/` 只跟踪三份主文档及其图片。AS2 fork 转为主线规定的构建补丁尚未完成：原 PR 锁定的 `f387e0d` 未在其远程仓库发布，不能用另一个提交代替。
+
+主线依赖准备入口仍为 `bash deployment/prepare_sources.sh`；AirSim / SUPER 使用 `bash tools/robopi/prepare_sources.sh`。
 两者都需从仓库根目录执行后续构建命令。AirSim 构建还依赖 PR 指定的基础镜像与外部仿真资源；目录迁移不表示它们已在当前机器上完成闭环验收。
 迁移说明与验证边界见[项目简介](docs/项目简介.md#pr-目录适配)。
 
@@ -61,8 +63,8 @@ Aerostack2 由 Universidad Politécnica de Madrid（UPM）的 Computer Vision an
 - `src/planner/interfaces`：统一 ROS 2 消息与 `ControlPlanner` 服务
 - `src/planner/framework`：Registry、配置解析、生命周期、完成判定和 Output Gateway
 - `src/behavior/follow_path`：兼容原生 FollowPath 的时间化轨迹扩展、ROS 回归与 SITL 验收入口
-- `src/planner/cat_ora/ros2_adapter`：CAT-ORA ROS 1 服务适配
-- `src/planner/swarm_formation/ros2_adapter`：Swarm-Formation ROS 1 滚动轨迹适配
+- `src/planner/cat_ora/ros2_adapter/bridge`：CAT-ORA ROS 1 服务适配
+- `src/planner/swarm_formation/ros2_adapter/bridge`：Swarm-Formation ROS 1 滚动轨迹适配
 - `src/behavior/legacy_setpoint`：PX4 本地 NED setpoint 到 AS2 本地 ENU reference
 - `deployment/integration/compose.yaml`：完整七机仿真部署
 - `src/planner/framework/examples`：任务与机群部署配置

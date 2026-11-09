@@ -1,0 +1,14 @@
+name: uav-aerostack2-cat-ora
+
+services:
+  cat-ora:
+    build:
+      context: ../..
+      dockerfile: deployment/cat_ora_humble/Dockerfile
+    image: uav/aerostack2-cat-ora:humble
+    container_name: aerostack2-cat-ora
+    network_mode: host
+    environment:
+      ROS_DOMAIN_ID: "${ROS_DOMAIN_ID:-0}"
+      ROS_LOCALHOST_ONLY: "1"
+    restart: unless-stopped

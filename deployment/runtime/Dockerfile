@@ -6,9 +6,10 @@ WORKDIR /opt/uav_planner_ws
 COPY src/planner/interfaces/ src/planner/interfaces/
 COPY src/behavior/follow_path/ src/behavior/follow_path/
 COPY src/planner/framework/ src/planner/framework/
-COPY src/planner/cat_ora/ros2_adapter/ src/planner/cat_ora/ros2_adapter/
-COPY src/planner/swarm_formation/ros2_adapter/ src/planner/swarm_formation/ros2_adapter/
+COPY src/planner/cat_ora/ros2_adapter/bridge/ src/planner/cat_ora/ros2_adapter/bridge/
+COPY src/planner/swarm_formation/ros2_adapter/bridge/ src/planner/swarm_formation/ros2_adapter/bridge/
 COPY src/behavior/legacy_setpoint/ src/behavior/legacy_setpoint/
+COPY src/planner/super/upstream/mars_uav_sim/mars_quadrotor_msgs/ src/dependencies/mars_quadrotor_msgs/
 COPY deployment/platform/fleet_takeoff.py /usr/local/bin/fleet_takeoff.py
 COPY deployment/platform/run_single_as2.sh /usr/local/bin/run_single_as2.sh
 COPY deployment/platform/run_multi_as2.sh /usr/local/bin/run_multi_as2.sh
@@ -23,8 +24,8 @@ RUN source /opt/ros/humble/setup.bash \
     && colcon test --merge-install --packages-select uav_follow_path_execution \
     && colcon test-result --verbose \
     && python3 -m unittest discover -s src/planner/framework/tests -v \
-    && python3 -m unittest discover -s src/planner/cat_ora/ros2_adapter/tests -v \
-    && python3 -m unittest discover -s src/planner/swarm_formation/ros2_adapter/tests -v \
+    && python3 -m unittest discover -s src/planner/cat_ora/ros2_adapter/bridge/tests -v \
+    && python3 -m unittest discover -s src/planner/swarm_formation/ros2_adapter/bridge/tests -v \
     && python3 -m unittest discover -s src/behavior/legacy_setpoint/tests -v
 
 ENV ROS_DOMAIN_ID=80 \
