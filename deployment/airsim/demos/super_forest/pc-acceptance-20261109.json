@@ -387,7 +387,88 @@
     "layout_image_id": "sha256:1242967324756673026eb117fadbc55ec1629af1a6a1a89db64ebb5527cc6a87",
     "native_binary_sha256": "0eb366aef80a0867ddc3ce0076607663645b402c609a2d535ce90c7d022254df",
     "native_binary_identical_to_flight_accepted_image": true,
-    "new_full_flight_run": false,
+    "new_full_flight_run": true,
     "verification_evidence_root": "log/airsim/super-native-layout-20261109"
+  },
+  "layout_demo_followup": {
+    "source_commit": "ab2e27147e2feb6bb40927519cf0c3202f255d00",
+    "image": "uav/apps-super-forest:repo-native-20261109",
+    "runner_exit_code": 0,
+    "evidence_root": "log/airsim/super-native-layout-20261109/demo-quick-1",
+    "result": {
+      "execution_backend": "follow_path",
+      "arrived": true,
+      "execution_completed": true,
+      "arrival_error_m": 0.2852251592401446,
+      "route_sim_seconds": 40.36886119842529,
+      "final_task_enu_m": [
+        -37.66574132326974,
+        231.9365726414835,
+        5.797492980957031
+      ],
+      "behavior_stop_confirmed": true,
+      "landed_and_disarmed": true,
+      "success": true,
+      "max_speed_m_s": 8.474590400987314,
+      "bounds_observation_count": 0,
+      "source_flags": {
+        "1": 5300
+      },
+      "counts": {
+        "clock": 4774,
+        "controller": 749,
+        "odom": 7314,
+        "cloud": 678,
+        "map": 168,
+        "inflated": 82,
+        "reference": 2426
+      }
+    },
+    "analysis": {
+      "result_success": true,
+      "axis_min_max_task_enu_m": [
+        [
+          -37.88505971316232,
+          2.931084276400668
+        ],
+        [
+          -0.004143682890571654,
+          232.46045264636632
+        ],
+        [
+          2.0882949829101562,
+          8.208534240722656
+        ]
+      ],
+      "observed_route_length_m": 262.06235593129304,
+      "bounds_policy": "observe",
+      "out_of_bounds_samples": 0,
+      "sampled_out_of_bounds_seconds_estimate": 0,
+      "strict_bounds_pass_for_observed_samples": true,
+      "source_flag_counts": {
+        "1": 5300
+      },
+      "native_plans_recorded": 483,
+      "references_recorded": 2426,
+      "references_with_source_curve_candidate": 2426,
+      "max_best_match_pva_difference": [
+        1.9048520589862908e-06,
+        2.5071641793578533e-06,
+        0.002530776636087549
+      ],
+      "matching_note": "Best match across received native plans at reference header time; includes interpolation and publication timing error, and does not prove a unique revision mapping."
+    },
+    "cleanup": {
+      "scene_alive": false,
+      "owned_containers_remaining": 0
+    },
+    "hashes": {
+      "result.json": "cf31a0fa6ecd3a6d984571fbdbca226673eaeff99af143c281966e85845df215",
+      "analysis.json": "100d9d10d92fedd62aa94b77dce52250045beb68090637552a01ce1cddb3b86d",
+      "source-manifest.json": "4a2937a2a6a2975b82406585ed1c433ba2db74ca393caa559f09d2eef882dcaf",
+      "images.json": "751aa2aeba2ecd3128963db1779d338f005e9eafbe593fa0e41ae58236ced9e2",
+      "flight.jsonl": "f696f154a2f934406b62b8becd58d1c9cf3ceaed7367201bbb8b555cc98106a8"
+    },
+    "interpretation": "Fresh full PC run using repository-owned native/bridge image; task functional pass under unchanged observe policy, strict 8m/s speed bound not passed. No backup flag2 observed in this followup."
   }
 }
