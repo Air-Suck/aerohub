@@ -84,3 +84,6 @@ rosbag2_*/
 
 # Local-only documents: Survey, discussions, handoffs and operations
 /docs/local/
+
+# Temporary reproduction records used to derive reusable Skills
+/skill/temp/

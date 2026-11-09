@@ -1,0 +1,8 @@
+FROM uav/aerostack2-planner-runtime:humble
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+WORKDIR /opt/fast_livo2_as2_ws
+COPY src/state_estimator/fast_livo2/plugin/ src/uav_fast_livo2/
+RUN source /opt/ros/humble/setup.bash \
+    && source /root/aerostack2_ws/install/setup.bash \
+    && colcon build --merge-install --cmake-args -DCMAKE_BUILD_TYPE=Release
+CMD ["bash", "-lc", "source /opt/ros/humble/setup.bash && source /root/aerostack2_ws/install/setup.bash && source /opt/fast_livo2_as2_ws/install/setup.bash && exec ros2 launch uav_fast_livo2 fast_livo2.launch.py"]

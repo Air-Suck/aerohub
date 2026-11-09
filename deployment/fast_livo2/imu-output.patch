@@ -1,0 +1,30 @@
+--- a/src/LIVMapper.cpp
++++ b/src/LIVMapper.cpp
+@@ -615,9 +615,10 @@
+     V3D posi, vel_i;
+     Eigen::Quaterniond q;
+     posi = imu_propagate.pos_end;
+-    vel_i = imu_propagate.vel_end;
++    vel_i = imu_propagate.rot_end.transpose() * imu_propagate.vel_end;
+     q = Eigen::Quaterniond(imu_propagate.rot_end);
+-    imu_prop_odom.header.frame_id = "world";
++    imu_prop_odom.header.frame_id = "camera_init";
++    imu_prop_odom.child_frame_id = "fast_livo_imu";
+     imu_prop_odom.header.stamp = newest_imu.header.stamp;
+     imu_prop_odom.pose.pose.position.x = posi.x();
+     imu_prop_odom.pose.pose.position.y = posi.y();
+@@ -629,6 +630,9 @@
+     imu_prop_odom.twist.twist.linear.x = vel_i.x();
+     imu_prop_odom.twist.twist.linear.y = vel_i.y();
+     imu_prop_odom.twist.twist.linear.z = vel_i.z();
++    imu_prop_odom.twist.twist.angular.x = newest_imu.angular_velocity.x - imu_propagate.bias_g.x();
++    imu_prop_odom.twist.twist.angular.y = newest_imu.angular_velocity.y - imu_propagate.bias_g.y();
++    imu_prop_odom.twist.twist.angular.z = newest_imu.angular_velocity.z - imu_propagate.bias_g.z();
+     pubImuPropOdom.publish(imu_prop_odom);
+   }
+   mtx_buffer_imu_prop.unlock();
+@@ -1187,1 +1191,3 @@
+-  laserCloudmsg.header.stamp = ros::Time::now(); //.fromSec(last_timestamp_lidar);
++  laserCloudmsg.header.stamp = ros::Time().fromSec(
++    LidarMeasures.lio_vio_flg == VIO ? LidarMeasures.measures.back().vio_time
++                                  : LidarMeasures.measures.back().lio_time);

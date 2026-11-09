@@ -1,0 +1,41 @@
+# 初版填写模板，不是 AS2 原生规范。null/空集合需要据实际情况填写或解释。
+schema_version: 0.1
+id: null
+name: null
+version: null
+type: null # tool | planner | behavior | state-estimator | perception
+description: null
+component:
+  id: null
+  manifest: null
+  shared_process_group: null
+  coupled_capabilities: []
+usage:
+  mode: null # task-call | planning-call | execution-action | continuous-provider | query
+  selection_phase: null # deployment | runtime
+  invocation_interface: null
+  switching_constraints: []
+inputs: [] # 每项描述接口、消息/schema、坐标、时间、单位及必需条件
+outputs: [] # 同上；环境表示不强制统一为 OccupancyGrid
+preconditions: []
+resources:
+  reads: []
+  writes: []
+  conflicts: []
+  enforcement: null # 实际仲裁机制；尚未实现须直说
+lifecycle:
+  startup: null
+  readiness: null
+  freshness: null
+  feedback: null
+  completion: null
+  cancel_or_stop: null
+  failure: null
+  recovery: null
+type_specific: {} # 如 representation、TF/reset、轨迹时序约束；按类型填写
+validation:
+  stage: unverified
+  scope: null
+  component_revision: null
+  evidence: []
+  limitations: []

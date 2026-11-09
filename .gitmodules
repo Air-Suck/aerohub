@@ -19,3 +19,6 @@
 [submodule "px4_msgs"]
 	path = as2/px4_msgs
 	url = https://github.com/PX4/px4_msgs.git
+[submodule "src/state_estimator/fast_livo2/upstream"]
+	path = src/state_estimator/fast_livo2/upstream
+	url = https://github.com/hku-mars/FAST-LIVO2.git

@@ -1,0 +1,9 @@
+--- a/sophus/so2.cpp
++++ b/sophus/so2.cpp
+@@ -31,5 +31,4 @@
+ SO2::SO2()
+ {
+-  unit_complex_.real() = 1.;
+-  unit_complex_.imag() = 0.;
++  unit_complex_ = Complexd(1., 0.);
+ }

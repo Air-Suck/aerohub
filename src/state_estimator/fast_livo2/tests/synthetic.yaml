@@ -1,0 +1,46 @@
+# Synthetic static scene for execution smoke only; not a localization benchmark.
+common:
+  img_topic: /test/image
+  lid_topic: /test/points
+  imu_topic: /test/imu
+  img_en: 1
+  lidar_en: 1
+extrin_calib:
+  extrinsic_T: [0.0, 0.0, 0.0]
+  extrinsic_R: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
+  Rcl: [0.0, -1.0, 0.0, 0.0, 0.0, -1.0, 1.0, 0.0, 0.0]
+  Pcl: [0.0, 0.0, 0.0]
+preprocess:
+  lidar_type: 2
+  scan_line: 16
+  point_filter_num: 1
+  filter_size_surf: 0.2
+  blind: 0.1
+imu:
+  imu_en: true
+  imu_int_frame: 30
+  acc_cov: 0.01
+  gyr_cov: 0.01
+lio:
+  voxel_size: 0.5
+  dept_err: 0.02
+  beam_err: 0.05
+  max_layer: 2
+  min_eigen_value: 0.0025
+  max_points_num: 50
+  layer_init_num: [5, 5, 5, 5, 5]
+vio:
+  max_iterations: 3
+  img_point_cov: 100.0
+  patch_size: 8
+  patch_pyrimid_level: 3
+publish:
+  dense_map_en: true
+  pub_scan_num: 1
+uav:
+  imu_rate_odom: true
+  gravity_align_en: true
+pcd_save:
+  pcd_save_en: false
+image_save:
+  img_save_en: false

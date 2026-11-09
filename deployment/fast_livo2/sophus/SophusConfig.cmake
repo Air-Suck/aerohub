@@ -1,0 +1,5 @@
+get_filename_component(_sophus_prefix "${CMAKE_CURRENT_LIST_DIR}/../../.." ABSOLUTE)
+set(Sophus_INCLUDE_DIRS "${_sophus_prefix}/include")
+set(Sophus_INCLUDE_DIR "${Sophus_INCLUDE_DIRS}")
+set(Sophus_LIBRARIES "${_sophus_prefix}/lib/libSophus.so")
+set(Sophus_FOUND TRUE)
