@@ -10,7 +10,7 @@
 
 ## 当前 AirSim / RoboPi 入口
 
-当前部署按四个运行角色组织；完整职责见[项目简介](docs/项目简介.md#deployment-roles)。
+全仓库的 Library、算法、适配组件及 Demo 统一采用四个运行角色的职责约定；完整职责见[项目简介](docs/项目简介.md#deployment-roles)。
 
 | 角色 | 当前对应 |
 | --- | --- |
@@ -18,6 +18,8 @@
 | 飞控板 | `flight_board` 容器中的 PX4 SITL；同时包装传感器/时钟桥 |
 | 算力板 | RoboPi 原生运行算法、导航输入、Adapter、AS2 与 FollowTimedPath |
 | 工作站 | 固定 ROS 桌面镜像中的 `mission.py`，通过 ROS 调用已就绪的算力板能力 |
+
+该约定适用于 CAT-ORA、Swarm-Formation、SUPER、状态估计与环境感知等组件。角色可在 PC 仿真中共置，实际部署位置和验收状态由各项目单独声明。SUPER 是当前实例，不代表其他项目已迁移或复验。
 
 从[部署准备](deployment/README.md)进入，再选择 [Library Demo](deployment/airsim/demos/README.md)。
 SUPER 四方运行使用显式 `--execution-location four-part`，构建、地面检查、短程、原任务和停止命令见
