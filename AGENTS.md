@@ -10,6 +10,12 @@
 
 ## 目标架构
 
+### 2026-11-09 四方部署职责（用户确认）
+
+- 以 `docs/项目简介.md` 的“四方部署职责”节（`#deployment-roles`）为职责及对应关系的主说明：仿真器对应 AirSim，飞控板对应物理 PX4 或 SITL PX4，算力板对应 RoboPi 自主算法与 AS2 执行链，工作站对应 ROS 任务脚本。镜像/容器可组合多个角色，不依据名称判定职责。
+- Demo 的 `mission.py` 在工作站通过 ROS 调用已部署、已就绪的算力板能力；自主算法、Adapter 与 AS2 执行链在算力板，高频控制不经工作站转发。
+- 仿真专有验收留在仿真器/工作站侧。当前 `robopi-all` 把任务脚本也放在板端，属于历史验证拓扑，尚未按新边界调整；不能据此宣称已实现目标部署或通用 Mission/Agent 层。
+
 ### 2026-11-07 目标架构补充（优先于下方早期分层描述）
 
 - 目标运行链为 Application → Mission（人类目标、Online Agent）→ Tool → 基础 Behavior → 基础能力与平台。现有 Planner 和 adapter 是 Navigation Tool 的实现基础；本次不实现 Mission 或 Tool。

@@ -6,6 +6,11 @@ Humble 传感器和时钟；后者提供可选的 PC AS2 / Library 开发环境�
 OHOS 开发环境由用户先按官方[设备开发环境搭建和开发指南](https://gitcode.com/openharmony-robot/docs/blob/main/device-dev/%E8%AE%BE%E5%A4%87%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA%E5%92%8C%E5%BC%80%E5%8F%91%E6%8C%87%E5%8D%97.md)准备。
 仓库直接调用官方 builder，只提供项目适配脚本与说明，不维护或交付派生 builder 镜像。
 
+部署职责以[项目简介：四方部署职责](../docs/项目简介.md#deployment-roles)为准。
+四个角色对应 AirSim 仿真器、PX4 飞控、RoboPi 自主算法/AS2 与工作站 ROS 任务脚本。
+镜像、容器与角色不必一一对应：flight_board 同时包装模拟飞控与平台采集桥，
+onboard_computer 是可选 PC 开发环境。完整职责、接口和当前实现差异统一见上述主说明。
+
 ## 目录与交付边界
 
 | 目录 | 用途 | 是否为镜像交付项 |

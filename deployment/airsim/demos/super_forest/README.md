@@ -1,5 +1,9 @@
 # SUPER forest8：PC 验收与历史 RoboPi 链路
 
+四方职责主说明见[项目简介](../../../../docs/项目简介.md#deployment-roles)。
+当前 `robopi-all` 的历史验证将 `mission.py` 也放在板端，尚未符合“工作站编排、
+算力板提供就绪 ROS 能力”的目标；本页运行方式按其实际实现描述。
+
 当前 PC 验收链为实际 AirSim LiDAR / PX4 状态 → SUPER → 时间化 Adapter →
 FollowTimedPath → onboard_computer 中的 AS2 → PX4 SITL / AirSim。
 历史 `forest8_as2_mission.py` 属于单点轨迹桥 → RoboPi AS2 的不同运行组合，
