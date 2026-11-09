@@ -4,9 +4,9 @@ AeroHub 正式维护的 PC 机载计算开发与仿真验证环境，承载 AS2�
 及应用任务，并作为 RoboPi 原生运行的功能参考基线。PC 验收与 RoboPi 板端验收分别记录。
 
 基础镜像提供 ROS 2 Humble、PX4 消息接口、AS2 与开发工具；Library 和应用
-通过派生镜像加入各自的算法及任务依赖，例如 `deployment/airsim/demos/catora_open_field/Dockerfile`。
-通用运行代码与配置继续由 `runtime/`、`deployment/airsim/config/` 共享。该镜像随项目交付，用户可选择是否使用 PC 开发；
-修改源码后可按需本地重建。Library 接入仍必须完成 RoboPi 验证。
+既有快照通过派生镜像加入各自的算法及任务依赖，例如 `deployment/airsim/demos/catora_open_field/Dockerfile`。
+通用 AS2 启动代码与配置由 `deployment/airsim/as2/`、`deployment/airsim/config/` 共享。该镜像随项目交付，用户可选择是否使用 PC 开发；
+日常源码迭代按下节使用工作区补编译，基础镜像维护单独处理。Library 接入仍必须完成 RoboPi 验证。
 
 镜像：`onboard_computer:v0.1.0`，与[固定 flight_board 镜像](../flight_board/README.md#使用固定镜像)配套。
 GHCR 地址为 `ghcr.io/popc0rn7/aerohub/onboard-computer:v0.1.0`，
@@ -14,6 +14,28 @@ GHCR 地址为 `ghcr.io/popc0rn7/aerohub/onboard-computer:v0.1.0`，
 基础环境使用 `onboard_computer_dependencies:humble-px4-1.18`，其中固定 PX4 消息已编译。
 该依赖镜像基于 `osrf/ros:humble-desktop-full-jammy`，默认锁定其 digest：
 `sha256:592f97da6b871a438fdb97f86b422ab9f80657e80efa7b98d258894738c8a0c0`。
+
+## 固定镜像与源码开发（用户确认的目标）
+
+共享镜像作为稳定的 ROS/编译工具与依赖环境，各开发者保留自己的源码、build/install
+缓存和日志。普通 AS2、算法或 Adapter 修改通过工作区补编译及显式加载 install overlay
+生效，默认不重建镜像，不替换镜像内的系统库或预编译安装。镜像中已有 AS2 安装可作为
+初始参考版本，实际运行选择的安装前缀与源码版本应可核对。
+
+AS2 实现修改通常重编译受影响包即可；公共接口、C++ 基类或消息定义变化时，需连同
+受影响的扩展、插件及客户端一起重编译。避免新 AS2 加载旧二进制插件，或启动入口
+继续 source 镜像旧安装而遗漏开发 overlay。新增依赖先核查镜像现有内容或使用工作区
+局部依赖；ROS、编译器或系统级依赖确需升级时，单独安排团队基础环境版本变更。
+
+**当前实现差异：**现有 Dockerfile 在构建镜像时编译 AS2，entrypoint 固定 source
+镜像安装，默认 Compose 只挂载配置；尚未接通上述外部源码/构建缓存及 overlay 选择。
+后续应调整开发启动和补编译入口，而不是将每次源码变更都转为重建镜像。
+本节记录开发约定，尚未修改这些运行入口；下文镜像构建命令用于基础环境维护或固定快照构建。
+
+**已有实例：**[SUPER four-part](../airsim/demos/super_forest/README.md#four-part)直接复用
+上述 ROS 桌面基线，外部编译接口 overlay 并显式加载，工作站只运行任务客户端；
+算法与 AS2 在 RoboPi，使用官方 builder 补编译后部署候选安装。该实例没有重建共享
+镜像，地面与短程已验证；它不等于通用 onboard Compose 已支持完整外部 AS2 开发工作区。
 
 ## 与原 AS2 镜像的区别
 
@@ -131,7 +153,8 @@ CAT-ORA、Swarm 及 adapter 在该通用镜像中编译 12 包并加载通过，
 到点误差 0.173 m，两秒保持漂移 0.436 m；七路图像、七路 CameraInfo、非空 LiDAR 和必需 TF 均收到。
 完整多机算法验收仍以各 Demo 记录的实际镜像为准，本轮不扩展为新镜像的多机或长期验收。
 
-[发布清单](../releases/v0.1.0.json)、[版本验收](../../log/pr-history/deployment/releases/v0.1.0-validation.json)。
+[发布清单](../releases/v0.1.0.json)受版本管理；历史详细验收文件为本地
+`log/pr-history/deployment/releases/v0.1.0-validation.json`，不随仓库分发，缺失时不能由该路径复核原始验收。
 原始日志在 `log/airsim/release-v0.1.0/`，测试资源已清理。校验已加载的固定交付镜像：
 
 ```bash

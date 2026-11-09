@@ -6,6 +6,18 @@ Humble 传感器和时钟；后者提供可选的 PC AS2 / Library 开发环境�
 OHOS 开发环境由用户先按官方[设备开发环境搭建和开发指南](https://gitcode.com/openharmony-robot/docs/blob/main/device-dev/%E8%AE%BE%E5%A4%87%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA%E5%92%8C%E5%BC%80%E5%8F%91%E6%8C%87%E5%8D%97.md)准备。
 仓库直接调用官方 builder，只提供项目适配脚本与说明，不维护或交付派生 builder 镜像。
 
+部署职责以[项目简介：四方部署职责](../docs/项目简介.md#deployment-roles)为准。
+四方职责和固定共享镜像、工作区补编译方式是所有 Library / Demo 的统一约定，
+不限定于 SUPER。各项目现有实现、运行拓扑与验证范围仍以其独立记录为准；
+共享入口说明不表示已修改或迁移其他项目。
+四个角色对应 AirSim 仿真器、PX4 飞控、RoboPi 自主算法/AS2 与工作站 ROS 任务脚本。
+镜像、容器与角色不必一一对应：flight_board 同时包装模拟飞控与平台采集桥，
+onboard_computer 是可选 PC 开发环境。完整职责、接口和当前实现差异统一见上述主说明。
+
+工作站任务容器选用 `osrf/ros:humble-desktop-full-jammy` 作为基线，复用 onboard
+开发环境的底层；任务接口在外部工作区补编译，运行时显式加载 overlay，不启动算法和 AS2 执行节点。
+[SUPER 四方入口](airsim/demos/super_forest/README.md#four-part)已实现此方式，复用原镜像，不新增正式镜像交付项。
+
 ## 目录与交付边界
 
 | 目录 | 用途 | 是否为镜像交付项 |
@@ -13,7 +25,7 @@ OHOS 开发环境由用户先按官方[设备开发环境搭建和开发指南](
 | [flight_board](flight_board/README.md) | PX4 / Agent / Humble sensors / clock 的统一仿真底座 | 是，GHCR 或离线 tar 交付 |
 | [oh-ros-build](oh-ros-build/README.md) | 官方 builder 调用、工作区准备与 CMake 适配；目录名为既有脚本路径 | 否，只有脚本和文档 |
 | [robopi](robopi/README.md) | 板端原生 AS2 部署、启动和诊断 | 否，部署交叉编译产物 |
-| [onboard_computer](onboard_computer/README.md) | 承载 AS2、算法 Library 与应用的正式 PC 开发及仿真验证环境 | 是，PC 开发可选，源码修改后可重建 |
+| [onboard_computer](onboard_computer/README.md) | 承载 AS2、算法 Library 与应用的正式 PC 开发及仿真验证环境 | 是，PC 开发可选；日常补编译约定与现有入口差异见详情 |
 
 AirSim 场景在 PC 宿主机独立运行，binary 通过资源 YAML 配置，不包含在 tar 中。
 RoboPi 原生运行 AS2，不运行 Docker。SDK、目标 ROS 和第三方依赖由官方环境提供。
@@ -29,7 +41,7 @@ RoboPi 原生运行 AS2，不运行 Docker。SDK、目标 ROS 和第三方依赖
 3. 按[项目适配说明](oh-ros-build/README.md#首次初始化项目工作区)准备隔离工作区，填写 `.env`。
 4. 按[固定镜像说明](flight_board/README.md#使用固定镜像)加载 flight_board tar 和校验文件，或按[GHCR 说明](releases/README.md#从-ghcr-获取)拉取固定镜像并设置 `.env`。
 5. 从 [AirSim 仓库 Releases](https://github.com/microsoft/AirSim/releases) 下载对应 Linux 场景，按[场景说明](../simulator/airsim/config/README.md)配置 AirSim binary 资源，准备 PC 与板端网络。
-6. 需要 PC 开发或混合 Demo 时加载交付的 onboard_computer 镜像。
+6. 按所选 Demo 准备计算环境：SUPER 四方任务复用 `osrf/ros:humble-desktop-full-jammy` 并补编译外部接口；全 PC 或其他 Demo 按各自说明加载 onboard_computer 镜像。
 7. 按[RoboPi 文档](robopi/README.md)编译、部署、启动和验收；Library 接入必须完成 RoboPi 验证，PC 验证不能替代。
 
 PC 运行组合为：
@@ -37,7 +49,8 @@ PC 运行组合为：
 ```text
 PC 宿主机：AirSim 场景
 PC Docker：同一 flight_board 镜像的 vehicle 与 clock 容器
-RoboPi：OHOS AS2 原生进程
+RoboPi：OHOS 算法、Adapter、AS2 原生进程
+工作站 Docker：固定 ROS 桌面镜像 + 外部接口 overlay + ROS 任务客户端
 ```
 
 上述 RoboPi 运行组合无需独立 sensors 或 onboard_computer 镜像。AS2 源码编译由官方 builder 执行，

@@ -1,6 +1,7 @@
 # SUPER 的时间化 Behavior 接入
 
-算法仍来自锁定的 `src/planner/super/upstream` fork；本目录只保存本仓库适配包。
+实际构建源码直接保存在本仓库 `ros2_adapter/native/`，AS2 适配包位于
+`ros2_adapter/bridge/`；`upstream/` submodule 只作上游对照，不是构建输入。
 原生输入、优化与主/备用轨迹计算不搬入 Behavior。当前验证对象是 PC forest8，
 不表示 ROS/OHOS 算法部署或 RoboPi 闭环已完成。
 

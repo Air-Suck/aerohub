@@ -8,6 +8,30 @@
 
 第一阶段不包含 Planner 并行协作、在线热切换、自动选优、远程 Model Hub、真机或国产操作系统验收。
 
+## 当前 AirSim / RoboPi 入口
+
+全仓库的 Library、算法、适配组件及 Demo 统一采用四个运行角色的职责约定；完整职责见[项目简介](docs/项目简介.md#deployment-roles)。
+
+| 角色 | 当前对应 |
+| --- | --- |
+| 仿真器 | PC 宿主 AirSim，提供环境、动力学和仿真真值 |
+| 飞控板 | `flight_board` 容器中的 PX4 SITL；同时包装传感器/时钟桥 |
+| 算力板 | RoboPi 原生运行算法、导航输入、Adapter、AS2 与 FollowTimedPath |
+| 工作站 | 固定 ROS 桌面镜像中的 `mission.py`，通过 ROS 调用已就绪的算力板能力 |
+
+该约定适用于 CAT-ORA、Swarm-Formation、SUPER、状态估计与环境感知等组件。角色可在 PC 仿真中共置，实际部署位置和验收状态由各项目单独声明。SUPER 是当前实例，不代表其他项目已迁移或复验。
+
+从[部署准备](deployment/README.md)进入，再选择 [Library Demo](deployment/airsim/demos/README.md)。
+SUPER 四方运行使用显式 `--execution-location four-part`，构建、地面检查、短程、原任务和停止命令见
+[SUPER Demo](deployment/airsim/demos/super_forest/README.md#four-part)。默认 `pc` 行为保持兼容。
+四方链路的地面及短程验证通过，原 forest8 在途中更新被拒，详见
+[Validation](deployment/airsim/demos/super_forest/VALIDATION-four-part-20261109.md)；单次失败原因尚未确认。
+
+共享镜像作为稳定工具，日常源码修改通过工作区补编译和加载 overlay 生效。
+SUPER 工作站已实现此方式；通用 onboard 开发入口的现状见
+[开发约定](deployment/onboard_computer/README.md#固定镜像与源码开发用户确认的目标)。
+下文 PX4/Gazebo、多机 ROS 1 镜像与 Compose 命令保留为早期集成路径；当前 AirSim/RoboPi 从上述入口开始。
+
 ## PR 功能与目录迁移
 
 AirSim / RoboPi 扩展与主线 Gazebo、FAST-LIVO2 入口并存：
@@ -15,7 +39,7 @@ AirSim / RoboPi 扩展与主线 Gazebo、FAST-LIVO2 入口并存：
 - 自建算法和适配器：`src/planner/`；基础执行：`src/behavior/`；导航输入整理：`src/perception/navigation_inputs/`。
 - AirSim 场景配置、模拟器启动与管理、传感器桥：`simulator/airsim/`；跨组件演示和 AS2 启动入口：`deployment/airsim/`；板端管理工具：`tools/robopi/`。
 - 主线 AS2 依赖仍在 `as2/aerostack2/` 和 `as2/as2_platform_pixhawk/`；Pixhawk 的 PX4 1.18 适配已转为构建补丁；AS2 核心也已转为 `as2-airsim-pr.patch`，只在 AirSim/OHOS 构建副本应用。
-- SUPER 上游子模块：`src/planner/super/upstream/`。运行产物进入被忽略的 `log/airsim/`。
+- SUPER 实际源码与 CAT-ORA 一致：`src/planner/super/ros2_adapter/native/`，AS2 适配在 `bridge/`，`upstream/` 子模块只作参考。运行产物进入被忽略的 `log/airsim/`。
 
 已有 Skill 集中在 `skill/`；历史运行证据保留在忽略的 `log/pr-history/`，复现过程记录在 `skill/temp/`。`docs/` 只跟踪三份主文档及其图片。原 PR 锁定的 AS2 `f387e0d` 已取得并转为构建补丁，官方子模块保持 main 锁定版本；这仍是构建时源码修改，不是无侵入插件替代。
 
