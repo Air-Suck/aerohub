@@ -56,10 +56,10 @@ AirSim / RoboPi 扩展与主线 Gazebo、FAST-LIVO2 入口并存：
 
 - 自建算法和适配器：`src/planner/`；基础执行：`src/behavior/`；导航输入整理：`src/perception/navigation_inputs/`。
 - AirSim 场景配置、模拟器启动与管理、传感器桥：`simulator/airsim/`；跨组件演示和 AS2 启动入口：`deployment/airsim/`；板端管理工具：`tools/robopi/`。
-- 主线 AS2 依赖仍在 `as2/aerostack2/` 和 `as2/as2_platform_pixhawk/`；Pixhawk 的 PX4 1.18 适配已转为构建补丁；AS2 核心也已转为 `as2-airsim-pr.patch`，只在 AirSim/OHOS 构建副本应用。
+- 主线 AS2 依赖仍在 `as2/aerostack2/` 和 `as2/as2_platform_pixhawk/`；AS2 核心直接锁定 AeroHub fork，Pixhawk 的 PX4 1.18 适配在构建副本应用兼容补丁。
 - SUPER 实际源码与 CAT-ORA 一致：`src/planner/super/ros2_adapter/native/`，AS2 适配在 `bridge/`，`upstream/` 子模块只作参考。运行产物进入被忽略的 `log/airsim/`。
 
-已有 Skill 集中在 `skill/`；历史运行证据保留在忽略的 `log/pr-history/`，复现过程记录在 `skill/temp/`。`docs/` 只跟踪三份主文档及其图片。原 PR 锁定的 AS2 `f387e0d` 已取得并转为构建补丁，官方子模块保持 main 锁定版本；这仍是构建时源码修改，不是无侵入插件替代。
+已有 Skill 集中在 `skill/`；历史运行证据保留在忽略的 `log/pr-history/`，复现过程记录在 `skill/temp/`。`docs/` 只跟踪三份主文档及其图片。AS2 直接使用 AeroHub fork 子模块并锁定到 `f387e0d`；构建流程不再对官方 AS2 副本重复应用同等补丁。
 
 主线依赖准备入口仍为 `bash deployment/prepare_sources.sh`；AirSim / SUPER 使用 `bash tools/robopi/prepare_sources.sh`。
 两者都需从仓库根目录执行后续构建命令。AirSim 构建还依赖 PR 指定的基础镜像与外部仿真资源；目录迁移不表示它们已在当前机器上完成闭环验收。
@@ -71,7 +71,7 @@ AirSim / RoboPi 扩展与主线 Gazebo、FAST-LIVO2 入口并存：
 
 | 上游 | 本工程中的用途 | 锁定版本 |
 | --- | --- | --- |
-| [Aerostack2](https://github.com/aerostack2/aerostack2) | 状态估计、运动控制、运动 Behavior 及公共接口 | `19c397309c6a41b279e6b551818ec12605cfcecc` |
+| [Aerostack2（AeroHub fork）](https://github.com/Popc0rn7/aerostack2-aerohub) | 状态估计、运动控制、运动 Behavior 及公共接口 | `f387e0d733a5102808508bcbec1b9eca2c29d1f0` |
 | [as2_platform_pixhawk](https://github.com/aerostack2/as2_platform_pixhawk) | Aerostack2 与 PX4 的平台适配 | `fcba062219935acef69dfa009c8be376c707ee8a` |
 | [px4_msgs](https://github.com/PX4/px4_msgs) | PX4 的 ROS 2 消息定义 | `86d8239e962f6939e05c3737784f60c02fa884db` |
 
@@ -142,7 +142,7 @@ bash tools/robopi/prepare_sources.sh
 - [飞控仿真底座](deployment/flight_board/README.md)：PX4 SITL、DDS、传感器与时钟。
 - [RoboPi 部署](deployment/robopi/README.md)：板端构建、部署、启动和诊断。
 
-验证结论必须注明平台、版本、拓扑和覆盖范围。静态检查、合成输入冒烟、容器启动、AirSim 闭环和真机验收是不同证据等级，不能互相替代。需要 GPU 的测试在没有可用 GPU 时应明确标记为未执行。
+验证结论必须注明平台、版本、拓扑和覆盖范围。静态检查、合成输入冒烟、容器启动、AirSim 闭环和真机验收是不同证据等级，不能互相替代。当前开发主机具备 NVIDIA GPU；依赖 GPU 的算法必须完成真实 GPU 运行测试。只有预先确定的适用测试全部执行并通过、证据完整时才能声明复现成功；失败、跳过、未执行或缺证据均表示复现尚未成功。
 
 ## 文档
 
@@ -160,6 +160,7 @@ bash tools/robopi/prepare_sources.sh
 | [as2_platform_pixhawk](https://github.com/aerostack2/as2_platform_pixhawk) | AS2 与 PX4 的平台适配 |
 | [PX4-Autopilot](https://github.com/PX4/PX4-Autopilot) | 飞控与 SITL |
 | [FAST-LIVO2](https://github.com/hku-mars/FAST-LIVO2) | 激光、视觉、惯性状态估计与建图 |
+| [PIN-SLAM](https://github.com/PRBonn/PIN_SLAM) | 激光状态估计与隐式神经点建图 |
 | [CAT-ORA](https://github.com/ctu-mrs/catora) | 多机轨迹规划 |
 | [Swarm-Formation](https://github.com/ZJU-FAST-Lab/Swarm-Formation) | 多机编队规划 |
 

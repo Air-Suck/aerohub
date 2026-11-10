@@ -23,6 +23,10 @@ description: 按原生 Aerostack2 扩展约定实现 Planner、Behavior、State 
 3. 明确外部算法进程由谁启动、健康检查及退出如何收口。State Estimator 插件不自动具有 Behavior 生命周期，也不自动将结果送入 PX4 EKF。
 4. 参数默认值不得伪装成实机标定。保留原有部署可用性；添加显式选择入口，不擅自切换飞行中的权威状态源。
 
+外部 SLAM 的 Adapter 应先形成完整、可验证的 `nav_msgs/Odometry` 契约，插件再负责 AS2 坐标、杆臂、陈旧值和发布权。若上游没有速度，先用两个有效且单调的采样位姿计算 twist，首帧保持未就绪；不要把有限差分、GPU 算法和 AS2 宿主职责揉进同一个插件。跟踪丢失时停止提交新权威状态，恢复或重启产生新地图 epoch 时禁止在运动中热切换。带 PGO 的全局位姿可能跳变，未另行提供平滑局部 chart 时必须向消费者声明。
+
+定位精度通过不代表输出速率适合直接承担控制状态。低频 SLAM 与高频平台里程计并存时，优先让平台里程计提供连续的 `odom -> base_link` 和 body twist，让 SLAM 按时间配对后提供 `map -> odom` 全局校正。动态全局校正应以零阶保持方式随每个新的本地采样时间提交，使完整 TF 链满足控制 freshness；这不同于把陈旧 SLAM pose 重发成新的 `odom -> base_link`。插件必须分别验证两路 frame、时间、频率、失效语义和唯一 canonical 发布权。
+
 同仓库存在不同 AS2 构建版本时，每个目标都需实际编译并在对应宿主中加载插件。FAST-LIVO2 在原基类中使用 `on_setup` 与插件发布接口，而 AirSim 构建中的新基类使用 `onSetup`、`getTransformationTypesAvailable` 和宿主拥有的 `StateEstimatorInterface`；仅保持类名和 plugin XML 不够。兼容选择依据实际头文件接口，不能复用另一版本的插件二进制。新宿主在 setup 之后才注册变换权限，主变换应在注册完成后的有效输入回调中提交；检查宿主定时发布是否违背陈旧状态静默要求。这些差异必须通过非恒等变换、时间戳、拒绝、静默与恢复测试核对，不能只修到编译成功。
 
 ## 交付

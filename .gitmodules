@@ -1,6 +1,6 @@
 [submodule "as2"]
 	path = as2/aerostack2
-	url = https://github.com/aerostack2/aerostack2.git
+	url = https://github.com/Popc0rn7/aerostack2-aerohub.git
 [submodule "pixhawk"]
 	path = as2/as2_platform_pixhawk
 	url = https://github.com/aerostack2/as2_platform_pixhawk.git
@@ -26,6 +26,9 @@
 [submodule "super"]
 	path = src/planner/super/upstream
 	url = https://github.com/Popc0rn7/SUPER-sim.git
+[submodule "src/state_estimator/pin_slam/upstream"]
+	path = src/state_estimator/pin_slam/upstream
+	url = https://github.com/PRBonn/PIN_SLAM.git
 [submodule "src/planner/yopo/upstream"]
 	path = src/planner/yopo/upstream
 	url = https://github.com/TJU-Aerial-Robotics/YOPO.git
