@@ -9,7 +9,6 @@
     <rect width="1080" height="1100" fill="#f8fafc"/>
     <text x="30" y="42" font-size="28" font-weight="700">SUPER · 三层接入关系</text>
     <text x="30" y="75" font-size="18" fill="#53657a">单机 drone0 配置示意 · 算法实现、执行调用与基础能力依赖</text>
-
     <rect x="100" y="112" width="950" height="268" rx="10" fill="white" stroke="#dbe2e9"/>
     <text x="124" y="150" font-size="24" font-weight="700">TOOL / 工具层</text>
     <text x="124" y="179" font-size="17" fill="#53657a">Navigation Tool 实现基础：现有规划与适配链；通用 Tool 尚未实现</text>
@@ -28,11 +27,10 @@
       <path d="M380 247 H434"/><path d="M690 247 H744"/>
     </g>
     <text x="124" y="353" font-size="17" fill="#b86b20">导航位姿与地图供规划使用；平台里程计供 Adapter 监测</text>
-
     <rect x="100" y="436" width="950" height="245" rx="10" fill="white" stroke="#dbe2e9"/>
     <text x="124" y="476" font-size="24" font-weight="700">BEHAVIOR / 基础行为执行层</text>
     <rect x="330" y="500" width="520" height="100" rx="8" fill="#eef3f8" stroke="#175da5"/>
-    <text x="590" y="534" text-anchor="middle" font-size="23" font-weight="700">ExtendedFollowPath × 1</text>
+    <text x="590" y="534" text-anchor="middle" font-size="23" font-weight="700">ExtendedFollowPath</text>
     <text x="590" y="565" text-anchor="middle" font-size="18">FollowTimedPath · drone0</text>
     <text x="124" y="532" font-size="16" fill="#b86b20">当前状态</text>
     <text x="124" y="635" font-size="17">复用公共 FollowPath 扩展：原生入口与 FollowTimedPath 互斥</text>
@@ -41,11 +39,11 @@
     <text x="124" y="790" font-size="24" font-weight="700">FUNCTION / 基础能力层</text>
     <g text-anchor="middle">
       <rect x="130" y="815" width="260" height="113" rx="8" fill="#eef3f8" stroke="#175da5"/>
-      <text x="260" y="848" font-size="20" font-weight="600">State Estimator × 1</text>
+      <text x="260" y="848" font-size="20" font-weight="600">State Estimator</text>
       <text x="260" y="879" font-size="17">位姿 / 速度 / TF</text>
       <text x="260" y="907" font-size="16" fill="#53657a">复用现有定位源 / TF</text>
       <rect x="440" y="815" width="260" height="113" rx="8" fill="#eef3f8" stroke="#175da5"/>
-      <text x="570" y="848" font-size="20" font-weight="600">Motion Controller × 1</text>
+      <text x="570" y="848" font-size="20" font-weight="600">Motion Controller</text>
       <text x="570" y="879" font-size="17">参考 + 自身状态 → 控制</text>
       <text x="570" y="907" font-size="16" fill="#53657a">复用 AS2 运动控制</text>
       <rect x="750" y="815" width="260" height="113" rx="8" fill="#d9f3ed" stroke="#168b78"/>
@@ -66,12 +64,11 @@
     <g fill="none" stroke="#b86b20" stroke-width="2" marker-end="url(#data)">
       <path d="M390 872 H434"/>
       <path d="M130 872 H60 V322 H565 V298"/>
-      
       <path d="M60 550 H324"/>
     </g>
     <g fill="#b86b20"><circle cx="60" cy="550" r="4"/></g>
     <text x="40" y="732" font-size="17" fill="#b86b20" transform="rotate(-90 40 732)">自身状态共享数据</text>
-    <text x="124" y="962" font-size="17">× 1 为单机实例；导航输入读取同源平台里程计及点云</text>
+    <text x="124" y="962" font-size="17">导航输入读取同源平台里程计及点云；ROG-Map 与规划同进程</text>
     <text x="124" y="991" font-size="17" fill="#53657a">平台边界：经 AS2 平台适配连接 PX4，位于本图三层范围之外</text>
     <rect x="30" y="1034" width="16" height="16" fill="#d9f3ed" stroke="#168b78"/>
     <text x="55" y="1048" font-size="17">算法与专属接入</text>

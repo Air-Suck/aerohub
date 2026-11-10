@@ -1,18 +1,38 @@
 ---
 title: CAT-ORA
-summary: 集中式多机队形重排；规划与适配组织在 Tool 层，调用逐机 Behavior，复用状态估计与运动控制。
+summary: 面向多机器人三维队形变换。CAT-ORA 联合考虑目标分配与机间避碰，生成满足速度、加速度约束的轨迹，减少整队完成形状切换所需的时间。
 category: planner
 source: https://github.com/ctu-mrs/catora
 revision: 4bc41f593eebde65dd74108a97e80430a145dfa0
+demo:
+  image: content/algorithms/cat_ora/assets/demo-cover.jpg
+  alt: CAT-ORA 作者论文中的实机队形变换，点击观看官方视频
+  caption: 作者论文 Figure 1 的实机队形变换；不代表本项目四机复现结果。
+  source: https://arxiv.org/html/2412.00603v2#S1.F1
+  video: https://www.youtube.com/watch?v=FOCyGhxazMI
 integration: integrated
 validation: unverified
 ---
 
-## Tool、Behavior、Function 三层接入关系
+## 在 Aerohub 中如何接入
+
+![CAT-ORA 在 Tool、Behavior、Function 三层中的接入、调用与依赖](./assets/layers.svg)
+
+- **Tool**：集中式规划、proxy 和 Adapter 生成统一机群轨迹，公共协调器管理逐机请求。
+- **Behavior**：复用扩展 FollowPath `×4`，按共同执行时间接收完整逐机轨迹。
+- **Function**：复用状态估计和运动控制各 `×4`；当前展示链路未接入环境地图。
+
+架构图对应 ROS 1 proxy 四机配置。上游可以重新分配目标，本接入要求固定车辆与目标的对应关系；通用 Navigation Tool 尚未实现。
+
+<details>
+<summary>接入细节与验证记录</summary>
+
+Demo 画面来自[作者公开素材](https://arxiv.org/html/2412.00603v2/fig/intro_fig.jpg)，保留未修改的本地副本，用于链接官方演示；素材来源见上方作者仓库，演示效果不计入本项目验收。
+
+### Tool、Behavior、Function 三层接入关系
 
 本图以项目架构的三层为固定坐标，分别标出 **CAT-ORA 提供的算法与接入、调用的执行能力、依赖的基础能力**。一个项目可以覆盖多个层；调用或依赖某层不等于实现了该层。
 
-![CAT-ORA 三层接入：Tool 层共享规划与适配，Behavior 层四机路径执行，Function 层复用状态估计与运动控制](./assets/layers.svg)
 
 图示对应仓库的四机配置与 ROS 1 proxy 接入链，表达职责和接口关系。Tool 层放置的是未来 Navigation Tool 的现有实现基础；通用 Tool 接口、资源仲裁与 Mission/Agent 尚未实现。图示不是飞行记录或仿真回放。
 
@@ -23,7 +43,7 @@ validation: unverified
 | Function | 各机 State Estimator、Motion Controller | 直接读取现有状态，复用运动控制；未新增定位或控制算法 |
 | Function 中的 Perception & Mapping | 当前展示链路未接入 | 本链未接入地图/点云，不推导上游其他配置的能力 |
 
-## Tool：规划、适配与机群协调
+### Tool：规划、适配与机群协调
 
 四架飞机共享一次批量规划和一套机群调用协调，不为每架飞机复制整个 CAT-ORA。
 
@@ -38,7 +58,7 @@ validation: unverified
 
 图中展示的是 ROS 1 proxy 接入链。当前目录还保留 `ros2_adapter/native/` 的原生 Humble 移植实现，与统一输出适配包 `bridge/` 并列；AirSim 部署显式选择构建链，不能从 Registry 的 Noetic 镜像字段推断所有部署的运行环境。规划核心在图中作为服务黑盒，其输入输出来自代理服务字段及适配代码。
 
-## Behavior：实际调用的基础执行能力
+### Behavior：实际调用的基础执行能力
 
 | 作用 | Behavior 与调用接口 | 谁调用、何时调用 |
 | --- | --- | --- |
@@ -51,7 +71,7 @@ validation: unverified
 
 Behavior 内采样时间化轨迹，再输出 Motion Reference，由 AS2 控制器与平台执行到 PX4。当前默认链路由 Behavior 承担轨迹执行。
 
-## Function：复用的状态与控制能力
+### Function：复用的状态与控制能力
 
 每架飞机复用现有 AS2 State Estimator 提供的位姿、速度与 TF。Adapter 直接订阅 `/<vehicle>/self_localization/pose`，转换坐标后用于规划；框架使用实际位置检查完成条件。定位插件和输入源由具体部署决定，CAT-ORA 不实现新的状态估计算法。
 
@@ -59,7 +79,7 @@ Behavior 内采样时间化轨迹，再输出 Motion Reference，由 AS2 控制�
 
 图中 ExtendedFollowPath、State Estimator 和 Motion Controller 均用 `×4` 聚合表示四个车辆实例，实际仍按 namespace 隔离。当前展示链路未接入 Perception & Mapping，图中以虚线标注；本接入没有新增地图、点云或感知算法。PX4 与 AS2 平台适配属于更下方的平台边界，在图外注明。
 
-## 四机如何协同
+### 四机如何协同
 
 示例配置为 `src/planner/framework/examples/cat_ora_four_px4.yaml`，部署映射来自同目录的 `deployment_four_px4.yaml`。
 
@@ -84,7 +104,7 @@ Behavior 内采样时间化轨迹，再输出 Motion Reference，由 AS2 控制�
 
 Manifest 声明 1–16 机是配置能力范围；本页四机展示不代表所有规模都已通过动力学验证。
 
-## 核查依据与验证边界
+### 核查依据与验证边界
 
 本页依据本地源码与配置建立展示，没有启动 ROS、AS2、PX4 或重新运行 CAT-ORA。仓库主文档记载过四机无障碍 PX4/Gazebo 验收；本次未重验，也未把对应运行证据打包进 Gallery，因此页面的验证记录仍为“未登记验证证据”。这不是否定历史结果，而是限定本条目的证据范围。
 
@@ -99,3 +119,5 @@ Manifest 声明 1–16 机是配置能力范围；本页四机展示不代表所
 | 历史验收范围 | `docs/项目简介.md` 的 FollowPath 扩展与多机验收章节；不代表本次重跑 |
 
 内容同步依据：[项目简介](https://github.com/Air-Suck/aerohub/blob/ca3581e6c8a1fddce4c521736e2959af81780333/docs/项目简介.md)（集成仓库版本 `ca3581e`）。后续复现平台为 AirSim + PX4 SITL；主文档的当前验收边界仍未登记 CAT-ORA 的 AirSim 多机飞行闭环。历史 Gazebo 结果不能替代该验收。以上路径用于定位源码，展示资源全部位于本条目目录。
+
+</details>

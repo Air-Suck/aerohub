@@ -47,6 +47,7 @@ export const collections = {
         return id;
       },
     }),
-    schema: algorithmSchema,
+    // Reject unknown metadata instead of silently dropping fields from the page.
+    schema: algorithmSchema.strict(),
   }),
 };

@@ -6,6 +6,16 @@ export const algorithmSchema = z.object({
   category: z.enum(['planner', 'behavior', 'state_estimator', 'perception']),
   source: z.url().refine((url) => /^https?:\/\//.test(url), 'Use an HTTP(S) source URL'),
   revision: z.string().min(1).optional(),
+  demo: z.object({
+    image: z.union([
+      z.url().refine((url) => /^https?:\/\//.test(url), 'Use an HTTP(S) image URL'),
+      z.string().regex(/^content\/algorithms\/[a-z0-9_-]+\/assets\/[a-zA-Z0-9_.-]+\.(?:jpg|jpeg|png|webp)$/),
+    ]),
+    alt: z.string().min(1),
+    caption: z.string().min(1),
+    source: z.url().refine((url) => /^https?:\/\//.test(url), 'Use an HTTP(S) source URL'),
+    video: z.url().refine((url) => /^https?:\/\//.test(url), 'Use an HTTP(S) video URL'),
+  }).optional(),
   integration: z.enum(['not_started', 'in_progress', 'integrated']),
   validation: z.enum(['unverified', 'build', 'interface', 'simulation', 'hardware']),
   evidence: z.array(z.object({

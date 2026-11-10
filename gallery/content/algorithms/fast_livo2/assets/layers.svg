@@ -21,7 +21,7 @@
 <text x="255.0" y="655" font-size="17" fill="#202d3a" text-anchor="middle">IMU / 图像 / 激光</text>
 <text x="255.0" y="683" font-size="17" fill="#202d3a" text-anchor="middle">ROS 1 驱动或 rosbag</text>
 <rect x="440" y="590" width="270" height="115" rx="10" fill="#d9f3ed" stroke="#168b78"/>
-<text x="575.0" y="623" font-size="20" fill="#202d3a" text-anchor="middle" font-weight="700">FAST-LIVO2 × 1</text>
+<text x="575.0" y="623" font-size="20" fill="#202d3a" text-anchor="middle" font-weight="700">FAST-LIVO2</text>
 <text x="575.0" y="655" font-size="17" fill="#202d3a" text-anchor="middle">联合定位建图</text>
 <text x="575.0" y="683" font-size="17" fill="#202d3a" text-anchor="middle">保留官方 ROS 1 算法</text>
 <rect x="770" y="590" width="250" height="115" rx="10" fill="#d9f3ed" stroke="#168b78"/>

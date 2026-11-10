@@ -1,18 +1,23 @@
 name: Gallery checks
 
 on:
-  pull_request:
-    paths: ['gallery/**', '.github/workflows/gallery-*.yml']
   push:
+    branches: [dev]
     paths: ['gallery/**', '.github/workflows/gallery-*.yml']
   workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: gallery-check-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
-    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/dev'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: gallery
