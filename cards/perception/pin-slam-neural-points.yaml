@@ -1,0 +1,62 @@
+schema_version: 0.1
+id: perception.pin-slam-neural-points
+name: PIN-SLAM neural-point anchors
+version: upstream-e2b7fbf-aerohub-0.1.0
+type: perception
+description: Downsampled support points from PIN-SLAM's implicit neural map
+component:
+  id: pin-slam
+  manifest: deployment/pin_slam/component.yaml
+  shared_process_group: pin-slam-gpu
+  coupled_capabilities: [state-estimator.pin-slam-lidar]
+usage:
+  mode: continuous-provider
+  selection_phase: deployment
+  invocation_interface: /<namespace>/pin_slam/neural_points
+  switching_constraints:
+    - Cannot start, stop, reset, or upgrade independently of PIN-SLAM state estimation.
+inputs:
+  - interface: PIN-SLAM internal neural map
+    schema: learned neural points and decoder state
+    frame: pin_slam_map
+    time: incrementally updated by LiDAR samples
+outputs:
+  - interface: /<namespace>/pin_slam/neural_points
+    schema: sensor_msgs/msg/PointCloud2 XYZ float32
+    frame: pin_slam_map
+    time: most recent LiDAR sample used for publication
+    representation: downsampled neural-point anchors, not the complete implicit model
+preconditions:
+  - PIN-SLAM mapping is initialized and has accepted a nonempty LiDAR frame.
+resources:
+  reads: [drone0.lidar, pin-slam-gpu.map-state]
+  writes: [drone0.perception.pin-slam-neural-points]
+  conflicts: [GPU or process reset conflicts shared with state-estimator.pin-slam-lidar]
+  enforcement: shared process lifecycle only; general GPU quota arbitration is not implemented
+lifecycle:
+  startup: starts with the shared PIN-SLAM algorithm process
+  readiness: nonempty map topic with monotonic sample stamp
+  freshness: one update after each accepted processed frame when the map is nonempty; no map is published after input stalls
+  feedback: algorithm diagnostic status and point count
+  completion: continuous map until stopped or explicitly saved
+  cancel_or_stop: stop shared PIN-SLAM process after state authority is removed
+  failure: tracking loss prevents corrupted observations from updating the map
+  recovery: process restart creates a new map unless a compatible saved model is explicitly loaded
+type_specific:
+  representation: point-based implicit neural map anchors
+  resolution: configured neural voxel size; output may be downsampled independently
+  coverage: accumulated global local-origin map, bounded by runtime and memory
+  reset: new epoch on restart; no transparent map merge
+  query: no online SDF query service is exposed in this first adapter
+validation:
+  stage: partial
+  scope: Real RTX 4090 processing, nonempty neural-point generation, independent subscription and visible AirSim LiDAR consumption are verified; the coupled state capability failed its shadow coverage gate, so component reproduction is not successful.
+  component_revision: e2b7fbf328e5fac1d638e217d70a69cbe9f30a52
+  evidence:
+    - log/pin_slam/static-20261110/algorithm-static.log
+    - log/pin_slam/gpu-smoke-20261110/result.json
+    - log/pin_slam/airsim-shadow-20261110/README.md
+  limitations:
+    - Point anchors are not OccupancyGrid, ESDF, TSDF, mesh, or collision-free space.
+    - No navigation consumer may claim collision-map support without a validated conversion.
+

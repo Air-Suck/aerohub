@@ -1,0 +1,35 @@
+schema_version: 0.1
+scenario: pin-slam-air-sim-shadow
+platform:
+  simulator: AirSim 1.8.1, visible window
+  flight_controller: PX4 SITL
+  motion_authority: previously validated AS2 state provider
+  candidate_role: shadow only
+duration:
+  minimum_airborne_seconds: 60.0
+  minimum_horizontal_truth_motion_m: 5.0
+alignment:
+  method: first valid candidate pose to simultaneous AirSim truth pose
+  scale: fixed at 1.0
+  max_time_pairing_error_s: 0.05
+gates:
+  sample_coverage_min: 0.95
+  maximum_output_gap_s: 0.5
+  horizontal_rmse_max_m: 0.5
+  position_rmse_max_m: 0.75
+  position_p95_max_m: 1.0
+  yaw_p95_max_deg: 10.0
+  tracking_loss_events_max: 0
+  non_monotonic_output_count_max: 0
+  neural_point_samples_min: 1
+authority_rule: >-
+  All gates must pass in the same shadow run before PIN-SLAM can become the
+  AS2 state and TF authority. Failure or missing evidence leaves authority
+  unexecuted; thresholds must not be relaxed after inspecting the result.
+required_evidence:
+  - source revision, dirty diff, image IDs, configuration and commands
+  - visible AirSim screenshot and process identity
+  - ROS graph proving real LiDAR input and AS2 plugin output
+  - paired truth and candidate samples plus computed metrics
+  - independent subscriber evidence for nonempty neural points
+  - controlled landing, disarm and resource cleanup result

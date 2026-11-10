@@ -1,0 +1,8 @@
+/**:
+  ros__parameters:
+    plugin_name: pin_slam
+    input_world_frame: pin_slam_map
+    input_body_frame: pin_slam_lidar
+    max_age: 0.5
+    earth_from_pin_world: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+    sensor_from_base: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]

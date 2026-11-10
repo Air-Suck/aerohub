@@ -26,3 +26,6 @@
 [submodule "super"]
 	path = src/planner/super/upstream
 	url = https://github.com/Popc0rn7/SUPER-sim.git
+[submodule "src/state_estimator/pin_slam/upstream"]
+	path = src/state_estimator/pin_slam/upstream
+	url = https://github.com/PRBonn/PIN_SLAM.git

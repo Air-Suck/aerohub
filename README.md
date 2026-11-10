@@ -142,7 +142,7 @@ bash tools/robopi/prepare_sources.sh
 - [飞控仿真底座](deployment/flight_board/README.md)：PX4 SITL、DDS、传感器与时钟。
 - [RoboPi 部署](deployment/robopi/README.md)：板端构建、部署、启动和诊断。
 
-验证结论必须注明平台、版本、拓扑和覆盖范围。静态检查、合成输入冒烟、容器启动、AirSim 闭环和真机验收是不同证据等级，不能互相替代。需要 GPU 的测试在没有可用 GPU 时应明确标记为未执行。
+验证结论必须注明平台、版本、拓扑和覆盖范围。静态检查、合成输入冒烟、容器启动、AirSim 闭环和真机验收是不同证据等级，不能互相替代。当前开发主机具备 NVIDIA GPU；依赖 GPU 的算法必须完成真实 GPU 运行测试。只有预先确定的适用测试全部执行并通过、证据完整时才能声明复现成功；失败、跳过、未执行或缺证据均表示复现尚未成功。
 
 ## 文档
 
@@ -160,6 +160,7 @@ bash tools/robopi/prepare_sources.sh
 | [as2_platform_pixhawk](https://github.com/aerostack2/as2_platform_pixhawk) | AS2 与 PX4 的平台适配 |
 | [PX4-Autopilot](https://github.com/PX4/PX4-Autopilot) | 飞控与 SITL |
 | [FAST-LIVO2](https://github.com/hku-mars/FAST-LIVO2) | 激光、视觉、惯性状态估计与建图 |
+| [PIN-SLAM](https://github.com/PRBonn/PIN_SLAM) | 激光状态估计与隐式神经点建图 |
 | [CAT-ORA](https://github.com/ctu-mrs/catora) | 多机轨迹规划 |
 | [Swarm-Formation](https://github.com/ZJU-FAST-Lab/Swarm-Formation) | 多机编队规划 |
 

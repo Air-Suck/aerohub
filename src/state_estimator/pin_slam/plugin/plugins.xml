@@ -1,0 +1,5 @@
+<library path="pin_slam_plugin">
+  <class type="pin_slam::Plugin" base_class_type="as2_state_estimator_plugin_base::StateEstimatorBase">
+    <description>Validated PIN-SLAM odometry with LiDAR-to-base rigid transform.</description>
+  </class>
+</library>
