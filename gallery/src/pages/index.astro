@@ -10,6 +10,11 @@ const { data } = homepage;
   <p class="eyebrow">{data.eyebrow}</p>
   <h1>{data.title}</h1>
   <p class="lead">{data.lead}</p>
+  <div class="home-actions">
+    <a class="button" href={sitePath('quickstart/')}>开始使用 →</a>
+    <a href={sitePath('gallery/')}>浏览 Gallery</a>
+    <a href={sitePath('docs/')}>阅读文档</a>
+  </div>
   <div class="grid">
     {data.features.map((feature) => <section class="card"><h2>{feature.title}</h2><p>{feature.description}</p></section>)}
   </div>

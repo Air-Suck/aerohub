@@ -53,3 +53,24 @@ h2 { font-size: 1.3rem; }
   .card { padding: 1rem; }
   .table-scroll th, .table-scroll td { padding: .6rem .75rem; }
 }
+
+.home-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 1.25rem; margin: 2rem 0; }
+.button { display: inline-block; background: #175da5; color: white; border-radius: .4rem; padding: .65rem 1.1rem; text-decoration: none; font-weight: 600; }
+.docs-layout { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 2.5rem; }
+.docs-sidebar { border-right: 1px solid #dbe2e9; padding-right: 1.25rem; }
+.docs-sidebar h2 { font-size: .9rem; color: #53657a; margin-top: 1.75rem; }
+.docs-sidebar ul, .docs-toc ul { list-style: none; padding: 0; }
+.docs-sidebar li { margin: .6rem 0; }
+.docs-sidebar a { text-decoration: none; }
+.docs-sidebar a[aria-current="page"] { font-weight: 700; text-decoration: underline; }
+.docs-content { min-width: 0; }
+.docs-content h1 { font-size: clamp(2rem, 4vw, 2.75rem); }
+.docs-note { padding: 1rem; border-left: 3px solid #175da5; background: #eef3f8; }
+.docs-toc { display: block; margin-block: 1.5rem; font-size: .95rem; }
+.docs-toc ul { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; }
+.docs-pagination { display: flex; flex-wrap: wrap; justify-content: space-between; border-top: 1px solid #dbe2e9; margin-top: 2.5rem; padding-top: 1.5rem; }
+@media (max-width: 800px) {
+  .docs-layout { grid-template-columns: 1fr; gap: 1.5rem; }
+  .docs-sidebar { border-right: 0; border-bottom: 1px solid #dbe2e9; padding: 0 0 1rem; }
+  .docs-sidebar section { display: inline-block; vertical-align: top; margin-right: 1.5rem; }
+}

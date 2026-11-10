@@ -1,0 +1,20 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+import { sitePath } from '../../lib/algorithms';
+const entries = (await getCollection('docs')).sort((a, b) => a.data.order - b.data.order);
+---
+<Base title="文档中心" description="从第一次运行到配置、部署和扩展 AeroHub。">
+  <p class="eyebrow">Documentation</p>
+  <h1>文档中心</h1>
+  <p class="lead">从第一次运行开始，逐步了解如何选择能力、部署组件与扩展 AeroHub。</p>
+  <p class="docs-note">文档正在逐步建设。已有内容先提供说明与源码入口，待完善页面会明确标注。</p>
+  {['开始使用', '用户指南', '深入了解'].map((section) => <section>
+    <h2>{section}</h2>
+    <div class="grid">{entries.filter((entry) => entry.data.section === section).map((entry) => <article class="card">
+      <p class="eyebrow">{entry.data.status}</p>
+      <h3><a href={sitePath(entry.id === 'quickstart' ? 'quickstart/' : `docs/${entry.id}/`)}>{entry.data.title}</a></h3>
+      <p>{entry.data.description}</p>
+    </article>)}</div>
+  </section>)}
+</Base>

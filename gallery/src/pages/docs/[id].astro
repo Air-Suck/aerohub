@@ -1,0 +1,10 @@
+---
+import { getCollection } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
+import Docs from '../../layouts/Docs.astro';
+export async function getStaticPaths() {
+  return (await getCollection('docs')).filter((entry) => entry.id !== 'quickstart').map((entry) => ({ params: { id: entry.id }, props: { entry } }));
+}
+interface Props { entry: CollectionEntry<'docs'> }
+---
+<Docs entry={Astro.props.entry} />
