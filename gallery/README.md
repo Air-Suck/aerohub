@@ -1,6 +1,6 @@
 # Aerohub Gallery
 
-本目录是仓库网站工程，承载项目主页、Gallery 列表和算法详情。采用 Astro 静态构建，本地开发与 GitHub Pages 使用同一份内容和页面代码。当前仅有框架占位条目，样式、真实算法展示和交互回放后续完善。
+本目录是仓库网站工程，承载项目主页、Gallery 列表和算法详情。采用 Astro 静态构建，本地开发与 GitHub Pages 使用同一份内容和页面代码。当前展示 CAT-ORA、Swarm-Formation、SUPER 和 FAST-LIVO2 的接入与验证范围，不提供交互飞行回放。示例 Markdown 保留为新增条目模板，不登记到公开列表。
 
 ## 本地使用
 
@@ -32,7 +32,7 @@ npm run preview
 - `schema/algorithm.ts`：元数据字段及约束的唯一实现。
 - `public/`：直接复制到站点的公共资源；算法下载文件放 `public/algorithms/<algorithm_id>/`。
 - 算法专属、由 Markdown 引用的图片可放条目旁的 `assets/`，使用相对引用。验收摘要可写入正文；大型视频、rosbag 和原始日志通过外部资源引用，不复制算法源码或运行环境进网站。
-- 正式迁移 Skill 在仓库根目录 `.agents/skills/`；算法实现仍在根目录 `src/`，运行部署仍在 `deployment/`。
+- 正式迁移 Skill 在仓库根目录 `skill/`；Gallery 专用 Skill 在 `.agents/skills/`。算法实现仍在根目录 `src/`，运行部署仍在 `deployment/`。
 
 采用 Markdown 原生 YAML frontmatter，合并之前讨论的 `algorithm.yaml` 和 `index.md`，避免为同一条目维护额外加载器。新增条目可复制示例 Markdown，修改元数据与正文，再在 `content/gallery.json` 添加 item。没有适配代码也能生成页面。例如：
 
@@ -48,7 +48,7 @@ JSON 中保留其他已有条目；每个 ID、Markdown 路径均须唯一，指
 
 网页的 Markdown、条目配置、资源与构建产物均放在 `gallery/` 内。Skill 可以读取仓库根目录 `src/` 中的说明，并将展示内容整理到 `gallery/content/`；网页构建与开发服务只读取展示副本，不直接加载或监听仓库根目录。
 
-本地执行 `npm run bundle` 即可校验并生成网页，它与 `build` 共用同一入口。`bundle-gallery` Skill 负责阅读源 Markdown、对照网页并同步展示文案；命令本身不自动总结任意 README。`gallerize-proj` 暂仅占位，后续负责新增内容和登记 item 后衔接 bundle。样式和布局继续由现有模板管理。
+本地执行 `npm run bundle` 即可校验并生成网页，它与 `build` 共用同一入口。`bundle-gallery` Skill 负责阅读源 Markdown、对照网页并同步展示文案；命令本身不自动总结任意 README。`gallerize-proj` 负责核查 lib/runtime 关系、新增内容和登记 item 后衔接 bundle。样式和布局继续由现有模板管理。
 
 算法 Markdown 的 frontmatter 示例：
 

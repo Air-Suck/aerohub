@@ -20,9 +20,10 @@ description: 对照仓库源 Markdown 与 Gallery 页面内容，同步首页和
 ## 同步过程
 
 1. 查看 Git 差异，读取用户指定的源 Markdown、首页 Markdown、条目配置和本次涉及的条目。源信息不足时标明未知；不要从构建、合成输入或论文描述推导出仿真或真机验收。
+   使用 worktree 时先比较展示分支与用户指定源工作区的文档版本。若源文档较新，记录源提交及采用的未提交内容，在页面标注来源版本；仅同步展示副本，无需将源分支的代码或主文档一并合入。主文档同时包含历史与当前记录时，按算法、平台、规模和日期限定结论；专项后续结果仅更新对应条目。
 2. 对照源材料与页面字段。首页更新其 frontmatter；算法展示统一写入 `gallery/content/algorithms/<id>/index.md`，从源 Markdown 提炼内容并标明来源，保留源文件原文。在 `gallery/content/gallery.json` 中登记相对 `gallery/` 的 `content/algorithms/<id>/index.md`。网页构建与开发监听仅限 Gallery 内部，不能把内容加载器根目录设为仓库根目录。
 3. 默认只改展示 Markdown 和必要的 JSON 条目。保留 ID、既有样式、CSS 类及页面布局；已有模板无法表达用户要求时说明具体缺口，不借内容同步重做风格。不要顺带改写根 README、主文档或其他算法。
 4. 从仓库根目录运行 `npm --prefix gallery run bundle`；仅当依赖缺失时先运行 `npm --prefix gallery ci`。沙箱限制用户配置写入时使用 `ASTRO_TELEMETRY_DISABLED=1`。失败后修复本次内容问题，不把构建失败当作已完成。
 5. 检查 `gallery/dist/index.html`、`gallery/dist/gallery/index.html` 及涉及的详情页，核对内容、链接、状态和证据。交付源 Markdown → 网页对应关系、构建结果和待确认信息。生成的 dist 不提交，也不自动推送或部署。
 
-`gallerize-proj` 完成 lib/runtime 核查、展示 Markdown 和条目登记后，衔接本 Skill 做内容对照与本地构建。检查图示与 Behavior 调用说明一致，多机结构示意不得被描述为实际飞行结果。
+`gallerize-proj` 完成三层覆盖与依赖核查、展示 Markdown 和条目登记后，衔接本 Skill 做内容对照与本地构建。检查 Tool、Behavior、Function 三层图与实现覆盖、调用及依赖说明一致，多机结构示意不得被描述为实际飞行结果。

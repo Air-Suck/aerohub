@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080" role="img" aria-labelledby="title description">
+<title id="title">FAST-LIVO2：Tool、Behavior、Function 三层接入关系</title>
+<desc id="description">Tool 与 Behavior 层没有本组件注册或调用的运动能力。Function 层中，ROS 1 传感器或回放输入进入一个 FAST-LIVO2 联合算法进程，经同一个只读输出桥提供状态估计插件和 Perception 配准点云接口。二者共享算法及部署依赖，不是两个独立估计器。无 PX4 外部定位融合或飞行验收声明。</desc>
+<defs><marker id="data" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8" fill="#b86b20"/></marker></defs>
+<g font-family="system-ui, sans-serif" fill="#202d3a"><rect width="1080" height="1080" fill="#f8fafc"/>
+<text x="30" y="42" font-size="28" fill="#202d3a" text-anchor="start" font-weight="700">FAST-LIVO2 · 三层接入关系</text>
+<text x="30" y="75" font-size="18" fill="#53657a" text-anchor="start">一个联合算法进程 · 状态与环境输出分别提供</text>
+<rect x="100" y="112" width="950" height="150" rx="10" fill="white" stroke="#dbe2e9"/>
+<text x="124" y="150" font-size="24" fill="#202d3a" text-anchor="start" font-weight="700">TOOL / 工具层</text>
+<text x="124" y="191" font-size="20" fill="#53657a" text-anchor="start">本接入未注册任务 Tool</text>
+<text x="124" y="229" font-size="17" fill="#53657a" text-anchor="start">定位与点云可供上层订阅；未声明已接通某个导航 Tool</text>
+<rect x="100" y="296" width="950" height="150" rx="10" fill="white" stroke="#dbe2e9"/>
+<text x="124" y="334" font-size="24" fill="#202d3a" text-anchor="start" font-weight="700">BEHAVIOR / 基础行为执行层</text>
+<text x="124" y="375" font-size="20" fill="#53657a" text-anchor="start">无直接运动 Behavior 调用</text>
+<text x="124" y="413" font-size="17" fill="#53657a" text-anchor="start">不创建 Planner，不提交运动 Action；基础能力输出不等同于动作执行</text>
+<rect x="100" y="480" width="950" height="520" rx="10" fill="white" stroke="#dbe2e9"/>
+<text x="124" y="520" font-size="24" fill="#202d3a" text-anchor="start" font-weight="700">FUNCTION / 基础能力层</text>
+<text x="124" y="555" font-size="17" fill="#53657a" text-anchor="start">保留一份联合定位建图实现；状态与点云共享进程及部署依赖</text>
+<rect x="130" y="590" width="250" height="115" rx="10" fill="#eef3f8" stroke="#175da5"/>
+<text x="255.0" y="623" font-size="20" fill="#202d3a" text-anchor="middle" font-weight="700">传感器 / 回放输入</text>
+<text x="255.0" y="655" font-size="17" fill="#202d3a" text-anchor="middle">IMU / 图像 / 激光</text>
+<text x="255.0" y="683" font-size="17" fill="#202d3a" text-anchor="middle">ROS 1 驱动或 rosbag</text>
+<rect x="440" y="590" width="270" height="115" rx="10" fill="#d9f3ed" stroke="#168b78"/>
+<text x="575.0" y="623" font-size="20" fill="#202d3a" text-anchor="middle" font-weight="700">FAST-LIVO2 × 1</text>
+<text x="575.0" y="655" font-size="17" fill="#202d3a" text-anchor="middle">联合定位建图</text>
+<text x="575.0" y="683" font-size="17" fill="#202d3a" text-anchor="middle">保留官方 ROS 1 算法</text>
+<rect x="770" y="590" width="250" height="115" rx="10" fill="#d9f3ed" stroke="#168b78"/>
+<text x="895.0" y="623" font-size="20" fill="#202d3a" text-anchor="middle" font-weight="700">只读输出桥</text>
+<text x="895.0" y="655" font-size="17" fill="#202d3a" text-anchor="middle">ROS 1 → ROS 2</text>
+<text x="895.0" y="683" font-size="17" fill="#202d3a" text-anchor="middle">状态与点云分流</text>
+<path d="M380 647 H434" fill="none" stroke="#b86b20" stroke-width="2" marker-end="url(#data)"/>
+<path d="M710 647 H764" fill="none" stroke="#b86b20" stroke-width="2" marker-end="url(#data)"/>
+<path d="M895 705 V753 H430 V794" fill="none" stroke="#b86b20" stroke-width="2" marker-end="url(#data)"/>
+<path d="M895 753 V794" fill="none" stroke="#b86b20" stroke-width="2" marker-end="url(#data)"/>
+<circle cx="895" cy="753" r="4" fill="#b86b20"/>
+<rect x="240" y="800" width="360" height="115" rx="10" fill="#d9f3ed" stroke="#168b78"/>
+<text x="420.0" y="835" font-size="21" fill="#202d3a" text-anchor="middle" font-weight="700">State Estimator 插件</text>
+<text x="420.0" y="867" font-size="17" fill="#202d3a" text-anchor="middle">pose / twist / TF</text>
+<text x="420.0" y="895" font-size="17" fill="#202d3a" text-anchor="middle">安装外参 + 世界对齐</text>
+<rect x="680" y="800" width="340" height="115" rx="10" fill="#d9f3ed" stroke="#168b78"/>
+<text x="850.0" y="835" font-size="21" fill="#202d3a" text-anchor="middle" font-weight="700">Perception 接口</text>
+<text x="850.0" y="867" font-size="17" fill="#202d3a" text-anchor="middle">registered_points</text>
+<text x="850.0" y="895" font-size="17" fill="#202d3a" text-anchor="middle">保留点云字段与测量时间</text>
+<text x="124" y="951" font-size="17" fill="#202d3a" text-anchor="start">状态与点云由消费者直接读取；不经运动 Behavior 中转</text>
+<text x="124" y="980" font-size="17" fill="#53657a" text-anchor="start">不自动回灌 PX4；配准点云不等同于占据图或 ESDF</text>
+<rect x="30" y="1026" width="16" height="16" rx="10" fill="#d9f3ed" stroke="#168b78"/>
+<text x="55" y="1040" font-size="17" fill="#202d3a" text-anchor="start">算法与专属接入</text>
+<rect x="300" y="1026" width="16" height="16" rx="10" fill="#eef3f8" stroke="#175da5"/>
+<text x="325" y="1040" font-size="17" fill="#202d3a" text-anchor="start">外部输入</text>
+<text x="525" y="1040" font-size="17" fill="#b86b20" text-anchor="start">橙：测量与输出数据</text>
+<text x="30" y="1070" font-size="16" fill="#53657a" text-anchor="start">结构示意；接口及合成输入冒烟不代表真实传感器、飞行或真机验收。</text>
+</g></svg>

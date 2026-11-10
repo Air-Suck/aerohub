@@ -5,8 +5,16 @@
       "markdown": "content/algorithms/cat_ora/index.md"
     },
     {
-      "id": "example_algorithm",
-      "markdown": "content/algorithms/example_algorithm/index.md"
+      "id": "swarm_formation",
+      "markdown": "content/algorithms/swarm_formation/index.md"
+    },
+    {
+      "id": "super",
+      "markdown": "content/algorithms/super/index.md"
+    },
+    {
+      "id": "fast_livo2",
+      "markdown": "content/algorithms/fast_livo2/index.md"
     }
   ]
 }
