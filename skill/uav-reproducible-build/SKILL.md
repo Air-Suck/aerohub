@@ -33,6 +33,8 @@ description: 为无人机算法及 AS2 扩展建立固定工具镜像内的可�
 
 ## 产物与交付
 
+涉及 CUDA 模型迁移、独立 uv 环境、权重准备或模型 README/setup 维护时，先读取并执行子 Skill [model-migration-cuda](../model-migration-cuda/SKILL.md)，再继续本节交付。具体流程仅在该子 Skill 维护。
+
 记录 build/install/log 在镜像、容器层还是宿主挂载；长期日志放 `log/<任务>/`，源码留在仓库。镜像重建不会自动更新已有容器，restart 也不切换镜像；替换运行实例属于部署阶段，按授权和任务状态执行。
 
 交付可执行命令、Dockerfile/Compose、版本与依赖来源、补丁、构建测试日志索引和已知前置条件。失败尝试记入 `skill/temp/<任务>/`，把已验证的修复回馈 Skill，不把某一算法的旧依赖版本规定为所有算法默认。
@@ -49,3 +51,5 @@ description: 为无人机算法及 AS2 扩展建立固定工具镜像内的可�
 依赖仅有规范 msg/srv 定义时，可记录版本/哈希并在工作站重新生成类型支持；
 不得复制不同架构的动态库。缺包与便利 API 缺失分别处理。编译前后核对镜像 ID，
 记录外部工作区、源文件与生成构建胶水；该工作区不作为源码的唯一保存位置。
+
+ROS shell 环境脚本不一定支持 Bash nounset。入口可在 source ROS/AS2/colcon setup 时暂不启用 `set -u`，加载后再启用；用真实目标镜像构造节点，而不只做 Python 语法检查。Python ROS 节点避免以 `handle`、`clients` 等 Node 只读属性命名自己的状态；目标 rclpy 的真实构造检查能检出这类问题。

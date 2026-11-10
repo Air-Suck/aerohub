@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "models": {
+    "yopo": {
+      "directory": "src/inference/models/yopo",
+      "description": "YOPO candidate relative PVA/cost inference in an isolated CUDA environment"
+    }
+  }
+}
