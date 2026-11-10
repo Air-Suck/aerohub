@@ -4,10 +4,11 @@ set -euo pipefail
 root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 source "$root/tools/robopi/load_env.sh"
 component=${1:-all}
-case "$component" in catora|swarm-formation|all) ;; *) echo 'Usage: build_lib.sh [catora|swarm-formation|all]' >&2; exit 2 ;; esac
+case "$component" in catora|swarm-formation|super|all) ;; *) echo 'Usage: build_lib.sh [catora|swarm-formation|super|all]' >&2; exit 2 ;; esac
 mkdir -p "$root/log/airsim/robopi-runtime"
 exec 9>"$root/log/airsim/robopi-runtime/cli.lock"
 flock -n 9 || { echo 'Another RoboPi operation is running' >&2; exit 1; }
+docker info >/dev/null 2>&1 || { echo 'Docker unavailable; cannot check shared builder' >&2; exit 1; }
 if docker container inspect aerohub-oh-ros-build >/dev/null 2>&1; then
   echo 'Shared builder is occupied; leave its inputs unchanged' >&2; exit 1
 fi
@@ -30,6 +31,9 @@ if component in ('all','swarm-formation'):
    packages[ET.parse(directory/'package.xml').getroot().findtext('name')]=str(directory.relative_to(root))
  packages['uav_swarm_formation_adapter']='src/planner/swarm_formation/ros2_adapter/bridge'
  packages['as2_navigation_inputs']='src/perception/navigation_inputs'
+if component == 'super':
+ packages.pop('uav_as2_setpoint_adapter')
+ packages.update(super_planner='src/planner/super/ros2_adapter/native/super_planner',rog_map='src/planner/super/ros2_adapter/native/rog_map',mars_quadrotor_msgs='src/planner/super/ros2_adapter/native/mars_uav_sim/mars_quadrotor_msgs',uav_super_adapter='src/planner/super/ros2_adapter/bridge',as2_navigation_inputs='src/perception/navigation_inputs')
 manifest={}
 stale_paths=[]
 for name,relative in packages.items():
@@ -56,9 +60,13 @@ if stale_paths:
                  '--entrypoint','/bin/rm',image,'-rf',*stale_paths],check=True)
 
 PY
-packages=(uav_planner_framework uav_as2_setpoint_adapter)
-[[ "$component" == swarm-formation ]] || packages+=(mrs_formation_reshaping uav_cat_ora_adapter)
-[[ "$component" == catora ]] || packages+=(ego_planner uav_swarm_formation_adapter as2_navigation_inputs)
+packages=(uav_planner_framework)
+case "$component" in
+ catora) packages+=(uav_as2_setpoint_adapter mrs_formation_reshaping uav_cat_ora_adapter) ;;
+ swarm-formation) packages+=(uav_as2_setpoint_adapter ego_planner uav_swarm_formation_adapter as2_navigation_inputs) ;;
+ all) packages+=(uav_as2_setpoint_adapter mrs_formation_reshaping uav_cat_ora_adapter ego_planner uav_swarm_formation_adapter as2_navigation_inputs) ;;
+ super) packages+=(super_planner uav_super_adapter as2_navigation_inputs) ;;
+esac
 bash "$root/deployment/oh-ros-build/run.sh" build "${packages[@]}"
 python3 - "$work" "$component" <<'PYVERIFY'
 import json,sys

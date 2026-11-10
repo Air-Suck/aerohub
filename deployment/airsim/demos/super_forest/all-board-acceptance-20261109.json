@@ -1,0 +1,215 @@
+{
+  "date": "2026-11-09",
+  "result": "passed: one short full-chain simulated mission with all algorithm and AS2 execution on RoboPi",
+  "scope": "Independent 4 m short goal; not original forest8 or hardware flight acceptance",
+  "topology": {
+    "location": "robopi-all",
+    "root": "/data/aerohub/validation/super-follow-path/as2",
+    "domain": 94,
+    "pc_interface": "192.168.100.1",
+    "board_interface": "192.168.100.11",
+    "backend": "follow_path",
+    "algorithm_location": "robopi",
+    "mission_location": "robopi",
+    "navigation_location": "robopi",
+    "adapter_location": "robopi",
+    "remote_evidence": "/data/aerohub/validation/super-follow-path/as2/runtime/super-runs/all-board-short-04"
+  },
+  "target_parameters": {
+    "relative_goal_enu_m": [
+      0,
+      4,
+      2
+    ],
+    "planner_speed_m_s": 8,
+    "planner_acceleration_m_s2": 8,
+    "arrival_tolerance_m": 1.5,
+    "speed_hold_m_s": 0.3,
+    "speed_hold_sim_seconds": 2
+  },
+  "final": {
+    "success": true,
+    "arrived": true,
+    "execution_completed": true,
+    "arrival_error_m": 0.20527659528349215,
+    "route_sim_seconds": 4.827102899551392,
+    "max_speed_m_s": 3.770467910755301,
+    "bounds_observation_count": 0,
+    "behavior_stop_confirmed": true,
+    "landed_and_disarmed": true,
+    "counts": {
+      "clock": 2723,
+      "controller": 410,
+      "odom": 3987,
+      "cloud": 368,
+      "map": 73,
+      "inflated": 73,
+      "reference": 144
+    },
+    "input_ages_s": {
+      "odom": {
+        "count": 3987,
+        "min": -0.05700111389160156,
+        "max": 0.10200214385986328
+      },
+      "cloud": {
+        "count": 368,
+        "min": 0.003000020980834961,
+        "max": 0.19500422477722168
+      },
+      "map": {
+        "count": 73,
+        "min": 0.0,
+        "max": 0.08400177955627441
+      },
+      "inflated": {
+        "count": 73,
+        "min": 0.0,
+        "max": 0.07200145721435547
+      }
+    }
+  },
+  "adapter": {
+    "enabled": false,
+    "error": "",
+    "task_id": "e29449cf-a39a-47d4-afe0-c2e7fc94f1c8",
+    "revision": 28,
+    "complete": false,
+    "settling": false,
+    "stop_confirmed": true,
+    "reference_ready": true,
+    "source_flags": {
+      "1": 189
+    },
+    "late_updates": 2,
+    "last_curve": {
+      "source_start": 1794227656.7748713,
+      "source_end": 1794227658.5258317,
+      "submitted_from": 1794227658.6119082,
+      "endpoint": [
+        -0.09999999999999998,
+        4.1,
+        2.7
+      ],
+      "end_velocity": [
+        1.3877787807814457e-16,
+        8.881784197001252e-16,
+        1.734723475976807e-17
+      ],
+      "is_final": true,
+      "pieces": 5
+    }
+  },
+  "pva": {
+    "result_success": true,
+    "axis_min_max_task_enu_m": [
+      [
+        -0.3916509369155392,
+        0.06721333472523838
+      ],
+      [
+        -0.006790754559915513,
+        4.463944712013472
+      ],
+      [
+        1.958343505859375,
+        2.0725021362304688
+      ]
+    ],
+    "observed_route_length_m": 4.975434121976061,
+    "bounds_policy": "observe",
+    "out_of_bounds_samples": 0,
+    "sampled_out_of_bounds_seconds_estimate": 0,
+    "strict_bounds_pass_for_observed_samples": true,
+    "source_flag_counts": {
+      "1": 597
+    },
+    "native_plans_recorded": 30,
+    "references_recorded": 144,
+    "references_with_source_curve_candidate": 144,
+    "max_best_match_pva_difference": [
+      1.334621393673168e-09,
+      4.986083027518899e-08,
+      7.299010293825699e-05
+    ],
+    "matching_note": "Best match across received native plans at reference header time; includes interpolation and publication timing error, and does not prove a unique revision mapping."
+  },
+  "resources": {
+    "joint_samples": 17,
+    "max_summed_process_rss_bytes": 1624690688,
+    "max_cpu_percent_one_core_basis_for_matching_processes": 539.6537091218364,
+    "limits": "Summed RSS double-counts shared pages; CPU samples omit processes created or exited between endpoint samples. Not unique physical memory or a capacity guarantee."
+  },
+  "attempts": {
+    "all-board-ground-01": {
+      "success": true,
+      "error": null,
+      "failed_phase": null,
+      "landed_and_disarmed": true,
+      "evidence": "log/airsim/super-robopi/all-board-ground-01/result.json",
+      "sha256": "187f8a505ed2a37ee3405999ed2f78297039b20ff09b864bb1f10ad8ecf8a0d6"
+    },
+    "all-board-short-01": {
+      "success": false,
+      "error": "[Errno 111] Connection refused",
+      "failed_phase": "holding",
+      "landed_and_disarmed": true,
+      "evidence": "log/airsim/super-robopi/all-board-short-01/result.json",
+      "sha256": "6f0f317a100b86b9e8498fb334628bb48130e434862ce6fdd7f724ddc0cd72b2"
+    },
+    "all-board-short-02": {
+      "success": false,
+      "stage": "PX4 preparation; no arming or board mission started",
+      "error": "PX4 TCP target did not match relay listen address",
+      "evidence": "log/airsim/super-robopi/all-board-short-02.log"
+    },
+    "all-board-short-03": {
+      "success": false,
+      "error": "EXECUTION_FAILED:FLEET_ACK_TIMEOUT",
+      "failed_phase": "route",
+      "landed_and_disarmed": true,
+      "evidence": "log/airsim/super-robopi/all-board-short-03/result.json",
+      "sha256": "e57aaf875df618cef44d5a12bef7dddbba07381d064eaf9f745120bec0b3a9e2"
+    },
+    "all-board-short-04": {
+      "success": true,
+      "error": null,
+      "failed_phase": null,
+      "landed_and_disarmed": true,
+      "evidence": "log/airsim/super-robopi/all-board-short-04/result.json",
+      "sha256": "99966ffccaf57b03c63733ab06a16360bed283618dc384793f46b27cea4000fc"
+    }
+  },
+  "native_super_sha256": "d67a6ba2b03292378ed5e9f04504fbbc59ed5cb307b6a2919c8801a0a5d4d5bf",
+  "adapter_python_sha256": "cdc0f273604b174186e75bb1ed162134c0a7dbcb2ffd12b2924a6778aaf8b19c",
+  "board_evidence_archive_sha256": "599756b0f4c4492292dca51d35afc9a93c8f9cee2ac769fbb2713e6a439a367e",
+  "flight_board_image": {
+    "flight_board": "sha256:8c33881fde6985fe5a43a894bde075471df85064e45ac8e5de28efebcc737cd2"
+  },
+  "cleanup": {
+    "candidate_processes": [],
+    "operation_locks_released": true,
+    "candidate_install_preserved": true
+  },
+  "relay_cleanup": {
+    "pid": 461297,
+    "alive": false
+  },
+  "limitations": [
+    "Original forest8 long mission not run in all-board topology",
+    "Cancellation, input-loss, external takeover and real wall-clock-fault flight recovery not accepted",
+    "Long-term clock reliability unresolved; automatic NTP configuration recorded only",
+    "PVA score matches best available native curve, not a unique revision mapping",
+    "Native binary replan debug file path remains unwritable on OHOS; stdout, plans, references and task records were retained"
+  ],
+  "evidence_root": "log/airsim/super-robopi/all-board-short-04",
+  "implementation_commit": "e84310c8b1fa40a05fdac7c048ff73b97a60bb5d",
+  "build_deployment_commit": "2d01e52",
+  "startup_handoff_commit": "2c020d8",
+  "tests": {
+    "local_layout_clock_and_runtime_checks": 12,
+    "target_adapter_handoff": "passed, old installed implementation reproduced RED first",
+    "target_native_load": "passed; no motion",
+    "relay_survives_coordinator_exit": "passed; no PX4 connection"
+  }
+}

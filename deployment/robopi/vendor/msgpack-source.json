@@ -1,0 +1,13 @@
+{
+  "source": "Debian python3-msgpack from existing flight_board:v0.1.0",
+  "image": "sha256:8c33881fde6985fe5a43a894bde075471df85064e45ac8e5de28efebcc737cd2",
+  "mode": "Pure Python fallback only; no host extensions",
+  "files": {
+    "ext.py": "e25df9e98e2c54472f0a56b6761fdc2f9eef87818c8597dade4b961c51d8cfa0",
+    "_version.py": "2694dc9d17776148a8036e0d0ed0d96cb5b4361976c80f8dd51ab694b0c107e8",
+    "exceptions.py": "7424d67a2f1da64accb100dc8d093be004e5f47b08047d326edf3338f36a3187",
+    "fallback.py": "2f98eb897cac5116dfeab3db6c76ef5e0be816b2998abc88066ba331372b7f70",
+    "COPYRIGHT": "28b03a048f650152181f0441f03ef7b694ec350ceecd803b6eaa04e03eba00fa",
+    "__init__.py": "da027072c4c8680b4233418c8b6ad4fbf63a9082de790baa464ad0db68d200d7"
+  }
+}

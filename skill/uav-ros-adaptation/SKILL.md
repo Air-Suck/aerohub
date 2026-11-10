@@ -36,3 +36,14 @@ description: 将无人机算法的 ROS 接口适配到目标系统，处理 ROS 
 ## 已有案例
 
 FAST-LIVO2 锁定实现的普通里程计未填写速度且用了发布时间；高频传播输出曾使用世界系速度。不能仅 remap 到 AS2 raw_odometry。已采用最小输出补丁和专用原生估计插件转换，并跳过初始化空点云。该结论来自特定版本，接入其他版本必须重新核查；回放时钟与真实同步尚不能借用合成测试宣称已验收。
+
+## 跨目标 Python 接口检查
+
+ROS 参数测试须包含 `Parameter.to_parameter_msg()` / `from_parameter_msg()` 往返，
+或实际服务调用；DOUBLE_ARRAY 在目标 rclpy 可能返回 `array.array`。按 ROS 参数
+类型及长度/有限性校验，不用 Python list/tuple 白名单误拒绝线上请求。运行期
+目标变更须同时更新节点缓存，并限定执行已停止/静默状态。
+
+固定共享镜像的 rclpy 可能没有便利客户端模块。先检查实际导入，必要时直接使用
+标准 `rcl_interfaces/srv/SetParametersAtomically`，等待响应成功后再运动；不能因
+便利 API 缺失就替换共享镜像。类型支持加载和无运动构造通过仍不等于跨机连通。

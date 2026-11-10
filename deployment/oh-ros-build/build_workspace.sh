@@ -57,6 +57,10 @@ case "${1:---help}" in
       "-DOPENSSL_SSL_LIBRARY=$OHOS_SYSDEPS/lib/libssl.so"
       "-DEIGEN3_INCLUDE_DIR=$OHOS_SYSDEPS/include/eigen3"
       "-DPYTHON_EXECUTABLE=$OHOS_HOST_PYTHON" "-DPYTHON_SOABI=$OHOS_PYTHON_SOABI")
+    if [[ " ${*} " == *" super_planner "* ]]; then
+      cmake_args+=(-DSUPER_ENABLE_STACKTRACE=OFF
+        "-DSUPER_PNG_LIBRARY=$OHOS_SYSDEPS/lib/libpng16.so.16.50.0")
+    fi
     pybind="$WS_ROOT/install/share/moveit_task_constructor_core/cmake"
     if [[ -f "$pybind/pybind11Config.cmake" ]]; then
       cmake_args+=("-Dpybind11_DIR=$pybind")

@@ -48,7 +48,7 @@ ros2 run uav_as2_setpoint_adapter super_as2_mission --ros-args \
 SUPER 和 adapter 应提前启动，避免模式进入后的 500 ms 等待窗口耗在启动进程。
 同机同时只能启用一个参考来源，CAT-ORA / Swarm 桥与 SUPER adapter 不同时激活。
 
-SUPER 使用 `src/planner/super/upstream/super_planner/config/as2_trajectory_ros2.yaml`：
+SUPER 使用 `src/planner/super/ros2_adapter/native/super_planner/config/as2_trajectory_ros2.yaml`：
 执行定时器开启，速度限制 1 m/s，保留主/备用轨迹和重规划。
 虚拟地面与天花板也是局部 odom 坐标，必须覆盖当前定位原点和目标。
 
@@ -68,7 +68,7 @@ SUPER 使用 `src/planner/super/upstream/super_planner/config/as2_trajectory_ros
 ```bash
 colcon build --paths src/planner/interfaces src/planner/framework \
   src/behavior/legacy_setpoint \
-  src/planner/super/upstream/mars_uav_sim/mars_quadrotor_msgs
+  src/planner/super/ros2_adapter/native/mars_uav_sim/mars_quadrotor_msgs
 ```
 
 需要已有 ROS 2 Humble 与 AS2 安装环境。传感器线程及相机配置不由本包修改。
