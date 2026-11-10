@@ -33,6 +33,8 @@ description: 为无人机算法及 AS2 扩展建立固定工具镜像内的可�
 
 ## 产物与交付
 
+涉及 CUDA 模型迁移、独立 uv 环境、权重准备或模型 README/setup 维护时，先读取并执行子 Skill [model-migration-cuda](../model-migration-cuda/SKILL.md)，再继续本节交付。具体流程仅在该子 Skill 维护。
+
 记录 build/install/log 在镜像、容器层还是宿主挂载；长期日志放 `log/<任务>/`，源码留在仓库。镜像重建不会自动更新已有容器，restart 也不切换镜像；替换运行实例属于部署阶段，按授权和任务状态执行。
 
 交付可执行命令、Dockerfile/Compose、版本与依赖来源、补丁、构建测试日志索引和已知前置条件。失败尝试记入 `skill/temp/<任务>/`，把已验证的修复回馈 Skill，不把某一算法的旧依赖版本规定为所有算法默认。

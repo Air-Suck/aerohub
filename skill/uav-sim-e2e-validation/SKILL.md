@@ -11,6 +11,10 @@ description: 在 AirSim/PX4 SITL 与 PC/RoboPi 运行组合中验收无人机算
 
 ## 先定义成功
 
+Inference 服务验收分层记录：独立环境加载、与迁移前固定输入的候选/评分一致性、HTTP 输入和忙时语义、实际 DDS→ROS Adapter→HTTP→模型往返，再到 GPU/真实传感器与下游消费。可复用 `deployment/inference/tests/` 的公共 runtime、选择逻辑和 AS2 基准入口；模型专属 ROS smoke 在模型接入时交付。CPU 合成测试不替代 GPU 或 AirSim 验收。客户端取消测试应确认底层计算结束前不会释放 worker 的忙状态。
+
+地面站调用 onboard 能力的通信基准先用 `deployment/inference/tests/cross_container_baseline.py`：固定地面站镜像局部生成 onboard 规范查询类型，调用实际原生 AS2 Platform 的只读 ListControlModes。按该拓扑验收 Inference 时，ROS 客户端与 Adapter 必须在不同容器中，记录两端镜像/overlay、DDS 网络与 worker 所在位置；同一 ROS 测试进程构造 Adapter 仅算合成接口证据。原生 AS2 基准通过不自动证明 Inference 通过，单宿主 Docker bridge 也不等于跨物理设备验证。
+
 读取用户目标、组件能力、接口契约和仿真配置，运行前确定场景、链路、指标、阈值、时长及需要重复的次数。来源可以是用户要求或明确标注的工程验收建议；缺少关键指标时先明确，不能看结果后降低阈值。
 
 输出分为通过、失败、未覆盖；缺证据不得记为通过。编译、接口测试、合成输入冒烟、真实数据回放、仿真闭环和真机验收是不同证据等级。

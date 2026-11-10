@@ -16,6 +16,9 @@ description: 为 Model Hub 外部能力分类并编写 cards 目录下的能力�
 | behavior | 执行 Goal 与生命周期 |
 | state-estimator | 部署时选择提供者，运行时持续输出自身状态 |
 | perception | 持续环境数据或查询服务 |
+| inference | 通过 ROS 请求模型推理，内部 worker 按模型隔离环境 |
+
+Inference 卡片同时声明算法源码归属、推理模块、模型/权重版本、输入坐标和时间约束、内部 HTTP 与对外 ROS 的边界。候选状态输出不写成完整轨迹执行；CPU 合成验证与 GPU/平台验收分别标记。共享 runtime 不代表多个模型共享同一进程，卡片须按实际 worker 说明耦合关系。
 
 一个组件可提供多张能力卡片；共享算法进程时声明 coupling，不能让管理层误判它们可独立启停。能力可被选择不等于允许 Online Agent 随时切换；明确部署选择、运行查询或任务调用的权限和控制路径。
 

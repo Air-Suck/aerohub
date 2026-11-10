@@ -95,6 +95,8 @@ rosbag2_*/
 .aws/
 .venv/
 /artifacts/
+/src/inference/models/*/artifacts/
+/config/inference.local.yaml
 /skills/temp/
 
 # Local AirSim executable/resource selection
