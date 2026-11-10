@@ -5,8 +5,9 @@ import AlgorithmCard from '../../components/AlgorithmCard.astro';
 const algorithms = (await getCollection('algorithms')).sort((a, b) => a.data.title.localeCompare(b.data.title));
 ---
 <Base title="Gallery">
+  <p class="eyebrow">EXPLORE THE CAPABILITIES</p>
   <h1>Gallery</h1>
-  <p>算法无需完成迁移即可建立预览页。接入状态与验证证据分别记录。</p>
+  <p class="lead">算法无需完成迁移即可建立预览页。接入状态与验证证据分别记录。</p>
   <div class="grid">{algorithms.map((algorithm) => <AlgorithmCard algorithm={algorithm} />)}</div>
   {algorithms.length === 0 && <p>尚无算法条目。</p>}
 </Base>

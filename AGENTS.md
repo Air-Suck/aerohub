@@ -95,4 +95,8 @@
 
 ## 目录约定
 
-自建代码位于 `src/`，先按 `planner/`、`behavior/`、`state_estimator/`、`perception/` 分类，再按对象分子目录。两个 Planner 都使用 `upstream/`、`ros2_adapter/`、`ros1_proxy/`。上游算法分别在 `src/planner/cat_ora/upstream/` 和 `src/planner/swarm_formation/upstream/`。同类对象的目录规则见 `docs/开发者贡献指导.md`。AS2 依赖在 `as2/`，PX4 在 `px4/`，官方 Gazebo 工程在 `simulator/gazebo/`，均以 `.gitmodules` 和 gitlink 锁定。运行产物与测试日志统一进入被忽略的 `log/`。部署入口仍为 `deployment/`，不得重新依赖项目外部的旧源码路径。
+新增 `src/inference/` 提供与 Perception、State Estimator 并列的 Inference Robotic Function：对外使用 ROS 2，内部 FastAPI runtime 与每模型独立 uv 环境隔离。`interfaces/`、`ros2_adapter/`、`runtime/` 保存公共服务设施，`models/<模型>/` 保存推理适配和环境。算法源码仍按功能归属原分类；Inference 模块只引用模型实现，不迁移或复制 Planner 算法，不承担轨迹重建或运动执行。
+
+CUDA 模型迁移、独立环境与模型文件准备按正式子 Skill [model-migration-cuda](skill/model-migration-cuda/SKILL.md) 执行；每模型 README/setup 及验证要求集中在该 Skill 维护。
+
+自建代码位于 `src/`，先按 `planner/`、`behavior/`、`state_estimator/`、`perception/`、`inference/` 分类，再按对象分子目录。CAT-ORA 与 Swarm-Formation 使用 `upstream/`、`ros2_adapter/`、`ros1_proxy/`。上游算法分别在 `src/planner/cat_ora/upstream/` 和 `src/planner/swarm_formation/upstream/`。同类对象的目录规则见 `docs/开发者贡献指导.md`。AS2 依赖在 `as2/`，PX4 在 `px4/`，官方 Gazebo 工程在 `simulator/gazebo/`，均以 `.gitmodules` 和 gitlink 锁定。运行产物与测试日志统一进入被忽略的 `log/`。部署入口仍为 `deployment/`，不得重新依赖项目外部的旧源码路径。

@@ -15,6 +15,10 @@
     {
       "id": "fast_livo2",
       "markdown": "content/algorithms/fast_livo2/index.md"
+    },
+    {
+      "id": "yopo",
+      "markdown": "content/algorithms/yopo/index.md"
     }
   ]
 }

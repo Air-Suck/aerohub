@@ -1,0 +1,3 @@
+# This section may also be added to an existing user YAML.
+inference:
+  models: []

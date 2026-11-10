@@ -1,8 +1,11 @@
 ---
 title: Aerohub
-eyebrow: 无人机算法接入与能力展示
+heroTitle: 连接算法与飞行能力。
+eyebrow: 无人机算法接入、运行与能力展示
 lead: 以 Aerostack2 为执行基础，连接多机规划、自身状态估计与环境感知，记录算法接入方式和验证边界。
 features:
+  - title: 从首次使用开始
+    description: Quickstart 提供环境准备、Demo 选择和运行检查路线；User Guide 逐步补充配置、部署与使用教程。
   - title: 规划与执行分层
     description: Planner 生成计划，Adapter 保留车辆、坐标和时间语义，扩展 FollowPath 通过 FollowTimedPath 执行时间化轨迹。
   - title: 自身状态与环境感知
