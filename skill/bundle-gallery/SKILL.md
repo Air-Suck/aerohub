@@ -39,3 +39,11 @@ description: 对照仓库源 Markdown 与 Gallery 页面内容，同步首页和
 2026-11-10 SUPER 案例：修复前当前服务只输出架构图，没有 Demo 节点；修复后输出本地封面，图片请求为 `200 image/jpeg`、58,184 字节，并已查看当前服务截图。未启停用户服务。封面随站点打包并保留原图来源，避免首屏依赖外部图片域名。该案例说明本次恢复与验证方法，不是所有 schema 修改均自动重载的保证。
 
 `gallerize-proj` 完成三层覆盖与依赖核查、展示 Markdown 和条目登记后，衔接本 Skill 做内容对照与本地构建。检查 Tool、Behavior、Function 三层图与实现覆盖、调用及依赖说明一致，多机结构示意不得被描述为实际飞行结果。
+
+## 新增文档集合与共享依赖缓存
+
+新增 Quickstart / Docs 集合后，检查当前开发服务的 `/quickstart/`、`/docs/` 和正文页，确认 HTTP 200 且正文存在。运行 `npm --prefix gallery run check:watch` 覆盖开发模式；静态构建成功不能替代开发服务检查。
+
+如果 worktree 的 `node_modules` 是共享软链接，先检查 Astro 内容缓存实际位置。网站配置将 `cacheDir` 放在本地 `.astro/cache/`，避免不同工作区共用依赖目录中的内容缓存。Vite 的依赖缓存仍可能位于共享 `node_modules/.vite/`，其写入权限需独立处理。
+
+2026-11-10 新增 Docs 后，当前服务 `/quickstart/` 返回 500；配置本地缓存并触发配置重载后，同一服务返回 200，标题与 Markdown 正文存在，开发回归检查覆盖全部新增页面及 Gallery。配置重载与缓存隔离同时发生，因此尚未独立证明缓存共享是唯一原因。

@@ -1,0 +1,7 @@
+---
+import { getEntry } from 'astro:content';
+import Docs from '../layouts/Docs.astro';
+const entry = await getEntry('docs', 'quickstart');
+if (!entry) throw new Error('Missing Quickstart');
+---
+<Docs entry={entry} />

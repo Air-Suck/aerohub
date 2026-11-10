@@ -1,17 +1,54 @@
 ---
 import Base from '../layouts/Base.astro';
+import AlgorithmCard from '../components/AlgorithmCard.astro';
 import { sitePath } from '../lib/algorithms';
-import { getEntry } from 'astro:content';
+import { getEntry, getCollection } from 'astro:content';
 const homepage = await getEntry('homepage', 'homepage');
 if (!homepage) throw new Error('Missing homepage Markdown');
 const { data } = homepage;
+const algorithms = (await getCollection('algorithms')).sort((a, b) => a.data.title.localeCompare(b.data.title));
+const routes = [
+  { number: '01', title: '从第一次运行开始', label: 'Quickstart', description: '准备环境，选择一个 Demo，沿着已有验证路线开始探索。', href: 'quickstart/' },
+  { number: '02', title: '发现可用的能力', label: 'Gallery', description: '浏览规划、状态估计与环境感知，了解每项能力的接入方式。', href: 'gallery/' },
+  { number: '03', title: '找到下一步的答案', label: 'Documentation', description: '从使用与部署到架构与接口，逐步深入 AeroHub。', href: 'docs/' },
+];
 ---
 <Base title="项目主页">
-  <p class="eyebrow">{data.eyebrow}</p>
-  <h1>{data.title}</h1>
-  <p class="lead">{data.lead}</p>
-  <div class="grid">
-    {data.features.map((feature) => <section class="card"><h2>{feature.title}</h2><p>{feature.description}</p></section>)}
-  </div>
-  <p><a href={sitePath('gallery/')}>{data.galleryLinkLabel}</a></p>
+  <section class="home-hero">
+    <div class="hero-copy">
+      <p class="eyebrow"><span class="status-dot" aria-hidden="true"></span>{data.eyebrow}</p>
+      <h1>{data.heroTitle}</h1>
+      <p class="lead">{data.lead}</p>
+      <div class="home-actions">
+        <a class="button" href={sitePath('quickstart/')}>开始使用 <span aria-hidden="true">↗</span></a>
+        <a class="button button-outline" href={sitePath('gallery/')}>探索 Gallery <span aria-hidden="true">→</span></a>
+      </div>
+      <p class="hero-footnote">基于 Aerostack2 · 面向 AirSim + PX4 SITL</p>
+    </div>
+    <div class="capability-map" aria-label="四方部署职责示意">
+      <div class="map-heading"><span>DEPLOYMENT / 四方职责</span><span aria-hidden="true">↗</span></div>
+      <div class="map-core"><span class="map-orbit" aria-hidden="true">✳</span><strong>Aerohub</strong><span>算法 · 适配 · 执行</span></div>
+      <div class="map-roles">
+        <div><span>01 / SIMULATOR</span><strong>AirSim</strong><small>环境与动力学</small></div>
+        <div><span>02 / FLIGHT CONTROL</span><strong>PX4</strong><small>飞行控制</small></div>
+        <div><span>03 / ONBOARD</span><strong>RoboPi</strong><small>自主算法与 AS2</small></div>
+        <div><span>04 / WORKSTATION</span><strong>ROS 任务</strong><small>能力调用与任务编排</small></div>
+      </div>
+      <div class="map-caption">目标职责示意 · 各组件实现与验收分别记录</div>
+    </div>
+  </section>
+  <section class="start-section" aria-label="探索 AeroHub">
+    {routes.map((route) => <a class="route-card" href={sitePath(route.href)}>
+      <span class="eyebrow">{route.number} / {route.label}</span><h2>{route.title}</h2><p>{route.description}</p><span class="route-arrow" aria-hidden="true">↗</span>
+    </a>)}
+  </section>
+  <section class="home-section">
+    <div class="section-heading"><div><p class="eyebrow">THE GALLERY</p><h2>从开源算法，探索更多可能。</h2></div><a href={sitePath('gallery/')}>{data.galleryLinkLabel}</a></div>
+    <div class="grid algorithm-grid">{algorithms.map((algorithm) => <AlgorithmCard algorithm={algorithm} />)}</div>
+  </section>
+  <section class="home-section foundation-section">
+    <div class="section-heading"><div><p class="eyebrow">BUILT ON AEROSTACK2</p><h2>清晰分层，逐步接入。</h2></div><a href={sitePath('docs/concepts/')}>了解架构 →</a></div>
+    <div class="feature-list">{data.features.slice(1).map((feature, index) => <section><span class="eyebrow">{String(index + 1).padStart(2, '0')}</span><h3>{feature.title}</h3><p>{feature.description}</p></section>)}</div>
+  </section>
+  <section class="closing-panel"><p class="eyebrow">START EXPLORING</p><h2>下一步，从一个 Demo 开始。</h2><p>文档正在逐步完善。先了解运行条件，再找到适合你的能力。</p><a class="button" href={sitePath('quickstart/')}>打开 Quickstart ↗</a></section>
 </Base>

@@ -1,6 +1,18 @@
 # Aerohub Gallery
 
-本目录是仓库网站工程，承载项目主页、Gallery 列表和算法详情。采用 Astro 静态构建，本地开发与 GitHub Pages 使用同一份内容和页面代码。当前展示 CAT-ORA、Swarm-Formation、SUPER 和 FAST-LIVO2，以官方 Demo、简短介绍和 Tool / Behavior / Function 三层接入图为核心，接入细节和验证记录放在折叠区域。示例 Markdown 保留为新增条目模板，不登记到公开列表。
+本目录是仓库网站工程，承载项目主页、Quickstart、Gallery 和 Docs 文档中心。采用 Astro 静态构建，本地开发与 GitHub Pages 使用同一份内容和页面代码。当前展示 CAT-ORA、Swarm-Formation、SUPER 和 FAST-LIVO2，以官方 Demo、简短介绍和 Tool / Behavior / Function 三层接入图为核心，接入细节和验证记录放在折叠区域。示例 Markdown 保留为新增条目模板，不登记到公开列表。
+
+## 网站结构与文档维护
+
+- `/`：项目介绍，以及 Quickstart、Gallery、Docs 三个入口。
+- `/quickstart/`：首次使用路线，当前提供环境准备、Demo 选择和检查顺序；完整可复制教程待补。
+- `/gallery/` 与 `/gallery/<id>/`：能力展示与接入记录，详情链接到使用指南。
+- `/docs/`：文档中心，按开始使用、用户指南、深入了解分组。
+- `/docs/<id>/`：文档正文，共用侧栏、本页目录与前后翻页。
+
+文档内容位于 `content/docs/*.md`；frontmatter 必填 `title`、`description`、`section`、`order`、`status`。`section` 为 `开始使用`、`用户指南`、`深入了解`；`status` 为 `初版` 或 `待完善`。文件名决定稳定 URL，其中 `quickstart.md` 单独映射到 `/quickstart/`。当前路由只支持单层文件名，请勿创建嵌套目录。`order` 决定文档导航与翻页顺序。新增文档自动进入集合与文档中心。
+
+文档正文使用 Markdown；跨页面内部链接使用相对路径，确保 GitHub Pages 子路径部署有效。内容缺失时写明待补项，不虚构运行命令或验收结果。技术事实继续以仓库对应主文档和 Demo 说明为来源；网站维护展示副本，构建不读取仓库外层。首批内容根据本工作区 2026-11-10 的部署、Demo、项目简介与共享架构约定整理；仓库外链用于查阅对应说明，不将其视为锁定版本的验收证据。
 
 ## 本地使用
 
@@ -22,6 +34,8 @@ npm run preview
 ```
 
 `build` 先检查内容与类型再生成 `dist/`。依赖由 `package-lock.json` 锁定；`node_modules/`、`.astro/` 与 `dist/` 不进入 Git。
+
+Astro 内容缓存保存在当前工程的 `.astro/cache/`，即使 `node_modules` 软链接到其他工作区也保持内容缓存隔离。
 
 已有 dev 服务与静态构建分别验证。修改内容 schema 后，已有服务可能未重新加载新增字段；出现“构建产物有图、开发页面无图”时，先检查当前页面 HTML 及其图片请求，具体排查见 `skill/bundle-gallery/SKILL.md`。开发服务由使用者启动和停止。
 

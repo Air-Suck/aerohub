@@ -32,9 +32,13 @@ const server = await dev({
 
 try {
   assert.deepEqual(violations, [], 'Content loader must not watch the repository root');
-  for (const path of ['/', '/gallery/', ...registry.items.map((item) => `/gallery/${item.id}/`)]) {
+  for (const path of ['/', '/quickstart/', '/docs/', '/docs/running-demos/', '/docs/deployment/', '/docs/concepts/', '/docs/reference/', '/docs/contributing/', '/gallery/', ...registry.items.map((item) => `/gallery/${item.id}/`)]) {
     const response = await fetch(`http://127.0.0.1:${server.address.port}${path}`);
     assert.equal(response.status, 200, path);
+    if (path === '/quickstart/') {
+      const html = await response.text();
+      assert(html.includes('快速开始') && html.includes('你将完成什么'), 'Quickstart must render its Markdown body');
+    }
   }
   const directories = Object.keys(server.watcher.getWatched());
   assert(!directories.some((path) => path.startsWith(resolve(repository, 'artifacts'))));
