@@ -3,7 +3,7 @@ id: state-estimator.pin-slam-lidar
 name: PIN-SLAM LiDAR state estimate
 version: upstream-e2b7fbf-aerohub-0.1.0
 type: state-estimator
-description: Globally corrected LiDAR pose with finite-difference body twist
+description: PIN-SLAM global correction composed with high-rate PX4 local pose and body twist
 component:
   id: pin-slam
   manifest: deployment/pin_slam/component.yaml
@@ -21,6 +21,11 @@ inputs:
     frame: <namespace>/Lidar, FLU
     time: AirSim LiDAR sample time in the shared /clock domain
     units: metres
+  - interface: /<namespace>/sensor_measurements/odom
+    schema: nav_msgs/msg/Odometry
+    frame: namespaced AS2 odom to base_link
+    time: PX4 local state sample time in the shared /clock domain
+    units: metres and seconds
 outputs:
   - interface: /<namespace>/self_localization/pose
     schema: geometry_msgs/msg/PoseStamped
@@ -41,31 +46,34 @@ resources:
   enforcement: deployment selection plus AS2 plugin ownership; no hot-switch arbiter implemented
 lifecycle:
   startup: platform LiDAR before algorithm; algorithm before AS2 plugin selection
-  readiness: at least two accepted poses with derived twist and fresh diagnostics
-  freshness: plugin rejects samples older than configured max_age and non-monotonic epochs
+  readiness: fresh PX4 local pose/twist, at least one time-paired PIN-SLAM correction, and fresh diagnostics
+  freshness: plugin rejects stale, non-monotonic or unpaired global samples; duplicate local stamps are ignored and unique local samples drive canonical output
   feedback: diagnostic_msgs status from the algorithm and AS2 output freshness
   completion: continuous provider; no task completion
   cancel_or_stop: deselect authority, stop plugin host, then stop shared algorithm process
-  failure: tracking loss or invalid input suppresses new authoritative samples
+  failure: tracking loss or invalid PIN-SLAM input freezes global correction while fresh PX4 local state remains available for controlled landing
   recovery: restart outside active motion; new process means a new local-map epoch
 type_specific:
   modality: lidar
-  tf: earth/map/odom/base are owned by the selected AS2 State Estimator host
+  tf: AS2 host owns earth/map/odom/base; PIN-SLAM updates map-to-odom and PX4 local state updates odom-to-base
   reset: no seamless reset or map-frame continuity guarantee
-  loop_closure: global pose can jump; smooth local odometry is not exposed
+  loop_closure: global correction can change at PIN-SLAM rate while local odometry stays continuous at control rate
 validation:
-  stage: partial
+  stage: reproduced
   gate: deployment/pin_slam/validation.yaml
-  scope: Native plugin, real GPU odometry, canonical AS2 output and visible AirSim shadow flight are verified; sample coverage was 0.852 below the required 0.95, so authority and full reproduction remain unapproved.
+  scope: Native dual-rate plugin, real GPU odometry, 42 Hz canonical state, full visible AirSim authority flight and controlled landing after algorithm exit are verified.
   component_revision: e2b7fbf328e5fac1d638e217d70a69cbe9f30a52
   evidence:
     - log/pin_slam/static-20261110/plugin-host.log
     - log/pin_slam/static-20261110/plugin-probe.log
     - log/pin_slam/gpu-smoke-20261110/result.json
     - log/pin_slam/gpu-smoke-20261110/canonical-pose.txt
-    - log/pin_slam/airsim-shadow-20261110/README.md
+    - log/pin_slam/plugin-dual-rate-20261110/plugin-probe.log
+    - log/pin_slam/airsim-authority-dual-rate-20261110/ground/rates.json
+    - log/pin_slam/airsim-authority-full-20261110/final-run/gate-report.json
+    - log/pin_slam/airsim-authority-fault-20261110/fault-report.json
   limitations:
     - AirSim 1.8.1 LiDAR has no per-point time and deskew is disabled.
-    - Twist is derived from consecutive poses rather than estimated by upstream PIN-SLAM.
-    - Not approved as the flight-control authority until shadow acceptance passes.
+    - Upstream PIN-SLAM finite-difference twist remains diagnostic; canonical control twist comes from PX4 local odometry.
+    - Global correction loss does not detect or replace failure of the PX4 local estimator.
 

@@ -23,7 +23,7 @@ images:
     dockerfile: deployment/pin_slam/Dockerfile.algorithm
   as2_plugin:
     name: uav/pin-slam-as2:humble
-    local_digest: sha256:1df7b4230cc1035f44645d92e9f49672f687537b1806adaa70382f885be495cc
+    local_digest: sha256:c2a67febdf0f7b176e94cf1da954f5f44149d5503b7693604beb3010f0b1148a
     base_image: onboard_computer:main-e2e
     base_revision: a9ddf15006a6a36d53fa0316b87a8da590fd7253
     architectures: [linux/amd64]
@@ -36,7 +36,9 @@ runtime:
     workstation: shadow scoring and lifecycle orchestration
   namespace: drone0
   clock: AirSim /clock
-  input: /drone0/sensor_measurements/Lidar/points
+  input:
+    lidar: /drone0/sensor_measurements/Lidar/points
+    local_odometry: /drone0/sensor_measurements/odom
   output_state: /drone0/pin_slam/odometry
   output_map: /drone0/pin_slam/neural_points
 requirements:
@@ -46,17 +48,17 @@ requirements:
   calibration: sensor_from_base must be measured for non-simulated platforms
 lifecycle:
   startup: start platform LiDAR and /clock, algorithm, then AS2 plugin
-  readiness: two monotonic LiDAR samples, valid odometry, nonempty neural-point map, healthy diagnostics
+  readiness: fresh PX4 local odometry, a time-paired PIN-SLAM correction, nonempty neural-point map, and healthy diagnostics
   stop: remove state authority before stopping the shared algorithm process
-  failure: stale, invalid, non-monotonic, or tracking-lost output is not forwarded as authoritative state
+  failure: stale, invalid, non-monotonic, or unpaired PIN-SLAM output cannot update the global correction; high-rate PX4 local state remains available for controlled landing
   recovery: restart as a new map epoch while the vehicle is not executing a task
 authority:
   state_and_tf: exactly one selected AS2 State Estimator provider per vehicle
   map_frame: PIN-SLAM process owns pin_slam_map data; AS2 plugin publishes its configured alias
 validation:
-  stage: partial
+  stage: reproduced
   gate: deployment/pin_slam/validation.yaml
-  scope: Real CUDA processing, independent neural-point consumption and a visible AirSim + PX4 SITL shadow flight are verified; accuracy, freshness and integrity gates passed, but sample coverage was 0.852 below the predeclared 0.95 threshold, so reproduction is not successful.
+  scope: Real CUDA processing, independent neural-point consumption, native AS2 dual-rate state integration, visible AirSim + PX4 SITL authority flight, all predeclared gates, and algorithm-exit recovery are verified.
   evidence:
     - log/pin_slam/static-20261110/image-inspect.json
     - log/pin_slam/static-20261110/compose-expanded.yaml
@@ -67,12 +69,14 @@ validation:
     - log/pin_slam/gpu-smoke-20261110/canonical-pose.txt
     - log/pin_slam/gpu-smoke-20261110/nvidia-smi.txt
     - log/pin_slam/gpu-smoke-20261110/SHA256SUMS
-    - log/pin_slam/airsim-shadow-20261110/README.md
-    - log/pin_slam/static-20261110/SHA256SUMS
+    - log/pin_slam/plugin-dual-rate-20261110/plugin-probe.log
+    - log/pin_slam/airsim-authority-dual-rate-20261110/ground/rates.json
+    - log/pin_slam/airsim-authority-full-20261110/final-run/gate-report.json
+    - log/pin_slam/airsim-authority-full-20261110/airsim-visible-ground.png
+    - log/pin_slam/airsim-authority-full-20261110/SHA256SUMS
+    - log/pin_slam/airsim-authority-fault-20261110/fault-report.json
   limitations:
-    - Build and interface checks do not prove AirSim localization accuracy.
     - Neural-point anchors are not a collision map or the complete implicit model.
-    - The host Docker daemon lacks NVIDIA Container Toolkit; the GPU run used explicit device and driver-library mounts for diagnosis, not a portable Compose deployment.
-    - The final visible AirSim shadow run covered 89.59 s and 6.55 m, but sample coverage was 0.852 below the required 0.95; the candidate remains non-authoritative.
-    - Authority is forbidden until the shadow accuracy gate passes.
+    - Current authority integration deliberately retains PX4 EKF local odometry for control; PIN-SLAM is the global correction source, not the sole inertial estimator.
+    - AirSim LiDAR lacks per-point time, so deskew remains disabled.
 

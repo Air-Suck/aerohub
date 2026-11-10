@@ -1,6 +1,6 @@
 [submodule "as2"]
 	path = as2/aerostack2
-	url = https://github.com/aerostack2/aerostack2.git
+	url = https://github.com/Popc0rn7/aerostack2-aerohub.git
 [submodule "pixhawk"]
 	path = as2/as2_platform_pixhawk
 	url = https://github.com/aerostack2/as2_platform_pixhawk.git

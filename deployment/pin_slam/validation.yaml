@@ -1,10 +1,19 @@
 schema_version: 0.1
-scenario: pin-slam-air-sim-shadow
+scenario: pin-slam-air-sim-state-acceptance
 platform:
   simulator: AirSim 1.8.1, visible window
   flight_controller: PX4 SITL
-  motion_authority: previously validated AS2 state provider
-  candidate_role: shadow only
+  motion_authority: previously validated AS2 provider during shadow; PIN-SLAM dual-rate provider only after all shadow gates pass
+  candidate_role: shadow candidate followed by gated authority validation
+  lidar:
+    rotations_per_second: 10
+    points_per_second: 80000
+    configured_points_per_rotation: 8000
+    ros_publish_rate_hz: 3.0
+    rationale: >-
+      Preserve the platform LiDAR model and explicitly rate-limit the ROS
+      bridge below the measured sustained PIN-SLAM processing rate on the RTX
+      4090. The bridge preserves the selected AirSim sample timestamp.
 duration:
   minimum_airborne_seconds: 60.0
   minimum_horizontal_truth_motion_m: 5.0
@@ -12,6 +21,11 @@ alignment:
   method: first valid candidate pose to simultaneous AirSim truth pose
   scale: fixed at 1.0
   max_time_pairing_error_s: 0.05
+coverage:
+  method: exact input and output PointCloud2/Odometry sample-stamp pairing
+  window: from the first candidate output stamp through the last candidate output stamp
+  numerator: unique candidate stamps that match an observed LiDAR input stamp
+  denominator: unique observed LiDAR input stamps inside the coverage window
 gates:
   sample_coverage_min: 0.95
   maximum_output_gap_s: 0.5

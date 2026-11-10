@@ -49,13 +49,13 @@ type_specific:
   reset: new epoch on restart; no transparent map merge
   query: no online SDF query service is exposed in this first adapter
 validation:
-  stage: partial
-  scope: Real RTX 4090 processing, nonempty neural-point generation, independent subscription and visible AirSim LiDAR consumption are verified; the coupled state capability failed its shadow coverage gate, so component reproduction is not successful.
+  stage: reproduced
+  scope: Real RTX 4090 processing, nonempty neural-point generation, independent subscription, visible AirSim LiDAR consumption and the coupled full authority flight are verified.
   component_revision: e2b7fbf328e5fac1d638e217d70a69cbe9f30a52
   evidence:
     - log/pin_slam/static-20261110/algorithm-static.log
     - log/pin_slam/gpu-smoke-20261110/result.json
-    - log/pin_slam/airsim-shadow-20261110/README.md
+    - log/pin_slam/airsim-authority-full-20261110/final-run/gate-report.json
   limitations:
     - Point anchors are not OccupancyGrid, ESDF, TSDF, mesh, or collision-free space.
     - No navigation consumer may claim collision-map support without a validated conversion.
