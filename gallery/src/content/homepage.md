@@ -1,5 +1,6 @@
 ---
 title: Aerohub
+heroTitle: 连接算法与飞行能力。
 eyebrow: 无人机算法接入、运行与能力展示
 lead: 以 Aerostack2 为执行基础，连接多机规划、自身状态估计与环境感知，记录算法接入方式和验证边界。
 features:

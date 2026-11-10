@@ -2,6 +2,8 @@
 import '../styles/global.css';
 import { sitePath } from '../lib/algorithms';
 interface Props { title: string; description?: string }
+const currentPath = Astro.url.pathname;
+const active = (path: string) => path === '' ? currentPath === sitePath() : currentPath.startsWith(sitePath(path));
 const { title, description = 'Aerohub：无人机能力展示、快速开始与使用文档。' } = Astro.props;
 ---
 <!doctype html>
@@ -15,15 +17,16 @@ const { title, description = 'Aerohub：无人机能力展示、快速开始与�
   <body>
     <a class="skip" href="#main">跳转到正文</a>
     <header>
-      <a href={sitePath()} class="brand">Aerohub</a>
+      <a href={sitePath()} class="brand"><span class="brand-symbol" aria-hidden="true">✳</span> Aerohub<span class="brand-caption">OPEN FLIGHT CAPABILITIES</span></a>
       <nav aria-label="主导航">
-        <a href={sitePath()}>项目主页</a>
-        <a href={sitePath('quickstart/')}>Quickstart</a>
-        <a href={sitePath('gallery/')}>Gallery</a>
-        <a href={sitePath('docs/')}>Docs</a>
+        <a href={sitePath()} aria-current={active('') ? 'page' : undefined}>项目主页</a>
+        <a href={sitePath('quickstart/')} aria-current={active('quickstart/') ? 'page' : undefined}>Quickstart</a>
+        <a href={sitePath('gallery/')} aria-current={active('gallery/') ? 'page' : undefined}>Gallery</a>
+        <a href={sitePath('docs/')} aria-current={active('docs/') ? 'page' : undefined}>Docs</a>
+        <a class="nav-source" href="https://github.com/Air-Suck/aerohub">GitHub ↗</a>
       </nav>
     </header>
     <main id="main"><slot /></main>
-    <footer>Aerohub · 无人机能力与使用文档 · 验证范围以各组件证据为准</footer>
+    <footer><div><a class="brand" href={sitePath()}>✳ Aerohub</a><p>连接开源算法与无人机能力。</p></div><div><a href={sitePath('quickstart/')}>开始使用</a> · <a href={sitePath('docs/')}>文档</a><p>验证范围以各组件证据为准</p></div></footer>
   </body>
 </html>
