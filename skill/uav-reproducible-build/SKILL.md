@@ -51,3 +51,5 @@ description: 为无人机算法及 AS2 扩展建立固定工具镜像内的可�
 依赖仅有规范 msg/srv 定义时，可记录版本/哈希并在工作站重新生成类型支持；
 不得复制不同架构的动态库。缺包与便利 API 缺失分别处理。编译前后核对镜像 ID，
 记录外部工作区、源文件与生成构建胶水；该工作区不作为源码的唯一保存位置。
+
+ROS shell 环境脚本不一定支持 Bash nounset。入口可在 source ROS/AS2/colcon setup 时暂不启用 `set -u`，加载后再启用；用真实目标镜像构造节点，而不只做 Python 语法检查。Python ROS 节点避免以 `handle`、`clients` 等 Node 只读属性命名自己的状态；目标 rclpy 的真实构造检查能检出这类问题。

@@ -2,14 +2,14 @@
 
 Inference 是与 Perception、State Estimator 并列的基础能力：目标对外使用 ROS 2，对内通过 FastAPI 隔离每模型的独立 uv 环境。
 
-当前提交提供公共 FastAPI runtime、ROS HTTP 客户端库、支持模型 manifest、用户 YAML 选择与准备入口，以及原生 AS2 双容器通信基准。尚未登记具体模型，也未提供可调用的模型 ROS Service；模型 schema、ROS 类型和节点在后续模型接入时交付。
+当前提供公共 FastAPI runtime、ROS HTTP 客户端、模型 manifest、用户 YAML 准备入口、原生 AS2 双容器通信基准，以及 [YOPO](models/yopo/README.md) typed ROS 推理服务。YOPO Planner 的轨迹重建和执行在 `src/planner/yopo/`，模型服务只返回候选 PVA/cost。
 
 ## 文件职责
 
 - `runtime/`：公共 FastAPI 应用工厂，每进程加载并预热一个模型，提供 `/health/live`、`/health/ready`、`/infer`。模型提供 factory、请求与响应 Pydantic 类型。
-- `ros2_adapter/`：`uav_inference` ROS Python 包，当前提供内部 HTTP 客户端；具体 ROS 服务节点按模型接入。
-- `manifest.json`：已支持模型 ID、仓库相对目录和描述。当前模型集合为空。
-- `models/`：后续模型各自提供 README/setup、依赖声明和锁文件、schema 与推理 adapter。算法源码按功能归属保留原目录。
+- `ros2_adapter/`：`uav_inference` ROS Python 包，提供内部 HTTP 客户端及 YOPO ROS Service Adapter。
+- `manifest.json`：已支持模型 ID、仓库相对目录和描述。已登记 `yopo`。
+- `models/`：各模型各自提供 README/setup、依赖声明和锁文件、schema 与推理 adapter。算法源码按功能归属保留原目录。
 
 ## 模型选择与准备
 
@@ -50,7 +50,7 @@ python3 deployment/inference/tests/cross_container_baseline.py
 
 2026-11-10 实测30/30成功，p50 3.32 ms、p95 3.88 ms；证据 `log/inference/as2-baseline/1391046/`，包含镜像 ID、规范服务定义哈希、逐次时延、构建及原生节点日志。此为单宿主双容器通信基准，不代表跨物理设备、完整 AS2 飞行链路或 Inference 已在该部署拓扑通过。
 
-后续具体模型仍需验证地面站容器客户端 → onboard 容器中的 Inference ROS Adapter → 模型 worker → GPU 的链路；原生 AS2 基准通过不代表该模型链路通过。
+YOPO 另以 `deployment/inference/tests/yopo_cross_container.py` 验证工作站容器客户端 → onboard Adapter → GPU worker。2026-11-10 的320×185合成输入10/10成功，往返中位17.76 ms、最大50.95 ms；证据 `log/yopo-single/model-chain.json` 与 `model-chain-manifest.json`。它仍不证明真实相机或飞行通过；Planner/仿真结果见 [YOPO Demo](../../deployment/airsim/demos/yopo_single/validation.md)。
 
 ### 公共逻辑测试
 
@@ -61,4 +61,16 @@ python3 -m unittest discover -s deployment/inference/tests -p test_selection.py 
 PYTHONPATH=src/inference/runtime uv run --no-project --python 3.8 --with-editable ./src/inference/runtime python -m unittest discover -s deployment/inference/tests -p test_runtime.py -v
 ```
 
-当前证据覆盖公共逻辑和单宿主双容器 AS2 只读通信；不代表具体模型、跨物理设备、真实传感器、AirSim 或飞行闭环验收通过。
+公共逻辑、AS2 只读通信与 YOPO 模型链分别报告；跨物理设备和真机未验证。实际 AirSim/Planner 证据以各 Demo 验收记录为准。
+
+## YOPO ROS 服务
+
+在共享 ROS 环境补编译 `interfaces/` 与 `ros2_adapter/`，显式 source overlay，再执行：
+
+```bash
+python3 -m uav_inference.yopo_node --ros-args -r __ns:=/drone0 -p endpoint:=http://127.0.0.1:8000
+```
+
+服务 `/drone0/inference/yopo/infer` 使用 `uav_inference_interfaces/srv/InferYopo`。实际测量 `observation_header` 与图像采集时刻分别检查，`state_header` 是规划参考时刻/对齐坐标，可有界未来（默认300ms）。响应保留两者、请求ID、候选/评分、时长、模型配置与设备。完整契约见 [Planner 接口](../planner/yopo/README.md)。
+
+YOPO Adapter另发布`<namespace>/inference/yopo/timing`（std_msgs/String JSON，以request_id关联）。包含ROS图像转换、内部HTTP、Adapter耗时及worker预处理/前向传输/解码分项；worker耗时属于HTTP子项。最新2 m/s双容器GPU结果及动力学见[Demo验收](../../deployment/airsim/demos/yopo_single/validation.md)。

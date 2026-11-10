@@ -26,3 +26,6 @@
 [submodule "super"]
 	path = src/planner/super/upstream
 	url = https://github.com/Popc0rn7/SUPER-sim.git
+[submodule "src/planner/yopo/upstream"]
+	path = src/planner/yopo/upstream
+	url = https://github.com/TJU-Aerial-Robotics/YOPO.git
