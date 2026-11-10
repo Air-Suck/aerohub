@@ -1,0 +1,42 @@
+---
+import { getCollection, render } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
+import type { ImageMetadata } from 'astro';
+import Base from '../../layouts/Base.astro';
+import IntegrationStatus from '../../components/IntegrationStatus.astro';
+export async function getStaticPaths() {
+  return (await getCollection('algorithms')).map((algorithm) => ({
+    params: { id: algorithm.id }, props: { algorithm },
+  }));
+}
+interface Props { algorithm: CollectionEntry<'algorithms'> }
+const { algorithm } = Astro.props;
+const { data } = algorithm;
+const { Content } = await render(algorithm);
+const covers = import.meta.glob<ImageMetadata>('../../../content/algorithms/**/assets/*.{jpg,jpeg,png,webp}', {
+  eager: true, import: 'default',
+});
+const cover = data.demo && covers[`../../../${data.demo.image}`];
+const demoImage = data.demo && (cover?.src ?? data.demo.image);
+if (data.demo?.image.startsWith('content/') && demoImage === data.demo.image) {
+  throw new Error(`Missing demo cover: ${data.demo.image}`);
+}
+---
+<Base title={data.title} description={data.summary}>
+  <p class="eyebrow">{data.category}</p>
+  <div class="algorithm-heading"><h1>{data.title}</h1><IntegrationStatus status={data.integration} /></div>
+  <p class="algorithm-links">
+    <a href={data.source}>官方仓库 ↗</a>
+    {data.demo && <a href={data.demo.video}>官方视频 ↗</a>}
+  </p>
+  {data.demo && <figure class="algorithm-demo">
+    <a class="demo-cover" href={data.demo.video}>
+      <img src={demoImage} alt={data.demo.alt} width={cover?.width ?? 1280} height={cover?.height ?? 720} fetchpriority="high" />
+      <span class="demo-play">▶ 观看官方 Demo</span>
+    </a>
+    <figcaption>{data.demo.caption} <a href={data.demo.source}>上游来源 ↗</a></figcaption>
+  </figure>}
+  <p class="lead">{data.summary}</p>
+  <article class="prose"><Content /></article>
+  {data.evidence.length > 0 && <section><h2>验证证据</h2><ul>{data.evidence.map((item) => <li><a href={item.url}>{item.label}</a></li>)}</ul></section>}
+</Base>

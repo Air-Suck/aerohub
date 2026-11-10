@@ -102,3 +102,7 @@ rosbag2_*/
 # Local AirSim executable/resource selection
 /simulator/airsim/config/resources.local.yaml
 /config/resources.local.yaml
+
+# Gallery dependency and generated content
+/gallery/node_modules/
+/gallery/.astro/

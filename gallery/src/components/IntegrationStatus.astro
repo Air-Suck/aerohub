@@ -1,0 +1,9 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { integrationLabels } from '../lib/algorithms';
+interface Props { status: CollectionEntry<'algorithms'>['data']['integration'] }
+const { status } = Astro.props;
+---
+<span class={`integration-status integration-${status}`} aria-label={`迁移状态：${integrationLabels[status]}`}>
+  {integrationLabels[status]}
+</span>

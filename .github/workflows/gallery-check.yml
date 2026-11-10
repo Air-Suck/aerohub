@@ -1,0 +1,37 @@
+name: Gallery checks
+
+on:
+  push:
+    branches: [dev]
+    paths: ['gallery/**', '.github/workflows/gallery-*.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gallery-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    if: github.ref == 'refs/heads/dev'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: gallery
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: gallery/.nvmrc
+          cache: npm
+          cache-dependency-path: gallery/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - name: Verify project subpath build
+        run: npm run build
+        env:
+          SITE_URL: https://example.github.io
+          BASE_PATH: /aerohub/
