@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import json
 import math
+import os
 import socket
+import time
 from pathlib import Path
 
 import rclpy
@@ -92,8 +94,12 @@ class SwarmFormationAdapter(Node):
     def __init__(self):
         super().__init__("swarm_formation_adapter")
         self.declare_parameter("resolved_config", "")
-        self.declare_parameter("proxy_host", "127.0.0.1")
+        self.declare_parameter("proxy_host", os.environ.get("SWARM_PROXY_HOST", "127.0.0.1"))
         self.declare_parameter("proxy_port", 28501)
+        self.declare_parameter("runtime_output_timeout", 3.0)
+        self.output_started = False
+        self.unavailable_since = None
+        self.failure_sent = False
         path = self.get_parameter("resolved_config").value
         if not path:
             raise RuntimeError("resolved_config parameter is required")
@@ -126,6 +132,26 @@ class SwarmFormationAdapter(Node):
             ))
         period = float(self.config["planner"]["parameters"]["update_period"])
         self.create_timer(period, self._update)
+
+    def _output_unavailable(self, detail):
+        """Fail after a previously healthy output remains unavailable."""
+        if not self.output_started or self.failure_sent:
+            return
+        now = time.monotonic()
+        if self.unavailable_since is None:
+            self.unavailable_since = now
+            return
+        timeout = float(self.get_parameter("runtime_output_timeout").value)
+        if now - self.unavailable_since < timeout:
+            return
+        failure = PlannerFailure()
+        failure.task_id = self.config["task"]["task_id"]
+        failure.reason = "OUTPUT_UNAVAILABLE"
+        failure.detail = str(detail)
+        self.failure_publisher.publish(failure)
+        self.failure_sent = True
+        self.final_sent = True
+        self.get_logger().error(f"Swarm-Formation output unavailable: {detail}")
 
     def _on_pose(self, vehicle_id, message):
         point = message.pose.position
@@ -171,8 +197,12 @@ class SwarmFormationAdapter(Node):
                 response = json.loads(stream.readline().decode())
         except (OSError, ValueError, json.JSONDecodeError) as exc:
             self.get_logger().warning(f"Swarm-Formation proxy unavailable: {exc}")
+            self._output_unavailable(f"proxy unavailable: {exc}")
             return
         if not response.get("ok"):
+            self._output_unavailable(
+                response.get("error", response.get("reason", "error"))
+            )
             if response.get("reason") != "WAITING_FOR_TRAJECTORIES":
                 self.get_logger().warning(response.get("error", response.get("reason", "error")))
             return
@@ -195,6 +225,8 @@ class SwarmFormationAdapter(Node):
         message = self._message(trajectories, response.get("valid_from"),
             response.get("velocities_enu"), response.get("accelerations_enu"),
             response.get("is_final", False))
+        self.output_started = True
+        self.unavailable_since = None
         self.publisher.publish(message)
         self.final_sent = message.is_final
 

@@ -1,0 +1,60 @@
+schema_version: 1
+
+fleet:
+  vehicle_count: 3
+  board_vehicle_index: 0
+  name_prefix: drone
+  airsim_name_prefix: Drone
+  initial_spacing_m: 4.0
+
+nodes:
+  board:
+    # The PC supervisor invokes this command; the UAV process itself runs on RoboPi.
+    launch_command:
+      - bash
+      - -lc
+      - >-
+        ssh "$AEROHUB_BOARD_HOST"
+        aerohub-board-node --vehicle {vehicle} --center {center_vehicle}
+  pc:
+    # Each PC UAV gets its own supervisor thread and process.
+    launch_command:
+      - bash
+      - -lc
+      - >-
+        aerohub-pc-node --vehicle {vehicle} --center {center_vehicle}
+
+coordination:
+  mode: centralized
+  centralized_cases:
+    - board_center
+    - board_worker
+
+ground_station:
+  required: true
+  placement: pc
+  launch_command:
+    - bash
+    - -lc
+    - >-
+      aerohub-ground-station --scenario {scenario} --center {center_vehicle}
+
+airsim:
+  base_settings: ../../simulator/airsim/scenarios/swarm_open_field/settings.json
+  rpc_port: 42471
+  ports:
+    tcp_base: 4680
+    control_local_base: 14840
+    control_remote_base: 14980
+    px4_instance_base: 0
+    px4_system_id_base: 1
+    xrce_agent_base: 8888
+  camera:
+    name: swarm_overhead
+    altitude_m: 25
+    fov_degrees: 90
+    update_hz: 5
+
+validation:
+  startup_timeout_s: 15
+  smoke_duration_s: 30

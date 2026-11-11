@@ -40,20 +40,33 @@ class StartupRelay(socketserver.ThreadingTCPServer):
         self.stopping.set();self.shutdown();self.server_close();self.thread.join(timeout=2)
 
 
-def launch_vehicles(image,app,output,prefix,dds,delay=.1,sensors=False):
-    settings=json.loads((app/'settings.json').read_text())
-    count=len(settings['Vehicles'])
+def legacy_vehicles(count):
+    return [{'name':f'drone{index}','airsim_name':f'Drone{index}','px4_instance':40+index,
+             'px4_system_id':41+index,'xrce_agent_port':8901+index} for index in range(count)]
+
+
+def launch_vehicles(image,app,output,prefix,dds,delay=.1,sensors=False,settings_path=None,vehicles=None):
+    """Default settings_path=None and vehicles=None keep app/settings.json and Drone<i>/40+i/41+i/8901+i."""
+    source=Path(settings_path) if settings_path else app/'settings.json'
+    settings=json.loads(source.read_text())
+    if vehicles is None:
+        vehicles=legacy_vehicles(len(settings['Vehicles']))
+    else:
+        vehicles=list(vehicles)
+        if [vehicle['airsim_name'] for vehicle in vehicles]!=list(settings['Vehicles']):
+            raise ValueError('launch vehicles must match the AirSim settings vehicles in order')
+    count=len(vehicles)
     relays=[]
     try:
-        for index in range(count):
-            original=int(settings['Vehicles'][f'Drone{index}']['TcpPort'])
+        for index,vehicle in enumerate(vehicles):
+            original=int(settings['Vehicles'][vehicle['airsim_name']]['TcpPort'])
             relays.append(StartupRelay(('127.0.0.1',4780+index),('127.0.0.1',original),delay))
-            settings['Vehicles'][f'Drone{index}']['TcpPort']=4780+index
+            settings['Vehicles'][vehicle['airsim_name']]['TcpPort']=4780+index
         path=output/'px4-settings.json';path.write_text(json.dumps(settings,indent=2)+'\n')
-        for index in range(count):
+        for index,vehicle in enumerate(vehicles):
             subprocess.run(['docker','run','--rm','--detach','--init','--network','host','--name',prefix+f'vehicle{index}',
-                '-e','ROS_DOMAIN_ID=91','-e',f'VEHICLE_NAME=Drone{index}','-e',f'VEHICLE_NAMESPACE=drone{index}',
-                '-e',f'PX4_INSTANCE={40+index}','-e',f'PX4_SYSTEM_ID={41+index}','-e',f'XRCE_AGENT_PORT={8901+index}',
+                '-e','ROS_DOMAIN_ID=91','-e',f"VEHICLE_NAME={vehicle['airsim_name']}",'-e',f"VEHICLE_NAMESPACE={vehicle['name']}",
+                '-e',f"PX4_INSTANCE={vehicle['px4_instance']}",'-e',f"PX4_SYSTEM_ID={vehicle['px4_system_id']}",'-e',f"XRCE_AGENT_PORT={vehicle['xrce_agent_port']}",
                 '-e','AIRSIM_RPC_PORT=42471','-e','FLIGHT_BOARD_SENSORS='+('1' if sensors else '0'),'-e','FLIGHT_BOARD_CAMERAS=0',
                 '-v',str(path)+':/config/settings.json:ro','-v',str(dds)+':/opt/fastdds_udp.xml:ro',image,'vehicle'],check=True,stdout=subprocess.DEVNULL)
         startup_timeout=float(os.environ.get('PX4_STARTUP_TIMEOUT','25'))

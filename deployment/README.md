@@ -26,6 +26,7 @@ onboard_computer 是可选 PC 开发环境。完整职责、接口和当前实�
 | [oh-ros-build](oh-ros-build/README.md) | 官方 builder 调用、工作区准备与 CMake 适配；目录名为既有脚本路径 | 否，只有脚本和文档 |
 | [robopi](robopi/README.md) | 板端原生 AS2 部署、启动和诊断 | 否，部署交叉编译产物 |
 | [onboard_computer](onboard_computer/README.md) | 承载 AS2、算法 Library 与应用的正式 PC 开发及仿真验证环境 | 是，PC 开发可选；日常补编译约定与现有入口差异见详情 |
+| [swarm](swarm/README.md) | 可配置机群拓扑、RoboPi/PC 混合进程编排与 AirSim 质心俯视观察 | 否，共享部署基础设施 |
 
 AirSim 场景在 PC 宿主机独立运行，binary 通过资源 YAML 配置，不包含在 tar 中。
 RoboPi 原生运行 AS2，不运行 Docker。SDK、目标 ROS 和第三方依赖由官方环境提供。

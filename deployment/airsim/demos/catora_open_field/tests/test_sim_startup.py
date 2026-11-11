@@ -1,4 +1,8 @@
-import socket,socketserver,threading,time,unittest
+import json,socket,socketserver,sys,tempfile,threading,time,unittest
+from pathlib import Path
+from unittest import mock
+sys.path.insert(0,str(Path(__file__).resolve().parent.parent))
+import sim_startup
 from sim_startup import StartupRelay
 
 
@@ -52,5 +56,51 @@ class SmallPacketLatencyTest(unittest.TestCase):
             self.assertEqual(len(ages),100)
             self.assertLess(max(ages),.030,'relay adds delayed-ACK/Nagle latency to the HIL stream')
         finally:relay.close();upstream.shutdown();upstream.server_close();worker.join(timeout=2)
+
+class LaunchVehiclesDefaultsTest(unittest.TestCase):
+    """Existing callers pass neither settings_path nor vehicles; their commands must stay unchanged."""
+    ROOT=Path(__file__).resolve().parents[5]
+    SCENES=('catora_open_field','swarm_open_field')
+
+    def launch(self,app,output,**kwargs):
+        runs=[];relays=[]
+        class Relay:
+            def __init__(self,listen,upstream,delay):relays.append((listen,upstream,delay))
+            def close(self):pass
+        def logs(command,**_):return 'Ready for takeoff!'
+        with mock.patch.object(sim_startup,'StartupRelay',Relay),\
+             mock.patch.object(sim_startup.subprocess,'run',side_effect=lambda command,**_:runs.append(command)),\
+             mock.patch.object(sim_startup.subprocess,'check_output',side_effect=logs):
+            sim_startup.launch_vehicles('board:image',app,output,'pre-',Path('/dds.xml'),**kwargs)
+        return runs,relays
+
+    def test_default_settings_and_vehicle_identity_are_unchanged(self):
+        for scene in self.SCENES:
+            with self.subTest(scene=scene),tempfile.TemporaryDirectory() as temporary:
+                app=self.ROOT/'simulator/airsim/scenarios'/scene;output=Path(temporary)
+                original=json.loads((app/'settings.json').read_text())
+                runs,relays=self.launch(app,output)
+                count=len(original['Vehicles'])
+                expected_settings=json.loads((app/'settings.json').read_text())
+                for index in range(count):expected_settings['Vehicles'][f'Drone{index}']['TcpPort']=4780+index
+                self.assertEqual(expected_settings,json.loads((output/'px4-settings.json').read_text()))
+                self.assertEqual([(('127.0.0.1',4780+i),('127.0.0.1',int(original['Vehicles'][f'Drone{i}']['TcpPort'])),.1) for i in range(count)],relays)
+                self.assertEqual([['docker','run','--rm','--detach','--init','--network','host','--name',f'pre-vehicle{i}',
+                    '-e','ROS_DOMAIN_ID=91','-e',f'VEHICLE_NAME=Drone{i}','-e',f'VEHICLE_NAMESPACE=drone{i}',
+                    '-e',f'PX4_INSTANCE={40+i}','-e',f'PX4_SYSTEM_ID={41+i}','-e',f'XRCE_AGENT_PORT={8901+i}',
+                    '-e','AIRSIM_RPC_PORT=42471','-e','FLIGHT_BOARD_SENSORS=0','-e','FLIGHT_BOARD_CAMERAS=0',
+                    '-v',str(output/'px4-settings.json')+':/config/settings.json:ro','-v','/dds.xml:/opt/fastdds_udp.xml:ro','board:image','vehicle'] for i in range(count)],runs)
+                self.assertEqual(list(range(count)),json.loads((output/'px4-startup.json').read_text())['ready_vehicles'])
+
+    def test_explicit_settings_path_and_vehicles_override_identity(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            output=Path(temporary);settings=output/'generated.json'
+            settings.write_text(json.dumps({'Vehicles':{'Drone0':{'TcpPort':5000},'Drone1':{'TcpPort':5001}}}))
+            vehicles=[{'name':f'drone{i}','airsim_name':f'Drone{i}','px4_instance':60+i,'px4_system_id':61+i,'xrce_agent_port':9000+i} for i in range(2)]
+            runs,relays=self.launch(output/'missing-app',output,settings_path=settings,vehicles=vehicles)
+            self.assertEqual([5000,5001],[upstream[1] for _,upstream,_ in relays])
+            self.assertIn('PX4_INSTANCE=61',runs[1]);self.assertIn('PX4_SYSTEM_ID=62',runs[1]);self.assertIn('XRCE_AGENT_PORT=9001',runs[1])
+            with self.assertRaisesRegex(ValueError,'must match'):
+                self.launch(output,output,settings_path=settings,vehicles=list(reversed(vehicles)))
 
 if __name__=='__main__':unittest.main()
