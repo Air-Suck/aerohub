@@ -34,14 +34,15 @@ class BaselineTest(unittest.TestCase):
 
     def test_reference_entrypoint_all_candidates(self):
         from scipy.spatial.transform import Rotation
-        model = self.predictor.model
+        model = self.predictor.backend._model
+        from config.config import cfg
         transform = model.state_transform
         rng = np.random.RandomState(43)
         for shape in [(96, 160), (48, 80), (7, 11)]:
             depth = rng.uniform(.01, 30, shape).astype(np.float32)
             depth.flat[:5] = [0., np.nan, np.inf, .02, 20.]
             data = SimpleNamespace(data=depth.tobytes(), height=shape[0], width=shape[1], encoding='32FC1')
-            expected_depth = original_preprocess(data, self.predictor.cfg)
+            expected_depth = original_preprocess(data, cfg)
             np.testing.assert_array_equal(preprocess_depth(depth, 160, 96), expected_depth)
             rotation = Rotation.from_euler('ZYX', [.7, -.2, .3]).as_matrix()
             # Reference-mode nonzero velocity/acceleration, relative goal, nonidentity attitude.
@@ -49,8 +50,8 @@ class BaselineTest(unittest.TestCase):
             state = (state_world @ rotation).reshape(9).astype(np.float32)
             obs = transform.prepare_input_cpu(transform.normalize_obs_cpu(state[None]))
             with torch.inference_mode():
-                prediction, score = model(torch.from_numpy(expected_depth).to(self.predictor.device),
-                                          torch.from_numpy(obs).to(self.predictor.device))
+                prediction, score = model(torch.from_numpy(expected_depth).to(self.predictor.backend.device),
+                                          torch.from_numpy(obs).to(self.predictor.backend.device))
             prediction = prediction.cpu().numpy().reshape(9, -1).T
             expected = transform.pred_to_endstate_cpu(prediction, np.arange(len(prediction)-1, -1, -1))
             # JSON transport represents invalid nonfinite pixels as zero (positive inf caps at 20m).

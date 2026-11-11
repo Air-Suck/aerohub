@@ -7,6 +7,17 @@ description: 将 CUDA 推理模型接入 Aerohub Inference，收束每模型独�
 
 本 Skill 是模型准备流程的唯一维护入口。[可复现构建](../uav-reproducible-build/SKILL.md)与[组件部署](../uav-component-deployment/SKILL.md)遇到模型迁移时读取本文件，完成后继续各自主流程。单独调用时仅处理用户指定模型；ROS 接口、平台输入和部署启停按实际任务另用对应 Skill，不自动扩展范围。
 
+## 准备条件与使用边界
+
+使用者先按 [Inference 前置条件](../../src/inference/README.md#开始前准备什么)和
+模型 README 准备对应运行环境。调用已有 ROS 服务无需模型开发工具；准备 CUDA
+worker 时使用模型独立 uv 环境，驱动/GPU 属于宿主条件，Torch/CUDA 运行库按锁文件
+安装。是否需要额外系统 SDK 或编译器以该模型实际构建为准，不能从 CUDA 名称推导。
+
+开发者执行本 Skill 完成模型接入；需转换为 Houmo HMM 时转到
+[Houmo Skill](../model-migration-houmo/SKILL.md)，不将 CUDA venv 复制到板端。
+ROS adapter 的构建、部署环境与模型环境分别准备。
+
 ## 1. 核对基线与归属
 
 读取项目约定、现有模型入口和真实导入链，记录算法提交、本地修改、Python/框架版本、权重来源和校验和、预处理与输出语义。保留原环境与固定输入输出作为迁移对照。
@@ -57,3 +68,19 @@ description: 将 CUDA 推理模型接入 Aerohub Inference，收束每模型独�
 ## 原生可变速度模型的版本与对照
 
 当上游已有速度缩放配置时，先核对它是否同时缩放状态归一化、候选速度/加速度和轨迹时长；仅给执行端降限不能代替该模型配置。对每个部署配置独立运行全候选/评分对照，并将速度配置与预处理版本纳入响应 model_version。YOPO 的锁定参考入口已完成6 m/s CPU及2 m/s CPU/CUDA对照；这一结论不扩展到其他配置或其他模型。
+
+
+## 多后端模型的职责边界
+
+同一模型支持 CUDA/HMM 时，共用模型 CPU 前后处理和请求响应组装；adapter 只负责
+源码/参数准备与后端构造。公共 `TorchBackend` 的命名 NumPy 输入输出、设备传输、
+同步计时和关闭契约见[后端说明](../../src/inference/runtime/aerohub_inference/backends/README.md)。
+框架依赖保留在模型独立环境，公共 HTTP runtime 与板端 HMM 不因共用服务而安装 Torch。
+
+重构前在实际运行权限下保存固定输入和全部输出，重构后对照所有候选、评分、身份和
+配置。GPU 在沙箱内探测失败时继续检查实际宿主权限；YOPO 本轮在真实 RTX 4090 上
+完成 6/2 m/s 旧新输出一致与双容器 ROS 10/10 回归。共用处理修改后同时复验板端
+HMM；无需为此扩展到未经授权的仿真或飞行任务。
+
+计时区分输入传输、前向与同步、输出传输；保留既有聚合字段时注明重叠关系。
+worker 正常退出调用后端 close；关闭幂等，关闭后拒绝继续执行。

@@ -108,3 +108,4 @@ rosbag2_*/
 # Gallery dependency and generated content
 /gallery/node_modules/
 /gallery/.astro/
+/src/inference/models/*/houmo/artifacts/
