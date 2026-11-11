@@ -36,7 +36,9 @@ ros2 launch uav_follow_reference_acro external_acro.launch.py \
 
 姿态模式输出同源stamp的`motion_reference/pose`和`motion_reference/thrust`，请求ATTITUDE/YAW_ANGLE。控制器将姿态转换到本地odom系，再由Pixhawk平台完成ENU/FLU→NED/FRD和推力归一化。必须显式加载[姿态验证overlay](../../../deployment/airsim/demos/attitude_control/README.md)，其中两项附加补丁在控制器和平台执行配对、新鲜度和四元数校验、保留源时间；共享镜像不变。
 
-该模式仍保留FollowReference目标/约束会话和固定yaw目标契约；姿态流由外部算法根据会话生成，插件不增加位置或姿态反馈控制器。当前不将该入口声明为任意动态航向任务接口，也没有跨Behavior资源仲裁。原角速度和新姿态接口回归均通过，真实平台配对测试通过；有屏AirSim/PX4验证范围见上述独立Demo，不能据此宣称diffphys已闭环。
+该模式保留FollowReference目标/约束会话，接受FIXED_YAW；ATTITUDE模式还显式接受YAW_FROM_TOPIC，由外部完整姿态流确定航向。BODY_RATES模式仍拒绝YAW_FROM_TOPIC，其他yaw模式不自动兼容。插件不增加位置或姿态反馈控制器，也没有跨Behavior资源仲裁。原角速度和姿态接口回归均通过，真实平台配对测试通过；有屏AirSim/PX4验证范围见上述独立Demo，DiffPhys算法任务证据另见其森林Demo。
+
+launch参数`solve_timeout`默认0.1秒；15Hz策略可显式选择0.2秒求解有效期，不更改独立控制流watchdog或刷新旧求解时间。超时设置必须与任务输入新鲜度及实际推理预算共同核查。
 
 ## 接口
 
@@ -47,7 +49,7 @@ ros2 launch uav_follow_reference_acro external_acro.launch.py \
 | `external_acro/control` | `ControlFrame`，best-effort深度1，一个消息携带选定模式的完整角速度／姿态和推力 |
 | `motion_reference/twist`、`motion_reference/thrust` | 经ACROMotion输出给AS2控制器；输入模式BODY_RATES/YAW_SPEED |
 
-第一版仅接受 FIXED_YAW 与 `external_acro.planning_frame` 中的目标（默认AS2 earth），拒绝其他yaw模式和移动目标系。max_speed是该固定规划系的逐轴上限；外部算法必须按完整session确认并执行，不能只回显ID忽略约束。IPC native adapter负责目标确认及对应算法能力，不由插件求解导航。
+角速度入口仅接受FIXED_YAW，姿态入口另接受上述YAW_FROM_TOPIC；目标必须位于`external_acro.planning_frame`（默认AS2 earth），移动目标系仍拒绝。max_speed是该固定规划系的逐轴上限；外部算法必须按完整session确认并执行，不能只回显ID忽略约束。IPC native adapter负责目标确认及对应算法能力，不由插件求解导航。
 
 控制帧须回显当前session_id/revision，sequence从正数递增。header为控制计算时间和车辆FLU机体系（如 `drone0/base_link`）；body_rates单位rad/s，thrust_newtons为牛顿。`last_successful_solve`保留真实最后成功求解时间，`solver_ok=false`不进入执行。超过角速度/推力界限、非有限值、旧版本、倒序、未来或陈旧数据均拒绝；拒绝不延长旧帧有效期。未提供单独ack消息，首个匹配版本且有效的控制帧表示外部算法已准备该目标版本。
 

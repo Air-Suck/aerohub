@@ -234,7 +234,8 @@ private:
   bool supported(const Goal & goal) const {
     return goal.target_pose.header.frame_id == planning_frame_ && finite(goal.target_pose.point.x) &&
       finite(goal.target_pose.point.y) && finite(goal.target_pose.point.z) &&
-      finite(goal.yaw.angle) && goal.yaw.mode == as2_msgs::msg::YawMode::FIXED_YAW &&
+      finite(goal.yaw.angle) && (goal.yaw.mode == as2_msgs::msg::YawMode::FIXED_YAW ||
+        (attitude_mode_ && goal.yaw.mode == as2_msgs::msg::YawMode::YAW_FROM_TOPIC)) &&
       finite(goal.max_speed_x) && goal.max_speed_x > 0 &&
       finite(goal.max_speed_y) && goal.max_speed_y > 0 &&
       finite(goal.max_speed_z) && goal.max_speed_z > 0;

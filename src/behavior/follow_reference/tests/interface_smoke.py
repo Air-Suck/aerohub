@@ -139,7 +139,7 @@ def main():
             return out
 
         # Unsupported semantics are rejected rather than silently ignored.
-        rejected = client.send_goal_async(goal(YawMode.YAW_FROM_TOPIC))
+        rejected = client.send_goal_async(goal(YawMode.KEEP_YAW if attitude_mode else YawMode.YAW_FROM_TOPIC))
         until(rejected.done)
         assert not rejected.result().accepted
         if '--disabled' in sys.argv:
