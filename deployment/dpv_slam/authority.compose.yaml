@@ -1,0 +1,17 @@
+services:
+  as2:
+    image: uav/dpv-slam-as2:humble
+    environment:
+      AS2_STATE_ESTIMATOR_PLUGIN: dpv_slam
+      AS2_STATE_ESTIMATOR_CONFIG_FILE: /config/dpv-slam-estimator.yaml
+      AS2_STATE_ESTIMATOR_LAUNCH_PACKAGE: uav_dpv_slam
+      AS2_STATE_ESTIMATOR_LAUNCH_FILE: dpv_slam.launch.py
+    volumes:
+      - ../../src/state_estimator/dpv_slam/plugin/config/estimator.yaml:/config/dpv-slam-estimator.yaml:ro
+      - ../airsim/as2/run.py:/opt/onboard_computer/run.py:ro
+    command:
+      - bash
+      - -lc
+      - >-
+        source /opt/dpv_slam_as2_ws/install/setup.bash &&
+        exec python3 /opt/onboard_computer/run.py

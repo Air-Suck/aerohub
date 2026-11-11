@@ -1,0 +1,13 @@
+/**:
+  ros__parameters:
+    plugin_name: dpv_slam
+    input_world_frame: dpv_slam_map
+    input_body_frame: dpv_slam_camera
+    local_odometry_topic: sensor_measurements/odom
+    max_age: 0.5
+    local_max_age: 0.2
+    pairing_tolerance: 0.05
+    local_buffer_duration: 2.0
+    earth_from_visual_world: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+    # camera optical -> base FLU for the co-located AirSim FrontCamera.
+    sensor_from_base: [0.0, 0.0, 0.0, 0.5, -0.5, 0.5, 0.5]

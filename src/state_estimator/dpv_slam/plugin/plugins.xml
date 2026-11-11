@@ -1,0 +1,5 @@
+<library path="dpv_slam_plugin">
+  <class type="dpv_slam::Plugin" base_class_type="as2_state_estimator_plugin_base::StateEstimatorBase">
+    <description>Metric-aligned DPV-SLAM correction with camera-to-base transform.</description>
+  </class>
+</library>

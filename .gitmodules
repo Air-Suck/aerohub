@@ -32,3 +32,6 @@
 [submodule "src/planner/yopo/upstream"]
 	path = src/planner/yopo/upstream
 	url = https://github.com/TJU-Aerial-Robotics/YOPO.git
+[submodule "src/state_estimator/dpv_slam/upstream"]
+	path = src/state_estimator/dpv_slam/upstream
+	url = https://github.com/princeton-vl/DPVO.git

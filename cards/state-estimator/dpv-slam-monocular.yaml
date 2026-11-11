@@ -1,0 +1,52 @@
+schema_version: 0.1
+id: state-estimator.dpv-slam-monocular
+name: DPV-SLAM monocular global correction
+version: upstream-0ac95b6-aerohub-0.1.0
+type: state-estimator
+description: Loop-closing monocular visual correction composed with high-rate PX4 local odometry
+component:
+  id: dpv-slam
+  manifest: deployment/dpv_slam/component.yaml
+  shared_process_group: dpv-slam-gpu
+  coupled_capabilities: [perception.dpv-slam-sparse-points]
+usage:
+  mode: continuous-provider
+  selection_phase: deployment
+  invocation_interface: AS2 state_estimator plugin_name=dpv_slam
+  switching_constraints: [Switch only with motion stopped and the previous state/TF provider inactive.]
+inputs:
+  - interface: /<namespace>/sensor_measurements/FrontCamera/rgb/image
+    schema: sensor_msgs/msg/Image rgb8
+    frame: <namespace>/FrontCamera_optical
+    time: AirSim image sample time in the shared clock domain
+  - interface: matching camera_info and local odometry
+    schema: sensor_msgs/msg/CameraInfo plus nav_msgs/msg/Odometry
+    purpose: intrinsics and one-time metric Sim(3) alignment
+outputs:
+  - interface: /<namespace>/self_localization/pose and twist
+    schema: AS2 canonical PoseStamped and TwistStamped
+    frame: AS2 earth and base frames
+    time: high-rate local odometry sample time after a visual correction is available
+preconditions:
+  - DPV-SLAM runs with LOOP_CLOSURE=True; CLASSIC_LOOP_CLOSURE=False.
+  - Startup motion provides at least the configured metric alignment baseline.
+  - Shadow gate passes before authority selection.
+resources:
+  reads: [drone0.front-rgb, drone0.camera-info, drone0.local-odometry, drone0.clock]
+  writes: [drone0.state, drone0.tf]
+  conflicts: [other state or TF authority for drone0, shared DPV-SLAM GPU reset]
+  enforcement: deployment selection and AS2 plugin ownership; no hot-switch arbiter
+lifecycle:
+  readiness: visual initialization plus frozen scale alignment and fresh local state
+  failure: visual loss freezes global correction; local state may only claim safe landing after fault validation
+  recovery: restart outside active motion; recalibrate scale for the new epoch
+type_specific:
+  modality: monocular RGB plus metric local alignment
+  tf: DPV-SLAM updates map-to-odom; PX4 local odometry updates odom-to-base
+  reset: no seamless visual-map reset or hot scale recalibration
+validation:
+  stage: reproduced
+  gate: deployment/dpv_slam/validation.yaml
+  limitations:
+    - Native monocular output is not metric without alignment.
+    - The current metric alignment depends on an existing local odometry source and is frozen after startup.
