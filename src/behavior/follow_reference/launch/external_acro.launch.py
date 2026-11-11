@@ -13,10 +13,12 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument('namespace', default_value='drone0'),
         DeclareLaunchArgument('use_sim_time', default_value='false'),
+        DeclareLaunchArgument('control_mode', default_value='body_rates'),
         DeclareLaunchArgument('output_enabled', default_value='false'),
         Node(package='uav_follow_reference_acro', executable='follow_reference_acro_node',
              namespace=LaunchConfiguration('namespace'), output='screen',
              parameters=[config, {
+                 'external_acro.control_mode': LaunchConfiguration('control_mode'),
                  'use_sim_time': ParameterValue(LaunchConfiguration('use_sim_time'), value_type=bool),
                  'external_acro.output_enabled': ParameterValue(
                      LaunchConfiguration('output_enabled'), value_type=bool),

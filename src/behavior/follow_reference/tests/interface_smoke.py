@@ -14,7 +14,7 @@ from rclpy.qos import QoSProfile, DurabilityPolicy, qos_profile_sensor_data
 from as2_msgs.action import FollowReference
 from as2_msgs.msg import ControllerInfo, ControlMode, PlatformInfo, PlatformStatus, Thrust, YawMode
 from as2_msgs.srv import SetControlMode
-from geometry_msgs.msg import TransformStamped, TwistStamped
+from geometry_msgs.msg import TransformStamped, TwistStamped, PoseStamped
 from tf2_ros import TransformBroadcaster
 from std_srvs.srv import Trigger
 from uav_follow_reference_acro.msg import ControlFrame, ControlSession
@@ -24,9 +24,11 @@ def main():
     rclpy.init()
     node = rclpy.create_node('external_acro_test')
     mode = ControlMode()
+    attitude_mode = "--attitude" in sys.argv
     sessions, rates, thrusts = [], [], []
+    poses = []
     state = {'session': None, 'sequence': 0, 'publish': False, 'revision_offset': 0,
-             'rate_x': 0.2, 'solver_ok': True}
+             'rate_x': 0.2, 'solver_ok': True, 'wrong_mode': False}
 
     def set_mode(request, response):
         nonlocal mode
@@ -53,6 +55,8 @@ def main():
         rates.append, qos_profile_sensor_data)
     sub_thrust = node.create_subscription(Thrust, '/drone0/motion_reference/thrust',
         thrusts.append, qos_profile_sensor_data)
+
+    node.create_subscription(PoseStamped, "/drone0/motion_reference/pose", poses.append, qos_profile_sensor_data)
 
     def tick():
         stamp = node.get_clock().now().to_msg()
@@ -85,6 +89,15 @@ def main():
             state['sequence'] += 1
             msg.sequence = state['sequence']
             msg.body_rates.x, msg.body_rates.y, msg.body_rates.z = state['rate_x'], -0.3, 0.4
+            if attitude_mode:
+                msg.control_mode = ControlFrame.ATTITUDE
+                msg.attitude_frame_id = 'earth'
+                msg.attitude.w = 1.0 if state['rate_x'] < 3 else 2.0
+                msg.body_rates.x = float('nan')  # Inactive mode field is intentionally ignored.
+            else:
+                msg.attitude.w = float('nan')  # Likewise for legacy angular-rate clients.
+            if state['wrong_mode']:
+                msg.control_mode = 255
             msg.thrust_newtons = 6.0
             msg.last_successful_solve = stamp
             msg.solver_ok = state['solver_ok']
@@ -109,6 +122,7 @@ def main():
             'ros2', 'run', 'uav_follow_reference_acro', 'follow_reference_acro_node',
             '--ros-args', '-r', '__ns:=/drone0',
             '--params-file', '/repo/src/behavior/follow_reference/config/external_acro.yaml',
+            '-p', 'external_acro.control_mode:=' + ('attitude' if attitude_mode else 'body_rates'),
             '-p', 'external_acro.output_enabled:=' + ('false' if '--disabled' in sys.argv else 'true'),
         ], start_new_session=True)
         client = ActionClient(node, FollowReference, '/drone0/FollowReferenceBehavior')
@@ -159,6 +173,25 @@ def main():
         spin_for(0.15)
         assert not rates and not thrusts
         state['solver_ok'] = True
+        state['wrong_mode'] = True
+        spin_for(.1)
+        assert not rates and not thrusts and not poses
+        state['wrong_mode'] = False
+        if attitude_mode:
+            until(lambda: len(poses) >= 5 and len(thrusts) >= 5)
+            assert mode.control_mode == ControlMode.ATTITUDE
+            assert mode.yaw_mode == ControlMode.YAW_ANGLE
+            assert not rates
+            assert poses[-1].header.frame_id == 'earth'
+            assert poses[-1].pose.orientation.w == 1.
+            state['publish'] = False
+            ended = handle.get_result_async()
+            until(ended.done)
+            until(lambda: mode.control_mode == ControlMode.HOVER)
+            spin_for(.1)
+            count = len(poses); spin_for(.15); assert len(poses) == count
+            print('PASS: attitude host mode, quaternion/frame output, invalid quaternion/revision/solver rejection and loss hold')
+            return
         until(lambda: len(rates) >= 5 and len(thrusts) >= 5)
         assert mode.control_mode == ControlMode.BODY_RATES
         assert mode.yaw_mode == ControlMode.YAW_SPEED

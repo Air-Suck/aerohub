@@ -1,0 +1,35 @@
+--- a/src/controller_handler.cpp
++++ b/src/controller_handler.cpp
+@@ -807,7 +807,22 @@
+         return;
+       }
+     }
++    if (control_mode_out_.control_mode == as2_msgs::msg::ControlMode::ATTITUDE) {
++      const double max_age = node_ptr_->getParameter<double>("attitude.max_age", 0.1);
++      const double age = (node_ptr_->now() - rclcpp::Time(ref_pose_.header.stamp,
++        node_ptr_->get_clock()->get_clock_type())).seconds();
++      const auto & q = ref_pose_.pose.orientation;
++      const double n = q.x*q.x+q.y*q.y+q.z*q.z+q.w*q.w;
++      if (!ref_pose_acquired_ || !ref_thrust_acquired_ ||
++          ref_pose_.header.stamp != ref_thrust_.header.stamp ||
++          ref_thrust_.header.frame_id != base_frame_id_ ||
++          !std::isfinite(n) || std::abs(n-1.0)>1e-3 ||
++          !std::isfinite(max_age) || max_age<=0 || age<0 || age>max_age ||
++          !std::isfinite(ref_thrust_.thrust) || ref_thrust_.thrust<=0) {return;}
++    }
+     command_pose_ = ref_pose_;
++    if (control_mode_out_.control_mode == as2_msgs::msg::ControlMode::ATTITUDE &&
++        !tf_handler_->tryConvert(command_pose_, input_pose_frame_id_)) {return;}
+     command_twist_ = ref_twist_;
+     command_thrust_ = ref_thrust_;
+   } else {
+@@ -840,7 +855,8 @@
+ {
+   // Preserve the common source stamp of a paired external BODY_RATES sample.
+   if (!(bypass_controller_ &&
+-    control_mode_out_.control_mode == as2_msgs::msg::ControlMode::BODY_RATES))
++    (control_mode_out_.control_mode == as2_msgs::msg::ControlMode::BODY_RATES ||
++     control_mode_out_.control_mode == as2_msgs::msg::ControlMode::ATTITUDE)))
+   {
+     command_pose_.header.stamp = node_ptr_->now();
+     command_twist_.header.stamp = command_pose_.header.stamp;

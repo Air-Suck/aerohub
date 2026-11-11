@@ -35,11 +35,15 @@ def main():
     p.add_argument('--clock-rate-hz',type=float,default=50.,help='This isolated demo clock RPC/publication rate; does not certify control frequency')
     p.add_argument('--native', action='store_true', help='Use real IPC native source for the control gate')
     p.add_argument('--workspace', type=Path, default=ROOT/'log/ipc/control-overlay')
+    p.add_argument('--stop-mode', choices=['loss','cancel'], default='loss', help='Attitude validation stop scenario')
+    p.add_argument('--attitude', action='store_true', help='Use attitude/thrust validation source and PX4 attitude loop')
     args = p.parse_args(); out = args.output.resolve(); workspace = args.workspace.resolve()
     if not math.isfinite(args.clock_rate_hz) or not 0 < args.clock_rate_hz <= 1000:
         p.error('--clock-rate-hz must be finite and in (0, 1000]')
     if bool(args.task) != bool(args.criteria): p.error('--task and --criteria must be supplied together')
     if args.task and not args.forest: p.error('--task requires --forest')
+    if args.attitude and (args.native or args.ground_only or args.forest or args.short):
+        p.error('--attitude is an independent control validation; cannot combine with IPC task modes')
     out.mkdir(parents=True, exist_ok=True)
     if (out/'images.json').exists(): raise RuntimeError('Choose a fresh output directory')
     if not (workspace/'install/setup.bash').exists(): raise RuntimeError('Build control overlay first')
@@ -94,10 +98,11 @@ def main():
         'use_sim_time':True,'cmd_freq':100.,'info_freq':50.,'external_odom':False,
         'fmu_prefix':'/drone0','target_system_id':73,'max_thrust':15.,'min_thrust':.15}}}))
     hashes = {str(f.relative_to(ROOT)):hashlib.sha256(f.read_bytes()).hexdigest()
-        for directory in [APP,ROOT/'src/behavior/follow_reference'] for f in directory.rglob('*')
+        for directory in [APP,ROOT/'src/behavior/follow_reference'] + ([ROOT/'deployment/airsim/demos/attitude_control'] if args.attitude else []) for f in directory.rglob('*')
         if f.is_file() and '__pycache__' not in f.parts}
     (out/'manifest.json').write_text(json.dumps({'source_sha256':hashes,'domain':182,
         'clock_rate_hz_requested':args.clock_rate_hz,
+        'control_mode':('attitude' if args.attitude else 'body_rates'),
         'compute_role':('real IPC native + AS2 on PC' if args.native else 'validation controller + AS2 on PC; not IPC or RoboPi'),
         'thresholds':(task if args.forest or args.short else {'max_hold_error_m':.75,'max_tilt_rad':.35,'max_stop_speed_mps':.5,
                       'hold_wall_seconds':5}),'motion_api':'AS2/PX4 only; AirSim RPC for scoring'},indent=2)+'\n')
@@ -137,7 +142,7 @@ def main():
         common = ['docker','run','--rm','--detach','--init','--network','host',
             '--label','aerohub.ipc.output='+str(out),'-e','ROS_DOMAIN_ID=182',
             '-e','AIRSIM_RPC_PORT='+str(args.rpc_port),'-e','VEHICLE_NAME=PX4']
-        if args.native: common += ['-e','FLIGHT_BOARD_CAMERAS=0']
+        if args.native or args.attitude: common += ['-e','FLIGHT_BOARD_CAMERAS=0']
         call(common+['--name',names[0],'-e','PX4_INSTANCE=72','-e','PX4_SYSTEM_ID=73',
             '-e','XRCE_AGENT_PORT=8963','-e','VEHICLE_NAMESPACE=drone0',
             '-v',str(out/'px4-settings.json')+':/config/settings.json:ro',images['flight_board'],'vehicle'])
@@ -172,6 +177,8 @@ def main():
             '-v',str(workspace)+':/overlay:ro','-v',str(out)+':/evidence',
             '--entrypoint','/bin/bash',images['compute'],'-lc',
             'source /root/aerostack2_ws/install/setup.bash && source /overlay/install/setup.bash && exec python3 /repo/deployment/airsim/demos/ipc_control/session.py']
+        if args.attitude:
+            command[command.index('--entrypoint'):command.index('--entrypoint')] = ['-e','EXTERNAL_ATTITUDE_TEST=1','-e','ATTITUDE_STOP_MODE='+args.stop_mode,'-e','OPENBLAS_NUM_THREADS=1','-e','OMP_NUM_THREADS=1','-e','MKL_NUM_THREADS=1']
         if args.native:
             command[command.index('--entrypoint'):command.index('--entrypoint')] = ['-e','IPC_NATIVE=1','-e','OPENBLAS_NUM_THREADS=1','-e','OMP_NUM_THREADS=1','-e','MKL_NUM_THREADS=1','-v',str(ROOT/'log/ipc/native-deps')+':/native:ro']
             command[-1] = command[-1].replace(' && exec python3', ' && source /native/ros-install/local_setup.bash && export LD_LIBRARY_PATH=/native/install/lib:$LD_LIBRARY_PATH && exec python3')

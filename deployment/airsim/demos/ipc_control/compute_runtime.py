@@ -23,6 +23,9 @@ def main():
                 'namespace:=drone0','use_sim_time:=true','output_enabled:=true'],
         'source':['python3','/repo/deployment/airsim/demos/ipc_control/control_source.py'],
     }
+    if os.environ.get('EXTERNAL_ATTITUDE_TEST') == '1':
+        commands['acro'].append('control_mode:=attitude')
+        commands['source']=['python3','/repo/deployment/airsim/demos/attitude_control/control_source.py']
     if os.environ.get('IPC_NATIVE') == '1':
         commands['record']=['ros2','bag','record','--output','/evidence/rosbag',
             '/clock','/drone0/navigation/odom','/drone0/ipc/processed_points',
