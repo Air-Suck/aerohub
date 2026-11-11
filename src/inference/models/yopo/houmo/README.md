@@ -1,5 +1,7 @@
 # YOPO Houmo 迁移试验
 
+仅运行已有 HMM 包或开发迁移模型所需的条件见 [Inference 前置条件](../../../README.md#开始前准备什么)。
+
 工具准备与通用流程见 [model-migration-houmo](../../../../../skill/model-migration-houmo/SKILL.md)。外部工具是固定 Houmo 工具链镜像和仓库已有 OHOS Native SDK；postmo-modelzoo 不是依赖。容器名为 `houmo-migrate-yopo`。
 
 在忽略的 `.env` 中设置 `OHOS_NATIVE_SDK` 和已有 AArch64 `TCIM_RUNTIME_PATH`，初始化锁定算法源码后进入迁移容器：

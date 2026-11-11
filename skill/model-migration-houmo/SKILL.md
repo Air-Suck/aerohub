@@ -5,6 +5,13 @@ description: 使用固定 Houmo 工具链 Docker 将 ONNX 量化编译为 HMM，
 
 # Houmo 模型迁移
 
+## 任务入口
+
+先按 [Inference 前置条件](../../src/inference/README.md#开始前准备什么)确定任务。
+仅运行已有板端包时，按模型 README 启动并验证服务；需要重新导出、量化、编译或
+打包时再进入下列迁移步骤。开始前核对各阶段资源是否已存在，明确缺少的是工具、
+目标开发资源还是模型文件，避免把模型适配过程列成额外安装工具。
+
 ## 工具准备
 
 完成迁移需要两项外部工具：
@@ -13,9 +20,14 @@ description: 使用固定 Houmo 工具链 Docker 将 ONNX 量化编译为 HMM，
    `harbor.houmo.ai/toolchain/release:Dadao-xh2-v1.5.0-ubuntu24.04-x86.64`。
    用 `docker pull` 获取镜像；镜像仓库需要凭据时由发行方提供。镜像已包含 HMATC、HMQuant、HMM 编译器和 x86 Houmo SDK，不再安装宿主机 Houmo SDK。基线镜像 ID 为 `sha256:ec2762ddf97360f64e54214f6c7c60ef1aabaf5deb5f83e718b048400f351aea`。
 2. OHOS Native SDK
-   优先复用仓库现有构建环境，准备方式见[OHOS 构建说明](../../deployment/oh-ros-build/README.md)。在忽略的 `.env` 中设置 `OHOS_NATIVE_SDK` 指向 `native/`；迁移容器只读挂载该目录。它用于编译 RoboPi runner，不参与 HMM 编译。
+   优先复用仓库现有构建环境，准备方式见[OHOS 构建说明](../../deployment/oh-ros-build/README.md)。在忽略的 `.env` 中设置 `OHOS_NATIVE_SDK` 指向 `native/`；迁移容器只读挂载该目录。它用于编译 RoboPi runner/Python 扩展，不参与 HMM 编译。当前 `run.sh` 入口会检查 SDK 路径，进入容器前需配置。
 
-RoboPi 侧还需要与目标系统匹配的 TCIM/HAL/驱动。它们属于现有板端运行环境，由 `TCIM_RUNTIME_PATH` 指向 AArch64 TCIM 开发包；不要从 x86 镜像复制运行库到板端。
+RoboPi 侧复用与目标系统匹配的 TCIM/HAL/驱动。需要编译 runner/绑定时，
+`TCIM_RUNTIME_PATH` 指向 AArch64 TCIM 开发包；编译绑定还要有同版本 `python/`
+源码和 `OHOS_SYSDEPS` 中的目标 Python 头文件、`libpython`。已有可用绑定可直接
+打包复用。目标 HAL 库由打包脚本参数传入，驱动由板端环境提供。
+新开发者缺少这些资源时需取得匹配的目标包，镜像内 x86 SDK 不能替代它们。
+ROS overlay 另复用已有 OHOS ROS builder/工作区；阶段与配置映射见上述前置条件。
 
 `postmo-modelzoo` 可作实现参考，不是用户依赖。ONNX 导出、图改写、输入处理及模型特有 Python 包按实际模型在模型目录内解决并记录，不提升为所有模型的前置工具。
 

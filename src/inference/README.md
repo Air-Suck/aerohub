@@ -1,8 +1,60 @@
 # Inference Robotic Function
 
-Inference 是与 Perception、State Estimator 并列的基础能力：目标对外使用 ROS 2，对内通过 FastAPI 隔离每模型的独立 uv 环境。
+Inference 是与 Perception、State Estimator 并列的基础能力：目标对外使用 ROS 2，对内通过 FastAPI 隔离每模型运行环境；CUDA 使用独立 uv 环境，RoboPi HMM 使用板端 Python 与应用私有运行包。
 
 当前提供公共 FastAPI runtime、ROS HTTP 客户端、模型 manifest、用户 YAML 准备入口、原生 AS2 双容器通信基准，以及 [YOPO](models/yopo/README.md) typed ROS 推理服务。YOPO Planner 的轨迹重建和执行在 `src/planner/yopo/`，模型服务只返回候选 PVA/cost。
+
+## 开始前准备什么
+
+先确定是调用已部署服务、部署已有模型，还是开发/迁移模型。准备条件按实际任务选择：
+
+| 任务 | 必须准备 | 入口 |
+| --- | --- | --- |
+| 调用已就绪的 ROS 服务 | ROS 2 Humble、匹配的 `uav_inference_interfaces`、可发现服务的 ROS 网络/domain | 本文“YOPO ROS 服务” |
+| 在 NVIDIA 上运行 YOPO | Linux x86_64、Git、uv、可用 NVIDIA GPU/驱动、锁定 Python/wheel 的网络或缓存 | [YOPO 准备与启动](models/yopo/README.md#准备) |
+| 在 RoboPi 上运行已有 HMM 包 | 匹配的板端 Python/ROS、TCIM/HAL/驱动、完整模型运行包、Inference ROS overlay | 下方“RoboPi 使用者” |
+| 开发 CUDA 模型适配 | 对应模型的独立环境、源码与权重；构建 ROS adapter 时使用 ROS Humble/colcon | [CUDA Skill](../../skill/model-migration-cuda/SKILL.md) |
+| 将模型迁移为 HMM | Docker、固定 Houmo 工具链镜像、OHOS Native SDK；板端验证所用匹配运行环境 | [Houmo Skill 工具准备](../../skill/model-migration-houmo/SKILL.md#工具准备) |
+
+调用已部署服务的客户端只需 ROS 接口，无需准备模型权重、CUDA 或 Houmo 工具链。
+NVIDIA worker 的 Torch/CUDA 运行库由模型锁定依赖准备；当前 YOPO 无需额外安装
+宿主 CUDA Toolkit。ROS 留在单独环境，模型 venv 不安装 ROS。
+`setup_models.py` 的模型准备入口目前调用 CUDA `setup.sh`，不会自动转换 HMM 或部署 RoboPi。
+
+### RoboPi 使用者
+
+运行已有 HMM 服务需拿到以下内容：
+
+1. 板端基础环境：匹配的 Python 与 ROS 2，以及可工作的 Houmo TCIM/HAL/驱动。
+2. 完整模型运行包：HMM、CPU 处理参数、对应 ABI 的 `tcim_lite` 绑定、目标动态库、
+   服务代码及 Python 依赖。YOPO 的打包输出为 `board-runtime/`。
+3. ROS overlay：匹配板端 ABI 的 `uav_inference_interfaces` 和 `uav_inference`。
+   仅启动内部 HTTP worker 可不加载此 overlay；对外 ROS 服务必须加载。
+
+完整运行包准备好后，板上无需 Docker、OHOS SDK、uv、Torch 或 postmo 源码。
+仓库不提交 HMM、目标库和运行包；新用户需由迁移开发者提供匹配的运行包，或按
+[YOPO Houmo 说明](models/yopo/houmo/README.md)自行构建。不能只拉取仓库就假定模型产物已存在。
+该说明记录了已查询的板端依赖、打包、启动和 ROS 检查命令。
+
+### Houmo 开发者按阶段复用的依赖
+
+基础开发工具是固定工具链镜像和 OHOS Native SDK，完整版本与获取说明以
+[Houmo Skill](../../skill/model-migration-houmo/SKILL.md#工具准备)为准。
+在此基础上，只有执行对应步骤时才需要以下现有目标资源：
+
+| 执行步骤 | 需要复用的资源 | 配置方式 |
+| --- | --- | --- |
+| 编译板端 runner | AArch64 TCIM 开发包的头文件和目标库 | `TCIM_RUNTIME_PATH` |
+| 编译 TCIM Python 绑定 | 同版本 TCIM 的 `python/` 源码、目标 Python 头文件和 `libpython` | `TCIM_RUNTIME_PATH`、`OHOS_SYSDEPS` |
+| 打包板端服务 | 已编译的绑定、目标 TCIM/HAL 库、模型文件和运行参数 | 打包脚本 `--tcim-lib`、`--hal-lib` 等参数 |
+| 编译 ROS overlay | 现有 OHOS ROS builder、已准备的隔离 SDK/ROS 工作区及目标依赖 | `OHOS_WORK_ROOT`、`OHOS_SYSDEPS`、`OHOS_INSTALL_PREFIX` |
+| 上传与板端验证 | OHOS SDK 的 HDC、可连接的 RoboPi | `HDC_BIN`、`HDC_TARGET` |
+
+这些资源优先复用已有 OHOS 开发环境；新开发者缺少目标包时需取得与板端版本匹配的
+TCIM/HAL 和 Python/ROS 开发资源，工具链镜像的 x86 库不能替代它们。
+ROS builder 的准备入口见 [OHOS 构建说明](../../deployment/oh-ros-build/README.md)，
+本地路径填入忽略的 `.env`，字段示例见 [`.env.example`](../../.env.example)。
+模型专有导出脚本、校准数据和图修改属于适配工作，不列为通用安装工具。
 
 ## 文件职责
 

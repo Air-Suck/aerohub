@@ -1,5 +1,7 @@
 # YOPO 推理模型
 
+后端选择及使用者/开发者准备条件见 [Inference 前置条件](../../README.md#开始前准备什么)。
+
 本目录仅管理 YOPO 的推理适配、独立环境和模型产物。算法源码仍是 `src/planner/yopo/upstream/` 中的 Planner 子模块，锁定版本 `bd8a7f91953cfef9f1aa9a48d7ff0ab7bceee132`，上游采用 MIT 许可证。ROS 对外接口和公共服务结构见 [Inference 说明](../../README.md)。
 
 ## 准备

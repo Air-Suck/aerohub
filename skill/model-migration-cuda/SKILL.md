@@ -7,6 +7,17 @@ description: 将 CUDA 推理模型接入 Aerohub Inference，收束每模型独�
 
 本 Skill 是模型准备流程的唯一维护入口。[可复现构建](../uav-reproducible-build/SKILL.md)与[组件部署](../uav-component-deployment/SKILL.md)遇到模型迁移时读取本文件，完成后继续各自主流程。单独调用时仅处理用户指定模型；ROS 接口、平台输入和部署启停按实际任务另用对应 Skill，不自动扩展范围。
 
+## 准备条件与使用边界
+
+使用者先按 [Inference 前置条件](../../src/inference/README.md#开始前准备什么)和
+模型 README 准备对应运行环境。调用已有 ROS 服务无需模型开发工具；准备 CUDA
+worker 时使用模型独立 uv 环境，驱动/GPU 属于宿主条件，Torch/CUDA 运行库按锁文件
+安装。是否需要额外系统 SDK 或编译器以该模型实际构建为准，不能从 CUDA 名称推导。
+
+开发者执行本 Skill 完成模型接入；需转换为 Houmo HMM 时转到
+[Houmo Skill](../model-migration-houmo/SKILL.md)，不将 CUDA venv 复制到板端。
+ROS adapter 的构建、部署环境与模型环境分别准备。
+
 ## 1. 核对基线与归属
 
 读取项目约定、现有模型入口和真实导入链，记录算法提交、本地修改、Python/框架版本、权重来源和校验和、预处理与输出语义。保留原环境与固定输入输出作为迁移对照。
