@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "version": "v0.1.1",
+  "published_date": "2026-11-11",
+  "images": {
+    "onboard_computer": {
+      "reference": "onboard_computer:v0.1.1",
+      "registry_reference": "ghcr.io/popc0rn7/aerohub/onboard-computer:v0.1.1",
+      "registry_digest": "sha256:ba618faf22ece6a76ffb8a0fb625b741894ef9f8f1c086a552737156a769086d",
+      "platform": "linux/amd64",
+      "published_artifact": "single-platform OCI image manifest; attestation manifest omitted for Skopeo 1.4.1 compatibility",
+      "local_index_id": "sha256:c8756265a76d827633e132824922ccdf2801c2e4bae864a08d4a54215d4c601e",
+      "image_config_digest": "sha256:31bc1df381cdbb72949739584c6177f5da3b2a749763f82208fb9dd5faf03d52",
+      "uncompressed_size_bytes": 6225860329,
+      "build_source_revision": "5450d3b50d5458fee4dd571795b9a07927d3e61d",
+      "build_source_dirty": true,
+      "provenance_limit": "Published image was built from an uncommitted parent worktree; source revision alone does not identify all build inputs. This record describes the uploaded artifact, not a claim of byte-identical rebuilding from the infrastructure branch."
+    },
+    "flight_board": {
+      "reference": "flight_board:v0.1.0",
+      "registry_reference": "ghcr.io/popc0rn7/aerohub/flight-board:v0.1.0",
+      "registry_digest": "sha256:1eff3190ca7870d0267ddb1531365dd7c68d85c6e52ade3d25b17b84b4758843",
+      "change": "unchanged; paired with onboard v0.1.1"
+    }
+  },
+  "submodules": {
+    "aerostack2": {
+      "source": "https://github.com/Popc0rn7/aerostack2-aerohub.git",
+      "commit": "1a8e52478474f25f13c0beee332fb3758c7777e9",
+      "dirty": false
+    },
+    "as2_platform_pixhawk": {
+      "source": "https://github.com/Popc0rn7/as2_platform-aerohub.git",
+      "commit": "4e5616408e0078abf38387d5b8c681f1387cfed6",
+      "dirty": false
+    }
+  },
+  "px4_interfaces": {
+    "source_commit": "86d8239e962f6939e05c3737784f60c02fa884db",
+    "vehicle_status_message_version": 4,
+    "overrides_manifest_sha256": "fb814a5fa31b25daf80f913047e4834ef8a6fb97cc56b40583dd6725ce9be2d1",
+    "message_sha256": {
+      "SensorGps.msg": "c3d42ddfe2c12d1ef832b7d92b8ba3f930a1fe3669ffaa3c294b26afd3920d94",
+      "VehicleCommandAck.msg": "185833dab85d5e9682ac230afc8ef193c2d48ab43804af52bea2fdc4d959a782",
+      "VehicleControlMode.msg": "621df1162bf1578157523cd57335c55b9f49a86574ee8dc4b31a1e7abf3b4e87",
+      "FailsafeFlags.msg": "bde238894bf20a002e7bdcd87a6e730c722a88503af5c427fcc914d33e1ec1dc",
+      "VehicleStatus.msg": "35984922aa55b55caae393a907ecd1e42a31a2fb94c0cb09a0846d97d69d3e79"
+    }
+  },
+  "publication": {
+    "status": "published",
+    "registry_manifest_verified": true,
+    "verification": "Authenticated GHCR raw manifest SHA256 matched upload digestfile and selected archive linux/amd64 manifest."
+  },
+  "validation": {
+    "offline_image_startup": "passed: seven nodes; log/dev-build-provenance/offline-smoke/node-check.json",
+    "source_overlay": "passed: 5 packages built from this dev-based branch in fixed onboard v0.1.1; 8 controller CTest targets, platform pairing and trajectory timeline passed; log/dev-build-provenance/overlay-verification.log",
+    "scope": "Build/provenance infrastructure only. No SimpleFlight adapter, environment runner or dynamics claims introduced by this branch; existing feature deployment defaults remain unchanged.",
+    "limits": "No shared image rebuild, OHOS build or new simulation flight in this branch. Remote fork ref listing interrupted after network failure; no fetch/push performed. Published image source labels and registry digest verified separately."
+  }
+}
