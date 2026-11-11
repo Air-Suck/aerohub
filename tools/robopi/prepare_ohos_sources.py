@@ -1,4 +1,4 @@
-"""Sync patched AS2 sources into the already prepared isolated OHOS workspace."""
+"""Sync locked AS2/Pixhawk fork sources into the already prepared isolated OHOS workspace."""
 import hashlib
 import json
 import os
@@ -19,8 +19,8 @@ if not (workspace / 'rmw_fastrtps_shared_cpp/package.xml').exists():
 for dependency in ['px4_msgs', 'vision_msgs', 'mocap4r2_msgs']:
     if not any((workspace / dependency).glob('**/package.xml')):
         raise SystemExit(f'Missing {dependency}; initialize a complete workspace with prepare.sh first')
-# Patch an isolated source copy; never modify the official AS2 submodule.
-temporary = tempfile.TemporaryDirectory(prefix='as2-pr-', dir=work_root)
+# Export isolated fork copies; never modify the source submodules.
+temporary = tempfile.TemporaryDirectory(prefix='as2-source-', dir=work_root)
 as2_copy = Path(temporary.name) / 'aerostack2'
 def export_locked(relative, destination):
     commit = subprocess.check_output(['git', '-C', str(root), 'ls-tree', 'HEAD', relative], text=True).split()[2]
@@ -33,8 +33,6 @@ def export_locked(relative, destination):
 as2_commit = export_locked('as2/aerostack2', as2_copy)
 pixhawk_copy = Path(temporary.name)/'pixhawk'
 pixhawk_commit = export_locked('as2/as2_platform_pixhawk', pixhawk_copy)
-subprocess.run(['git', 'apply', '--unsafe-paths', '--directory=' + str(as2_copy.resolve()),
-                str(root / 'deployment/platform/patches/as2-airsim-pr.patch')], check=True)
 paths = {name: as2_copy / name for name in
          ['as2_core', 'as2_msgs', 'as2_motion_reference_handlers',
           'as2_state_estimator', 'as2_motion_controller']}
@@ -47,8 +45,6 @@ paths['uav_follow_path_execution'] = root / 'src/behavior/follow_path'
 for name, source in paths.items():
     shutil.copytree(source, workspace / name, dirs_exist_ok=True,
                     ignore=shutil.ignore_patterns('.git', '__pycache__', 'build', 'install', 'log'))
-subprocess.run(['patch', '--batch', '--forward', '-p1', '-d', str(workspace / 'as2_platform_pixhawk'),
-                '-i', str(root / 'deployment/platform/patches/as2-platform-px4-v1.18.patch')], check=True)
 if not (workspace / 'as2_motion_controller/thirdparties/pid_controller/CMakeLists.txt').exists():
     raise SystemExit('Missing offline PID source; initialize a complete workspace with prepare.sh first')
 for source in (root / 'deployment/onboard_computer/px4_msgs/overrides').glob('*.msg'):
@@ -59,5 +55,5 @@ for name in [*paths, 'px4_msgs', 'vision_msgs', 'mocap4r2_msgs', 'rmw_fastrtps_s
         str(p.relative_to(workspace / name)): hashlib.sha256(p.read_bytes()).hexdigest()
         for p in (workspace / name).rglob('*') if p.is_file() and '.git' not in p.parts}
 (work_root / 'current-sources.json').write_text(json.dumps(record, indent=2) + '\n')
-print('Patched AS2 sources and PX4 1.18 definitions synchronized into OHOS workspace')
+print('Locked AS2/Pixhawk fork sources and PX4 1.18 definitions synchronized into OHOS workspace')
 temporary.cleanup()

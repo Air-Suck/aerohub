@@ -27,11 +27,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /root/aerostack2_ws/src
 COPY as2/aerostack2/ aerostack2/
-COPY deployment/platform/patches/as2-airsim-pr.patch /tmp/as2-airsim-pr.patch
-RUN git apply --unsafe-paths --directory=/root/aerostack2_ws/src/aerostack2 /tmp/as2-airsim-pr.patch
 COPY as2/as2_platform_pixhawk/ as2_platform_pixhawk/
-COPY deployment/platform/patches/as2-platform-px4-v1.18.patch /tmp/as2-platform-px4-v1.18.patch
-RUN cd as2_platform_pixhawk && patch --batch --forward -p1 < /tmp/as2-platform-px4-v1.18.patch
 COPY src/perception/navigation_inputs/ as2_navigation_inputs/
 WORKDIR /root/aerostack2_ws
 # Install only dependencies of the selected flight components, not unrelated

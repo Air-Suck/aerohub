@@ -46,15 +46,18 @@ main 中的原 `deployment/platform/Dockerfile` 从第三方 Humble Desktop 镜�
 组件安装依赖。DDS Agent、PX4、传感器桥、时钟桥全部由 flight_board 提供，
 不在 onboard_computer 中安装或启动。源码和编译工具保留在镜像中，便于开发。
 
-AS2 和 Pixhawk 使用 main 锁定的官方子模块，在构建副本分别应用 `as2-airsim-pr.patch`、`as2-platform-px4-v1.18.patch`；补丁位于 `deployment/platform/patches/`，源码来源见同目录的 provenance 文档。
-不再在 Docker 构建时应用 AS2/Pixhawk 补丁。主仓库通过 submodule 指针锁定版本；
-未提交的子仓库改动也会进入本地构建，分享版本时须先提交到对应 fork。
-迁移时的 fork 基础版本如下（不包含随后迁入的本地适配）：
+AS2 和 Pixhawk 以 `.gitmodules` 声明的 AeroHub fork 为源码权威；主仓库 gitlink
+锁定版本。onboard、CAT-ORA hybrid 和 OHOS 源码准备直接使用 fork，不再应用
+等价的 AS2/Pixhawk 构建补丁。旧补丁和 provenance 仅保留给尚未迁移的历史
+Gazebo/PX4 1.17 部署链，不作为当前 AirSim 构建输入。
 
-| 源码 | Commit |
+本地 Docker 构建使用当前子仓库工作树；OHOS 准备继续导出主仓库锁定提交。
+分享修改时先提交到对应 fork，再更新主仓库 gitlink；不自动跟随远端分支最新值。
+
+| 源码 | 锁定 Commit |
 | --- | --- |
-| Aerostack2 | 1cb38ab9c37671d123b6a61f81bbc91e08988466 |
-| as2_platform_pixhawk | fcba062219935acef69dfa009c8be376c707ee8a |
+| Aerostack2 | 1a8e52478474f25f13c0beee332fb3758c7777e9 |
+| as2_platform_pixhawk | 4e5616408e0078abf38387d5b8c681f1387cfed6 |
 | px4_msgs | 86d8239e962f6939e05c3737784f60c02fa884db |
 
 PX4 接口基础提交仍固定在依赖镜像中，并覆盖三个存在布局差异的消息。
