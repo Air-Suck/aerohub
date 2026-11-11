@@ -74,3 +74,13 @@ python3 -m uav_inference.yopo_node --ros-args -r __ns:=/drone0 -p endpoint:=http
 服务 `/drone0/inference/yopo/infer` 使用 `uav_inference_interfaces/srv/InferYopo`。实际测量 `observation_header` 与图像采集时刻分别检查，`state_header` 是规划参考时刻/对齐坐标，可有界未来（默认300ms）。响应保留两者、请求ID、候选/评分、时长、模型配置与设备。完整契约见 [Planner 接口](../planner/yopo/README.md)。
 
 YOPO Adapter另发布`<namespace>/inference/yopo/timing`（std_msgs/String JSON，以request_id关联）。包含ROS图像转换、内部HTTP、Adapter耗时及worker预处理/前向传输/解码分项；worker耗时属于HTTP子项。最新2 m/s双容器GPU结果及动力学见[Demo验收](../../deployment/airsim/demos/yopo_single/validation.md)。
+
+
+## 模型逻辑与执行引擎
+
+模型前后处理与具体设备执行分开维护。YOPO 的 CUDA/HMM 共用
+`models/yopo/processing.py` 和 `predictor.py`；各 adapter 只准备模型并选择后端。
+Torch 与 HMM 后端均使用命名 NumPy 输入输出、固定张量契约及一致的生命周期和
+分项计时，详见[后端契约](runtime/aerohub_inference/backends/README.md)。
+Torch 后端是模型环境内的可选导入，公共 HTTP runtime 和 RoboPi worker 不依赖 Torch。
+ROS service、HTTP schema、busy/取消语义继续由现有公共设施提供。
