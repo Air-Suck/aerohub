@@ -1,6 +1,10 @@
 {
   "schema_version": 1,
   "models": {
+    "diffphys": {
+      "directory": "src/inference/models/diffphys",
+      "description": "Official DiffPhys swarm checkpoint recurrent inference with caller-owned hidden state"
+    },
     "yopo": {
       "directory": "src/inference/models/yopo",
       "description": "YOPO candidate relative PVA/cost inference in an isolated CUDA environment"
