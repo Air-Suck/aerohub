@@ -1,0 +1,52 @@
+{
+  "SettingsVersion": 1.2,
+  "SimMode": "Multirotor",
+  "ClockType": "SteppableClock",
+  "ApiServerPort": 45471,
+  "Vehicles": {
+    "PX4": {
+      "VehicleType": "PX4Multirotor",
+      "UseSerial": false,
+      "UseTcp": true,
+      "LockStep": true,
+      "LocalHostIp": "127.0.0.1",
+      "TcpPort": 5080,
+      "ControlPortLocal": 16040,
+      "ControlPortRemote": 16180,
+      "Sensors": {
+        "Barometer": {"SensorType": 1, "Enabled": true},
+        "imu": {"SensorType": 2, "Enabled": true, "UpdateFrequency": 200},
+        "gps": {"SensorType": 3, "Enabled": true},
+        "magnetometer": {"SensorType": 4, "Enabled": true}
+      },
+      "Cameras": {
+        "FrontCamera": {
+          "X": 0, "Y": 0, "Z": 0,
+          "Roll": 0, "Pitch": 0, "Yaw": 0,
+          "CaptureSettings": [{
+            "ImageType": 0,
+            "Width": 640,
+            "Height": 480,
+            "FOV_Degrees": 90,
+            "AutoExposureMaxBrightness": 1,
+            "AutoExposureMinBrightness": 0.03
+          }]
+        }
+      },
+      "ControlIp": "127.0.0.1",
+      "X": 4, "Y": 0, "Z": 0, "Yaw": 0,
+      "EnableCollisions": true
+    }
+  },
+  "ClockSpeed": 1.0,
+  "ViewMode": "SpringArmChase",
+  "RpcEnabled": true,
+  "LocalHostIp": "127.0.0.1",
+  "ExternalCameras": {
+    "survey": {
+      "X": 3, "Y": 0, "Z": -12,
+      "Pitch": -90, "Roll": 0, "Yaw": 0,
+      "CaptureSettings": [{"ImageType": 0, "Width": 1024, "Height": 1024, "FOV_Degrees": 90}]
+    }
+  }
+}

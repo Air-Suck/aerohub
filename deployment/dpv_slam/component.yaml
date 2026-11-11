@@ -1,0 +1,50 @@
+schema_version: 0.1
+id: dpv-slam
+version: upstream-0ac95b6-aerohub-0.1.0
+description: Monocular DPV-SLAM global correction and sparse visual landmarks
+source:
+  repository: https://github.com/princeton-vl/DPVO.git
+  commit: 0ac95b656d1fda91c271d2a106460d19ad966fc7
+  license: MIT
+capabilities: [state-estimator.dpv-slam-monocular, perception.dpv-slam-sparse-points]
+cards:
+  - cards/state-estimator/dpv-slam-monocular.yaml
+  - cards/perception/dpv-slam-sparse-points.yaml
+shared_process_group: dpv-slam-gpu
+images:
+  algorithm:
+    name: uav/dpv-slam:humble
+    dockerfile: deployment/dpv_slam/Dockerfile.algorithm
+    architectures: [linux/amd64]
+  as2_plugin:
+    name: uav/dpv-slam-as2:humble
+    dockerfile: deployment/dpv_slam/Dockerfile.as2
+    architectures: [linux/amd64]
+runtime:
+  roles:
+    simulator: visible AirSim host process
+    flight_board: PX4 SITL, RGB/CameraInfo/local-odometry and clock bridge
+    compute: DPV-SLAM GPU process and native AS2 State Estimator plugin
+    workstation: mission, truth scoring and lifecycle orchestration
+  namespace: drone0
+  clock: AirSim /clock
+  input_image: /drone0/sensor_measurements/FrontCamera/rgb/image
+  input_calibration: /drone0/sensor_measurements/FrontCamera/rgb/camera_info
+  input_metric_reference: /drone0/sensor_measurements/odom
+  output_state: /drone0/dpv_slam/odometry
+  output_map: /drone0/dpv_slam/sparse_points
+requirements:
+  gpu: NVIDIA CUDA GPU; current validation target is RTX 4090
+  sensors: calibrated monocular RGB camera with monotonic sampling timestamps
+  platform: AirSim 1.8.1 plus PX4 SITL for project acceptance
+  scale: a time-paired metric local odometry source for startup alignment
+lifecycle:
+  startup: camera, CameraInfo, local odometry and clock; algorithm; then AS2 plugin
+  readiness: initialized loop-closing tracker, frozen valid scale alignment, fresh sparse map and plugin output
+  stop: remove state authority before stopping the shared GPU process
+  failure: stale or invalid visual correction freezes map-to-odom while fresh local state remains available for controlled landing
+  recovery: restart while motion is stopped; a restart creates a new visual map epoch and scale alignment
+validation:
+  stage: reproduced
+  gate: deployment/dpv_slam/validation.yaml
+  scope: Build, official TUM GPU evaluation, AirSim consumers, shadow, authority and fault tests passed.
