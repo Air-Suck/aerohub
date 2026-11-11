@@ -11,7 +11,9 @@ def main():
     compute = subprocess.Popen(['python3',str(base/'compute_runtime.py')],start_new_session=True)
     task_base = Path('/repo/deployment/airsim/demos/ipc_navigation') if os.environ.get('IPC_NATIVE') == '1' else base
     if os.environ.get('EXTERNAL_ATTITUDE_TEST') == '1': task_base=Path('/repo/deployment/airsim/demos/attitude_control')
-    task = subprocess.Popen(['python3',str(task_base/('ground_probe.py' if os.environ.get('IPC_GROUND_ONLY')=='1' else ('forest_mission.py' if os.environ.get('IPC_FOREST')=='1' else 'mission.py')))],start_new_session=True)
+    if os.environ.get('DIFFPHYS_TEST') == '1': task_base=Path('/repo/deployment/airsim/demos/diffphys_forest')
+    task_name='ground_probe.py' if os.environ.get('IPC_GROUND_ONLY')=='1' else ('forest_mission.py' if os.environ.get('IPC_FOREST')=='1' else 'mission.py')
+    task = subprocess.Popen(['python3',str(task_base/task_name)],start_new_session=True)
     def recover(*_):
         if task.poll() is None: task.send_signal(signal.SIGINT)
     signal.signal(signal.SIGINT,recover); signal.signal(signal.SIGTERM,recover)
