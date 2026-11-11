@@ -55,7 +55,7 @@ CUDA_VISIBLE_DEVICES='' YOPO_DEVICE=cpu bash deployment/inference/start_yopo.sh
 
 ## 文件与验证边界
 
-`adapter.py` 对照锁定 `test_yopo_ros.py` 的参考规划入口，包含 resize、20m截断、uint8量化、inpaint、CPU normalize/prepare/primitive解码；不使用会重复处理状态的简化 wrapper。`schemas.py` 定义内部 HTTP 输入输出；`serve.py` 接公共 runtime。`.venv/` 和 `artifacts/` 均忽略，不提交模型产物或环境。
+`processing.py` 对照锁定 `test_yopo_ros.py` 的参考规划入口，包含 resize、20m截断、uint8量化、inpaint、CPU normalize/prepare/primitive解码；不使用会重复处理状态的简化 wrapper。`schemas.py` 定义内部 HTTP 输入输出；`serve.py` 接公共 runtime。`.venv/` 和 `artifacts/` 均忽略，不提交模型产物或环境。
 
 已验证 CPU 固定输入与迁移前输出一致、ROS→HTTP→CPU 模型往返，以及准备脚本在可访问设备的环境中的 CUDA 加载/预热。GPU 的双容器 ROS 往返已验证（320×185合成输入10/10）；真实传感器与 AirSim 的逐轮结果见 [Demo验收](../../../../deployment/airsim/demos/yopo_single/validation.md)。受限沙箱可能无法访问 GPU，不能据此直接判定宿主驱动不可用。输出是候选终端状态与评分，不是完整轨迹或控制指令。
 
@@ -68,3 +68,39 @@ PYTHONDONTWRITEBYTECODE=1 CUDA_VISIBLE_DEVICES='' YOPO_DEVICE=cpu YOPO_VELOCITY=
 ```
 
 该测试从锁定原 ROS 文件 AST 提取预处理代码，覆盖无效深度、不同尺寸、非零速度/加速度和非恒等姿态，比较全部候选和评分。ROS stride/端序/单位转换由独立 `deployment/inference/tests/test_contract.py` 验证，不将其当作相机几何证明。
+
+Houmo 后端适配与工具链试验维护在 [houmo/](houmo/README.md)，使用容器 `houmo-migrate-yopo`。HMM 已完成 RoboPi 真实 ROS → HTTP → NPU 快速验证；下游闭环仍待验收。
+
+
+## 共用模型逻辑与执行后端
+
+CUDA 与 HMM 共用 `processing.py` 和 `predictor.py`：前者只依赖 NumPy/OpenCV，
+负责图像、状态与候选语义；后者统一输入检查、预热、推理、输出解码与响应组装。
+`adapter.py` 负责锁定 YOPO 源码/配置，并构造公共 `TorchBackend`；
+`houmo/adapter.py` 读取导出参数并构造 `HmmBackend`。板端打包携带这两份共享文件，
+无需 Torch 或上游源码。两种 backend 的[张量契约](../../runtime/aerohub_inference/backends/README.md)
+统一，具体设备与模型加载由各自实现负责。
+
+Torch backend 位于 `src/inference/runtime/aerohub_inference/backends/torch.py`，
+可供其他 Torch 模型使用。它只接受命名张量和模型 factory，不包含 OpenCV、ROS 或
+YOPO 逻辑。公共 runtime 不在导入时加载 Torch；板端 HMM 环境也不安装 Torch。
+当前 YOPO 仍沿用原有环境、启动脚本及环境变量，依赖锁未改变。
+
+两种 worker 的 timing 字段统一为 `preprocess`、`input_transfer`、
+`forward_and_sync`、`output_transfer`、`decode`、`total`；保留
+`forward_and_transfer` 作为三项引擎计时之和，兼容既有 ROS timing 消费者。
+该聚合项与分项重叠，不能把所有字段相加。GPU 前向时间包含设备同步。
+
+2026-11-11 整理后的验证：
+
+- RTX 4090 真实 CUDA：6 和 2 m/s 各三组固定输入，与旧实现全部候选、评分及原有
+  model_version/device/时长完全一致（候选最大差异 0）。
+- 两种速度通过原 ROS 预处理 AST 和锁定上游模型全候选对照；Torch 后端真实 GPU
+  执行、输入契约、输出独立性及关闭测试通过。
+- 工作站容器 → onboard ROS adapter → 新 CUDA worker，320×185 合成输入 10/10
+  成功，RTT 中位约 22.34 ms，最大 36.01 ms；这是本轮合成回归记录。
+- 同一共享处理代码在 RoboPi 通过原 ROS/HMM 快速矩阵，包括三个正常请求、直接
+  HTTP 候选对照、健康诊断、过期输入和 worker 离线。
+
+证据在 `log/yopo-cuda-refactor/`。这些检查验证整理没有改变已覆盖语义，
+不扩大此前真实传感器、量化精度或飞行验收范围。
