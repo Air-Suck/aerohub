@@ -19,6 +19,7 @@ AS2 的 IMU topic 名不能证明数据未经处理；检查角速度、加速�
 - `deployment/flight_board/`：PX4 SITL、消息及传感器/时钟桥环境。
 - `src/perception/navigation_inputs/`：导航坐标注册；不是通用雷达逐点去畸变。
 - `src/state_estimator/fast_livo2/`：算法、原生插件和现有输出桥；检查是否另有输入桥，不推定输出桥能反向使用。
+- `src/state_estimator/pin_slam/`：复用现有标准 ROS 2 LiDAR 话题的算法 Adapter 与状态插件；不要再增加第二个 AirSim RPC 读取器。
 
 先确认 scene 二进制、AirSim/PX4 源码版本与实际配置一致。源码中存在功能不证明下载的预编译场景包含它。检查仿真时间与 PX4 时间如何映射、暂停/reset 后是否清空旧数据，以及各车辆 TF/话题是否隔离。
 
@@ -31,3 +32,5 @@ AS2 的 IMU topic 名不能证明数据未经处理；检查角速度、加速�
 实际有屏 shadow 飞行证明三种测量进入真实算法，配准点云也由 ROS 2 Perception 消费；但 LIO/LIVO 状态误差超过预设 `0.5 m` 门限，并出现航向跳变。该结果是输入链通过、定位精度失败，不得写成 AirSim 状态估计或权威控制闭环通过。authority 必须由 shadow gate 阻止。
 
 AirSim 射线循环没有可供算法恢复的逐点时间，不能将其直接等同真实旋转雷达。后续诊断应优先保存可重放的原始三传感器记录，分开评估扫描模型、场景可观性、内外参与估计器参数；不要用合成字段、真值状态或放宽门限替代缺失语义。
+
+PIN-SLAM 的当前 AirSim 接入直接消费标准 FLU XYZ PointCloud2。因为该帧是瞬时射线结果且没有逐点时间，配置必须保持 `deskew: false`，也不生成 ring、强度或时间字段。适配器在进入 GPU 前拒绝错误 frame、非单调时间、空帧和非单值 FLOAT32 XYZ；这些接口检查通过仍不代表神经地图或定位精度通过。

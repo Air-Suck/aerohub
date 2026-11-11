@@ -1,0 +1,280 @@
+{
+  "date": "2026-11-10",
+  "scope": "single-host NVIDIA AirSimNH + PX4 SITL; reference-mode YOPO; 2m/s; 5m arrival",
+  "model": {
+    "model_id": "yopo",
+    "model_version": "sha256:09ec31094ed83e09702efc1facf18076564ebbe1afc164960c41036e16ba229f;ros-reference-u8-inpaint-v1;velocity=2.0",
+    "device": "cuda",
+    "preprocessing_version": "ros-reference-u8-inpaint-v1",
+    "velocity_m_s": 2.0,
+    "source_revision": "bd8a7f91953cfef9f1aa9a48d7ff0ab7bceee132",
+    "busy": false
+  },
+  "images": {
+    "onboard_computer:v0.1.0": "sha256:a99a9c1df2caabffa370091e48cc8190b6f0578513b913cf971a544e960471bc",
+    "osrf/ros:humble-desktop-full-jammy": "sha256:592f97da6b871a438fdb97f86b422ab9f80657e80efa7b98d258894738c8a0c0",
+    "flight_board:v0.1.0": "sha256:8c33881fde6985fe5a43a894bde075471df85064e45ac8e5de28efebcc737cd2"
+  },
+  "as2_checkout": "f387e0d733a5102808508bcbec1b9eca2c29d1f0",
+  "as2_gitlink": "160000 19c397309c6a41b279e6b551818ec12605cfcecc 0\tas2/aerostack2",
+  "thresholds": {
+    "arrival_distance_m": 5,
+    "stop_speed_m_s": 0.2,
+    "stop_hold_ros_s": 1,
+    "stop_deadline_wall_s": 10,
+    "handoff_lead_s": 0.2,
+    "inference_timeout_wall_s": 0.1,
+    "send_reserve_s": 0.05
+  },
+  "validated_runs": [
+    {
+      "path": "sitl-15/open-01",
+      "success": true,
+      "motion_requested": true,
+      "arrived_5m": true,
+      "stopped": true,
+      "land_success": true,
+      "disarmed": true,
+      "collision": false,
+      "fault": "none",
+      "stop_reason": "ARRIVED_5M",
+      "accepted_revisions": 21,
+      "low_speed_hold_ros_s": 1.0380220413208008,
+      "stop_elapsed_wall_s": 5.401216745376587,
+      "only_native_behavior_reference_publishers": true
+    },
+    {
+      "path": "sitl-16/open-01",
+      "success": true,
+      "motion_requested": true,
+      "arrived_5m": true,
+      "stopped": true,
+      "land_success": true,
+      "disarmed": true,
+      "collision": false,
+      "fault": "none",
+      "stop_reason": "ARRIVED_5M",
+      "accepted_revisions": 21,
+      "low_speed_hold_ros_s": 1.0410223007202148,
+      "stop_elapsed_wall_s": 5.399231672286987,
+      "only_native_behavior_reference_publishers": true
+    },
+    {
+      "path": "sitl-17/open-01",
+      "success": true,
+      "motion_requested": true,
+      "arrived_5m": true,
+      "stopped": true,
+      "land_success": true,
+      "disarmed": true,
+      "collision": false,
+      "fault": "none",
+      "stop_reason": "ARRIVED_5M",
+      "accepted_revisions": 21,
+      "low_speed_hold_ros_s": 1.020021915435791,
+      "stop_elapsed_wall_s": 5.358830213546753,
+      "only_native_behavior_reference_publishers": true
+    },
+    {
+      "path": "sitl-18/forest-01",
+      "success": true,
+      "motion_requested": true,
+      "arrived_5m": true,
+      "stopped": true,
+      "land_success": true,
+      "disarmed": true,
+      "collision": false,
+      "fault": "none",
+      "stop_reason": "ARRIVED_5M",
+      "accepted_revisions": 23,
+      "low_speed_hold_ros_s": 1.0410223007202148,
+      "stop_elapsed_wall_s": 5.420216798782349,
+      "only_native_behavior_reference_publishers": true
+    },
+    {
+      "path": "sitl-19/forest-01",
+      "success": true,
+      "motion_requested": true,
+      "arrived_5m": true,
+      "stopped": true,
+      "land_success": true,
+      "disarmed": true,
+      "collision": false,
+      "fault": "none",
+      "stop_reason": "ARRIVED_5M",
+      "accepted_revisions": 23,
+      "low_speed_hold_ros_s": 1.0380222797393799,
+      "stop_elapsed_wall_s": 5.417848348617554,
+      "only_native_behavior_reference_publishers": true
+    },
+    {
+      "path": "sitl-20/forest-01",
+      "success": true,
+      "motion_requested": true,
+      "arrived_5m": true,
+      "stopped": true,
+      "land_success": true,
+      "disarmed": true,
+      "collision": false,
+      "fault": "none",
+      "stop_reason": "ARRIVED_5M",
+      "accepted_revisions": 23,
+      "low_speed_hold_ros_s": 1.020021677017212,
+      "stop_elapsed_wall_s": 5.479767084121704,
+      "only_native_behavior_reference_publishers": true
+    },
+    {
+      "path": "sitl-21/cancel",
+      "success": true,
+      "motion_requested": true,
+      "arrived_5m": false,
+      "stopped": true,
+      "land_success": true,
+      "disarmed": true,
+      "collision": false,
+      "fault": "cancel",
+      "stop_reason": "CANCELED",
+      "accepted_revisions": 3,
+      "low_speed_hold_ros_s": 1.1160237789154053,
+      "stop_elapsed_wall_s": 1.1195390224456787,
+      "only_native_behavior_reference_publishers": true
+    },
+    {
+      "path": "sitl-25/stale",
+      "success": true,
+      "motion_requested": true,
+      "arrived_5m": false,
+      "stopped": true,
+      "land_success": true,
+      "disarmed": true,
+      "collision": false,
+      "fault": "stale",
+      "stop_reason": "STALE_OR_INVALID_INPUT",
+      "accepted_revisions": 3,
+      "low_speed_hold_ros_s": 1.014021635055542,
+      "stop_elapsed_wall_s": 1.7798376083374023,
+      "only_native_behavior_reference_publishers": true
+    },
+    {
+      "path": "sitl-26/worker-exit",
+      "success": true,
+      "motion_requested": true,
+      "arrived_5m": false,
+      "stopped": true,
+      "land_success": true,
+      "disarmed": true,
+      "collision": false,
+      "fault": "worker-exit",
+      "stop_reason": "INFERENCE_RESULT:WORKER_UNAVAILABLE:<urlopen error [Errno 111] Connection refused>",
+      "accepted_revisions": 3,
+      "low_speed_hold_ros_s": 1.0410223007202148,
+      "stop_elapsed_wall_s": 1.9394786357879639,
+      "only_native_behavior_reference_publishers": true
+    }
+  ],
+  "raw_evidence_root": "log/yopo-single/",
+  "truth": "not used as planner state; AirSim RPC used for collision/depth scoring only",
+  "gpu_service_chain": {
+    "evidence": "log/yopo-single/model-chain/1619540",
+    "p50_ms": 18.382999493042007,
+    "max_ms": 43.479149986524135,
+    "samples": 10,
+    "below_100ms": 10,
+    "component_timings_ms": {
+      "conversion_ms": {
+        "p50": 2.350996481254697,
+        "max": 4.975119954906404
+      },
+      "http_ms": {
+        "p50": 13.72820051619783,
+        "max": 30.718271038495004
+      },
+      "adapter_ms": {
+        "p50": 16.229251981712878,
+        "max": 36.265611997805536
+      },
+      "worker_preprocess_ms": {
+        "p50": 1.0055629827547818,
+        "max": 1.4119549887254834
+      },
+      "worker_forward_and_transfer_ms": {
+        "p50": 1.4005459961481392,
+        "max": 10.911760968156159
+      },
+      "worker_decode_ms": {
+        "p50": 0.09548250818625093,
+        "max": 0.10818801820278168
+      }
+    },
+    "model_version": "sha256:09ec31094ed83e09702efc1facf18076564ebbe1afc164960c41036e16ba229f;ros-reference-u8-inpaint-v1;velocity=2.0"
+  },
+  "gpu_hardware": {
+    "name": "NVIDIA GeForce RTX4090",
+    "driver": "580.178.04"
+  },
+  "cleanup": {
+    "owned_scenes_stopped": 23,
+    "owned_test_containers_remaining": 0,
+    "owned_workers_remaining": 0,
+    "original_containers_preserved": true,
+    "scope": "Original validation batch only; subsequent user-requested windowed deployments are retained after disarm."
+  },
+  "additional_windowed_validation": {
+    "long_distance": {
+      "path": "log/yopo-single/live-forest-long-01/forest-long",
+      "success": true,
+      "motion_requested": true,
+      "arrived_5m": true,
+      "stopped": true,
+      "land_success": true,
+      "disarmed": true,
+      "collision": false,
+      "fault": "none",
+      "stop_reason": "ARRIVED_5M",
+      "accepted_revisions": 347,
+      "low_speed_hold_ros_s": 1.020021915435791,
+      "stop_elapsed_wall_s": 5.258700370788574,
+      "only_native_behavior_reference_publishers": true,
+      "configured_velocity_m_s": 2.0,
+      "measured_speed_median_m_s": 1.9920902327864098,
+      "measured_speed_peak_m_s": 2.308883060117729,
+      "navigation_wall_s": 122.65952277183533,
+      "goal_enu_m": [
+        -37.57,
+        231.76,
+        6.0
+      ],
+      "target_horizontal_m": 234.7854392844667,
+      "arrival_logged_pose": [
+        -42.14624786376953,
+        231.91619873046875,
+        7.936943054199219
+      ],
+      "post_landing_collision_info": {
+        "has_collided": true,
+        "penetration_depth": 0.0,
+        "time_stamp": 1794298153837640960,
+        "normal": {
+          "x_val": 0.023419762030243874,
+          "y_val": -0.031226249411702156,
+          "z_val": -0.9992378950119019
+        },
+        "impact_point": {
+          "x_val": 231.73678588867188,
+          "y_val": -41.82073211669922,
+          "z_val": -3.7929577827453613
+        },
+        "position": {
+          "x_val": 231.86143493652344,
+          "y_val": -42.27695083618164,
+          "z_val": -3.9857704639434814
+        },
+        "object_name": "Landscape_0",
+        "object_id": -1
+      },
+      "collision_scope": "Mission collision=false refers to monitored flight/stop phase; post-landing query reports Landscape_0 terrain contact; raw flags retained."
+    },
+    "repeat_count": 1,
+    "acceptance_scope": "Reference-mode, 2m/s, 5m arrival; single long-distance run, not three-run long-distance stability acceptance."
+  }
+}

@@ -40,13 +40,21 @@ def main():
             'use_sim_time': True, 'cmd_freq': 50.0, 'info_freq': 10.0,
             'external_odom': False, 'fmu_prefix': vehicle['fmu_prefix'],
             'target_system_id': system_id}}}))
+        estimator_command = [
+            'ros2', 'launch', estimator_launch_package, estimator_launch_file,
+            f'namespace:={namespace}']
+        if (estimator_launch_package, estimator_launch_file) == (
+                'as2_state_estimator', 'state_estimator_launch.py'):
+            estimator_command.extend([
+                f'config_file:={config}', f'plugin_name:={estimator_plugin}',
+                f'plugin_config_file:={estimator_config}', 'use_sim_time:=true'])
+        else:
+            estimator_command.extend([
+                f'config_file:={estimator_config}', 'use_sim_time:=true'])
         commands.extend([
             ['ros2', 'launch', 'as2_platform_pixhawk', 'pixhawk_launch.py',
              f'namespace:={namespace}', f'platform_config_file:={platform_config}'],
-            ['ros2', 'launch', estimator_launch_package, estimator_launch_file,
-             f'namespace:={namespace}', f'config_file:={config}', f'plugin_name:={estimator_plugin}',
-             f'plugin_config_file:={estimator_config}',
-             'use_sim_time:=true'],
+            estimator_command,
             ['ros2', 'launch', 'as2_motion_controller', 'controller_launch.py',
              f'namespace:={namespace}', f'config_file:={config}', 'plugin_name:=pid_speed_controller',
              f'plugin_config_file:={controller}', 'use_sim_time:=true'],

@@ -1,0 +1,12 @@
+{
+  "binary_resource": "airsim_nh",
+  "project": "AirSimNH",
+  "settings": "airsim-settings.json",
+  "args": [
+    "-vulkan",
+    "-nosound",
+    "-NoMouseCapture",
+    "-ini:Input:[/Script/Engine.InputSettings]:bCaptureMouseOnLaunch=False,DefaultViewportMouseCaptureMode=NoCapture,bDefaultViewportMouseLock=False,DefaultViewportMouseLockMode=DoNotLock",
+    "-windowed"
+  ]
+}

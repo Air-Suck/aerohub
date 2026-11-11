@@ -29,6 +29,13 @@
 - 高层复合 Behavior 不加载、不暴露，保留上游代码；基础执行按需兼容扩展。
 - Tool 必须声明功能卡片；资源互斥、取消交接和应急优先级由运行时软件强制执行，不仅依赖 Agent 自律。
 - Offline Agent 负责适配和部署，Online Agent 负责任务编排。详细接口、目录和验证约束见 `docs/开发者贡献指导.md`。
+### 多无人机共享部署
+
+- 算法无关的多无人机拓扑、进程编排和观察视图统一维护在 deployment/swarm/，具体 Demo 复用该基础设施。
+- 机群规模由配置决定。恰好一个 UAV 计算节点运行在 RoboPi；其余 UAV 在 PC 上分别由一个独立线程监管一个独立进程或容器。
+- 集中式系统必须同时验证板端 UAV 作为中心和作为非中心 worker；外部计算及地面站固定运行在 PC。
+- 单机和多机 AirSim 均使用位于全部 UAV 实时质心正上方、垂直向下的观察视图。启动与健康检查不得把静态初始相机误报为动态跟踪成功。
+
 
 ## Behavior 复用与扩展原则
 
@@ -56,8 +63,14 @@
 - 先审查锁定版本中原生 FollowPath、FollowReference 及轨迹相关组件，确认时间、同步和滚动更新能力，再决定复用或新增执行 Behavior。
 - 针对 CAT-ORA 的有限多机轨迹与 Swarm-Formation 的滚动轨迹分别验证，不能把单机到点成功当作完整支持多机规划结果的证据。
 - 实现变更应验证调用接口、轨迹语义、生命周期、异常路径和 AirSim + PX4 SITL 动力学闭环；后续复现统一使用该平台。文档中区分设计目标、已实现功能与实际验收结果，历史 Gazebo 结果不替代当前验收。
+- “代码已接入”“部分验证通过”和“复现成功”必须分开表述。只有运行前确定的适用测试矩阵全部执行并通过，且证据包完整可核查，才能判定复现成功；任何失败、跳过、未执行或缺少证据都只能标记为未完成或未通过。
+- 当前开发主机具备可用 NVIDIA GPU。依赖 GPU 的算法必须执行真实 GPU 算法测试；不得再以缺少 GPU 为由跳过，也不得用导入、CPU mock、合成输出或容器存活代替。
+- 状态估计与感知复现至少覆盖锁定源码/依赖构建、算法真实运行、ROS/AS2 接口、真实仿真传感器输入、实际下游消费、预声明指标与失效路径，以及有屏 AirSim + PX4 SITL 端到端验收。状态权威切换仍受 shadow gate 约束；gate 失败时不得强行切换，同时该轮复现不能标记成功。
+- 若硬件、场景、数据或安全门导致某项测试确实无法执行，保留“未完成”状态和缺口证据，不能通过缩小声明范围、删除测试项或降低事后门槛获得成功结论。
 
 ## 复现过程中的 Skill 使用与维护
+
+本节仅适用于外部工作或算法的复现任务。基础设施开发、普通功能开发、文档整理、分支合并和日常维护等非复现任务，不强制使用 Skill，不创建复现过程记录，也不因任务完成而更新或迭代 Skill；只有当这些任务明确构成某项复现工作的一部分时，才按本节执行。
 
 每次开展复现工作，必须使用 `skill/` 中与当前任务相关的正式 Skill，而不是仅在复现结束后总结 Skill。
 
@@ -91,4 +104,8 @@
 
 ## 目录约定
 
-自建代码位于 `src/`，先按 `planner/`、`behavior/`、`state_estimator/`、`perception/` 分类，再按对象分子目录。两个 Planner 都使用 `upstream/`、`ros2_adapter/`、`ros1_proxy/`。上游算法分别在 `src/planner/cat_ora/upstream/` 和 `src/planner/swarm_formation/upstream/`。同类对象的目录规则见 `docs/开发者贡献指导.md`。AS2 依赖在 `as2/`，PX4 在 `px4/`，官方 Gazebo 工程在 `simulator/gazebo/`，均以 `.gitmodules` 和 gitlink 锁定。运行产物与测试日志统一进入被忽略的 `log/`。部署入口仍为 `deployment/`，不得重新依赖项目外部的旧源码路径。
+新增 `src/inference/` 提供与 Perception、State Estimator 并列的 Inference Robotic Function：对外使用 ROS 2，内部 FastAPI runtime 与每模型独立 uv 环境隔离。`interfaces/`、`ros2_adapter/`、`runtime/` 保存公共服务设施，`models/<模型>/` 保存推理适配和环境。算法源码仍按功能归属原分类；Inference 模块只引用模型实现，不迁移或复制 Planner 算法，不承担轨迹重建或运动执行。
+
+CUDA 模型迁移、独立环境与模型文件准备按正式子 Skill [model-migration-cuda](skill/model-migration-cuda/SKILL.md) 执行；每模型 README/setup 及验证要求集中在该 Skill 维护。
+
+自建代码位于 `src/`，先按 `planner/`、`behavior/`、`state_estimator/`、`perception/`、`inference/` 分类，再按对象分子目录。CAT-ORA 与 Swarm-Formation 使用 `upstream/`、`ros2_adapter/`、`ros1_proxy/`。上游算法分别在 `src/planner/cat_ora/upstream/` 和 `src/planner/swarm_formation/upstream/`。同类对象的目录规则见 `docs/开发者贡献指导.md`。AS2 依赖在 `as2/`，PX4 在 `px4/`，官方 Gazebo 工程在 `simulator/gazebo/`，均以 `.gitmodules` 和 gitlink 锁定。运行产物与测试日志统一进入被忽略的 `log/`。部署入口仍为 `deployment/`，不得重新依赖项目外部的旧源码路径。

@@ -1,7 +1,7 @@
 # Runtime 平台支撑
 
 Runtime 为用户 App 和算法 Library 提供状态、传感器、时钟与运动执行能力。
-AirSim 使用官方 `as2/aerostack2/` 子模块，在构建副本应用 `deployment/platform/patches/as2-airsim-pr.patch`；传感器桥在 `simulator/airsim/sensors/`，导航输入整理在 `src/perception/navigation_inputs/`。
+AirSim 直接使用锁定的 `as2/aerostack2/` AeroHub fork 子模块；传感器桥在 `simulator/airsim/sensors/`，导航输入整理在 `src/perception/navigation_inputs/`。
 
 | 目录 | 职责 | ROS 包名 |
 | --- | --- | --- |

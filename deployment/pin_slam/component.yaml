@@ -1,0 +1,82 @@
+schema_version: 0.1
+id: pin-slam
+version: upstream-e2b7fbf-aerohub-0.1.0
+description: PIN-SLAM LiDAR pose estimation and implicit neural-point mapping
+source:
+  repository: https://github.com/PRBonn/PIN_SLAM.git
+  commit: e2b7fbf328e5fac1d638e217d70a69cbe9f30a52
+  license: MIT
+capabilities:
+  - state-estimator.pin-slam-lidar
+  - perception.pin-slam-neural-points
+cards:
+  - cards/state-estimator/pin-slam-lidar.yaml
+  - cards/perception/pin-slam-neural-points.yaml
+shared_process_group: pin-slam-gpu
+images:
+  algorithm:
+    name: uav/pin-slam:humble
+    local_digest: sha256:6be2f8b0b5e764434ca25583e59e4b6dfad7de0e22579327a291fb5870e0ee92
+    base_image: onboard_computer_dependencies:humble-px4-1.18-msgfix
+    base_image_id: sha256:cb9eb452cc25d62abe6d0607d7136f14706a78a9ac4d628f905036d074cd8c3e
+    architectures: [linux/amd64]
+    dockerfile: deployment/pin_slam/Dockerfile.algorithm
+  as2_plugin:
+    name: uav/pin-slam-as2:humble
+    local_digest: sha256:c2a67febdf0f7b176e94cf1da954f5f44149d5503b7693604beb3010f0b1148a
+    base_image: onboard_computer:main-e2e
+    base_revision: a9ddf15006a6a36d53fa0316b87a8da590fd7253
+    architectures: [linux/amd64]
+    dockerfile: deployment/pin_slam/Dockerfile.as2
+runtime:
+  roles:
+    simulator: AirSim host process
+    flight_board: PX4 SITL, DDS Agent, LiDAR and clock bridge
+    compute: PIN-SLAM algorithm plus AS2 State Estimator plugin
+    workstation: shadow scoring and lifecycle orchestration
+  namespace: drone0
+  clock: AirSim /clock
+  input:
+    lidar: /drone0/sensor_measurements/Lidar/points
+    local_odometry: /drone0/sensor_measurements/odom
+  output_state: /drone0/pin_slam/odometry
+  output_map: /drone0/pin_slam/neural_points
+requirements:
+  gpu: NVIDIA GPU with at least 4 GiB memory; 24 GiB used for current validation host
+  sensors: one metrically calibrated LiDAR with a static base-to-sensor transform
+  platform: AirSim 1.8.1 plus PX4 SITL for project acceptance
+  calibration: sensor_from_base must be measured for non-simulated platforms
+lifecycle:
+  startup: start platform LiDAR and /clock, algorithm, then AS2 plugin
+  readiness: fresh PX4 local odometry, a time-paired PIN-SLAM correction, nonempty neural-point map, and healthy diagnostics
+  stop: remove state authority before stopping the shared algorithm process
+  failure: stale, invalid, non-monotonic, or unpaired PIN-SLAM output cannot update the global correction; high-rate PX4 local state remains available for controlled landing
+  recovery: restart as a new map epoch while the vehicle is not executing a task
+authority:
+  state_and_tf: exactly one selected AS2 State Estimator provider per vehicle
+  map_frame: PIN-SLAM process owns pin_slam_map data; AS2 plugin publishes its configured alias
+validation:
+  stage: reproduced
+  gate: deployment/pin_slam/validation.yaml
+  scope: Real CUDA processing, independent neural-point consumption, native AS2 dual-rate state integration, visible AirSim + PX4 SITL authority flight, all predeclared gates, and algorithm-exit recovery are verified.
+  evidence:
+    - log/pin_slam/static-20261110/image-inspect.json
+    - log/pin_slam/static-20261110/compose-expanded.yaml
+    - log/pin_slam/static-20261110/algorithm-static.log
+    - log/pin_slam/static-20261110/plugin-host.log
+    - log/pin_slam/static-20261110/plugin-probe.log
+    - log/pin_slam/gpu-smoke-20261110/result.json
+    - log/pin_slam/gpu-smoke-20261110/canonical-pose.txt
+    - log/pin_slam/gpu-smoke-20261110/nvidia-smi.txt
+    - log/pin_slam/gpu-smoke-20261110/SHA256SUMS
+    - log/pin_slam/plugin-dual-rate-20261110/plugin-probe.log
+    - log/pin_slam/airsim-authority-dual-rate-20261110/ground/rates.json
+    - log/pin_slam/airsim-authority-full-20261110/final-run/gate-report.json
+    - log/pin_slam/airsim-authority-full-20261110/airsim-visible-ground.png
+    - log/pin_slam/airsim-authority-full-20261110/SHA256SUMS
+    - log/pin_slam/airsim-authority-fault-20261110/fault-report.json
+  limitations:
+    - Neural-point anchors are not a collision map or the complete implicit model.
+    - Current authority integration deliberately retains PX4 EKF local odometry for control; PIN-SLAM is the global correction source, not the sole inertial estimator.
+    - AirSim LiDAR lacks per-point time, so deskew remains disabled.
+

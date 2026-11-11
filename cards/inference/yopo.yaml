@@ -1,0 +1,72 @@
+schema_version: '0.1'
+id: inference.yopo
+name: YOPO network inference
+version: 0.1.0
+type: inference
+description: Predict candidate relative terminal states and costs; does not reconstruct
+  or execute trajectories.
+component:
+  id: aerohub.inference.yopo
+  manifest: deployment/inference/component.yaml
+  shared_process_group: yopo-model-worker
+  coupled_capabilities: []
+usage:
+  mode: query
+  selection_phase: deployment
+  invocation_interface: uav_inference_interfaces/srv/InferYopo
+  switching_constraints:
+  - stop-worker-before-replacing-model-or-environment
+inputs:
+- service: <namespace>/inference/yopo/infer
+  schema: src/inference/interfaces/srv/InferYopo.srv
+  depth: 32FC1 meters or 16UC1 millimeters; invalid pixels repaired by frozen ROS
+    preprocessing; preserve acquisition stamp/frame
+  state: velocity m/s, acceleration m/s^2, relative goal m; aligned x-forward/y-left/z-up
+    frame
+  timing: measured observation/depth age <=0.5s and skew <=0.05s; reference epoch
+    independently bounded at <=0.3s future
+outputs:
+- candidates: relative terminal p/v/a and predicted cost in request planning frame;
+    lower cost is better
+  metadata: request_id, reference and observation headers, best_index, duration_s,
+    weights SHA256/preprocess/velocity model version, actual device
+preconditions:
+- Correct camera geometry and camera/planning-frame alignment supplied by caller.
+- Model worker loaded and warmed; CUDA available unless explicitly running CPU smoke
+  test.
+resources:
+  reads:
+  - caller-provided-depth-and-state
+  - model-weights
+  writes:
+  - selected-GPU-memory-and-compute
+  conflicts:
+  - other-workloads-on-same-GPU
+  enforcement: single in-flight inference per worker; busy rejected; no cross-model
+    GPU arbitration
+lifecycle:
+  startup: load and warm once per process
+  readiness: ROS inference/status and internal HTTP /health/ready
+  freshness: check timestamps before inference; result preserves input state stamp
+  feedback: null
+  completion: one Service response
+  cancel_or_stop: no Service cancellation; timeout does not interrupt active model
+    computation
+  failure: explicit ROS error_code; no automatic retry or CPU fallback
+  recovery: restart failed worker, wait ready, submit a fresh observation
+type_specific:
+  algorithm_owner: src/planner/yopo/upstream
+  worker_module: src/inference/models/yopo
+validation:
+  stage: GPU-ROS-chain-and-PC-simulation-consumption
+  scope: frozen ROS all-candidate comparison at6m/s CPU and2m/s CPU/CUDA; final2m/s
+    GPU dual-container10/10; consumed by real AirSim reference-mode Planner, scope
+    in Demo validation
+  component_revision: bd8a7f91953cfef9f1aa9a48d7ff0ab7bceee132
+  evidence:
+  - deployment/airsim/demos/yopo_single/validation.md
+  - src/inference/models/yopo/test_baseline.py
+  - deployment/inference/tests/yopo_cross_container.py
+  limitations:
+  - cross-physical-device-unverified
+  - model-service-has-no-flight-execution

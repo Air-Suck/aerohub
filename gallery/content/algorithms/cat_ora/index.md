@@ -111,7 +111,7 @@ Manifest 声明 1–16 机是配置能力范围；本页四机展示不代表所
 | 核查内容 | 本地依据 |
 | --- | --- |
 | 上游来源与锁定版本 | `.gitmodules`、`src/planner/cat_ora/upstream` gitlink：`4bc41f593eebde65dd74108a97e80430a145dfa0` |
-| AS2 基线 | `as2/aerostack2` gitlink：`19c397309c6a41b279e6b551818ec12605cfcecc`；AirSim 构建在副本应用独立补丁，不能将此 gitlink 当作所有运行镜像的最终源码版本 |
+| AS2 基线 | `as2/aerostack2` 使用 AeroHub fork gitlink：`f387e0d733a5102808508bcbec1b9eca2c29d1f0`；AirSim 构建直接使用该锁定源码 |
 | 服务字段与坐标/时间转换 | `ros1_proxy.py` 的 `generate()`；adapter 的 `_try_generate()`、`_message()` |
 | 车辆对应、Action 名称、失败收口 | `FleetFollowPathClient` 与 `make_goal()` |
 | Behavior 继承、互斥及 Motion Reference 输出 | `follow_path_extended.cpp`、`motion_behaviors.launch.py` |

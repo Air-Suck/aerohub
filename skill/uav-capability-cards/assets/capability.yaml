@@ -3,7 +3,7 @@ schema_version: 0.1
 id: null
 name: null
 version: null
-type: null # tool | planner | behavior | state-estimator | perception
+type: null # tool | planner | behavior | state-estimator | perception | inference
 description: null
 component:
   id: null

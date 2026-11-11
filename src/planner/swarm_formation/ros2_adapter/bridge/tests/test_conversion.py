@@ -56,6 +56,31 @@ class ConversionTest(unittest.TestCase):
 
 
 class ThreeVehicleContractTest(unittest.TestCase):
+    def test_runtime_output_timeout_only_fails_after_healthy_output(self):
+        from types import SimpleNamespace
+        from unittest.mock import Mock, patch
+        from uav_swarm_formation_adapter.node import SwarmFormationAdapter
+        node = Mock()
+        node.output_started = False
+        node.failure_sent = False
+        node.unavailable_since = None
+        node.config = {'task': {'task_id': 'runtime-loss'}}
+        node.get_parameter.return_value.value = 3.0
+        SwarmFormationAdapter._output_unavailable(node, 'startup unavailable')
+        node.failure_publisher.publish.assert_not_called()
+        node.output_started = True
+        with patch('uav_swarm_formation_adapter.node.time.monotonic',
+                   side_effect=(10.0, 12.9, 13.1)):
+            SwarmFormationAdapter._output_unavailable(node, 'first loss')
+            SwarmFormationAdapter._output_unavailable(node, 'still unavailable')
+            node.failure_publisher.publish.assert_not_called()
+            SwarmFormationAdapter._output_unavailable(node, 'timeout')
+        failure = node.failure_publisher.publish.call_args.args[0]
+        self.assertEqual(failure.task_id, 'runtime-loss')
+        self.assertEqual(failure.reason, 'OUTPUT_UNAVAILABLE')
+        self.assertTrue(node.failure_sent)
+        self.assertTrue(node.final_sent)
+
     def test_three_vehicle_scaled_targets_share_one_anchor(self):
         config = {
             'vehicles': ['drone0', 'drone1', 'drone2'],

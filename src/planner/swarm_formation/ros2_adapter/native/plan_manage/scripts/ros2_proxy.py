@@ -209,8 +209,9 @@ def main():
     executor = threading.Thread(target=rclpy.spin, args=(node,), daemon=True)
     executor.start()
     try:
-        with Server(("127.0.0.1", 28501), Handler) as server:
-            node.get_logger().info("Swarm-Formation proxy listening on 127.0.0.1:28501")
+        bind_host = str(node.declare_parameter("bind_host", "127.0.0.1").value)
+        with Server((bind_host, 28501), Handler) as server:
+            node.get_logger().info(f"Swarm-Formation proxy listening on {bind_host}:28501")
             server.serve_forever()
     finally:
         rclpy.shutdown()
