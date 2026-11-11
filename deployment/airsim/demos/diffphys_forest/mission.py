@@ -1,4 +1,4 @@
-"""Task/score role for isolated FollowReference ACRO AirSim acceptance."""
+"""DiffPhys forest task and scoring through AS2 Behaviors and PX4."""
 import collections
 import json
 import math
@@ -19,7 +19,7 @@ from as2_msgs.action import Takeoff, Land, FollowReference, GoToWaypoint
 from as2_msgs.msg import PlatformInfo, PlatformStatus, ControllerInfo, ControlMode, Thrust, YawMode
 from as2_msgs.srv import SetControlMode
 from geometry_msgs.msg import PoseStamped, TwistStamped
-from px4_msgs.msg import VehicleRatesSetpoint, VehicleAttitudeSetpoint, VehicleControlMode, VehicleCommand
+from px4_msgs.msg import VehicleAttitudeSetpoint, VehicleControlMode, VehicleCommand
 from uav_follow_reference_acro.msg import ControlFrame
 
 sys.path.insert(0, '/repo/simulator/airsim/sensors')
@@ -35,7 +35,7 @@ class Mission(Node):
         self.px4_mode = None
         self.source_ready = False
         self.action_handle = None; self.terminal_handle = None; self.phase = 'ground'; self.flying = False
-        self.counts = collections.Counter(); self.frames = {}; self.rates = []; self.targets = []
+        self.counts = collections.Counter()
         self.actuator_rates = []; self.actuator_thrust = None
         self.result = {'success': False, 'scope': 'DiffPhys '+os.environ.get('DIFFPHYS_PROFILE','swarm')+' -> ROS Inference -> ATTITUDE Behavior -> AS2/PX4, forest'}
         self.log = (self.out/'samples.jsonl').open('w')
@@ -69,9 +69,6 @@ class Mission(Node):
             rec['stamp_ns'] = msg.header.stamp.sec*1000000000+msg.header.stamp.nanosec
         if isinstance(msg, VehicleAttitudeSetpoint):
             rec.update(q=list(map(float,msg.q_d)), thrust=list(map(float,msg.thrust_body)))
-        elif isinstance(msg, VehicleRatesSetpoint):
-            rec.update(rate=[msg.roll, msg.pitch, msg.yaw], thrust=list(map(float,msg.thrust_body)))
-            self.rates.append(rec)
         elif isinstance(msg, ControlFrame):
             rec.update(rate=[msg.body_rates.x, msg.body_rates.y, msg.body_rates.z],
                        q=[msg.attitude.w,msg.attitude.x,msg.attitude.y,msg.attitude.z], attitude_frame=msg.attitude_frame_id, control_mode=msg.control_mode,
@@ -173,7 +170,7 @@ class Mission(Node):
             self.destroy_publisher(rates_pub); self.destroy_publisher(thrust_pub)
         # Leave the ground probe in BODY_RATES: Offboard initialization uses
         # the same mode. Native Takeoff will negotiate POSITION after PX4 confirms Offboard.
-        self.counts.clear(); self.rates.clear()
+        self.counts.clear()
 
     def run(self):
         try:
@@ -316,22 +313,11 @@ class Mission(Node):
                 raise RuntimeError('missing control-chain messages')
             self.result.update(hold_error_max_m=max_error, tilt_max_rad=max_tilt,
                 truth_hold_drift_max_m=truth_error,
-                counts=dict(self.counts), nonzero_yaw=any(r['rate'][2]<-.02 for r in self.rates))
-            def truth_yaw(q):
-                return math.atan2(2*(q['w_val']*q['z_val']+q['x_val']*q['y_val']),
-                                  1-2*(q['y_val']**2+q['z_val']**2))
-            yaw_delta = math.remainder(truth_yaw(truth['orientation'])-
-                truth_yaw(truth_start['orientation']), 2*math.pi)
-            self.result['truth_yaw_change_rad'] = yaw_delta
-            self.result['attitude_mode'] = True
+                counts=dict(self.counts))
             self.phase = 'handover'
-            self.result['stop_scenario'] = 'cancel'
-            if self.result.get('expected_fault'):pass
-            elif self.result['stop_scenario'] == 'cancel':
+            if not self.result.get('expected_fault'):
                 canceled = self.action_handle.cancel_goal_async(); self.wait(canceled.done, 5)
                 if not canceled.result().goals_canceling: raise RuntimeError('cancel rejected')
-            else:
-                self.out.joinpath('stop-source').touch()
             result = self.action_handle.get_result_async(); self.wait(result.done, 5)
             self.wait(lambda: self.controller.input_control_mode.control_mode == ControlMode.POSITION, 10)
             stop_started=time.monotonic();slow_since=None

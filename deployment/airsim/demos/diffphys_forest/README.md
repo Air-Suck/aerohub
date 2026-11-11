@@ -47,6 +47,12 @@ python deployment/airsim/demos/diffphys_forest/analyze.py log/diffphys/forest-8m
 稳定镜像为`uav/apps-super-forest:repo-native-20261109`与`flight_board:v0.1.0`，
 默认overlay为`log/diffphys/attitude-overlay`，同一工作区不并行构建或运行。
 
+AS2构建输入来自固定镜像：build.sh复用attitude_control/build_overlay.sh，
+从镜像复制控制器与Pixhawk平台源码，再按deployment/platform/patches的校验清单
+应用补丁并补编译；本入口不读取本地`as2/aerostack2`子模块源码。
+主仓库AS2锁定指针保持不变，本地额外检出旧提交不作为部署依赖或提交内容。
+后续若切换为仓库AS2源码构建，应单独验证，不能沿用镜像overlay的通过结论。
+
 任务结束自动回收所属场景、容器和中继；worker由其部署终端独立持有，完成后SIGINT
 并等待退出。若降落恢复未确认，入口保留所属控制/时钟/场景，使用IPC控制的
 `recover_ground.py --output <目录>`确认解除武装后回收，不停止其他实例。
