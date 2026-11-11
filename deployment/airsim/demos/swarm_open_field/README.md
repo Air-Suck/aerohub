@@ -1,7 +1,42 @@
-# Swarm-Formation 三机混合部署验收
+# Swarm-Formation 混合部署验收
 
-本应用使用 NH 真实 AirSim 场景、三台独立 PX4 和三套 AS2。
-RoboPi 的 drone0 与 PC 两个独立容器的 drone1/2，各运行本机 Swarm 原生规划器、
+机群规模、唯一板端 UAV、AirSim 车辆与端口由
+deployment/swarm/configs/swarm_open_field.yaml 决定。RoboPi 只运行一个 UAV
+计算节点，其余 UAV 在 PC 上分别由独立监管线程拥有独立 Docker 进程。
+
+## 混合入口的当前边界
+
+run_robopi.py 与 run_role_matrix.py 是本次接入共享配置的混合入口。hybrid_plan.py
+从同一份配置生成 AirSim settings、PX4 实例/系统 ID/Agent 端口、fleet、deployment、
+任务车辆与目标、容器名和角色归属；run_robopi.py 只消费这些产物。配置中
+nodes.*.launch_command 与 ground_station.launch_command 供共享编排器使用，本入口不执行它们。
+
+- 机数：Swarm 原生 launch、setDesiredFormation 与 adapter 都只接受 3..7 架，且名称须为
+  drone0..droneN-1/Drone0..DroneN-1。共享拓扑能生成 N=2 或 N>7，但本入口会在接触
+  RoboPi/Docker 之前拒绝。
+- 目标队形：初始位置来自共享拓扑的环形布局（AirSim X/Y 即机群 NED 北/东，Z=0）。
+  目标取原生六边形 relative_pos 的前 N 个顶点乘 swarm_scale（ENU），整体放在初始质心
+  正北 6 m、高 3 m；默认三机原布局下与历史 task.yaml 的目标一致。task.yaml 的
+  formation_scale 必须等于原生 swarm_scale。环形到六边形的自动重排仍未实现；当前配置按索引映射原生队形顶点。
+- 角色：板端只运行一个 UAV 节点。每个 PC UAV 由一个 ComputeWorker 线程监管一个前台容器。
+  中心 ros2_proxy 在中心所在机器上监听 0.0.0.0:28501。任务客户端（mission、Planner、
+  swarm_formation_adapter）在 PC 的 ground 容器里；adapter 通过 SWARM_PROXY_HOST 连接中心。
+  只读 audit 仍只在完整飞行时运行。2026-11-11 当前源码有屏回归已通过两种角色的完整飞行，证据在 `log/swarm-infra/role-flight-gap-fix-20261111/`。算法 worker planner 与 PC 中心 proxy 均已在真实轨迹执行后注入故障；两次均由 `OUTPUT_UNAVAILABLE` 使 Planner 进入 FAILED，三机确认 HOVER 后降落解除武装，证据分别在 `fault-worker-fixed-20261111/` 和 `fault-center-fixed-20261111/`。整台 compute 主机或容器失联属于 PX4 failsafe 边界，不等价于该进程故障矩阵。
+已实现并有单测（deployment/swarm/tests/test_swarm_open_field.py，不需要 Docker、RoboPi、
+ROS）：N=3/5/7 与非 0 板端索引的产物一致性、两种中心角色、N=2/8 拒绝、目标满足 adapter
+队形检查、ENU/NED 方向、PC worker 线程/进程唯一、提前退出（含退出码 0）判失败、无法停止
+的容器被强制删除、未启动时清理安全。launch_vehicles 默认参数回归在
+catora_open_field/tests/test_sim_startup.py。
+
+2026-11-11 将同一份 config 的 vehicle_count 改为 5 后，有屏 board_center 闭环通过，证据在 `log/swarm-infra/fleet5-flight-20261111b/`：板端 drone0，PC 四机各有独立线程和容器，planner_status 为 SUCCEEDED，五机均降落并解除武装，最小真实间距 3.02 m。该次使用按索引映射的五个原生队形顶点，没有实现队形重排。下方 2026-11-06 实测结果属于修改前的固定三机入口。
+
+历史固定三机工具，未迁移到配置驱动，也不被混合入口调用：analyze.py（固定 drone0..2 与
+compute/drone1..2 日志路径）、verify_parameters.py（固定三台 ego_planner 及 vehicle_count=3）、
+纯 PC run.py 及其使用的静态 task.yaml 目标、deployment.yaml、fleet.yaml。混合入口只读取
+task.yaml 的任务参数模板和 planner.yaml。
+
+本应用使用 NH 真实 AirSim 场景、独立 PX4 和独立 AS2。
+RoboPi 节点与 PC 节点各运行本机 Swarm 原生规划器、
 GridMap/ESDF、导航注册、本机输入/output adapter 和 AS2。实时原生 PolyTraj 广播直接走 DDS UDP。
 全局 JSON 采样代理、公共 Planner 及只读验收程序位于 RoboPi；公共 Planner 将 FleetSetpoint
 分发到各机 adapter，由本机 AS2 执行。PC 容器共享 x86 宿主机与网卡，不等于三块 ARM 板。
@@ -30,13 +65,30 @@ docker build --network none --pull=false \
 docker build --network none --pull=false -f deployment/airsim/demos/swarm_open_field/Dockerfile \
   -t uav/swarm-hybrid-compute:local .
 bash tools/robopi/build_lib.sh swarm-formation
-python3 deployment/airsim/demos/swarm_open_field/run_robopi.py --preflight-only --output log/airsim/swarm-ground-new
-python3 deployment/airsim/demos/swarm_open_field/run_robopi.py --output log/airsim/swarm-flight-new
+python3 deployment/airsim/demos/swarm_open_field/run_role_matrix.py --preflight-only \
+  --output log/airsim/swarm-role-ground-new
+python3 deployment/airsim/demos/swarm_open_field/run_role_matrix.py \
+  --output log/airsim/swarm-role-flight-new
 ```
 
+集中式验收必须通过 board_center 和 board_worker 两个场景，不能只运行其中一个。
+前者在板端 UAV 启动中心协调进程；后者在配置选中的 PC UAV 容器启动中心协调进程。
+role-matrix.json 汇总两次退出码和证据路径。单场景调试可直接执行 run_robopi.py
+并显式传入 --coordination-scenario，但不构成完整的集中式验收。
+
+故障收口矩阵：
+
+```bash
+DISPLAY=:3 AIRSIM_RENDER_MODE=windowed \
+python3 deployment/airsim/demos/swarm_open_field/run_fault_matrix.py \
+  --output log/swarm-infra/fault-matrix-new
+```
+
+完整的配置、运行、证据和安全边界说明见 [Swarm Infra 使用说明](../../../swarm/README.md)。
+
 入口沿用 `.env` 的 HDC、网卡、目标地址与 `FLIGHT_BOARD_IMAGE`。
-应用使用 ROS domain 91、RPC 42471/42473、PX4 TCP 4680..4682（启动中继 4780..4782）、
-Agent 8901..8903；使用前确认这些端口及 RoboPi 无其他消费者。
+应用使用 ROS domain 91、RPC 42471/42473、PX4 TCP 4680 起（启动中继 4780 起）、
+Agent 8901 起，各按机数递增；使用前确认这些端口及 RoboPi 无其他消费者。
 运行期持有共享 RoboPi 操作锁，不重启或覆盖其他任务。
 板端安装在 `/data/aerohub/lib/swarm-formation/install`，AS2 在 `/data/aerohub/as2/install`。
 

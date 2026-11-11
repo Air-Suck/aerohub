@@ -2,6 +2,7 @@
 """AirSim host lifecycle. Identity/listener checks adapted from LeUAV runtime/processes.py."""
 import argparse
 import fcntl
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -10,6 +11,12 @@ import socket
 import subprocess
 import sys
 import time
+
+REPOSITORY = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(REPOSITORY))
+
+from deployment.swarm.view import apply_overhead_view, camera_options
+
 
 def start_ticks(pid):
     data = Path(f"/proc/{pid}/stat").read_text()
@@ -26,6 +33,17 @@ def host_alive(state):
                 and Path(f"/proc/{pid}/exe").resolve() == Path(state["binary"]).resolve()
                 and f"-settings={state['runtime_settings']}".encode()
                 in Path(f"/proc/{pid}/cmdline").read_bytes().split(b"\0"))
+    except (OSError, KeyError, ProcessLookupError):
+        return False
+
+
+def auxiliary_alive(process):
+    try:
+        return (
+            start_ticks(process["pid"]) == process["start_ticks"]
+            and Path(f"/proc/{process['pid']}/exe").resolve()
+            == Path(process["binary"]).resolve()
+        )
     except (OSError, KeyError, ProcessLookupError):
         return False
 
@@ -56,20 +74,68 @@ def save(directory, state):
     temporary.replace(directory / 'state.json')
 
 
-def stop(state, directory):
-    if not host_alive(state):
+def terminate_process(process):
+    if not auxiliary_alive(process):
         return
-    os.killpg(state['pid'], signal.SIGTERM)
-    deadline = time.monotonic() + 5
-    while host_alive(state) and time.monotonic() < deadline:
+    os.killpg(process['pid'], signal.SIGTERM)
+    deadline = time.monotonic() + 3
+    while auxiliary_alive(process) and time.monotonic() < deadline:
         time.sleep(0.1)
+    if auxiliary_alive(process):
+        os.killpg(process['pid'], signal.SIGKILL)
+
+
+def stop(state, directory):
+    terminate_process(state.get('overhead_tracker', {}))
     if host_alive(state):
-        os.killpg(state['pid'], signal.SIGKILL)
+        os.killpg(state['pid'], signal.SIGTERM)
+        deadline = time.monotonic() + 5
+        while host_alive(state) and time.monotonic() < deadline:
+            time.sleep(0.1)
+        if host_alive(state):
+            os.killpg(state['pid'], signal.SIGKILL)
     state['phase'] = 'stopped'
     save(directory, state)
 
 
+def start_overhead_tracker(profile, runtime_settings, directory):
+    options = camera_options(profile.get('overhead_view'))
+    command = [
+        sys.executable,
+        str(REPOSITORY / 'deployment/swarm/overhead_view.py'),
+        '--settings', str(runtime_settings),
+        '--camera-name', options['name'],
+        '--altitude', str(options['altitude_m']),
+        '--update-hz', str(options['update_hz']),
+    ]
+    log_path = directory / 'overhead-view.log'
+    with log_path.open('w') as log:
+        child = subprocess.Popen(
+            command, stdout=log, stderr=subprocess.STDOUT, start_new_session=True
+        )
+    process = {
+        'pid': child.pid,
+        'start_ticks': start_ticks(child.pid),
+        'binary': str(Path(sys.executable).resolve()),
+        'command': command,
+        'log': str(log_path),
+    }
+    time.sleep(0.5)
+    if child.poll() is not None:
+        raise RuntimeError('overhead view tracker exited; see ' + str(log_path))
+    return process
+
+
+def require_tracker_dependencies():
+    if importlib.util.find_spec('msgpack') is None:
+        raise ImportError(
+            f'overhead view tracker needs msgpack for {sys.executable}; install python3-msgpack '
+            'or pip install -r deployment/swarm/requirements.txt (see simulator/airsim/README.md)'
+        )
+
+
 def load_profile(profile_path, binary_override=None):
+    require_tracker_dependencies()
     profile = json.loads(profile_path.read_text())
     if binary_override:
         profile['binary'] = binary_override
@@ -91,6 +157,8 @@ def load_profile(profile_path, binary_override=None):
     vehicles = settings.get('Vehicles', {})
     if not isinstance(vehicles, dict) or not vehicles:
         raise ValueError('settings require at least one vehicle')
+    profile['overhead_view'] = camera_options(profile.get('overhead_view'))
+    settings = apply_overhead_view(settings, profile['overhead_view'])
     udp_ports = []
     for name, vehicle in vehicles.items():
         if (vehicle.get('VehicleType') != 'PX4Multirotor'
@@ -165,6 +233,9 @@ def start(profile_path, directory, timeout, binary_override=None):
             if child.poll() is not None:
                 raise RuntimeError('AirSim exited; see ' + state['log'])
             if host_alive(state) and all(listen_owned(child.pid, port) for port in ports):
+                state['overhead_tracker'] = start_overhead_tracker(
+                    profile, runtime_settings, directory
+                )
                 state['phase'] = 'listening'
                 save(directory, state)
                 return state
@@ -198,8 +269,11 @@ def main():
         state = json.loads(path.read_text()) if path.exists() else {}
         if args.action == 'status':
             state['alive'] = host_alive(state)
+            state['overhead_tracker_alive'] = auxiliary_alive(
+                state.get('overhead_tracker', {})
+            )
             print(json.dumps(state, indent=2))
-            return 0 if state['alive'] else 1
+            return 0 if state['alive'] and state['overhead_tracker_alive'] else 1
         if args.action == 'stop':
             stop(state, directory)
             return 0

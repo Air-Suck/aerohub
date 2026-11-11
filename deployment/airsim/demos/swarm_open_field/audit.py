@@ -1,5 +1,5 @@
 """Read-only DDS evidence: native trajectories, PVA segments, actual AS2 references."""
-import json,math,signal,time
+import json,math,os,signal,time
 from pathlib import Path
 import rclpy
 from rclpy.node import Node
@@ -12,7 +12,9 @@ from uav_planner_interfaces.msg import TimedTrajectorySegment
 
 def main():
     rclpy.init();n=Node('swarm_readonly_audit',parameter_overrides=[Parameter('use_sim_time',value=True)])
-    out=Path('/results/dds-audit.json');counts={v:{'native_polynomials':0,'as2_references':0,'finite_pva_references':0,'broadcasts':0} for v in ('drone0','drone1','drone2')}
+    vehicles=tuple(os.environ['AEROHUB_SWARM_VEHICLES'].split(','))
+    if vehicles!=tuple('drone'+str(i) for i in range(len(vehicles))):raise ValueError('native drone_id requires drone0..droneN-1 order')
+    out=Path('/results/dds-audit.json');counts={v:{'native_polynomials':0,'as2_references':0,'finite_pva_references':0,'broadcasts':0} for v in vehicles}
     state={'vehicles':counts,'segments':0,'pva_segments':0,'bad_references':0,'bad_segments':0};subscriptions=[];running=True
     def reference(msg,v):
         counts[v]['as2_references']+=1
@@ -31,7 +33,7 @@ def main():
         if v in counts:counts[v]['broadcasts']+=1
     def segment(msg):
         state['segments']+=1
-        if len(msg.vehicle_trajectories)!=3:state['bad_segments']+=1
+        if len(msg.vehicle_trajectories)!=len(vehicles):state['bad_segments']+=1
         elif all(t.valid_fields&3==3 for t in msg.vehicle_trajectories):state['pva_segments']+=1
     for i,v in enumerate(counts):
         subscriptions.append(n.create_subscription(TrajectorySetpoints,f'/{v}/motion_reference/trajectory',lambda msg,v=v:reference(msg,v),qos_profile_sensor_data))
