@@ -1,0 +1,15 @@
+/**:
+  ros__parameters:
+    plugin_name: follow_reference_plugin_external_acro
+    run_frequency: 100.0
+    follow_reference_max_speed_x: 1.0
+    follow_reference_max_speed_y: 1.0
+    follow_reference_max_speed_z: 1.0
+    tf_timeout_threshold: 0.05
+    external_acro.output_enabled: false
+    external_acro.frame_timeout: 0.1
+    external_acro.solve_timeout: 0.1
+    external_acro.startup_timeout: 2.0
+    external_acro.state_timeout: 0.2
+    external_acro.max_body_rate: 3.0
+    external_acro.max_thrust_newtons: 15.0

@@ -26,3 +26,6 @@
 [submodule "super"]
 	path = src/planner/super/upstream
 	url = https://github.com/Popc0rn7/SUPER-sim.git
+[submodule "ipc"]
+	path = src/planner/ipc/upstream
+	url = https://github.com/hku-mars/IPC.git

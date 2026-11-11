@@ -1,0 +1,43 @@
+{
+  "name": "IPC free XYZ speed envelope 1.0mps",
+  "spawn_ned_m": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "target_offset_enu_m": [
+    20.0,
+    0.0,
+    1.0
+  ],
+  "takeoff_height_m": 2.0,
+  "speed_m_s": 4.0,
+  "goal_tolerance_m": 0.3,
+  "goal_speed_m_s": 0.2,
+  "dwell_sim_s": 2.0,
+  "timeout_sim_s": 100.0,
+  "max_tilt_rad": 0.35,
+  "max_cross_track_m": 5.0,
+  "minimum_clearance_m": 0.35,
+  "status": "runtime configuration; acceptance is defined independently by acceptance-criteria.json",
+  "minimum_planned_deviation_m": 0.35,
+  "detour_metric": "perpendicular distance of planned path to start-goal segment",
+  "reference_speed_m_s": 1.2,
+  "planning_clearance_m": 0.55,
+  "planar_path": false,
+  "stop_speed_m_s": 0.2,
+  "stop_timeout_wall_s": 10.0,
+  "stop_dwell_wall_s": 1.0,
+  "max_stop_drift_m": 0.75,
+  "require_detour": false,
+  "mpc_velocity_limit_m_s": 4.0,
+  "reference_speed_ratio": 1.0,
+  "mpc_acceleration_limit_m_s2": 2.0,
+  "mpc_jerk_limit_m_s3": 10.0,
+  "timeout_wall_s": 300.0,
+  "cruise_min_m_s": 0.9,
+  "cruise_required_sim_s": 2.0,
+  "map_z_max_m": 12.0,
+  "nominal_cruise_m_s": 1.0,
+  "reference_calibration": "Initial freeXYZ0.5m/s reference yielded median0.418m/s; reference gain1.2, actual cruise gate unchanged"
+}
