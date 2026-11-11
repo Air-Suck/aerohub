@@ -17,6 +17,24 @@ GHCR 地址为 `ghcr.io/popc0rn7/aerohub/onboard-computer:v0.1.0`，
 
 ## 固定镜像与源码开发（用户确认的目标）
 
+基础镜像的显式升级使用 `bash deployment/onboard_computer/build.sh`；默认输出
+本地 `onboard_computer:v0.1.1`，不覆盖历史 `v0.1.0`。默认重新构建固定
+px4_msgs 依赖，再编译 AS2/Pixhawk 及消费者；依赖与消费者两个阶段均断言
+`VehicleStatus.MESSAGE_VERSION == 4`，配套 `flight_board:v0.1.0` 不变。
+
+可用 `ONBOARD_COMPUTER_IMAGE`、`ONBOARD_IMAGE_VERSION`、`ONBOARD_DEPS_IMAGE`
+指定标签；仅在确认依赖正确后使用 `BUILD_PX4_DEPS=0` 复用本地依赖镜像。
+镜像 labels 记录主仓库 revision/dirty、两个 fork 的来源/revision/dirty，
+以及消息覆盖清单的 SHA256；本地工作树有修改时镜像会明确标为 dirty，
+不能仅凭主仓库 revision 声称可精确复建。检查方式：
+
+```bash
+docker image inspect onboard_computer:v0.1.1 --format '{{json .Config.Labels}}'
+```
+
+普通源码迭代仍使用外部工作区补编译并显式加载 overlay。基础镜像升级需要
+重新编译受影响的消费者；不要把旧镜像里的插件与新 AS2 ABI 混用。
+
 共享镜像作为稳定的 ROS/编译工具与依赖环境，各开发者保留自己的源码、build/install
 缓存和日志。普通 AS2、算法或 Adapter 修改通过工作区补编译及显式加载 install overlay
 生效，默认不重建镜像，不替换镜像内的系统库或预编译安装。镜像中已有 AS2 安装可作为

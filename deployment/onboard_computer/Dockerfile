@@ -3,7 +3,7 @@ ARG BASE_IMAGE=onboard_computer_dependencies:humble-px4-1.18
 FROM ${BASE_IMAGE}
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ARG DEBIAN_FRONTEND=noninteractive
-ARG IMAGE_VERSION=v0.1.0
+ARG IMAGE_VERSION=v0.1.1
 ARG SOURCE_REVISION=unknown
 ARG UBUNTU_APT_MIRROR=https://archive.ubuntu.com/ubuntu
 ARG UBUNTU_SECURITY_MIRROR=https://security.ubuntu.com/ubuntu
@@ -34,6 +34,7 @@ WORKDIR /root/aerostack2_ws
 # Gazebo/platform packages that happen to be present in the upstream monorepo.
 RUN source /opt/ros/humble/setup.bash \
     && source /opt/px4_ws/install/setup.bash \
+    && python3 -c 'from px4_msgs.msg import VehicleStatus; assert VehicleStatus.MESSAGE_VERSION == 4' \
     && colcon list --packages-up-to as2_platform_pixhawk as2_state_estimator \
        as2_motion_controller as2_behaviors_motion as2_navigation_inputs --paths-only > /tmp/as2-paths \
     && apt-get update \
