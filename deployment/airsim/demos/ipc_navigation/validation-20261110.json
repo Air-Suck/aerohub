@@ -1,0 +1,231 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-10",
+  "success": true,
+  "scope": "Real IPC fixed cruise-height 20m static forest application: AirSim + flight_board PX4 SITL + PC compute",
+  "independent_fresh_runs": 2,
+  "same_runtime_binaries_and_task_and_criteria": true,
+  "criteria": {
+    "schema_version": 1,
+    "id": "ipc-forest-original-v1",
+    "scope": "PC fixed cruise-height 20m static forest application",
+    "origin": "Original application thresholds; stricter 0.05 stop and 0.03 quiet-handoff experiments are excluded",
+    "criteria": {
+      "goal_tolerance_m": 0.3,
+      "goal_speed_m_s": 0.2,
+      "dwell_sim_s": 2.0,
+      "timeout_sim_s": 180.0,
+      "max_tilt_rad": 0.35,
+      "max_cross_track_m": 5.0,
+      "minimum_clearance_m": 0.35,
+      "minimum_planned_deviation_m": 0.35,
+      "stop_speed_m_s": 0.2,
+      "stop_timeout_wall_s": 10.0,
+      "stop_dwell_wall_s": 1.0,
+      "max_stop_drift_m": 0.75,
+      "require_detour": true
+    }
+  },
+  "task": {
+    "name": "IPC forest PC 20m static navigation",
+    "spawn_ned_m": [
+      42.6,
+      160.11,
+      0.0
+    ],
+    "target_offset_enu_m": [
+      0.0,
+      20.0,
+      0.0
+    ],
+    "takeoff_height_m": 2.0,
+    "speed_m_s": 0.5,
+    "goal_tolerance_m": 0.3,
+    "goal_speed_m_s": 0.2,
+    "dwell_sim_s": 2.0,
+    "timeout_sim_s": 180.0,
+    "max_tilt_rad": 0.35,
+    "max_cross_track_m": 5.0,
+    "minimum_clearance_m": 0.35,
+    "status": "runtime configuration; acceptance is defined independently by acceptance-criteria.json",
+    "minimum_planned_deviation_m": 0.35,
+    "detour_metric": "perpendicular distance of planned path to start-goal segment",
+    "reference_speed_m_s": 0.25,
+    "planning_clearance_m": 0.55,
+    "planar_path": true,
+    "stop_speed_m_s": 0.2,
+    "stop_timeout_wall_s": 10.0,
+    "stop_dwell_wall_s": 1.0,
+    "max_stop_drift_m": 0.75,
+    "require_detour": true
+  },
+  "images": {
+    "compute": "sha256:1242967324756673026eb117fadbc55ec1629af1a6a1a89db64ebb5527cc6a87",
+    "flight_board": "sha256:8c33881fde6985fe5a43a894bde075471df85064e45ac8e5de28efebcc737cd2"
+  },
+  "upstream_ipc_commit": "0f959ca7995e71a1fcc4942bd4a86869ab6ee975",
+  "px4_reference_commit": "61907962c9220437ec01a98fa26bfbf5cbb254b5",
+  "runtime_sha256": {
+    "log/ipc/native-deps/ros-install/lib/ipc_native_core/ipc_node": "aa4bd168a8b174ff5a0d33b8e6aad3418039fc08767fdc8f565c67768f3a9762",
+    "log/ipc/control-overlay/install/lib/libfollow_reference_acro_plugin.so": "bf585128ea542b24ee932451f9d5649474ca14390dee21f587e677e7ba946b9e",
+    "log/ipc/control-overlay/install/lib/libas2_motion_controller.so": "692e9b976bbbd544a235fd5208e908485e9750e4b9845d7efd1aa1c93c52b21b",
+    "log/ipc/control-overlay/install/lib/as2_motion_controller/as2_motion_controller_node": "88b4eb6d124abb14cb67d3182d92725b1c53d09e47c64c9fe10bb320cce35416",
+    "log/ipc/control-overlay/install/lib/as2_platform_pixhawk/as2_platform_pixhawk_node": "28eebdf8d12bb5d18e0cd8133712db75aa99dbcbdbc0037ec214aa52a1f88694",
+    "log/ipc/control-overlay/install/lib/uav_follow_reference_acro/follow_reference_acro_node": "9a07d753b09a1e642417f789210d6f895ebc2730cc54a8c0b30d7a83f74303c5",
+    "log/ipc/native-deps/install/lib/libOsqpEigen.so": "4a69914ae88975939c3a0925d1d18f2b65f4bcb1630165e1b2763a842a61a2fd",
+    "log/ipc/native-deps/install/lib/libosqp.so": "b95aee4609e3c359158228ad1bdc72bd34c33c5324adde567f5f40061e7e8a11"
+  },
+  "runs": [
+    {
+      "id": "forest-13",
+      "passed": true,
+      "evidence_directory": "log/ipc/forest-13",
+      "metrics": {
+        "goal_error_m": 0.05329309926913208,
+        "truth_goal_error_m": 0.10737121041622799,
+        "truth_stop_goal_error_m": 0.22655501099581277,
+        "stop_speed_mps": 0.1862096810451331,
+        "stop_max_drift_m": 0.2762319012266294,
+        "minimum_clearance_m": 0.6945173623527755,
+        "max_tilt_rad": 0.18744516801985003,
+        "max_speed_norm_mps": 0.4778381719506758,
+        "max_cross_track_m": 2.4305158606579327,
+        "max_planned_deviation_m": 2.3949494485743337,
+        "straight_blocked": true,
+        "detour_seen": true,
+        "landed_and_disarmed": true,
+        "navigation_duration_sim_s": 103.1692008972168
+      },
+      "control_mapping": {
+        "success": true,
+        "source_to_actuator_stamp_pairs": 5644,
+        "max_thrust_error_newtons": 2.3838321272506846e-07,
+        "source_to_actuator_rate_stamp_pairs": 5644,
+        "max_actuator_rate_error_rad_s": 0.0,
+        "px4_value_matches": 5690,
+        "px4_samples_compared": 5690,
+        "max_combined_rate_throttle_error": 7.233641396986457e-08,
+        "px4_internal_body_rate_mode_confirmed": true,
+        "px4_internal_yaw_samples_rad_s": [
+          -0.07485,
+          -0.07485,
+          -0.07486
+        ],
+        "frequency_observations": {
+          "external_acro/control": {
+            "wall_hz": 97.80504703448976,
+            "sim_hz": 137.67612669928366
+          },
+          "actuator_command/thrust": {
+            "wall_hz": 38.74910941884149,
+            "sim_hz": 54.54780477824505
+          },
+          "fmu/in/vehicle_rates_setpoint": {
+            "wall_hz": 39.056387910911674,
+            "sim_hz": 54.984136013524626
+          }
+        },
+        "actuator_mapping_window_wall_s": [
+          451660.828701364,
+          451806.489892895
+        ],
+        "limitations": "Exact actuator mapping is scoped to the observed PX4 BODY_RATES interval; preceding Hover commands are excluded. PX4 bounded value matching permits repeated samples; no unique sequence mapping. Clock bridge is nominally 50Hz; this is not a 100Hz closed-loop acceptance."
+      },
+      "evidence_sha256": {
+        "result.json": "843cf18fe503ddf894c2715403d6dac4fab39ab92b03fcfc7d31ae8db86ef127",
+        "analysis.json": "4a5db22b6b31974dcf70e81e48c54c380c182411a0c339204a74abf86e88cf14",
+        "acceptance.json": "b46ba29fc93b141f89283bb0253458c22973c1b5325517a92df4e247b7a0630a",
+        "cleanup.json": "9cbe4c91ceb7efee79c83e5308589855b65a2a11f63641ca21d7a1054236bbf3",
+        "native-manifest.json": "7f74092cee5429928a16e94ff3d3f1661d9f4a36f6138a6e7b66733b87aa7b9f",
+        "forest-task.json": "60d9fe1358abcfc35e824b89ac40c8576c9743892e3677ff578688e2e15912d6",
+        "acceptance-criteria.json": "a45057094553d6c0883d16075c8b72cab79eda098909f614db608dc39d5920e8",
+        "images.json": "6c0f05b800226e155a4742bd12f8263535360f87200c6432287628bb1cc1b752",
+        "px4-control-mode-uorb.txt": "f5e3e114050829912380625c347e3a0ffa6a1c3a31f3a6328ea139b2667b0959",
+        "px4-rates-uorb.txt": "bbe789967721bf915de0c532eb70356be7fafe4b6f9872fc10ed6d10da874b99"
+      }
+    },
+    {
+      "id": "forest-14",
+      "passed": true,
+      "evidence_directory": "log/ipc/forest-14",
+      "metrics": {
+        "goal_error_m": 0.0378248339349099,
+        "truth_goal_error_m": 0.0628102065420029,
+        "truth_stop_goal_error_m": 0.03997636556821856,
+        "stop_speed_mps": 0.013651853856274649,
+        "stop_max_drift_m": 0.02755271340887209,
+        "minimum_clearance_m": 0.7261497938391387,
+        "max_tilt_rad": 0.15764039393093882,
+        "max_speed_norm_mps": 0.37834467983271597,
+        "max_cross_track_m": 2.641077127511457,
+        "max_planned_deviation_m": 2.625726978108287,
+        "straight_blocked": true,
+        "detour_seen": true,
+        "landed_and_disarmed": true,
+        "navigation_duration_sim_s": 107.87630128860474
+      },
+      "control_mapping": {
+        "success": true,
+        "source_to_actuator_stamp_pairs": 5876,
+        "max_thrust_error_newtons": 2.3841028617965776e-07,
+        "source_to_actuator_rate_stamp_pairs": 5876,
+        "max_actuator_rate_error_rad_s": 0.0,
+        "px4_value_matches": 5926,
+        "px4_samples_compared": 5926,
+        "max_combined_rate_throttle_error": 6.974377697588352e-08,
+        "px4_internal_body_rate_mode_confirmed": true,
+        "px4_internal_yaw_samples_rad_s": [
+          -0.07471,
+          -0.07471,
+          -0.07471
+        ],
+        "frequency_observations": {
+          "external_acro/control": {
+            "wall_hz": 97.73860216430505,
+            "sim_hz": 139.93752069648755
+          },
+          "actuator_command/thrust": {
+            "wall_hz": 37.95519382658857,
+            "sim_hz": 54.338526209187016
+          },
+          "fmu/in/vehicle_rates_setpoint": {
+            "wall_hz": 38.2657783440002,
+            "sim_hz": 54.791451426751465
+          }
+        },
+        "actuator_mapping_window_wall_s": [
+          451994.659266457,
+          452149.497355643
+        ],
+        "limitations": "Exact actuator mapping is scoped to the observed PX4 BODY_RATES interval; preceding Hover commands are excluded. PX4 bounded value matching permits repeated samples; no unique sequence mapping. Clock bridge is nominally 50Hz; this is not a 100Hz closed-loop acceptance."
+      },
+      "evidence_sha256": {
+        "result.json": "0b46b5a13e63827623280e895ed72e8191723c96088b03444936af560e7979d0",
+        "analysis.json": "9ee2218fe81ab9bbce26edb9e5106a4a16ebb077024fa6f368731a7ab9287427",
+        "acceptance.json": "b46ba29fc93b141f89283bb0253458c22973c1b5325517a92df4e247b7a0630a",
+        "cleanup.json": "9cbe4c91ceb7efee79c83e5308589855b65a2a11f63641ca21d7a1054236bbf3",
+        "native-manifest.json": "fe9d3d25fdd0ac4ef7005e014065b24ca4b1ef64817137884def7ac7003b762d",
+        "forest-task.json": "60d9fe1358abcfc35e824b89ac40c8576c9743892e3677ff578688e2e15912d6",
+        "acceptance-criteria.json": "a45057094553d6c0883d16075c8b72cab79eda098909f614db608dc39d5920e8",
+        "images.json": "6c0f05b800226e155a4742bd12f8263535360f87200c6432287628bb1cc1b752",
+        "px4-control-mode-uorb.txt": "fd789e14aef38007e7e1a0cff59362e7d16dbf11569bb76178ec4d078fb430af",
+        "px4-rates-uorb.txt": "c31d8283d66bc6be421cb549848aea26cfc3d614a2db8815bced60bdbb1df9b8"
+      }
+    }
+  ],
+  "limitations": [
+    "Fixed cruise-height horizontal A* path with full 3D MPC; free-3D forest rounds did not pass",
+    "No RoboPi, real-aircraft, multi-vehicle, dynamic-obstacle or 100Hz closed-loop acceptance",
+    "Nominal thrust field mapped through measured hover throttle and AS2 max_thrust, not real-aircraft force calibration",
+    "PX4 value matching permits repeated samples and is not unique sequence mapping",
+    "No generic Mission/Tool runtime or cross-Behavior resource arbitration"
+  ],
+  "history": "src/planner/ipc/validation.md; all failed trials retained, including additional 0.05 stop/0.03 quiet-handoff experiments. Final application uses the original 0.2m/s stop criterion with joint truth/estimate confirmation.",
+  "airsim_scene_executable": {
+    "name": "AirSimNH",
+    "sha256": "129138bb1de13ac8c9e5f488352c2bc0efa46e93f7ae4943b3a9e4020105db92",
+    "rendering": "Vulkan RenderOffscreen; no NullRHI; no AirSim movement API"
+  },
+  "same_runtime_images": true,
+  "current_runtime_files_match_tested_hashes": true
+}

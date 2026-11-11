@@ -1,0 +1,9 @@
+{
+  "as2_reference_commit": "f387e0d733a5102808508bcbec1b9eca2c29d1f0",
+  "package": "as2_motion_controller",
+  "path": "src/controller_handler.cpp",
+  "baseline_sha256": "2672e6b79b03b0faa22e42731fe9251a2255817f47607027dd649ca0efd935af",
+  "patched_sha256": "d149b7368662a83c2941123227fb70b85ee27a4f51b70362842640aea8422ad4",
+  "patch_sha256": "b4cbeaa5db9115aca8f972053fde17b8f8702efbddd5a49754f3498eb8f6b2e7",
+  "scope": "Follow bypass patch; preserve paired BODY_RATES source timestamps; no ABI change"
+}

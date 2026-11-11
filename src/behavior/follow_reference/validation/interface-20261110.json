@@ -1,0 +1,28 @@
+{
+  "status": "passed",
+  "scope": "Build, pluginlib loading and real AS2 host with simulated algorithm/state/controller; no PX4 or flight",
+  "image_id": "sha256:1242967324756673026eb117fadbc55ec1629af1a6a1a89db64ebb5527cc6a87",
+  "evidence": "log/ipc/plugin-build/runs/20261110T064508Z-1494999",
+  "reproduce": "bash src/behavior/follow_reference/tests/verify.sh",
+  "checks": [
+    "stream gate CTest: 1 passed",
+    "pluginlib dynamic load",
+    "real host ROS interface/lifecycle smoke",
+    "output disabled rejects goals"
+  ],
+  "source_sha256": {
+    "config/external_acro.yaml": "bc08b3d6f748506fadb3bf90b2b0af8c0abea7b6d0f80cc67efe8b43f09c7450",
+    "include/uav_follow_reference_acro/stream_gate.hpp": "5aa63637d3942731a6a3f85e92624b22b217954c3b60c3864b9433264414a275",
+    "launch/external_acro.launch.py": "46439a774c6be99f355cb1d3447cb89ab20ff15d09b07badd1f8eb93d2c219e5",
+    "msg/ControlFrame.msg": "9be08e59a2029a5a9fcfc4b37d3a3724ddcb8034941d80b5bdf3ff96f55eb8ad",
+    "msg/ControlSession.msg": "d53f8caec86ef87f4d12e5d313f0639321a2ae2c68341986c9afe421489dc968",
+    "package.xml": "039d8b8d4401a0ce8d91c3485222584a38d655c9d337c10df84d4ca81220ce54",
+    "plugins.xml": "edcc1cb2f1a360667b99944570ee077aa76a80f371e1aa4813968e6733c8e1be",
+    "src/node.cpp": "5b656543b0f6bc9cf22b1e26ed7317bdc85bc299abfd90ba11e9e93435c007b4",
+    "src/plugin.cpp": "a3e991fa3a0ba4be3427c2b355dcaf0e28b7b1fcd71f817ff3e58af2441a81bf",
+    "tests/interface_smoke.py": "2c082a07e6c3648cc8995b4e418022bdb084efc1505f65fbc6dc7916954a8682",
+    "tests/plugin_load_test.cpp": "1ef612b300ed6b6fb628e6b620cfcba83c1e8c63d8f8b00fffb8e9f5c043e815",
+    "tests/stream_gate_test.cpp": "56672b89633f1235bb4520e4e6f21757728a8bcdfe28688d2da97f1b7ee90de3",
+    "tests/verify.sh": "ca24cff32ba6061e8b0d442a3ccf444bb9425b189925605235c91cd3a5f8a728"
+  }
+}
