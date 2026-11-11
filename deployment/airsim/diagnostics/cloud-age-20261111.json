@@ -1,0 +1,298 @@
+{
+  "date": "2026-11-11",
+  "scope": "Historical flight ages plus one isolated disarmed stage trace; analysis only, no publisher or algorithm changes",
+  "ground_stage_report": {
+    "scope": "Passive ROS callbacks at one observer; does not modify publishers or perform flight",
+    "complete_required_stages": true,
+    "stage_counts": {
+      "registered": 50,
+      "raw": 47,
+      "ipc_processed": 33
+    },
+    "stage_ages": {
+      "registered": {
+        "age_sim": {
+          "count": 41,
+          "min_ms": 42.000896000000004,
+          "p50_ms": 78.001664,
+          "p95_ms": 102.002176,
+          "max_ms": 102.002176
+        },
+        "uninitialized_clock_records": 9,
+        "future_stamp_records": 0,
+        "unique_scans": 50,
+        "repeated_stamp_records": 0
+      },
+      "raw": {
+        "age_sim": {
+          "count": 47,
+          "min_ms": 24.000512,
+          "p50_ms": 75.0016,
+          "p95_ms": 102.002176,
+          "max_ms": 102.002176
+        },
+        "uninitialized_clock_records": 0,
+        "future_stamp_records": 0,
+        "unique_scans": 47,
+        "repeated_stamp_records": 0
+      },
+      "ipc_processed": {
+        "age_sim": {
+          "count": 33,
+          "min_ms": 42.000896000000004,
+          "p50_ms": 75.0016,
+          "p95_ms": 102.002176,
+          "max_ms": 102.002176
+        },
+        "uninitialized_clock_records": 0,
+        "future_stamp_records": 0,
+        "unique_scans": 33,
+        "repeated_stamp_records": 0
+      }
+    },
+    "same_stamp_pairs": {
+      "raw_to_registered": {
+        "observer_receive_wall": {
+          "count": 41,
+          "min_ms": 1.202187,
+          "p50_ms": 4.320416,
+          "p95_ms": 8.833786,
+          "max_ms": 10.143562
+        },
+        "observer_receive_sim": {
+          "count": 41,
+          "min_ms": 0.0,
+          "p50_ms": 3.000064,
+          "p95_ms": 12.000256,
+          "max_ms": 12.000256
+        },
+        "count": 41
+      },
+      "registered_to_ipc_processed": {
+        "observer_receive_wall": {
+          "count": 33,
+          "min_ms": 0.10856600000000001,
+          "p50_ms": 0.621375,
+          "p95_ms": 3.258971,
+          "max_ms": 4.996831
+        },
+        "observer_receive_sim": {
+          "count": 33,
+          "min_ms": 0.0,
+          "p50_ms": 0.0,
+          "p95_ms": 0.0,
+          "max_ms": 3.000064
+        },
+        "count": 33
+      },
+      "raw_to_ipc_processed": {
+        "observer_receive_wall": {
+          "count": 33,
+          "min_ms": 1.694673,
+          "p50_ms": 5.016208000000001,
+          "p95_ms": 10.811658999999999,
+          "max_ms": 12.092757
+        },
+        "observer_receive_sim": {
+          "count": 33,
+          "min_ms": 0.0,
+          "p50_ms": 6.000128,
+          "p95_ms": 12.000256,
+          "max_ms": 15.000319999999999
+        },
+        "count": 33
+      }
+    },
+    "limitations": [
+      "Callback receive differences include observer scheduling and transport; negative differences may reflect observer ordering, not time reversal.",
+      "ROS clock is quantized; individual age samples are estimates.",
+      "Unmatched or pre-discovery scans are not treated as measured stage latency."
+    ],
+    "source_events": "log/ipc/cloud-age/stages-01/events.json"
+  },
+  "historical_flight_reports": [
+    {
+      "run": "super-3mps-balanced-01",
+      "scope": "Historical postprocessed scan bag and source health only; receive clock brackets are estimates, not hard synchronized latency bounds",
+      "latest_scan_age_at_solve": {
+        "n": 8308,
+        "min_ms": 21.000448000000002,
+        "p50_ms": 129.002752,
+        "p95_ms": 192.004096,
+        "p99_ms": 204.004352,
+        "max_ms": 204.004352
+      },
+      "scan_sample_interval": {
+        "n": 910,
+        "min_ms": 102.002176,
+        "p50_ms": 102.002176,
+        "p95_ms": 102.002176,
+        "p99_ms": 102.002176,
+        "max_ms": 102.002176
+      },
+      "processed_observer_arrival_age_low": {
+        "n": 911,
+        "min_ms": 15.000319999999999,
+        "p50_ms": 78.001664,
+        "p95_ms": 102.002176,
+        "p99_ms": 102.002176,
+        "max_ms": 102.002176
+      },
+      "processed_observer_arrival_age_high": {
+        "n": 911,
+        "min_ms": 21.000448000000002,
+        "p50_ms": 84.00179200000001,
+        "p95_ms": 102.002176,
+        "p99_ms": 102.002176,
+        "max_ms": 102.002176
+      },
+      "first_solve_using_each_scan_age": {
+        "n": 817,
+        "min_ms": 21.000448000000002,
+        "p50_ms": 87.001856,
+        "p95_ms": 114.002432,
+        "p99_ms": 117.002496,
+        "max_ms": 201.004288
+      },
+      "elapsed_since_first_solve_using_same_scan": {
+        "n": 8308,
+        "min_ms": 0.0,
+        "p50_ms": 45.00096,
+        "p95_ms": 93.001984,
+        "p99_ms": 117.002496,
+        "max_ms": 180.00384
+      },
+      "first_solve_minus_processed_observer_clock_low": {
+        "n": 816,
+        "min_ms": -6.000128,
+        "p50_ms": 6.000128,
+        "p95_ms": 12.000256,
+        "p99_ms": 18.000384,
+        "max_ms": 24.000512
+      },
+      "first_solve_minus_processed_observer_clock_high": {
+        "n": 816,
+        "min_ms": 0.0,
+        "p50_ms": 9.000192,
+        "p95_ms": 15.000319999999999,
+        "p99_ms": 24.000512,
+        "max_ms": 30.000639999999997
+      },
+      "sampled_preprocess_wall_cost": {
+        "n": 46,
+        "min_ms": 0.446585,
+        "p50_ms": 2.951327,
+        "p95_ms": 8.513448,
+        "p99_ms": 14.330091,
+        "max_ms": 14.330091
+      },
+      "unobserved_first_scan_count": 1
+    },
+    {
+      "run": "super-3mps-balanced-02",
+      "scope": "Historical postprocessed scan bag and source health only; receive clock brackets are estimates, not hard synchronized latency bounds",
+      "latest_scan_age_at_solve": {
+        "n": 8493,
+        "min_ms": 27.000576,
+        "p50_ms": 132.002816,
+        "p95_ms": 192.004096,
+        "p99_ms": 204.004352,
+        "max_ms": 204.004352
+      },
+      "scan_sample_interval": {
+        "n": 941,
+        "min_ms": 102.002176,
+        "p50_ms": 102.002176,
+        "p95_ms": 102.002176,
+        "p99_ms": 102.002176,
+        "max_ms": 102.002176
+      },
+      "processed_observer_arrival_age_low": {
+        "n": 942,
+        "min_ms": 12.000256,
+        "p50_ms": 81.001728,
+        "p95_ms": 102.002176,
+        "p99_ms": 102.002176,
+        "max_ms": 102.002176
+      },
+      "processed_observer_arrival_age_high": {
+        "n": 942,
+        "min_ms": 18.000384,
+        "p50_ms": 84.00179200000001,
+        "p95_ms": 102.002176,
+        "p99_ms": 102.002176,
+        "max_ms": 102.002176
+      },
+      "first_solve_using_each_scan_age": {
+        "n": 836,
+        "min_ms": 27.000576,
+        "p50_ms": 90.00192,
+        "p95_ms": 114.002432,
+        "p99_ms": 114.002432,
+        "max_ms": 117.002496
+      },
+      "elapsed_since_first_solve_using_same_scan": {
+        "n": 8493,
+        "min_ms": 0.0,
+        "p50_ms": 45.00096,
+        "p95_ms": 93.001984,
+        "p99_ms": 117.002496,
+        "max_ms": 171.003648
+      },
+      "first_solve_minus_processed_observer_clock_low": {
+        "n": 836,
+        "min_ms": -9.000192,
+        "p50_ms": 6.000128,
+        "p95_ms": 12.000256,
+        "p99_ms": 21.000448000000002,
+        "max_ms": 51.001088
+      },
+      "first_solve_minus_processed_observer_clock_high": {
+        "n": 836,
+        "min_ms": 0.0,
+        "p50_ms": 9.000192,
+        "p95_ms": 18.000384,
+        "p99_ms": 27.000576,
+        "max_ms": 60.001279999999994
+      },
+      "sampled_preprocess_wall_cost": {
+        "n": 48,
+        "min_ms": 0.408628,
+        "p50_ms": 3.015342,
+        "p95_ms": 8.852379,
+        "p99_ms": 19.106477,
+        "max_ms": 19.106477
+      },
+      "unobserved_first_scan_count": 0
+    }
+  ],
+  "images": {
+    "compute": "sha256:1242967324756673026eb117fadbc55ec1629af1a6a1a89db64ebb5527cc6a87",
+    "flight_board": "sha256:8c33881fde6985fe5a43a894bde075471df85064e45ac8e5de28efebcc737cd2"
+  },
+  "ground_cleanup": {
+    "confirmed_disarmed": true,
+    "owned_resources_stopped": true
+  },
+  "source_sha256": {
+    "simulator/airsim/sensors/uav_as2_sensor_adapter/node.py": "ba921c8ee6c3463a973cd8679c18cc511552158d3ef6505dd9b1e6dd0df9d78f",
+    "simulator/airsim/sensors/uav_as2_sensor_adapter/worker.py": "023bce823344a8320019065199b775d3b564296547e1ef601ab12a8320ce8335",
+    "simulator/airsim/sensors/uav_as2_sensor_adapter/rpc.py": "064ffe5213796ad83c0d676f0d0963df3e664b911b050febdaaad22f2dbe421a",
+    "src/perception/navigation_inputs/src/navigation_inputs.cpp": "cad0b7ffe458fc5bcd1b3c2d52c0815f33d15ca2672215becf15c363b44c1b1d",
+    "deployment/airsim/diagnostics/cloud_age_probe.py": "ed4ddcbafa93d92ea1360154928545ded786db3500c7ff828858deb3744e6fc7"
+  },
+  "evidence_sha256": {
+    "log/ipc/cloud-age/stages-01/events.json": "15ed33e4efe6d474c6b5719f5409f7ce5316c9a7212181dec9abce6c2c6ebf96",
+    "log/ipc/cloud-age/stages-01-analyzed/report.json": "3ced49246d6a6ce5346673ff866a03f220cc5951c3a35643a89f4f3fa5798063",
+    "log/ipc/cloud-age/super-3mps-balanced-01.json": "14dd46b1f1f50c0d30bd0e6c5a926e2755c9872edc1b17482db2e030a1ebc27c",
+    "log/ipc/cloud-age/super-3mps-balanced-02.json": "891104c71489a6ab1e2fe7d8c7547d4a352252067f42c2863123fa3b9f274e62",
+    "log/ipc/cloud-age/ground-01/result.json": "73c99fee539c698a7f900d19ac12ddfabc901544e23e13c734bcb6caa31450de",
+    "log/ipc/cloud-age/ground-01/cleanup.json": "9cbe4c91ceb7efee79c83e5308589855b65a2a11f63641ca21d7a1054236bbf3"
+  },
+  "inferences": [
+    "Shared acquisition/publication plus holding a10Hz scan account for most observed latest-frame age; current trace does not separate RPC snapshot age, transport, conversion or DDS timing.",
+    "The ground result is a limited sample and does not replace moving-scene stage timing."
+  ],
+  "next_measurement": "Add acquisition/RPC/conversion/publication boundaries, then compare startup polling10/40Hz at unchanged source scan rate; count unique scan stamps and CPU/RPC cost.",
+  "map_history_note": "Ten102ms frames span about918ms. Latest scan age does not express every voxel observation age; static and dynamic temporal policies differ."
+}

@@ -1,0 +1,12 @@
+{
+  "as2_reference_commit": "f387e0d733a5102808508bcbec1b9eca2c29d1f0",
+  "package": "as2_motion_controller",
+  "path": "src/controller_handler.cpp",
+  "baseline_sha256": "354d65627323d4aa088951921c54c4912d7c6acf6d99aaf2754b6ab8cc30b84d",
+  "patched_sha256": "2672e6b79b03b0faa22e42731fe9251a2255817f47607027dd649ca0efd935af",
+  "patch_sha256": "ee43b32d21f7d6f13bba0ce9448eb3fce5b95dd2bc007d91df339c223dd104b1",
+  "scope": "BODY_RATES bypass thrust propagation and complete fresh matching control samples; no ABI change",
+  "compatible_patched_sha256": [
+    "d149b7368662a83c2941123227fb70b85ee27a4f51b70362842640aea8422ad4"
+  ]
+}
