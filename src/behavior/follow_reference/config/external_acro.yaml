@@ -6,6 +6,7 @@
     follow_reference_max_speed_y: 1.0
     follow_reference_max_speed_z: 1.0
     tf_timeout_threshold: 0.05
+    external_acro.control_mode: body_rates
     external_acro.output_enabled: false
     external_acro.frame_timeout: 0.1
     external_acro.solve_timeout: 0.1

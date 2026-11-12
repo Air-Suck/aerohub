@@ -1,0 +1,53 @@
+schema_version: '0.1'
+id: inference.diffphys
+name: DiffPhys recurrent policy inference
+version: 0.1.0
+type: inference
+description: Official swarm.pth or high-speed base.pth network outputs and explicit GRU state; no trajectory or flight execution.
+component:
+  id: aerohub.inference.diffphys
+  manifest: deployment/inference/diffphys.component.yaml
+  shared_process_group: diffphys-model-worker
+  coupled_capabilities: []
+usage:
+  mode: query
+  selection_phase: deployment
+  invocation_interface: uav_inference_interfaces/srv/InferDiffphys
+  switching_constraints: [stop-worker-before-model-replacement, explicit-per-task-hidden-state-reset]
+inputs:
+- service: <namespace>/inference/diffphys/infer
+  schema: src/inference/interfaces/srv/InferDiffphys.srv
+  depth: Positive finite 36x48 DepthPlanar; 32FC1 meters or 16UC1 millimeters.
+  state: Ten profile-specific features; swarm uses level attitude row, high_speed uses actual body attitude row.
+  hidden_state: Empty resets; otherwise192 finite values owned by caller per vehicle/task.
+  timing: Actual image/state age<=0.5s and skew<=0.05s; preserve stamps and frames; no future reference.
+outputs:
+- action: Six raw interleaved local setpoint/velocity-estimate features; not terminal PVA or motion command.
+  metadata: request_id, state/depth headers, model version, actual device,192-dimensional next hidden state.
+preconditions:
+- Selected official profile and verified artifacts prepared; stop worker before switching profiles.
+- Caller verifies camera geometry and constructs correctly synchronized observation features.
+- CUDA worker ready; explicit CPU mode only for preparation checks.
+resources:
+  reads: [caller-observation, caller-hidden-state, verified-weights]
+  writes: [selected-GPU-memory-and-compute]
+  conflicts: [other-workloads-on-same-GPU]
+  enforcement: Single-inflight worker; caller owns request ordering and per-vehicle/task state acceptance.
+lifecycle:
+  startup: Load strict checkpoint and warm once; no persisted recurrent state.
+  readiness: Internal HTTP /health/ready and ROS inference/diffphys/status; not flight readiness.
+  completion: One ROS Service response.
+  cancel_or_stop: No service cancellation; timeout does not cancel computation; caller discards obsolete h_next.
+  recovery: Restart worker, wait ready, and explicitly initialize caller hidden state.
+type_specific:
+  algorithm_owner: src/planner/diffphys/upstream
+  worker_module: src/inference/models/diffphys
+  profiles: [official-swarm-odom, official-high-speed-odom]
+  high_speed_camera: Planner samples horizontal91deg 640x480 Pitch20deg source using official82pct crop and nearest36x48; worker normalizes and pools. Ideal AirSim DepthPlanar differs from SGM.
+validation:
+  evidence: src/inference/models/diffphys/validation.json
+  flight_evidence: deployment/airsim/demos/diffphys_forest/validation.json
+  latency_evidence: log/diffphys/latency-30-ground-60s/latency-analysis.json
+  latency_scope: Ground60sim-seconds real camera and CUDA901-calls; no internal image loss observed. Not airborne endurance or navigation acceptance.
+  normal_forest_scope: Single normal pass at target8m/s with current camera; actual median6.359/peak8.917m/s. See flight_evidence and demo KNOWN_ISSUES.md.
+  limitations: [no-physical-device-validation, full-reproduction-incomplete, repeat-reliability-unverified, high-speed-camera-loss-stop-failed, 10mps-collision, ideal-depth-not-stereo-SGM]

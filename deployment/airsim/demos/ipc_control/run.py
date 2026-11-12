@@ -11,6 +11,7 @@ import socket
 import subprocess
 import sys
 import time
+import urllib.request
 import yaml
 
 ROOT = Path(__file__).resolve().parents[4]
@@ -35,14 +36,50 @@ def main():
     p.add_argument('--clock-rate-hz',type=float,default=50.,help='This isolated demo clock RPC/publication rate; does not certify control frequency')
     p.add_argument('--native', action='store_true', help='Use real IPC native source for the control gate')
     p.add_argument('--workspace', type=Path, default=ROOT/'log/ipc/control-overlay')
+    p.add_argument('--stop-mode', choices=['loss','cancel'], default='loss', help='Attitude validation stop scenario')
+    p.add_argument('--diffphys', action='store_true', help='Real DiffPhys forest policy, separate from IPC')
+    p.add_argument('--diffphys-long',action='store_true',help='Original SUPER forest start/goal and bounds; DiffPhys native speed')
+    p.add_argument('--diffphys-fault', choices=['none','camera'],default='none')
+    p.add_argument('--diffphys-camera-x', type=float, default=.25)
+    p.add_argument('--diffphys-endpoint', default='http://127.0.0.1:18082')
+    p.add_argument('--diffphys-profile', choices=['swarm','high_speed'],default='swarm')
+    p.add_argument('--diffphys-speed',type=float,default=2.5,help='DiffPhys target speed in m/s')
+    p.add_argument('--diffphys-takeoff-height',type=float,default=2.,help='Native Takeoff height before DiffPhys handover, in metres')
+    p.add_argument('--diffphys-goal-lookahead',type=float,default=0.,help='Horizontal lookahead for finite-goal height steering; zero preserves direct goal')
+    p.add_argument('--diffphys-tilt-limit',type=float,default=.6,help='Predeclared flight tilt gate in radians; historical diagnostic runs used .9')
+    p.add_argument('--diffphys-command-tilt',type=float,default=0.,help='Explicit decoder command tilt cone; zero preserves raw valid output')
+    p.add_argument('--attitude', action='store_true', help='Use attitude/thrust validation source and PX4 attitude loop')
     args = p.parse_args(); out = args.output.resolve(); workspace = args.workspace.resolve()
+    if args.diffphys: args.attitude = True
+    if not math.isfinite(args.diffphys_takeoff_height) or args.diffphys_takeoff_height<=0:
+        p.error('--diffphys-takeoff-height must be positive and finite')
+    if not math.isfinite(args.diffphys_command_tilt) or not 0<=args.diffphys_command_tilt<math.pi/2:p.error('invalid DiffPhys command tilt')
+    if not math.isfinite(args.diffphys_tilt_limit) or not 0<args.diffphys_tilt_limit<=math.pi/2:p.error('invalid DiffPhys tilt limit')
+    if not math.isfinite(args.diffphys_goal_lookahead) or args.diffphys_goal_lookahead<0:p.error('invalid DiffPhys goal lookahead')
     if not math.isfinite(args.clock_rate_hz) or not 0 < args.clock_rate_hz <= 1000:
         p.error('--clock-rate-hz must be finite and in (0, 1000]')
+    if not math.isfinite(args.diffphys_speed) or args.diffphys_speed <= 0:
+        p.error('--diffphys-speed must be positive and finite')
     if bool(args.task) != bool(args.criteria): p.error('--task and --criteria must be supplied together')
     if args.task and not args.forest: p.error('--task requires --forest')
+    if args.attitude and (args.native or args.ground_only or args.forest or args.short):
+        p.error('--attitude is an independent control validation; cannot combine with IPC task modes')
     out.mkdir(parents=True, exist_ok=True)
     if (out/'images.json').exists(): raise RuntimeError('Choose a fresh output directory')
     if not (workspace/'install/setup.bash').exists(): raise RuntimeError('Build control overlay first')
+    if args.diffphys:
+        # The ROS service can be present while its model worker is unavailable.
+        # Require the real warmed-up CUDA model before starting the simulator.
+        with urllib.request.urlopen(args.diffphys_endpoint.rstrip('/')+'/health/ready',timeout=3) as response:
+            worker=json.load(response)
+        expected={'swarm':('official-swarm-odom','72e0ec5ad1c7a2163ce10506c4210bc9439fab8e6b0cb83114002bedd5582628'),
+                  'high_speed':('official-high-speed-odom','dd9ffeafd12e44dfd0e402fb880b52d110f414530faddb16e6c9b3dbd336bb64')}
+        profile,checksum=expected[args.diffphys_profile]
+        if args.diffphys_profile=='high_speed' and worker.get('preprocessing_version')!='high-speed-hfov91-crop82-nearest36x48-pool3-state10-explicit-h-v2':
+            raise RuntimeError('DiffPhys high-speed preprocessing version mismatch')
+        if worker.get('device')!='cuda' or worker.get('profile')!=profile or not worker.get('model_version','').startswith('sha256:'+checksum+';') or worker.get('busy',True):
+            raise RuntimeError('DiffPhys worker CUDA/profile/checkpoint/readiness mismatch')
+        (out/'worker-preflight.json').write_text(json.dumps(worker,indent=2)+'\n')
     if args.native and not (ROOT/'log/ipc/native-deps/ros-install/lib/ipc_native_core/ipc_node').is_file():
         raise RuntimeError('Build IPC native node before starting simulation')
     image = os.environ.get('IPC_CONTROL_IMAGE', 'uav/apps-super-forest:repo-native-20261109')
@@ -79,6 +116,14 @@ def main():
             criteria=args.criteria or ROOT/'deployment/airsim/demos/ipc_navigation/acceptance-criteria.json'
             call([sys.executable,ROOT/'deployment/airsim/demos/ipc_navigation/check_criteria.py',out/'forest-task.json',criteria])
             (out/'acceptance-criteria.json').write_text(criteria.read_text())
+    if args.diffphys:
+        width,height,fov,pitch=(640,480,91,20) if args.diffphys_profile=='high_speed' else (48,36,79,10)
+        camera = dict(X=args.diffphys_camera_x,Y=0.,Z=-.1,Pitch=pitch,Roll=0.,Yaw=0.,CaptureSettings=[dict(ImageType=1,Width=width,Height=height,FOV_Degrees=fov)])
+        settings['Vehicles']['PX4']['Cameras']={'diffphys_front':camera}
+        # This visual policy consumes no point cloud. Do not inherit SUPER's
+        # 200k-points/s LiDAR simulation or its two independent ROS readers.
+        for sensor in settings['Vehicles']['PX4'].get('Sensors',{}).values():
+            if sensor.get('SensorType')==6:sensor['Enabled']=False
     settings['ApiServerPort'] = args.rpc_port
     settings['Vehicles']['PX4'].update(TcpPort=args.tcp_port,ControlPortLocal=15743,ControlPortRemote=15783)
     (out/'settings.json').write_text(json.dumps(settings,indent=2)+'\n')
@@ -94,10 +139,11 @@ def main():
         'use_sim_time':True,'cmd_freq':100.,'info_freq':50.,'external_odom':False,
         'fmu_prefix':'/drone0','target_system_id':73,'max_thrust':15.,'min_thrust':.15}}}))
     hashes = {str(f.relative_to(ROOT)):hashlib.sha256(f.read_bytes()).hexdigest()
-        for directory in [APP,ROOT/'src/behavior/follow_reference'] for f in directory.rglob('*')
+        for directory in [APP,ROOT/'src/behavior/follow_reference'] + ([ROOT/'deployment/airsim/demos/attitude_control'] if args.attitude else []) + ([ROOT/'deployment/airsim/demos/diffphys_forest',ROOT/'src/planner/diffphys/ros2_adapter',ROOT/'simulator/airsim/sensors',ROOT/'src/inference/ros2_adapter'] if args.diffphys else []) for f in directory.rglob('*')
         if f.is_file() and '__pycache__' not in f.parts}
     (out/'manifest.json').write_text(json.dumps({'source_sha256':hashes,'domain':182,
         'clock_rate_hz_requested':args.clock_rate_hz,
+        'control_mode':('attitude' if args.attitude else 'body_rates'),
         'compute_role':('real IPC native + AS2 on PC' if args.native else 'validation controller + AS2 on PC; not IPC or RoboPi'),
         'thresholds':(task if args.forest or args.short else {'max_hold_error_m':.75,'max_tilt_rad':.35,'max_stop_speed_mps':.5,
                       'hold_wall_seconds':5}),'motion_api':'AS2/PX4 only; AirSim RPC for scoring'},indent=2)+'\n')
@@ -137,7 +183,8 @@ def main():
         common = ['docker','run','--rm','--detach','--init','--network','host',
             '--label','aerohub.ipc.output='+str(out),'-e','ROS_DOMAIN_ID=182',
             '-e','AIRSIM_RPC_PORT='+str(args.rpc_port),'-e','VEHICLE_NAME=PX4']
-        if args.native: common += ['-e','FLIGHT_BOARD_CAMERAS=0']
+        if args.native or args.attitude: common += ['-e','FLIGHT_BOARD_CAMERAS=0']
+        if args.diffphys: common += ['-e','FLIGHT_BOARD_SENSORS=0']
         call(common+['--name',names[0],'-e','PX4_INSTANCE=72','-e','PX4_SYSTEM_ID=73',
             '-e','XRCE_AGENT_PORT=8963','-e','VEHICLE_NAMESPACE=drone0',
             '-v',str(out/'px4-settings.json')+':/config/settings.json:ro',images['flight_board'],'vehicle'])
@@ -164,14 +211,32 @@ def main():
         passed = 'pre_flight_checks_pass: True' in status
         (out/'preflight.json').write_text(json.dumps({'checks_pass':passed,'source':'target firmware uORB vehicle_status'})+'\n')
         if not passed: raise RuntimeError('PX4 full preflight checks not passed')
+        parameters = subprocess.check_output(['docker','exec',names[0],'/opt/px4-gazebo/bin/px4-param',
+            '--instance','72','show','-a'],text=True,timeout=15)
+        (out/'px4-runtime-parameters.txt').write_text(parameters)
         app_log = (out/'application.log').open('w')
         command = ['docker','run','--rm','--init','--network','host','--name',names[2],
             '--label','aerohub.ipc.output='+str(out),'-e','ROS_DOMAIN_ID=182',
             '-e','IPC_TEST_RPC_PORT='+str(args.rpc_port),
-            '-e','AS2_BEHAVIORS=takeoff,land','-v',str(ROOT)+':/repo:ro',
+            '-e','AS2_BEHAVIORS='+('takeoff,land,go_to' if args.diffphys else 'takeoff,land'),'-v',str(ROOT)+':/repo:ro',
             '-v',str(workspace)+':/overlay:ro','-v',str(out)+':/evidence',
             '--entrypoint','/bin/bash',images['compute'],'-lc',
             'source /root/aerostack2_ws/install/setup.bash && source /overlay/install/setup.bash && exec python3 /repo/deployment/airsim/demos/ipc_control/session.py']
+        if args.attitude:
+            command[command.index('--entrypoint'):command.index('--entrypoint')] = ['-e','EXTERNAL_ATTITUDE_TEST=1','-e','ATTITUDE_STOP_MODE='+args.stop_mode,'-e','OPENBLAS_NUM_THREADS=1','-e','OMP_NUM_THREADS=1','-e','MKL_NUM_THREADS=1']
+        if args.diffphys:
+            command[command.index('--entrypoint'):command.index('--entrypoint')] = [
+                '-e','DIFFPHYS_TEST=1','-e','DIFFPHYS_LONG='+str(int(args.diffphys_long)),
+                '-e','FASTRTPS_DEFAULT_PROFILES_FILE=/repo/deployment/airsim/demos/diffphys_forest/fastdds.xml',
+                '-e','DIFFPHYS_FAULT='+args.diffphys_fault,
+                '-e','DIFFPHYS_CAMERA_X='+str(args.diffphys_camera_x),
+                '-e','DIFFPHYS_PROFILE='+args.diffphys_profile,
+                '-e','DIFFPHYS_SPEED='+str(args.diffphys_speed),
+                '-e','DIFFPHYS_TAKEOFF_HEIGHT='+str(args.diffphys_takeoff_height),
+                '-e','DIFFPHYS_GOAL_LOOKAHEAD='+str(args.diffphys_goal_lookahead),
+                '-e','DIFFPHYS_TILT_LIMIT='+str(args.diffphys_tilt_limit),
+                '-e','DIFFPHYS_COMMAND_TILT='+str(args.diffphys_command_tilt),
+                '-e','DIFFPHYS_ENDPOINT='+args.diffphys_endpoint]
         if args.native:
             command[command.index('--entrypoint'):command.index('--entrypoint')] = ['-e','IPC_NATIVE=1','-e','OPENBLAS_NUM_THREADS=1','-e','OMP_NUM_THREADS=1','-e','MKL_NUM_THREADS=1','-v',str(ROOT/'log/ipc/native-deps')+':/native:ro']
             command[-1] = command[-1].replace(' && exec python3', ' && source /native/ros-install/local_setup.bash && export LD_LIBRARY_PATH=/native/install/lib:$LD_LIBRARY_PATH && exec python3')

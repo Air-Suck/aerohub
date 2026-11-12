@@ -2,7 +2,7 @@
 
 Inference 是与 Perception、State Estimator 并列的基础能力：目标对外使用 ROS 2，对内通过 FastAPI 隔离每模型运行环境；CUDA 使用独立 uv 环境，RoboPi HMM 使用板端 Python 与应用私有运行包。
 
-当前提供公共 FastAPI runtime、ROS HTTP 客户端、模型 manifest、用户 YAML 准备入口、原生 AS2 双容器通信基准，以及 [YOPO](models/yopo/README.md) typed ROS 推理服务。YOPO Planner 的轨迹重建和执行在 `src/planner/yopo/`，模型服务只返回候选 PVA/cost。
+当前提供公共 FastAPI runtime、ROS HTTP 客户端、模型 manifest、用户 YAML 准备入口、原生 AS2 双容器通信基准，以及 [YOPO](models/yopo/README.md) 和 [DiffPhys](models/diffphys/README.md) typed ROS 推理服务。YOPO Planner 的轨迹重建和执行在 `src/planner/yopo/`，模型服务只返回候选 PVA/cost；DiffPhys返回原始策略输出和显式GRU隐状态，尚无运动执行接入。
 
 ## 开始前准备什么
 
@@ -60,7 +60,7 @@ ROS builder 的准备入口见 [OHOS 构建说明](../../deployment/oh-ros-build
 
 - `runtime/`：公共 FastAPI 应用工厂，每进程加载并预热一个模型，提供 `/health/live`、`/health/ready`、`/infer`。模型提供 factory、请求与响应 Pydantic 类型。
 - `ros2_adapter/`：`uav_inference` ROS Python 包，提供内部 HTTP 客户端及 YOPO ROS Service Adapter。
-- `manifest.json`：已支持模型 ID、仓库相对目录和描述。已登记 `yopo`。
+- `manifest.json`：已支持模型 ID、仓库相对目录和描述。已登记 `yopo`、`diffphys`。
 - `models/`：各模型各自提供 README/setup、依赖声明和锁文件、schema 与推理 adapter。算法源码按功能归属保留原目录。
 
 ## 模型选择与准备

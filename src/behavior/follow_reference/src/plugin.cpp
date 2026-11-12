@@ -27,6 +27,10 @@ public:
     desired_control_mode_.yaw_mode = Mode::YAW_SPEED;
   }
   bool prepare() {return checkMode();}
+  void attitudeMode() {
+    desired_control_mode_.control_mode = Mode::ATTITUDE;
+    desired_control_mode_.yaw_mode = Mode::YAW_ANGLE;
+  }
 };
 
 class Plugin : public follow_reference_base::FollowReferenceBase {
@@ -34,6 +38,11 @@ public:
   void ownInit() override {
     platform_state_ = 0;
     localization_flag_ = false;
+    const auto selected = node_ptr_->getParameter<std::string>("external_acro.control_mode", "body_rates");
+    if (selected != "body_rates" && selected != "attitude") {
+      throw std::invalid_argument("external_acro.control_mode must be body_rates or attitude");
+    }
+    attitude_mode_ = selected == "attitude";
     enabled_ = node_ptr_->getParameter<bool>("external_acro.output_enabled", false);
     frame_timeout_ = positive("external_acro.frame_timeout", 0.1);
     solve_timeout_ = positive("external_acro.solve_timeout", 0.1);
@@ -47,6 +56,9 @@ public:
       throw std::invalid_argument("external ACRO requires the controller motion-reference route");
     }
     acro_ = std::make_unique<AcroHandler>(node_ptr_);
+    if (attitude_mode_) {acro_->attitudeMode();}
+    pose_pub_ = node_ptr_->create_publisher<geometry_msgs::msg::PoseStamped>(
+      as2_names::topics::motion_reference::pose, as2_names::topics::motion_reference::qos);
     rate_pub_=node_ptr_->create_publisher<geometry_msgs::msg::TwistStamped>(
       as2_names::topics::motion_reference::twist,as2_names::topics::motion_reference::qos);
     thrust_pub_=node_ptr_->create_publisher<as2_msgs::msg::Thrust>(
@@ -58,8 +70,8 @@ public:
     rclcpp::SubscriptionOptions mode_options;mode_options.callback_group=mode_group_;
     mode_sub_ = node_ptr_->create_subscription<as2_msgs::msg::ControllerInfo>(
       "controller/info", rclcpp::QoS(1), [this](as2_msgs::msg::ControllerInfo::SharedPtr msg) {
-        mode_ready_ = msg->input_control_mode.control_mode == Mode::BODY_RATES &&
-          msg->input_control_mode.yaw_mode == Mode::YAW_SPEED;
+        mode_ready_ = msg->input_control_mode.control_mode == (attitude_mode_ ? Mode::ATTITUDE : Mode::BODY_RATES) &&
+          msg->input_control_mode.yaw_mode == (attitude_mode_ ? Mode::YAW_ANGLE : Mode::YAW_SPEED);
         mode_info_stamp_ = node_ptr_->now().seconds();
       }, mode_options);
     sub_ = node_ptr_->create_subscription<Frame>("external_acro/control",
@@ -67,11 +79,7 @@ public:
         if (!active_ || !msg->solver_ok ||
             seconds(msg->header.stamp) < seconds(session_.header.stamp) ||
             msg->header.frame_id != node_ptr_->getBaseFrameId() ||
-            !finite(msg->body_rates.x) || !finite(msg->body_rates.y) ||
-            !finite(msg->body_rates.z) || !finite(msg->thrust_newtons) ||
-            std::abs(msg->body_rates.x) > rate_limit_ ||
-            std::abs(msg->body_rates.y) > rate_limit_ ||
-            std::abs(msg->body_rates.z) > rate_limit_ ||
+            !validCommand(*msg) || !finite(msg->thrust_newtons) ||
             msg->thrust_newtons <= 0 || msg->thrust_newtons > thrust_limit_) {return;}
         if (gate_.accept(msg->session_id, msg->revision, msg->sequence,
             seconds(msg->header.stamp), seconds(msg->last_successful_solve),
@@ -191,11 +199,29 @@ public:
     // each send through a second, independently scheduled feedback cache.
     geometry_msgs::msg::TwistStamped rates;rates.header=frame_.header;
     rates.twist.angular=frame_.body_rates;
-    thrust_pub_->publish(thrust);rate_pub_->publish(rates);
+    thrust_pub_->publish(thrust);
+    if (attitude_mode_) {
+      geometry_msgs::msg::PoseStamped pose;
+      pose.header = frame_.header;
+      pose.header.frame_id = frame_.attitude_frame_id;
+      pose.pose.orientation = frame_.attitude;
+      pose_pub_->publish(pose);
+    } else {rate_pub_->publish(rates);}
     return Status::RUNNING;  // Continuous follow; caller cancels when its task is complete.
   }
 
 private:
+  bool validCommand(const Frame & msg) const {
+    if (msg.control_mode != (attitude_mode_ ? Frame::ATTITUDE : Frame::BODY_RATES)) {return false;}
+    if (!attitude_mode_) {
+      return finite(msg.body_rates.x) && finite(msg.body_rates.y) && finite(msg.body_rates.z) &&
+        std::abs(msg.body_rates.x) <= rate_limit_ && std::abs(msg.body_rates.y) <= rate_limit_ &&
+        std::abs(msg.body_rates.z) <= rate_limit_;
+    }
+    const auto & q = msg.attitude;
+    const double norm2 = q.x*q.x + q.y*q.y + q.z*q.z + q.w*q.w;
+    return msg.attitude_frame_id == planning_frame_ && finite(norm2) && std::abs(norm2-1.0) < 1e-3;
+  }
   static bool finite(double x) {return std::isfinite(x);}
   static double seconds(const builtin_interfaces::msg::Time & t) {
     return static_cast<double>(t.sec) + t.nanosec * 1e-9;
@@ -208,7 +234,8 @@ private:
   bool supported(const Goal & goal) const {
     return goal.target_pose.header.frame_id == planning_frame_ && finite(goal.target_pose.point.x) &&
       finite(goal.target_pose.point.y) && finite(goal.target_pose.point.z) &&
-      finite(goal.yaw.angle) && goal.yaw.mode == as2_msgs::msg::YawMode::FIXED_YAW &&
+      finite(goal.yaw.angle) && (goal.yaw.mode == as2_msgs::msg::YawMode::FIXED_YAW ||
+        (attitude_mode_ && goal.yaw.mode == as2_msgs::msg::YawMode::YAW_FROM_TOPIC)) &&
       finite(goal.max_speed_x) && goal.max_speed_x > 0 &&
       finite(goal.max_speed_y) && goal.max_speed_y > 0 &&
       finite(goal.max_speed_z) && goal.max_speed_z > 0;
@@ -218,6 +245,7 @@ private:
     session_.header.stamp = node_ptr_->now();
     session_.header.frame_id = goal.target_pose.header.frame_id;
     session_.active = true;
+    session_.control_mode = attitude_mode_ ? Frame::ATTITUDE : Frame::BODY_RATES;
     session_.target = goal.target_pose;
     session_.yaw = goal.yaw;
     session_.max_speed.x = goal.max_speed_x;
@@ -243,6 +271,7 @@ private:
     return Status::FAILURE;
   }
   uav_follow_reference_acro::StreamGate gate_;
+  rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr pose_pub_;
   rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr rate_pub_;
   rclcpp::Publisher<as2_msgs::msg::Thrust>::SharedPtr thrust_pub_;
   std::unique_ptr<AcroHandler> acro_;
@@ -262,6 +291,7 @@ private:
   rclcpp::CallbackGroup::SharedPtr mode_group_;
   std::atomic<double> mode_info_stamp_{0};
   std::string planning_frame_;
+  bool attitude_mode_{false};
   bool enabled_{false}, active_{false}, prepared_{false}, streaming_{false};
   std::atomic<bool> mode_ready_{false};
 };

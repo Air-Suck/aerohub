@@ -1,4 +1,4 @@
-# 外部角速度与推力 FollowReference 插件
+# 外部角速度／姿态与推力 FollowReference 插件
 
 本包扩展原生 `FollowReferenceBase`，保留 `as2_msgs/action/FollowReference`，不新增导航 Behavior 或 Tool。算法、地图、MPC、推力估计和控制转换留在外部 Robotic Functions；此包只管理执行会话和运动参考。已通过接口验证及独立 [AirSim + flight_board 短程控制闭环](../../../deployment/airsim/demos/ipc_control/README.md)；真实IPC自由XYZ、SUPER同起终点约238m森林已以名义3m/s两次完整通过；旧20m定高结果仅作历史，范围及失败历史见 [IPC validation](../../planner/ipc/validation.md)；板端及真机尚未验收。
 
@@ -20,16 +20,36 @@ ros2 launch uav_follow_reference_acro external_acro.launch.py namespace:=drone0
 
 pluginlib 类为 `follow_reference_plugin_external_acro::Plugin`，宿主参数 `plugin_name=follow_reference_plugin_external_acro`。宿主复用原 FollowReferenceBehavior 类，采用双线程事件驱动 executor，默认组串行执行、独立组处理模式反馈；原 CLI 宿主的30Hz spinLoop不适合直接承担100Hz控制流。配置 `run_frequency=100.0` 仅设定执行定时器，不等于已测得100Hz全链闭环。
 
+## 姿态模式扩展（2026-11-11）
+
+部署时通过 `control_mode:=body_rates|attitude` 选择模式，默认body_rates。模式在宿主启动后固定，`ControlSession.control_mode`明确公布；每个`ControlFrame.control_mode`须匹配。未知模式或会话内不匹配帧拒绝且不刷新有效期。模式改变须停止、重启并重新接管，不能在流中隐式切换。
+
+- BODY_RATES=0：保留原body_rates(rad/s)＋thrust_newtons(N)语义；attitude字段忽略。
+- ATTITUDE=1：使用`attitude`四元数与`attitude_frame_id`，表示固定ENU规划系中FLU机体的目标姿态；thrust_newtons仍为牛顿。`header`保持计算时刻和FLU机体系，供推力和时效契约使用。四元数须有限且模平方与1偏差<1e-3，目标姿态frame须等于配置planning_frame；body_rates字段忽略。
+
+未激活字段允许存在，不根据其值推断模式。新增消息字段保持源码默认行为，但改变ROS类型定义：**所有发布者、订阅者及IPC等消费者必须在同一overlay重新生成消息／重编译**；不宣称旧二进制DDS兼容。
+
+```bash
+ros2 launch uav_follow_reference_acro external_acro.launch.py \
+  namespace:=drone0 control_mode:=attitude output_enabled:=true use_sim_time:=true
+```
+
+姿态模式输出同源stamp的`motion_reference/pose`和`motion_reference/thrust`，请求ATTITUDE/YAW_ANGLE。控制器将姿态转换到本地odom系，再由Pixhawk平台完成ENU/FLU→NED/FRD和推力归一化。必须显式加载[姿态验证overlay](../../../deployment/airsim/demos/attitude_control/README.md)，其中两项附加补丁在控制器和平台执行配对、新鲜度和四元数校验、保留源时间；共享镜像不变。
+
+该模式保留FollowReference目标/约束会话，接受FIXED_YAW；ATTITUDE模式还显式接受YAW_FROM_TOPIC，由外部完整姿态流确定航向。BODY_RATES模式仍拒绝YAW_FROM_TOPIC，其他yaw模式不自动兼容。插件不增加位置或姿态反馈控制器，也没有跨Behavior资源仲裁。原角速度和姿态接口回归均通过，真实平台配对测试通过；有屏AirSim/PX4验证范围见上述独立Demo，DiffPhys算法任务证据另见其森林Demo。
+
+launch参数`solve_timeout`默认0.1秒；15Hz策略可显式选择0.2秒求解有效期，不更改独立控制流watchdog或刷新旧求解时间。超时设置必须与任务输入新鲜度及实际推理预算共同核查。
+
 ## 接口
 
 | 接口（相对车辆命名空间） | 内容 |
 | --- | --- |
 | `FollowReferenceBehavior` Action | 原生目标、yaw、逐轴速度上限及生命周期 |
 | `external_acro/session` | `ControlSession`，可靠/transient-local深度1，包含目标、约束、会话ID、revision和active |
-| `external_acro/control` | `ControlFrame`，best-effort深度1，一个消息携带完整角速度和推力 |
+| `external_acro/control` | `ControlFrame`，best-effort深度1，一个消息携带选定模式的完整角速度／姿态和推力 |
 | `motion_reference/twist`、`motion_reference/thrust` | 经ACROMotion输出给AS2控制器；输入模式BODY_RATES/YAW_SPEED |
 
-第一版仅接受 FIXED_YAW 与 `external_acro.planning_frame` 中的目标（默认AS2 earth），拒绝其他yaw模式和移动目标系。max_speed是该固定规划系的逐轴上限；外部算法必须按完整session确认并执行，不能只回显ID忽略约束。IPC native adapter负责目标确认及对应算法能力，不由插件求解导航。
+角速度入口仅接受FIXED_YAW，姿态入口另接受上述YAW_FROM_TOPIC；目标必须位于`external_acro.planning_frame`（默认AS2 earth），移动目标系仍拒绝。max_speed是该固定规划系的逐轴上限；外部算法必须按完整session确认并执行，不能只回显ID忽略约束。IPC native adapter负责目标确认及对应算法能力，不由插件求解导航。
 
 控制帧须回显当前session_id/revision，sequence从正数递增。header为控制计算时间和车辆FLU机体系（如 `drone0/base_link`）；body_rates单位rad/s，thrust_newtons为牛顿。`last_successful_solve`保留真实最后成功求解时间，`solver_ok=false`不进入执行。超过角速度/推力界限、非有限值、旧版本、倒序、未来或陈旧数据均拒绝；拒绝不延长旧帧有效期。未提供单独ack消息，首个匹配版本且有效的控制帧表示外部算法已准备该目标版本。
 

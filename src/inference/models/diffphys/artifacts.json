@@ -1,0 +1,29 @@
+{
+  "release": "https://github.com/HenryHuYu/DiffPhysDrone/releases/tag/v1.0",
+  "url": "https://github.com/HenryHuYu/DiffPhysDrone/releases/download/v1.0/validation_code.zip",
+  "archive_sha256": "d894c0aded7de7f2d3d5f1c8bc8d0e32c23ccc24b130d1c115b5b9025a9adef5",
+  "inner_archive": "swarm_v1.tar.gz",
+  "files": {
+    "swarm/swarm.pth": "72e0ec5ad1c7a2163ce10506c4210bc9439fab8e6b0cb83114002bedd5582628",
+    "swarm/model.py": "425d3f6cea75bd012971045f8460e8513a8b3625de7d989adeeef4980f9398fa",
+    "swarm/eval.py": "c30be743d95f0ece8ffba5205b8f2aa3d9d060e8a8ed07a604a92f66d5e1b1ff",
+    "swarm/settings.json": "7554e6f168d2e366d30dc53365f69ad96f8c01653217ffbcc21c066395d41226"
+  },
+  "high_speed_inner_archive": "high_speed_flight_v1.tar.gz",
+  "high_speed_files": {
+    "high_speed_flight/src/e2e_planner_v2/base.pth": {
+      "target": "high_speed/base.pth",
+      "sha256": "dd9ffeafd12e44dfd0e402fb880b52d110f414530faddb16e6c9b3dbd336bb64"
+    },
+    "high_speed_flight/src/e2e_planner_v2/src/model.py": {
+      "target": "high_speed/model.py",
+      "sha256": "de6d4016548f261ee1ba852777103aa648d11e8a3b46732f39b6963e3c83253c"
+    },
+    "high_speed_flight/src/e2e_planner_v2/src/PlannerBase.py": {
+      "target": "high_speed/PlannerBase.py",
+      "sha256": "c32f37474701b0da919c9816eb3578b66e15ddd9d514a8d0694f4132f9b7ddda"
+    }
+  },
+  "upstream_revision": "271936190b5c2a5e760230e718fa6b167718a5bf",
+  "upstream_model_sha256": "ea78efbdbf34edaeb19ebb11b8f9b475ed2cb13110fce09b07246f42fea278f7"
+}

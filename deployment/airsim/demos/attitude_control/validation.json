@@ -1,0 +1,92 @@
+{
+  "date": "2026-11-11",
+  "scope": "FollowReference ATTITUDE/thrust execution through AS2 and PX4; validation feedback source, not diffphys",
+  "overall": "passed-for-declared-control-test-matrix",
+  "thresholds": {
+    "hold_wall_s": 5,
+    "drift_m": 0.75,
+    "tilt_rad": 0.35,
+    "stop_speed_m_s": 0.5,
+    "control_frame_timeout_s": 0.1,
+    "mapping_tolerance": 1e-05
+  },
+  "interface_evidence": "log/diffphys/attitude-plugin/runs/20261111T032140Z-3564768",
+  "platform_pairing_evidence": "log/diffphys/attitude-overlay/attitude-pairing-test.log",
+  "runs": [
+    {
+      "evidence": "log/diffphys/attitude-sitl-05",
+      "scenario": "input-loss",
+      "result": {
+        "success": true,
+        "hold_error_max_m": 0.21120339915210173,
+        "tilt_max_rad": 0.03726761101890373,
+        "truth_hold_drift_max_m": 0.2973829339040529,
+        "truth_yaw_change_rad": -0.11789950076375742,
+        "stop_speed_mps": 0.028026167263296677,
+        "landed_and_disarmed": true
+      },
+      "mapping": {
+        "success": true,
+        "source_thrust_pairs": 396,
+        "max_force_error_N": 2.384084174522627e-07,
+        "px4_samples": 392,
+        "max_quaternion_plus_throttle_error": 4.940612952086809e-08,
+        "px4_attitude_loop_confirmed": true,
+        "limitation": "PX4 matches use bounded 0.5s value window; no unique sequence identity. Validation source, not diffphys."
+      },
+      "cleanup": {
+        "confirmed_disarmed": true,
+        "owned_resources_stopped": true
+      },
+      "images": {
+        "compute": "sha256:1242967324756673026eb117fadbc55ec1629af1a6a1a89db64ebb5527cc6a87",
+        "flight_board": "sha256:8c33881fde6985fe5a43a894bde075471df85064e45ac8e5de28efebcc737cd2"
+      }
+    },
+    {
+      "evidence": "log/diffphys/attitude-sitl-06",
+      "scenario": "active-cancel",
+      "result": {
+        "success": true,
+        "hold_error_max_m": 0.06522546879968714,
+        "tilt_max_rad": 0.035387875120204054,
+        "truth_hold_drift_max_m": 0.059465879092440305,
+        "truth_yaw_change_rad": -0.13660226772454181,
+        "stop_speed_mps": 0.040833876795863415,
+        "landed_and_disarmed": true
+      },
+      "mapping": {
+        "success": true,
+        "source_thrust_pairs": 362,
+        "max_force_error_N": 2.379722703338416e-07,
+        "px4_samples": 359,
+        "max_quaternion_plus_throttle_error": 4.2844903458405525e-08,
+        "px4_attitude_loop_confirmed": true,
+        "limitation": "PX4 matches use bounded 0.5s value window; no unique sequence identity. Validation source, not diffphys."
+      },
+      "cleanup": {
+        "confirmed_disarmed": true,
+        "owned_resources_stopped": true
+      },
+      "images": {
+        "compute": "sha256:1242967324756673026eb117fadbc55ec1629af1a6a1a89db64ebb5527cc6a87",
+        "flight_board": "sha256:8c33881fde6985fe5a43a894bde075471df85064e45ac8e5de28efebcc737cd2"
+      }
+    }
+  ],
+  "limitations": [
+    "No DiffPhys Planner or visual policy closed loop",
+    "No physical platform/RoboPi",
+    "No dynamic-yaw task interface",
+    "No cross-Behavior arbitration",
+    "No 100Hz performance acceptance",
+    "Cameras bridge disabled for this sensor-independent control test",
+    "Official prior IPC consumers require message rebuild"
+  ],
+  "failed_runs": {
+    "01": "msgpack missing before scene launch; no motion",
+    "02": "watchdog terminated control; Land/disarmed",
+    "03": "watchdog terminated control; Land/disarmed",
+    "04": "watchdog terminated control; Land/disarmed"
+  }
+}

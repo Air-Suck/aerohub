@@ -31,5 +31,7 @@ docker run --rm --network none --entrypoint /bin/bash \
       > "runs/$VERIFY_RUN/interfaces.log" 2>&1
     python3 /repo/src/behavior/follow_reference/tests/interface_smoke.py --disabled \
       > "runs/$VERIFY_RUN/disabled.log" 2>&1
+    python3 /repo/src/behavior/follow_reference/tests/interface_smoke.py --attitude \
+      > "runs/$VERIFY_RUN/attitude.log" 2>&1
     echo "PASS: runs/$VERIFY_RUN"
   '
