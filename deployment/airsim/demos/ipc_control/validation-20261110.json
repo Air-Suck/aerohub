@@ -1,0 +1,94 @@
+{
+  "date": "2026-11-10",
+  "scope": "FollowReference ACRO plugin + AS2 + AirSim/PX4 flight_board short control validation; validation feedback source, not IPC",
+  "success": true,
+  "evidence_directory": "log/ipc/airsim-control-13",
+  "versions": {
+    "as2_runtime_source": "f387e0d733a5102808508bcbec1b9eca2c29d1f0",
+    "pixhawk_runtime_source": "80f0f27a72efd053d029d3e6a76c3d5d473db6d2",
+    "px4_firmware": "61907962c9220437ec01a98fa26bfbf5cbb254b5",
+    "images": {
+      "compute": "sha256:1242967324756673026eb117fadbc55ec1629af1a6a1a89db64ebb5527cc6a87",
+      "flight_board": "sha256:8c33881fde6985fe5a43a894bde075471df85064e45ac8e5de28efebcc737cd2"
+    },
+    "controller_patch": {
+      "as2_reference_commit": "f387e0d733a5102808508bcbec1b9eca2c29d1f0",
+      "package": "as2_motion_controller",
+      "path": "src/controller_handler.cpp",
+      "baseline_sha256": "354d65627323d4aa088951921c54c4912d7c6acf6d99aaf2754b6ab8cc30b84d",
+      "patched_sha256": "2672e6b79b03b0faa22e42731fe9251a2255817f47607027dd649ca0efd935af",
+      "patch_sha256": "ee43b32d21f7d6f13bba0ce9448eb3fce5b95dd2bc007d91df339c223dd104b1",
+      "scope": "BODY_RATES bypass thrust propagation and complete fresh matching control samples; no ABI change"
+    }
+  },
+  "result": {
+    "preflight": {
+      "checks_pass": true,
+      "source": "target firmware uORB vehicle_status"
+    },
+    "unarmed_output_suppressed": true,
+    "hover": {
+      "normalized_thrust": 0.48821,
+      "source": "PX4 vehicle_attitude_setpoint before takeover"
+    },
+    "hold_error_max_m": 0.11089823087281987,
+    "tilt_max_rad": 0.06802748065219397,
+    "truth_hold_drift_max_m": 0.1300666358557251,
+    "truth_yaw_change_rad": -0.11043611235518225,
+    "stop_speed_mps": 0.08416448895157624,
+    "control_passed": true,
+    "landed_and_disarmed": true
+  },
+  "analysis": {
+    "success": true,
+    "source_to_actuator_stamp_pairs": 202,
+    "max_thrust_error_newtons": 2.3775444368823173e-07,
+    "px4_value_matches": 198,
+    "px4_samples_compared": 198,
+    "max_combined_rate_throttle_error": 4.344577304860042e-08,
+    "px4_internal_body_rate_mode_confirmed": true,
+    "px4_internal_yaw_samples_rad_s": [
+      -0.5,
+      -0.5,
+      -0.5
+    ],
+    "frequency_observations": {
+      "external_acro/control": {
+        "wall_hz": 36.48692800724414,
+        "sim_hz": 48.12103973356788
+      },
+      "actuator_command/thrust": {
+        "wall_hz": 36.59759152740059,
+        "sim_hz": 48.26986484290646
+      },
+      "fmu/in/vehicle_rates_setpoint": {
+        "wall_hz": 36.02358343750848,
+        "sim_hz": 47.54907059594512
+      }
+    },
+    "limitations": "PX4 bounded value matching permits repeated samples; no unique sequence mapping. Clock bridge is nominally 50Hz; this is not a 100Hz closed-loop acceptance."
+  },
+  "cleanup": {
+    "confirmed_disarmed": true,
+    "owned_resources_stopped": true
+  },
+  "evidence_sha256": {
+    "result.json": "fbe90d8e60d72e2641c5c1d91310a976ca0865cfe0a43176aa106897dbc53b9e",
+    "analysis.json": "a2e5af64a2091f8b47fcbda291216c21bd7a0becdc60d0513e3cc70cd1b678ab",
+    "images.json": "6c0f05b800226e155a4742bd12f8263535360f87200c6432287628bb1cc1b752",
+    "manifest.json": "2fbdbc5eec815e78090c8e66a152ffb3d3942a7e1ed012e2ac74facea3a81679",
+    "samples.jsonl": "777c7b5228041847da01f55c50d8b18781419c7de1ffb0044b273ee5f7009688",
+    "px4-control-mode-uorb.txt": "17443f6fb99352de2ccc64b0f73cfcbb5078f8a1f2b6a37678ed1f1eab1af946",
+    "px4-rates-uorb.txt": "35676b63bed6293ad51d7891340c880d11c98ee88a8802d18463e2f78af29561",
+    "compute-cleanup.json": "1ebd365b4c191ad5f59129d4f659ef75fc9cca0930db3e0ef82a4eb43c79461c",
+    "cleanup.json": "9cbe4c91ceb7efee79c83e5308589855b65a2a11f63641ca21d7a1054236bbf3"
+  },
+  "limitations": [
+    "5 wall-second control hold; not long-duration reliability",
+    "PC co-located compute/task roles; no RoboPi or real aircraft acceptance",
+    "No real IPC solver/navigation/obstacle avoidance yet",
+    "Approximately 48 Hz simulation time, not 100 Hz",
+    "Normalized thrust mapping is not physical thrust calibration",
+    "Bounded numerical PX4 matching permits repeated samples; no unique sequence attribution"
+  ]
+}

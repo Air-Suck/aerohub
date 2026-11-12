@@ -144,7 +144,7 @@ forest8的验收版本完全相同；本次布局调整未重复飞行。准确�
 
 应用镜像为 `uav/apps-super-forest:super-main-pc-20261109-startfix`，ID
 `sha256:b30487573240725517560a8a72ee4b60f00f5bc448cfb1a18a0792365f5d379b`。
-机载基底由本轮官方 AS2/Pixhawk gitlink 与当前补丁重编，并非旧 v0.1.0 安装直接冒充。
+机载基底由本轮 AS2 fork gitlink、官方 Pixhawk gitlink 与 Pixhawk 兼容补丁重编，并非旧 v0.1.0 安装直接冒充。
 固定 PX4 消息工具链和场景仍是明确的既有前置依赖，不宣称空机无外部资源复现。
 
 原始证据保留在 `log/airsim/super-main-pc-20261109/`，包括两轮结果、DDS 连接与

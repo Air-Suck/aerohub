@@ -1,0 +1,26 @@
+{
+  "name": "@aerohub/gallery",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "dev": "astro dev --host 127.0.0.1",
+    "check": "astro check",
+    "check:watch": "node scripts/check-watch-scope.mjs",
+    "bundle": "npm run build",
+    "build": "npm run check && astro build",
+    "preview": "astro preview --host 127.0.0.1"
+  },
+  "dependencies": {
+    "@astrojs/markdown-satteri": "0.4.7",
+    "astro": "7.4.7"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.12",
+    "@types/node": "^24.19.2",
+    "typescript": "~5.9.3"
+  }
+}

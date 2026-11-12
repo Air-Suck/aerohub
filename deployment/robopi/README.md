@@ -198,7 +198,7 @@ AS2 进程树内存约 648 MiB，继续保留 1536 MiB 保护阈值。
 本轮日期：2026-11-04。使用官方 `build-ros-humble --custom` 流程。
 这不是 PC Linux 安装目录复制上板，也未替换板端系统 ROS。
 
-以下记录早期独立构建工作区的准备过程。当前统一使用官方锁定子模块，历史 fork 的改动通过 `deployment/platform/patches/` 的补丁应用到构建副本，不修改 `as2/` 检出目录。
+以下记录早期独立构建工作区的准备过程。当前统一使用锁定的 AeroHub AS2 fork 子模块；准备脚本直接导出该提交，不再向 AS2 构建副本应用历史补丁。
 当前入口由 `tools/robopi/prepare_ohos_sources.py` 同步该工作区的活动 AS2 源码与
 PX4 1.18 消息；首次准备目标工具链仍参考下文。
 

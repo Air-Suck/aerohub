@@ -1,0 +1,7 @@
+<library path="follow_reference_acro_plugin">
+  <class name="follow_reference_plugin_external_acro::Plugin"
+         type="follow_reference_plugin_external_acro::Plugin"
+         base_class_type="follow_reference_base::FollowReferenceBase">
+    <description>Executes session-bound external body rates and thrust.</description>
+  </class>
+</library>

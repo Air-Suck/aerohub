@@ -1,0 +1,39 @@
+name: aerohub-pin-slam
+services:
+  algorithm:
+    image: uav/pin-slam:humble
+    build:
+      context: ../..
+      dockerfile: deployment/pin_slam/Dockerfile.algorithm
+      args:
+        BASE_IMAGE: "${ONBOARD_DEPENDENCIES_IMAGE:-onboard_computer_dependencies:humble-px4-1.18-msgfix}"
+    init: true
+    network_mode: host
+    runtime: nvidia
+    environment:
+      ROS_DOMAIN_ID: "${PIN_SLAM_DOMAIN:-81}"
+      PIN_SLAM_NAMESPACE: "${PIN_SLAM_NAMESPACE:-drone0}"
+      NVIDIA_VISIBLE_DEVICES: "${PIN_SLAM_GPU:-0}"
+      NVIDIA_DRIVER_CAPABILITIES: compute,utility
+    volumes:
+      - ./airsim.yaml:/config/airsim.yaml:ro
+      - ./algorithm.params.yaml:/config/algorithm.yaml:ro
+      - ../../log/pin_slam:/results
+    stop_grace_period: 30s
+
+  estimator:
+    image: uav/pin-slam-as2:humble
+    build:
+      context: ../..
+      dockerfile: deployment/pin_slam/Dockerfile.as2
+      args:
+        BASE_IMAGE: "${ONBOARD_COMPUTER_IMAGE:-onboard_computer:main-e2e}"
+    init: true
+    network_mode: host
+    environment:
+      ROS_DOMAIN_ID: "${PIN_SLAM_DOMAIN:-81}"
+    command:
+      - bash
+      - -lc
+      - source /opt/ros/humble/setup.bash && source /root/aerostack2_ws/install/setup.bash && source /opt/pin_slam_as2_ws/install/setup.bash && exec ros2 launch uav_pin_slam pin_slam.launch.py namespace:=${PIN_SLAM_NAMESPACE:-drone0} use_sim_time:=true
+    stop_grace_period: 10s

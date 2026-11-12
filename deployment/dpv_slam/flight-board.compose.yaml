@@ -1,0 +1,17 @@
+services:
+  drone0:
+    environment:
+      ROS_DOMAIN_ID: "${DPV_SLAM_DOMAIN:-82}"
+      FLIGHT_BOARD_CAMERAS: "1"
+      FLIGHT_BOARD_CAMERA_RATE_HZ: "15.0"
+      AIRSIM_SETTINGS: /config/dpv-slam-settings.json
+      AIRSIM_RPC_PORT: "45471"
+    volumes:
+      - ../dpv_slam/airsim-settings.json:/config/dpv-slam-settings.json:ro
+  clock:
+    environment:
+      ROS_DOMAIN_ID: "${DPV_SLAM_DOMAIN:-82}"
+      AIRSIM_SETTINGS: /config/dpv-slam-settings.json
+      AIRSIM_RPC_PORT: "45471"
+    volumes:
+      - ../dpv_slam/airsim-settings.json:/config/dpv-slam-settings.json:ro

@@ -1,8 +1,8 @@
 repositories:
   as2/aerostack2:
     type: git
-    url: https://github.com/aerostack2/aerostack2.git
-    version: 19c397309c6a41b279e6b551818ec12605cfcecc
+    url: https://github.com/Popc0rn7/aerostack2-aerohub.git
+    version: f387e0d733a5102808508bcbec1b9eca2c29d1f0
   as2/as2_platform_pixhawk:
     type: git
     url: https://github.com/aerostack2/as2_platform_pixhawk.git

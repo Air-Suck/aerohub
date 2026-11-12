@@ -1,0 +1,27 @@
+{
+  "id": "ipc-free-xyz-super-3mps-v1-acc4",
+  "origin": "User target3m/s, SUPER geometry, engineering acceptance fixed before running; actual cruise >=2.7 for5sim seconds; report full speed distribution; independent acceleration4 envelope with0.5rad tilt gate, validated first in open-field3m/s, prior criteria retained",
+  "criteria": {
+    "goal_tolerance_m": 1.5,
+    "goal_speed_m_s": 0.3,
+    "dwell_sim_s": 2.0,
+    "timeout_sim_s": 300.0,
+    "max_tilt_rad": 0.5,
+    "max_cross_track_m": 30.0,
+    "minimum_clearance_m": 0.35,
+    "minimum_planned_deviation_m": 0.35,
+    "stop_speed_m_s": 0.2,
+    "stop_timeout_wall_s": 10.0,
+    "stop_dwell_wall_s": 1.0,
+    "max_stop_drift_m": 0.75,
+    "require_detour": true,
+    "planar_path": false,
+    "target_from_ground_enu_m": [
+      -37.57000000000001,
+      231.76000000000002,
+      6.0
+    ],
+    "cruise_min_m_s": 2.7,
+    "cruise_required_sim_s": 5.0
+  }
+}

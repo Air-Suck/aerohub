@@ -1,0 +1,42 @@
+schema_version: '0.1'
+id: aerohub.planner.yopo-single
+version: '0.1.0'
+source:
+  upstream: src/planner/yopo/upstream
+  revision: bd8a7f91953cfef9f1aa9a48d7ff0ab7bceee132
+  integration: src/planner/yopo/ros2_adapter
+  license: MIT
+provides: [planner.yopo-single]
+cards: [cards/planner/yopo-single.yaml]
+roles:
+  compute: [yopo-planner, yopo-inference-adapter, isolated-yopo-worker, AS2, FollowTimedPath]
+  workstation: [ROS-task-client, simulation-collision-scoring]
+  simulator: [AirSim, sensor-bridge]
+  flight_controller: [PX4-SITL]
+runtime:
+  images: [onboard_computer:v0.1.0, flight_board:v0.1.0, 'osrf/ros:humble-desktop-full-jammy']
+  platform: linux-x86_64-NVIDIA
+  dependencies: [aerohub.inference.yopo, uav_follow_path_execution, ROS-2-Humble, AirSimNH, PX4-SITL]
+  source_preparation: src/inference/models/yopo/setup.sh
+  build: deployment/airsim/demos/yopo_single/build.sh
+  launch: deployment/airsim/demos/yopo_single/run.py
+  configuration: deployment/airsim/demos/yopo_single/planner.yaml
+  camera_rate_hz: 15.0
+  sensors: deployment/airsim/demos/yopo_single/settings.json
+  model_profile: YOPO_VELOCITY=2
+  worker_endpoint: http://127.0.0.1:18081
+  overlay: log/yopo-single/ros_ws/install
+  workstation_overlay: log/yopo-single/workstation/ws/install
+  clock: AirSim-clock-bridge
+  domain: selected-unused-110-to-170-recorded-in-each-domain.json
+  readiness: fresh-synchronized-depth-pose-twist-camera-info-and-TF-plus-ROS-services
+  stop: ROS-yopo/cancel-then-STOPPED-speed-gate-before-native-Land
+  rollback: stop-confirmed-disarmed-task-restore-reviewed-source-and-model-lock-rebuild-matching-overlay
+  persistence: log/yopo-single
+resources:
+  motion: exclusive-drone0-FollowTimedPath-session
+  gpu: external-worker-selected-by-CUDA_VISIBLE_DEVICES
+  tf_authority: AS2-self-localization-and-sensor-static-bridge
+validation:
+  evidence: deployment/airsim/demos/yopo_single/validation.md
+  limitations: [reference-planning-branch-only, no-precise-arrival, no-real-hardware-validation]

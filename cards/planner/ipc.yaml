@@ -1,0 +1,88 @@
+schema_version: 0.1
+id: ipc-native
+name: IPC 联合规划控制
+version: 0f959ca7995e71a1fcc4942bd4a86869ab6ee975
+type: planner
+description: 单机局部 A*/Floyd、安全走廊与 MPC，输出机体角速度和推力；现有 FollowReference 插件承接执行。
+component:
+  id: ipc_native_core
+  manifest: src/planner/ipc/ros2_adapter/native/component.yaml
+  shared_process_group: ipc-native-node
+  coupled_capabilities: []
+usage:
+  mode: continuous-provider
+  selection_phase: deployment
+  invocation_interface: ControlSession 绑定既有 as2_msgs/action/FollowReference Goal；不是独立 Tool API
+  switching_constraints:
+    - 起降和导航执行互斥；任务协调器先停止其他运动发布者
+    - 固定 yaw、earth 目标系；暂停后取消并提交新目标
+    - 当前应用自由XYZ规划，目标相对本轮测得的地面原点；任务空间边界和地图绝对高度范围须匹配
+inputs:
+  - interface: /drone0/navigation/odom
+    schema: nav_msgs/msg/Odometry
+    semantics: earth 位姿，drone0/base_link 的 body FLU 速度，ROS采样时间；年龄不超过0.2s
+  - interface: /drone0/navigation/points
+    schema: sensor_msgs/msg/PointCloud2
+    semantics: 注册到 earth 的米制XYZ点云，保留扫描时间；年龄不超过0.5s
+  - interface: /drone0/external_acro/session
+    schema: uav_follow_reference_acro/msg/ControlSession
+    semantics: 会话ID/修订、活动状态、earth目标、固定yaw弧度与逐轴速度上限
+outputs:
+  - interface: /drone0/external_acro/control
+    schema: uav_follow_reference_acro/msg/ControlFrame
+    semantics: body FLU角速度rad/s；推力N字段采用悬停油门与AS2 max_thrust映射，非实机力标定；源计算及最后成功求解时间
+  - interface: /drone0/ipc/path
+    schema: nav_msgs/msg/Path
+    semantics: earth局部路径，仅供观察；不作为外部时间化轨迹执行接口
+  - interface: /drone0/ipc/ready
+    schema: std_msgs/msg/Bool
+  - interface: /drone0/ipc/health
+    schema: std_msgs/msg/String
+preconditions:
+  - 显式加载匹配AS2版本的控制器修复overlay和external_acro插件，output_enabled=true
+  - PX4已就绪、原生起飞完成、真实输入与TF新鲜
+  - 悬停油门在控制接管前测得；AS2 max_thrust与映射一致
+resources:
+  reads: [vehicle_state, registered_point_cloud]
+  writes: [external_acro_control_stream]
+  conflicts: [other_motion_reference_publishers, duplicate_ipc_source, duplicate_follow_reference_host]
+  enforcement: 插件拒绝旧会话/修订和陈旧控制；本样例协调起降/导航。跨Behavior全局资源仲裁尚未实现。
+lifecycle:
+  startup: 部署侧启动native节点、输入适配和AS2；任务另进程调用现有Behavior
+  readiness: ipc/ready加新鲜输入、DDS发现及真实PX4状态前置检查
+  freshness: 控制帧与成功求解ROS/墙钟100ms；状态200ms；最新扫描500ms，静态历史最多2s；重复发送不续期
+  feedback: ipc/health与现有Behavior/ControllerInfo反馈
+  completion: 外部任务以估计/真值位置、速度和持续时间判定，随后取消；连续FollowReference不自行判到点
+  cancel_or_stop: 会话撤销清空输出缓存；插件请求Hover；任务确认物理停止
+  failure: 未收敛或超龄输出无效，执行层失败并请求保持
+  recovery: 任务协调原生Land并确认解除武装；NAV_LAND兜底不计正常通过
+type_specific:
+  vehicles: 1
+  local_map_m: [20, 20, 12]
+  grid_resolution_m: 0.1
+  nominal_cruise_m_s: 3.0
+  reference_speed_m_s: 3.6
+  reference_acceleration_m_s2: 1.0
+  acceleration_limit_m_s2: 3.0
+  jerk_limit_m_s3: 10.0
+  hard_axis_speed_m_s: 4.0
+  forest_planar_path: false
+  astar_search_clearance_m: 0.75
+  astar_path_check_clearance_m: 0.55
+  sfc_clearance_m: 0.55
+  output_model: receding_horizon_body_rates_and_thrust
+  conservative_corridor: 原时序失败时仅在当前认证凸走廊内重新求解，保留全部动力学约束；仅新成功解输出
+  plan_installation: 独立快照规划，同会话且地图年龄≤0.5s才安装；MPC用当前静态历史地图重建走廊
+validation:
+  stage: PC-simulation-e2e
+  scope: PC自由XYZ SUPER同起终点约238m静态forest，名义巡航3m/s，super-3mps-balanced-01/02两次全新启动完整通过
+  component_revision: 项目native适配，来源锁定提交见version；每轮记录实际源及运行库哈希
+  evidence:
+    - src/planner/ipc/validation.md
+    - deployment/airsim/demos/ipc_navigation/README.md
+    - deployment/airsim/demos/ipc_navigation/validation-free-xyz-20261110.json
+    - deployment/airsim/demos/ipc_navigation/validation-speed-envelope-20261110.json
+  limitations:
+    - 最多十帧/两秒局部静态历史，未迁移在线推力辨识
+    - 未验证RoboPi、真机、多机、突发/动态障碍及扰动；约100Hz平均求解/输入不代表硬10ms期限或固件逐周期消费
+    - 未实现Mission/Tool运行时或跨Behavior全局资源仲裁

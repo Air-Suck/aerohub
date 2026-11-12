@@ -1,0 +1,20 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import type { ImageMetadata } from 'astro';
+import { sitePath } from '../lib/algorithms';
+import IntegrationStatus from './IntegrationStatus.astro';
+interface Props { algorithm: CollectionEntry<'algorithms'> }
+const { algorithm } = Astro.props;
+const { data } = algorithm;
+const covers = import.meta.glob<ImageMetadata>('../../content/algorithms/**/assets/*.{jpg,jpeg,png,webp}', { eager: true, import: 'default' });
+const cover = data.demo && covers[`../../${data.demo.image}`];
+---
+<article class="card algorithm-card">
+  {cover && <a class="card-cover" href={sitePath(`gallery/${algorithm.id}/`)} tabindex="-1" aria-hidden="true"><img src={cover.src} width={cover.width} height={cover.height} alt="" loading="lazy" /></a>}
+  <div class="card-content">
+  <p class="eyebrow">{data.category}</p>
+  <h2><a href={sitePath(`gallery/${algorithm.id}/`)}>{data.title}</a></h2>
+  <p>{data.summary}</p>
+  <IntegrationStatus status={data.integration} />
+  </div>
+</article>

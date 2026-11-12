@@ -1,0 +1,432 @@
+{
+  "status": "passed-two-independent-fresh-starts",
+  "scope": "AirSimNH forest, flight_board PX4 SITL, PC compute, one vehicle, freeXYZ SUPER A-to-B nominal3m/s",
+  "upstream_commit": "0f959ca7995e71a1fcc4942bd4a86869ab6ee975",
+  "task_config": "deployment/airsim/demos/ipc_navigation/super-3mps-balanced-task.json",
+  "criteria_config": "deployment/airsim/demos/ipc_navigation/super-3mps-balanced-criteria.json",
+  "task_definition": {
+    "spawn_ned_m": [
+      42.6,
+      160.11,
+      0.0
+    ],
+    "target_from_measured_ground_enu_m": [
+      -37.57,
+      231.76,
+      6.0
+    ],
+    "planar_path": false,
+    "nominal_cruise_m_s": 3.0,
+    "reference_speed_m_s": 3.6,
+    "reference_acceleration_m_s2": 1.0,
+    "hard_axis_speed_m_s": 4.0,
+    "acceleration_m_s2": 3.0,
+    "jerk_m_s3": 10.0,
+    "max_tilt_rad": 0.6,
+    "clock_requested_wall_hz": 200.0,
+    "map_absolute_z_m": [
+      0.0,
+      12.0
+    ],
+    "task_ground_relative_z_m": [
+      0.2,
+      10.0
+    ]
+  },
+  "same_runtime_task_criteria_and_images": true,
+  "scene_binary_sha256": "129138bb1de13ac8c9e5f488352c2bc0efa46e93f7ae4943b3a9e4020105db92",
+  "speed_percentile_levels": [
+    10,
+    50,
+    90,
+    95,
+    99
+  ],
+  "runs": [
+    {
+      "id": "super-3mps-balanced-01",
+      "evidence": "log/ipc/free-xyz/super-3mps-balanced-01",
+      "metrics": {
+        "navigation_sim_s": 82.86776781082153,
+        "travelled_m": 237.62714271254714,
+        "trajectory_average_m_s": 2.8675460796171692,
+        "speed_percentiles_m_s": [
+          2.5475688318348535,
+          2.9761498535853246,
+          3.4879007918562492,
+          3.551160127584548,
+          3.593014078971931
+        ],
+        "max_speed_norm_mps": 3.6414574874389922,
+        "cruise_above_threshold_sim_s": 66.54141974449158,
+        "minimum_clearance_m": 0.9679479708438177,
+        "max_tilt_rad": 0.48087891400895844,
+        "goal_error_m": 0.02404715030789343,
+        "truth_goal_error_m": 0.10902363485016651,
+        "stop_max_drift_m": 0.052469653153328646,
+        "truth_stop_goal_error_m": 0.13293419643912893,
+        "max_planned_deviation_m": 4.482878051526723,
+        "straight_blocked": true,
+        "detour_seen": true,
+        "landed_and_disarmed": true
+      },
+      "control_source_sha256": {
+        "src/planner/ipc/ros2_adapter/native/src/node.cpp": "b327d76326d82656bfaed7b1d6b53612e960d51432b9982192d6af13579f70c4",
+        "src/planner/ipc/ros2_adapter/native/core/engine.cpp": "c5bacae93559af13f47aa9b95359d1c82b45e5a14267c7894e9e53cbac5b2973",
+        "src/planner/ipc/ros2_adapter/native/core/local_astar.h": "204fe93ced851effd6212d1796bf98192bd4c890fbbc35575965da882ef504e8",
+        "src/planner/ipc/ros2_adapter/native/core/astar.h": "d0193f18ec037736fd3c3b2778b1128f64fd0e64307ebb5eca0208d646d54f06",
+        "src/planner/ipc/ros2_adapter/native/core/mpc.cpp": "6240756d93b4bec45ee3e5ff5d131e725b91c35b9f78927488ed6df2fdf6d2e8",
+        "src/planner/ipc/ros2_adapter/native/core/mpc.h": "13f83918c8d2a208d1a97b69c148209a360ca83a5dabf0f86958f0c3d41e295c",
+        "src/planner/ipc/ros2_adapter/native/core/runtime.hpp": "2f5bc7956b293314d43d85debdd677df376d27895032cd0ebc067a670f45d9df",
+        "src/planner/ipc/ros2_adapter/native/core/engine.hpp": "5b4314c8906ed553581110df8c2f029e6071cdb2ff3de5cf59f2e381934fa015",
+        "src/planner/ipc/ros2_adapter/native/core/local_astar.cpp": "75255ef1137681209015891b9e4e1ea30568bd653631e8d4fbac11df1d13ab40",
+        "src/planner/ipc/ros2_adapter/native/core/astar.cpp": "ad320a43887012298d4e69abdba7bb222bff486ea69576bcdf751fa0dbe66db4",
+        "src/planner/ipc/ros2_adapter/native/core/polytope/line_segment.hpp": "87bb93a75bc80ee95ea629f97a4d6695b95dd035375c77fd8361ac6cc302609f",
+        "src/planner/ipc/ros2_adapter/native/core/polytope/quickhull.hpp": "2062fe60db9f94c91873c7205a8a425a1ae61ee838491b7a795dc2bf9b72b546",
+        "src/planner/ipc/ros2_adapter/native/core/polytope/common_type_name.hpp": "4cade31dcd56c523b40d99d70175889aba38876577528ebf8d50da295e367fa6",
+        "src/planner/ipc/ros2_adapter/native/core/polytope/sdlp.hpp": "d7b7bd66597ca1355d7bf16d902cf17da638ad0fd98870673f209a329ded0abf",
+        "src/planner/ipc/ros2_adapter/native/core/polytope/ellipsoid.hpp": "4c8811c8a64cc40af17cb1aa52c5e44f150d340c0441fc9615768cc288f4b779",
+        "src/planner/ipc/ros2_adapter/native/core/polytope/emvp.hpp": "1746d77963b6f2ffa4b7894eae7f32fad6af7716c06c2dfdf63fe00c5d165087",
+        "src/planner/ipc/ros2_adapter/native/core/polytope/polytope.hpp": "aa9ab28275ae8d8347a7b554d64a35e1f4b3731bca7d635789ea3d75d505880e",
+        "src/planner/ipc/ros2_adapter/native/core/polytope/lbfgs.hpp": "fdc6b0d4c4b4c50e0368d6983dd28ffd893c824df461aebe9e3b24dd8a99b3ca",
+        "src/planner/ipc/ros2_adapter/native/core/polytope/geo_utils.hpp": "5be4c111c67236ba146a8a22ed969e0ff0242e7792d45f67a049bc0d61c1989c",
+        "deployment/airsim/demos/ipc_navigation/source.py": "cbb965966aa8f5339c604dc2f89ec95a711a2674219e080971680519c4af165f",
+        "deployment/airsim/demos/ipc_navigation/forest_mission.py": "deb418312ff228ddd941dbc73b6db3b90d24f352cd02872a5ecfc7ec94335ddc"
+      },
+      "source_timestamp_conflicts": [],
+      "timing_evidence_sha256": "c599c86ff068ba979e607c15915e60686130e5d39a217d3f2d5bfe88dbaf3ce9",
+      "ground_origin_enu": [
+        0.00040896396967582405,
+        0.0009602098143659532,
+        0.5078201293945312
+      ],
+      "target_earth_enu": [
+        -37.56959103603033,
+        231.76096020981439,
+        6.507820129394531
+      ],
+      "geometry": {
+        "scope": "Offline recorded-state and RPC scoring-truth geometry; no new flight",
+        "planar_path": false,
+        "path_messages": 39,
+        "target_ground_relative_enu_m": [
+          -37.57000000000001,
+          231.76000000000002,
+          6.0
+        ],
+        "estimated_height_ground_relative_m": [
+          2.000640869140625,
+          5.991615295410156
+        ],
+        "maximum_planned_height_deviation_from_global_goal_line_m": 0.2839191221311923,
+        "sampled_truth_trajectory_length_m": 238.01889487324328,
+        "sampled_truth_duration_sim_s": 82.83176708221436,
+        "sampled_truth_trajectory_average_m_s": 2.873521877626956,
+        "limitations": "Truth is scoring only. Sampled truth length excludes the unsampled start/end intervals and is not a continuous trajectory integral. Path height deviation alone does not certify every obstacle required vertical avoidance."
+      },
+      "acceptance": {
+        "success": true,
+        "navigation_passed": true,
+        "control_mapping_passed": true,
+        "landed_and_disarmed": true
+      },
+      "timing": {
+        "successful_records": 8308,
+        "unique_solve_stamps": 8308,
+        "sim_hz": 99.8536216826605,
+        "solve_interval_sim_s": {
+          "count": 8307,
+          "p50": 0.009000192,
+          "p95": 0.01500032,
+          "p99": 0.01500032,
+          "max": 0.024000512
+        },
+        "state_age_at_solve_sim_s": {
+          "count": 8308,
+          "p50": 0.012000256,
+          "p95": 0.021000448,
+          "p99": 0.021000448,
+          "max": 0.036000768
+        },
+        "cloud_age_at_solve_sim_s": {
+          "count": 8308,
+          "p50": 0.129002752,
+          "p95": 0.192004096,
+          "p99": 0.204004352,
+          "max": 0.204004352
+        }
+      },
+      "conservative_corridor_solves": {
+        "observed_records": 8308,
+        "count": 18
+      },
+      "elapsed_to_health_wall_ms": {
+        "count": 8308,
+        "p50": 1.600838,
+        "p95": 5.53356,
+        "p99": 8.660288,
+        "max": 23.462131
+      },
+      "mapping": {
+        "source_to_actuator_stamp_pairs": 8245,
+        "max_thrust_error_newtons": 4.7256517099469875e-07,
+        "max_actuator_rate_error_rad_s": 0.0,
+        "px4_value_matches": 8264,
+        "px4_samples_compared": 8264,
+        "frequency_observations": {
+          "external_acro/control": {
+            "wall_hz": 97.72099884052282,
+            "sim_hz": 142.3499465452034
+          },
+          "actuator_command/thrust": {
+            "wall_hz": 68.13138319559451,
+            "sim_hz": 99.25869339279703
+          },
+          "fmu/in/vehicle_rates_setpoint": {
+            "wall_hz": 68.28353226692688,
+            "sim_hz": 99.47538914550415
+          }
+        }
+      },
+      "runtime_sha256": {
+        "log/ipc/native-deps/ros-install/lib/ipc_native_core/ipc_node": "f8414a09165cc925af8a855bdd567b510f96bfdefd5f524a5fd42ef9b60d6047",
+        "log/ipc/control-overlay/install/lib/libfollow_reference_acro_plugin.so": "bf585128ea542b24ee932451f9d5649474ca14390dee21f587e677e7ba946b9e",
+        "log/ipc/control-overlay/install/lib/libas2_motion_controller.so": "692e9b976bbbd544a235fd5208e908485e9750e4b9845d7efd1aa1c93c52b21b",
+        "log/ipc/control-overlay/install/lib/as2_motion_controller/as2_motion_controller_node": "88b4eb6d124abb14cb67d3182d92725b1c53d09e47c64c9fe10bb320cce35416",
+        "log/ipc/control-overlay/install/lib/as2_platform_pixhawk/as2_platform_pixhawk_node": "28eebdf8d12bb5d18e0cd8133712db75aa99dbcbdbc0037ec214aa52a1f88694",
+        "log/ipc/control-overlay/install/lib/uav_follow_reference_acro/follow_reference_acro_node": "9a07d753b09a1e642417f789210d6f895ebc2730cc54a8c0b30d7a83f74303c5",
+        "log/ipc/native-deps/install/lib/libOsqpEigen.so": "4a69914ae88975939c3a0925d1d18f2b65f4bcb1630165e1b2763a842a61a2fd",
+        "log/ipc/native-deps/install/lib/libosqp.so": "b95aee4609e3c359158228ad1bdc72bd34c33c5324adde567f5f40061e7e8a11"
+      },
+      "images": {
+        "compute": "sha256:1242967324756673026eb117fadbc55ec1629af1a6a1a89db64ebb5527cc6a87",
+        "flight_board": "sha256:8c33881fde6985fe5a43a894bde075471df85064e45ac8e5de28efebcc737cd2"
+      },
+      "task_sha256": "5b58addb84c99bb2d77bdc8018156b356decb7f2b1e86f6621404535d652db29",
+      "criteria_sha256": "94e7a04c67c5dcc29ca3138f43d54fe6f5da8375996e007301d7f6273c2dfce6",
+      "cleanup": {
+        "confirmed_disarmed": true,
+        "owned_resources_stopped": true
+      },
+      "evidence_sha256": {
+        "result.json": "6f03104c7d0628df28b7e7d99266c172a0c41d22d2cc8acceed99c730a4795a8",
+        "analysis.json": "c0a85d7eb45834bb8dcbaece41c02b911e69174245c5148c0720ee05dab0d629",
+        "acceptance.json": "b46ba29fc93b141f89283bb0253458c22973c1b5325517a92df4e247b7a0630a",
+        "forest-task.json": "5b58addb84c99bb2d77bdc8018156b356decb7f2b1e86f6621404535d652db29",
+        "acceptance-criteria.json": "94e7a04c67c5dcc29ca3138f43d54fe6f5da8375996e007301d7f6273c2dfce6",
+        "images.json": "6c0f05b800226e155a4742bd12f8263535360f87200c6432287628bb1cc1b752",
+        "native-manifest.json": "e2ac1d6a056ab9542d6ac56467374aab601737cb8082540fa8d98512f02e24f2",
+        "samples.jsonl": "470d35ea3f9a1e5368bd09245704c301576ff62b9c80e3115a789e1a55ec7040",
+        "cleanup.json": "9cbe4c91ceb7efee79c83e5308589855b65a2a11f63641ca21d7a1054236bbf3",
+        "compute-cleanup.json": "bd3585820815901426fd38c1fb0b9c129ff403e7e808abd79bfc089a047db428",
+        "navigation-geometry.json": "e1455cd7ea9e968111bf5b516d9247d46cf5f50a62c7b070582eb1bd763292c0",
+        "navigation-free-xyz.png": "e491c6371fd6c6d745e0407f7dda10f0c9d8e8a3a99a5a28e4a45db39bc2ec4b",
+        "rosbag/rosbag_0.db3": "2bc1c45afcb9ca208645f1fd1a2c56b9a799eabb46363d58e87fc9f379c5c14c"
+      }
+    },
+    {
+      "id": "super-3mps-balanced-02",
+      "evidence": "log/ipc/free-xyz/super-3mps-balanced-02",
+      "metrics": {
+        "navigation_sim_s": 84.79380893707275,
+        "travelled_m": 238.9878453745796,
+        "trajectory_average_m_s": 2.818458663083969,
+        "speed_percentiles_m_s": [
+          2.3217131708078447,
+          2.978586916452963,
+          3.4682700573053484,
+          3.5426744760065665,
+          3.598006510132613
+        ],
+        "max_speed_norm_mps": 3.6576104239186367,
+        "cruise_above_threshold_sim_s": 65.8244035243988,
+        "minimum_clearance_m": 0.889843481021699,
+        "max_tilt_rad": 0.45300048758094075,
+        "goal_error_m": 0.014941433045281241,
+        "truth_goal_error_m": 0.12643903842035248,
+        "stop_max_drift_m": 0.08961016056239025,
+        "truth_stop_goal_error_m": 0.17932400206825874,
+        "max_planned_deviation_m": 2.1392493195732176,
+        "straight_blocked": true,
+        "detour_seen": true,
+        "landed_and_disarmed": true
+      },
+      "control_source_sha256": {
+        "src/planner/ipc/ros2_adapter/native/src/node.cpp": "b327d76326d82656bfaed7b1d6b53612e960d51432b9982192d6af13579f70c4",
+        "src/planner/ipc/ros2_adapter/native/core/engine.cpp": "c5bacae93559af13f47aa9b95359d1c82b45e5a14267c7894e9e53cbac5b2973",
+        "src/planner/ipc/ros2_adapter/native/core/local_astar.h": "204fe93ced851effd6212d1796bf98192bd4c890fbbc35575965da882ef504e8",
+        "src/planner/ipc/ros2_adapter/native/core/astar.h": "d0193f18ec037736fd3c3b2778b1128f64fd0e64307ebb5eca0208d646d54f06",
+        "src/planner/ipc/ros2_adapter/native/core/mpc.cpp": "6240756d93b4bec45ee3e5ff5d131e725b91c35b9f78927488ed6df2fdf6d2e8",
+        "src/planner/ipc/ros2_adapter/native/core/mpc.h": "13f83918c8d2a208d1a97b69c148209a360ca83a5dabf0f86958f0c3d41e295c",
+        "src/planner/ipc/ros2_adapter/native/core/runtime.hpp": "2f5bc7956b293314d43d85debdd677df376d27895032cd0ebc067a670f45d9df",
+        "src/planner/ipc/ros2_adapter/native/core/engine.hpp": "5b4314c8906ed553581110df8c2f029e6071cdb2ff3de5cf59f2e381934fa015",
+        "src/planner/ipc/ros2_adapter/native/core/local_astar.cpp": "75255ef1137681209015891b9e4e1ea30568bd653631e8d4fbac11df1d13ab40",
+        "src/planner/ipc/ros2_adapter/native/core/astar.cpp": "ad320a43887012298d4e69abdba7bb222bff486ea69576bcdf751fa0dbe66db4",
+        "src/planner/ipc/ros2_adapter/native/core/polytope/line_segment.hpp": "87bb93a75bc80ee95ea629f97a4d6695b95dd035375c77fd8361ac6cc302609f",
+        "src/planner/ipc/ros2_adapter/native/core/polytope/quickhull.hpp": "2062fe60db9f94c91873c7205a8a425a1ae61ee838491b7a795dc2bf9b72b546",
+        "src/planner/ipc/ros2_adapter/native/core/polytope/common_type_name.hpp": "4cade31dcd56c523b40d99d70175889aba38876577528ebf8d50da295e367fa6",
+        "src/planner/ipc/ros2_adapter/native/core/polytope/sdlp.hpp": "d7b7bd66597ca1355d7bf16d902cf17da638ad0fd98870673f209a329ded0abf",
+        "src/planner/ipc/ros2_adapter/native/core/polytope/ellipsoid.hpp": "4c8811c8a64cc40af17cb1aa52c5e44f150d340c0441fc9615768cc288f4b779",
+        "src/planner/ipc/ros2_adapter/native/core/polytope/emvp.hpp": "1746d77963b6f2ffa4b7894eae7f32fad6af7716c06c2dfdf63fe00c5d165087",
+        "src/planner/ipc/ros2_adapter/native/core/polytope/polytope.hpp": "aa9ab28275ae8d8347a7b554d64a35e1f4b3731bca7d635789ea3d75d505880e",
+        "src/planner/ipc/ros2_adapter/native/core/polytope/lbfgs.hpp": "fdc6b0d4c4b4c50e0368d6983dd28ffd893c824df461aebe9e3b24dd8a99b3ca",
+        "src/planner/ipc/ros2_adapter/native/core/polytope/geo_utils.hpp": "5be4c111c67236ba146a8a22ed969e0ff0242e7792d45f67a049bc0d61c1989c",
+        "deployment/airsim/demos/ipc_navigation/source.py": "cbb965966aa8f5339c604dc2f89ec95a711a2674219e080971680519c4af165f",
+        "deployment/airsim/demos/ipc_navigation/forest_mission.py": "deb418312ff228ddd941dbc73b6db3b90d24f352cd02872a5ecfc7ec94335ddc"
+      },
+      "source_timestamp_conflicts": [],
+      "timing_evidence_sha256": "b7dc595b6a48fe70dee1848f4b03d2f91b46355228bc4fb287d670909d108f76",
+      "ground_origin_enu": [
+        -0.0003685471892822534,
+        0.0008630406227894127,
+        1.0795974731445312
+      ],
+      "target_earth_enu": [
+        -37.57036854718929,
+        231.7608630406228,
+        7.079597473144531
+      ],
+      "geometry": {
+        "scope": "Offline recorded-state and RPC scoring-truth geometry; no new flight",
+        "planar_path": false,
+        "path_messages": 39,
+        "target_ground_relative_enu_m": [
+          -37.57000000000001,
+          231.76000000000002,
+          6.0
+        ],
+        "estimated_height_ground_relative_m": [
+          1.9990997314453125,
+          5.9866485595703125
+        ],
+        "maximum_planned_height_deviation_from_global_goal_line_m": 0.221253427366772,
+        "sampled_truth_trajectory_length_m": 239.72882361760176,
+        "sampled_truth_duration_sim_s": 84.77280855178833,
+        "sampled_truth_trajectory_average_m_s": 2.827897620864474,
+        "limitations": "Truth is scoring only. Sampled truth length excludes the unsampled start/end intervals and is not a continuous trajectory integral. Path height deviation alone does not certify every obstacle required vertical avoidance."
+      },
+      "acceptance": {
+        "success": true,
+        "navigation_passed": true,
+        "control_mapping_passed": true,
+        "landed_and_disarmed": true
+      },
+      "timing": {
+        "successful_records": 8493,
+        "unique_solve_stamps": 8493,
+        "sim_hz": 99.66572586878459,
+        "solve_interval_sim_s": {
+          "count": 8492,
+          "p50": 0.009000192,
+          "p95": 0.01500032,
+          "p99": 0.01500032,
+          "max": 0.051001088
+        },
+        "state_age_at_solve_sim_s": {
+          "count": 8493,
+          "p50": 0.009000192,
+          "p95": 0.021000448,
+          "p99": 0.021000448,
+          "max": 0.036000768
+        },
+        "cloud_age_at_solve_sim_s": {
+          "count": 8493,
+          "p50": 0.132002816,
+          "p95": 0.192004096,
+          "p99": 0.204004352,
+          "max": 0.204004352
+        }
+      },
+      "conservative_corridor_solves": {
+        "observed_records": 8493,
+        "count": 43
+      },
+      "elapsed_to_health_wall_ms": {
+        "count": 8493,
+        "p50": 1.762376,
+        "p95": 6.114517,
+        "p99": 10.225674,
+        "max": 43.869295
+      },
+      "mapping": {
+        "source_to_actuator_stamp_pairs": 8456,
+        "max_thrust_error_newtons": 4.7380442502742426e-07,
+        "max_actuator_rate_error_rad_s": 0.0,
+        "px4_value_matches": 8468,
+        "px4_samples_compared": 8468,
+        "frequency_observations": {
+          "external_acro/control": {
+            "wall_hz": 97.49749497734854,
+            "sim_hz": 143.0451708951163
+          },
+          "actuator_command/thrust": {
+            "wall_hz": 67.77848469028531,
+            "sim_hz": 99.43701209974755
+          },
+          "fmu/in/vehicle_rates_setpoint": {
+            "wall_hz": 67.86364282944027,
+            "sim_hz": 99.56864069262855
+          }
+        }
+      },
+      "runtime_sha256": {
+        "log/ipc/native-deps/ros-install/lib/ipc_native_core/ipc_node": "f8414a09165cc925af8a855bdd567b510f96bfdefd5f524a5fd42ef9b60d6047",
+        "log/ipc/control-overlay/install/lib/libfollow_reference_acro_plugin.so": "bf585128ea542b24ee932451f9d5649474ca14390dee21f587e677e7ba946b9e",
+        "log/ipc/control-overlay/install/lib/libas2_motion_controller.so": "692e9b976bbbd544a235fd5208e908485e9750e4b9845d7efd1aa1c93c52b21b",
+        "log/ipc/control-overlay/install/lib/as2_motion_controller/as2_motion_controller_node": "88b4eb6d124abb14cb67d3182d92725b1c53d09e47c64c9fe10bb320cce35416",
+        "log/ipc/control-overlay/install/lib/as2_platform_pixhawk/as2_platform_pixhawk_node": "28eebdf8d12bb5d18e0cd8133712db75aa99dbcbdbc0037ec214aa52a1f88694",
+        "log/ipc/control-overlay/install/lib/uav_follow_reference_acro/follow_reference_acro_node": "9a07d753b09a1e642417f789210d6f895ebc2730cc54a8c0b30d7a83f74303c5",
+        "log/ipc/native-deps/install/lib/libOsqpEigen.so": "4a69914ae88975939c3a0925d1d18f2b65f4bcb1630165e1b2763a842a61a2fd",
+        "log/ipc/native-deps/install/lib/libosqp.so": "b95aee4609e3c359158228ad1bdc72bd34c33c5324adde567f5f40061e7e8a11"
+      },
+      "images": {
+        "compute": "sha256:1242967324756673026eb117fadbc55ec1629af1a6a1a89db64ebb5527cc6a87",
+        "flight_board": "sha256:8c33881fde6985fe5a43a894bde075471df85064e45ac8e5de28efebcc737cd2"
+      },
+      "task_sha256": "5b58addb84c99bb2d77bdc8018156b356decb7f2b1e86f6621404535d652db29",
+      "criteria_sha256": "94e7a04c67c5dcc29ca3138f43d54fe6f5da8375996e007301d7f6273c2dfce6",
+      "cleanup": {
+        "confirmed_disarmed": true,
+        "owned_resources_stopped": true
+      },
+      "evidence_sha256": {
+        "result.json": "b04da78aa9c4d7fff14a10ae35e832db4f4eb8b2819b089578d5eadb9a6abf20",
+        "analysis.json": "1c412726fbfd6bff449705d28cfbbc46a8f977807cb6c8caff67b158c68b1074",
+        "acceptance.json": "b46ba29fc93b141f89283bb0253458c22973c1b5325517a92df4e247b7a0630a",
+        "forest-task.json": "5b58addb84c99bb2d77bdc8018156b356decb7f2b1e86f6621404535d652db29",
+        "acceptance-criteria.json": "94e7a04c67c5dcc29ca3138f43d54fe6f5da8375996e007301d7f6273c2dfce6",
+        "images.json": "6c0f05b800226e155a4742bd12f8263535360f87200c6432287628bb1cc1b752",
+        "native-manifest.json": "e2ac1d6a056ab9542d6ac56467374aab601737cb8082540fa8d98512f02e24f2",
+        "samples.jsonl": "c047538c050e61cbbf5dafc4371f2c21433aa873742b219b010a4ee522617849",
+        "cleanup.json": "9cbe4c91ceb7efee79c83e5308589855b65a2a11f63641ca21d7a1054236bbf3",
+        "compute-cleanup.json": "bd3585820815901426fd38c1fb0b9c129ff403e7e808abd79bfc089a047db428",
+        "navigation-geometry.json": "2fb18e8a51fc0290e39ec47aba3be8ba8d31b95e0fb622ede1e65b150f8ecf68",
+        "navigation-free-xyz.png": "e5bc4e70b4f3bca153cab0b99c97934ce28637a25c40d0f54fc1fa51f1b0047d",
+        "rosbag/rosbag_0.db3": "a13d936bdacc572bc1a7a020d9ca49dbdc43d6efc3c96fa8815f6937853441bf"
+      }
+    }
+  ],
+  "implementation_differences": [
+    "Configurable speed/reference envelope and map height bounds; old defaults retained for direct node construction.",
+    "Reference startup ramp and bounded path-distance sampling preserving reference temporal scale.",
+    "On primary schedule failure, NEW MPC constrained to current certified convex corridor; accepts only successful solve, not old or failed commands.",
+    "Original compute timestamps and lifecycle guards preserved; scoring observer queue increased to avoid lost evidence."
+  ],
+  "limitations": [
+    "Static single-vehicle simulation; no RoboPi, real aircraft, dynamic/sudden obstacles or wind/disturbance acceptance.",
+    "Nominal3m/s cruise: speed varies, whole-trajectory mean2.82...2.87m/s, not constant3m/s.",
+    "Near100Hz mean computation/input observed; hard10ms deadlines and firmware sample-by-sample100Hz consumption unverified.",
+    "FreeXYZ search active throughout, with real variable-height motion; this forest run alone does not prove every obstacle required vertical avoidance.",
+    "First primary failed QP file can exist in passing runs due to validated conservative reoptimization; original and recovery solve status are separate."
+  ],
+  "historical_failures": [
+    "speed-0p5-01:actual cruise below threshold",
+    "super-3mps-01:primary corridor/dynamic infeasibility",
+    "super-3mps-acc4-01:tilt0.5356>0.5",
+    "super-3mps-acc4-02:QP infeasibility at25m",
+    "super-3mps-corridor-01:startup tilt0.6033>0.6",
+    "speed-3p0-corridor-01:observer missed one source frame (present in bag); original acceptance remains failed",
+    "super-3mps-ramp-01:turn tilt0.6006>0.6"
+  ],
+  "postflight_entrypoint_change": "Default selects exactly the validated balanced task/criteria and200Hz clock; new flight entry rejects planar profiles. Routing checked offline; binary/task/criteria above are the flown artifacts."
+}

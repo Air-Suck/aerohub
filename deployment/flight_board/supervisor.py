@@ -81,10 +81,13 @@ def commands(mode, env):
     if env.get('FLIGHT_BOARD_SENSORS', '1') not in ('0', '1'):
         raise ValueError('FLIGHT_BOARD_SENSORS must be 0 or 1')
     if env.get('FLIGHT_BOARD_SENSORS', '1') == '1':
+        lidar_rate = env.get('FLIGHT_BOARD_LIDAR_RATE_HZ', '10.0')
+        camera_rate = env.get('FLIGHT_BOARD_CAMERA_RATE_HZ', '5.0')
         result.append(
         (['ros2', 'run', 'uav_as2_sensor_adapter', 'airsim_sensor_node'] + common +
          ['-p', f'settings_file:={config_path}', '-p', f'vehicle_namespace:={namespace}',
-          '-p', 'use_sim_time:=true', '-p',
+          '-p', 'use_sim_time:=true', '-p', f'lidar_rate_hz:={lidar_rate}',
+          '-p', f'camera_rate_hz:={camera_rate}', '-p',
           'camera_enabled:=' + ('true' if env.get('FLIGHT_BOARD_CAMERAS', '1') == '1' else 'false')], env, None))
     return result
 

@@ -1,0 +1,21 @@
+# observation_header is measured pose time/frame; state_header is reference epoch/aligned frame.
+# Reference may be bounded future time. No TF or synchronization is performed here.
+string request_id
+sensor_msgs/Image depth
+std_msgs/Header observation_header
+std_msgs/Header state_header
+geometry_msgs/Vector3 velocity
+geometry_msgs/Vector3 acceleration
+geometry_msgs/Vector3 relative_goal
+---
+bool success
+string error_code
+string message
+string request_id
+std_msgs/Header header
+std_msgs/Header observation_header
+string model_version
+string device
+uav_inference_interfaces/YopoCandidate[] candidates
+uint32 best_index
+float64 duration_s

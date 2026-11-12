@@ -1,0 +1,52 @@
+schema_version: '0.1'
+id: aerohub.inference.yopo
+version: 0.1.0
+source:
+  upstream: src/planner/yopo/upstream
+  revision: bd8a7f91953cfef9f1aa9a48d7ff0ab7bceee132
+  license: MIT
+  integration: src/inference
+provides:
+- inference.yopo
+cards:
+- cards/inference/yopo.yaml
+roles:
+  compute:
+  - yopo-model-worker
+  - yopo-ros-adapter
+  workstation:
+  - ROS-client
+runtime:
+  model_environment: src/inference/models/yopo/uv.lock
+  prepare: bash src/inference/models/yopo/setup.sh
+  weights: src/inference/models/yopo/artifacts/epoch50.pth
+  weights_checksum: src/inference/models/yopo/weights.sha256
+  platform: linux-x86_64
+  prerequisites:
+  - NVIDIA-compatible-driver
+  - CUDA-capable-GPU
+  - ROS-2-Humble
+  - uv
+  - Python-3.8
+  worker: bash deployment/inference/start_yopo.sh
+  ros_adapter: python3 -m uav_inference.yopo_node
+  endpoint: http://127.0.0.1:8000
+  ros_namespace: configurable
+  readiness: HTTP-/health/ready-and-ROS-inference/status
+  stop: SIGINT-to-adapter-and-worker-then-confirm-process-exit
+  persistence: log/
+  rollback: stop-both-processes-restore-source-and-lock-rebuild-overlay-restart
+resources:
+  gpu: selected-by-CUDA_VISIBLE_DEVICES
+  arbitration: one-inflight-request-per-worker-no-cross-model-GPU-arbiter
+validation:
+  stage: GPU-ROS-chain-and-PC-simulation-consumption
+  scope: 2m/s reference-mode profile; dual-container GPU chain 10/10 with component
+    timings; real AirSim input consumed by YOPO Planner in normal and fault runs
+  evidence:
+  - deployment/airsim/demos/yopo_single/validation.md
+  - deployment/airsim/demos/yopo_single/validation.json
+  limitations:
+  - cross-physical-device-unverified
+  - no-real-hardware-validation
+  - model-service-itself-does-not-execute-motion

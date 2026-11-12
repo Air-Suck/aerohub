@@ -1,0 +1,31 @@
+{
+  "commit": "0f959ca7995e71a1fcc4942bd4a86869ab6ee975",
+  "source": "hku-mars/IPC",
+  "kernel_sha256": {
+    "astar.h": "662f2b7759c85242ad5724fb821d795f1fd4cefbca555d07c1d23181b1a06585",
+    "astar.cpp": "681e1f0b8d8b252139afd1e4fe1d02caf57ece7713e2c5f8e846eff613bf0ea0",
+    "local_astar.h": "ed6b30c1ce5dddc7f5548bbda76738b2cdc8690fa7fbcc9da075020f710fd643",
+    "local_astar.cpp": "7c7d94ae1e305de460de7109d9b56ceb7d42760acdf768586568ea2e6b0ac976",
+    "mpc.h": "e4e81944271bb86087ad5ce3b8233a535e01424300df007d97ae96c6bbc6a037",
+    "mpc.cpp": "da0ba7f01174199739e22619f0e0da394156df18f2e18e17632b0ff98843fd64"
+  },
+  "supporting_source_sha256": {
+    "include/polytope/common_type_name.hpp": "32a7c5095a904d6c5f0c793817b3b8b07d8d440ca88fd5c9cfb9ec30cf651124",
+    "include/polytope/ellipsoid.hpp": "0e60132c757b79324449bec124c9627ae6e1e1bdeba67f18b7a1695d33221175",
+    "include/polytope/emvp.hpp": "1746d77963b6f2ffa4b7894eae7f32fad6af7716c06c2dfdf63fe00c5d165087",
+    "include/polytope/geo_utils.hpp": "7d3e69ad652e3f2228ffadce8c8d2a7a10c93c82886d67f4a45dcc1e2ed6abd4",
+    "include/polytope/lbfgs.hpp": "fdc6b0d4c4b4c50e0368d6983dd28ffd893c824df461aebe9e3b24dd8a99b3ca",
+    "include/polytope/line_segment.hpp": "084228b50d33198f74aae3f1f282938fe931a166432bbce8fd659faf7186d46a",
+    "include/polytope/polytope.hpp": "e9d46ce226e5638b53392125576c0a18ad6229d684418655d18996673eb0854c",
+    "include/polytope/quickhull.hpp": "2062fe60db9f94c91873c7205a8a425a1ae61ee838491b7a795dc2bf9b72b546",
+    "include/polytope/sdlp.hpp": "d7b7bd66597ca1355d7bf16d902cf17da638ad0fd98870673f209a329ded0abf",
+    "src/planner.cpp": "6e414c6f5cf917033516bbe81365995c60d7218bc694dcae624a603e566e60ea",
+    "src/planner.h": "55af0324ae9b8890203feef060589978b96e8564ba45ddcf95797e6c6ab65e69"
+  },
+  "adaptation_map": {
+    "core/engine.hpp": "planner.cpp TimerCallback reference/SFC/MPC selection and PathReplan A*/Floyd; custom local-goal policy and runtime scheduling",
+    "core/engine.cpp": "planner.cpp GenerateAPolytope; removed ROS visualization and added finite checks",
+    "src/node.cpp": "planner.h ComputeThrust/ConvertCommand and planner.cpp OdomCallback; ROS2 sessions, fixed yaw, input validation, scheduling; no online thrust estimation",
+    "core/polytope": "include/polytope with ROS visualization removed where required"
+  }
+}

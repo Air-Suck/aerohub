@@ -1,0 +1,10 @@
+/**:
+  ros__parameters:
+    use_sim_time: true
+    input_topic: sensor_measurements/Lidar/points
+    expected_input_frame: drone0/Lidar
+    map_frame: pin_slam_map
+    sensor_frame: pin_slam_lidar
+    config_path: /config/airsim.yaml
+    output_root: /results/run
+    map_max_points: 500000

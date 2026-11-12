@@ -1,0 +1,186 @@
+{
+  "scope": "Four freeXYZ20m+1m envelope flights; no forced altitude; does not replace forest acceptance",
+  "reference_gain": 1.2,
+  "runs": [
+    {
+      "nominal_m_s": 0.5,
+      "evidence": "log/ipc/free-xyz/speed-0p5-02",
+      "runtime_sha256": {
+        "log/ipc/native-deps/ros-install/lib/ipc_native_core/ipc_node": "2a13f8f9a1562fdb78ac439e39da0ddd6ec91cb9e9c2e27815e7857c1c8d1654",
+        "log/ipc/control-overlay/install/lib/libfollow_reference_acro_plugin.so": "bf585128ea542b24ee932451f9d5649474ca14390dee21f587e677e7ba946b9e",
+        "log/ipc/control-overlay/install/lib/libas2_motion_controller.so": "692e9b976bbbd544a235fd5208e908485e9750e4b9845d7efd1aa1c93c52b21b",
+        "log/ipc/control-overlay/install/lib/as2_motion_controller/as2_motion_controller_node": "88b4eb6d124abb14cb67d3182d92725b1c53d09e47c64c9fe10bb320cce35416",
+        "log/ipc/control-overlay/install/lib/as2_platform_pixhawk/as2_platform_pixhawk_node": "28eebdf8d12bb5d18e0cd8133712db75aa99dbcbdbc0037ec214aa52a1f88694",
+        "log/ipc/control-overlay/install/lib/uav_follow_reference_acro/follow_reference_acro_node": "9a07d753b09a1e642417f789210d6f895ebc2730cc54a8c0b30d7a83f74303c5",
+        "log/ipc/native-deps/install/lib/libOsqpEigen.so": "4a69914ae88975939c3a0925d1d18f2b65f4bcb1630165e1b2763a842a61a2fd",
+        "log/ipc/native-deps/install/lib/libosqp.so": "b95aee4609e3c359158228ad1bdc72bd34c33c5324adde567f5f40061e7e8a11"
+      },
+      "metrics": {
+        "success": true,
+        "planar_path": false,
+        "navigation_sim_s": 42.68491053581238,
+        "travelled_m": 20.236581648332397,
+        "trajectory_average_m_s": 0.4740921649901088,
+        "speed_percentiles_m_s": [
+          0.48499708695487087,
+          0.49534048777666295,
+          0.5094719633230139,
+          0.515621405596091,
+          0.5489798852139504
+        ],
+        "max_speed_norm_mps": 0.5596054289934064,
+        "cruise_above_threshold_sim_s": 39.549843549728394,
+        "height_range_enu_m": [
+          2.6968231201171875,
+          3.7458953857421875
+        ],
+        "truth_goal_error_m": 0.044556457071723836,
+        "stop_max_drift_m": 0.0093092826528122,
+        "landed_and_disarmed": true
+      },
+      "px4_matches": 4289,
+      "px4_samples": 4289,
+      "acceptance": {
+        "success": true,
+        "navigation_passed": true,
+        "control_mapping_passed": true,
+        "landed_and_disarmed": true
+      }
+    },
+    {
+      "nominal_m_s": 1.0,
+      "evidence": "log/ipc/free-xyz/speed-1p0-02",
+      "runtime_sha256": {
+        "log/ipc/native-deps/ros-install/lib/ipc_native_core/ipc_node": "2a13f8f9a1562fdb78ac439e39da0ddd6ec91cb9e9c2e27815e7857c1c8d1654",
+        "log/ipc/control-overlay/install/lib/libfollow_reference_acro_plugin.so": "bf585128ea542b24ee932451f9d5649474ca14390dee21f587e677e7ba946b9e",
+        "log/ipc/control-overlay/install/lib/libas2_motion_controller.so": "692e9b976bbbd544a235fd5208e908485e9750e4b9845d7efd1aa1c93c52b21b",
+        "log/ipc/control-overlay/install/lib/as2_motion_controller/as2_motion_controller_node": "88b4eb6d124abb14cb67d3182d92725b1c53d09e47c64c9fe10bb320cce35416",
+        "log/ipc/control-overlay/install/lib/as2_platform_pixhawk/as2_platform_pixhawk_node": "28eebdf8d12bb5d18e0cd8133712db75aa99dbcbdbc0037ec214aa52a1f88694",
+        "log/ipc/control-overlay/install/lib/uav_follow_reference_acro/follow_reference_acro_node": "9a07d753b09a1e642417f789210d6f895ebc2730cc54a8c0b30d7a83f74303c5",
+        "log/ipc/native-deps/install/lib/libOsqpEigen.so": "4a69914ae88975939c3a0925d1d18f2b65f4bcb1630165e1b2763a842a61a2fd",
+        "log/ipc/native-deps/install/lib/libosqp.so": "b95aee4609e3c359158228ad1bdc72bd34c33c5324adde567f5f40061e7e8a11"
+      },
+      "metrics": {
+        "success": true,
+        "planar_path": false,
+        "navigation_sim_s": 22.82448673248291,
+        "travelled_m": 20.27872313437804,
+        "trajectory_average_m_s": 0.8884634897624296,
+        "speed_percentiles_m_s": [
+          0.17037919934428977,
+          0.9918641045718777,
+          1.0099000705509869,
+          1.0517430087926842,
+          1.117779939688956
+        ],
+        "max_speed_norm_mps": 1.1325522630009717,
+        "cruise_above_threshold_sim_s": 19.54241681098938,
+        "height_range_enu_m": [
+          3.5549240112304688,
+          4.701087951660156
+        ],
+        "truth_goal_error_m": 0.16873991930244145,
+        "stop_max_drift_m": 0.04779470305332389,
+        "landed_and_disarmed": true
+      },
+      "px4_matches": 2276,
+      "px4_samples": 2276,
+      "acceptance": {
+        "success": true,
+        "navigation_passed": true,
+        "control_mapping_passed": true,
+        "landed_and_disarmed": true
+      }
+    },
+    {
+      "nominal_m_s": 2.0,
+      "evidence": "log/ipc/free-xyz/speed-2p0-02",
+      "runtime_sha256": {
+        "log/ipc/native-deps/ros-install/lib/ipc_native_core/ipc_node": "2a13f8f9a1562fdb78ac439e39da0ddd6ec91cb9e9c2e27815e7857c1c8d1654",
+        "log/ipc/control-overlay/install/lib/libfollow_reference_acro_plugin.so": "bf585128ea542b24ee932451f9d5649474ca14390dee21f587e677e7ba946b9e",
+        "log/ipc/control-overlay/install/lib/libas2_motion_controller.so": "692e9b976bbbd544a235fd5208e908485e9750e4b9845d7efd1aa1c93c52b21b",
+        "log/ipc/control-overlay/install/lib/as2_motion_controller/as2_motion_controller_node": "88b4eb6d124abb14cb67d3182d92725b1c53d09e47c64c9fe10bb320cce35416",
+        "log/ipc/control-overlay/install/lib/as2_platform_pixhawk/as2_platform_pixhawk_node": "28eebdf8d12bb5d18e0cd8133712db75aa99dbcbdbc0037ec214aa52a1f88694",
+        "log/ipc/control-overlay/install/lib/uav_follow_reference_acro/follow_reference_acro_node": "9a07d753b09a1e642417f789210d6f895ebc2730cc54a8c0b30d7a83f74303c5",
+        "log/ipc/native-deps/install/lib/libOsqpEigen.so": "4a69914ae88975939c3a0925d1d18f2b65f4bcb1630165e1b2763a842a61a2fd",
+        "log/ipc/native-deps/install/lib/libosqp.so": "b95aee4609e3c359158228ad1bdc72bd34c33c5324adde567f5f40061e7e8a11"
+      },
+      "metrics": {
+        "success": true,
+        "planar_path": false,
+        "navigation_sim_s": 12.846274137496948,
+        "travelled_m": 20.23620995924884,
+        "trajectory_average_m_s": 1.5752590784421634,
+        "speed_percentiles_m_s": [
+          0.07864331911148431,
+          1.9952931257412745,
+          2.216726032853445,
+          2.358542113197957,
+          2.424842106601187
+        ],
+        "max_speed_norm_mps": 2.448642711059042,
+        "cruise_above_threshold_sim_s": 9.012192249298096,
+        "height_range_enu_m": [
+          3.551513671875,
+          4.609764099121094
+        ],
+        "truth_goal_error_m": 0.13999198880926572,
+        "stop_max_drift_m": 0.05320685492861894,
+        "landed_and_disarmed": true
+      },
+      "px4_matches": 1284,
+      "px4_samples": 1284,
+      "acceptance": {
+        "success": true,
+        "navigation_passed": true,
+        "control_mapping_passed": true,
+        "landed_and_disarmed": true
+      }
+    },
+    {
+      "nominal_m_s": 3.0,
+      "evidence": "log/ipc/free-xyz/speed-3p0-02",
+      "runtime_sha256": {
+        "log/ipc/native-deps/ros-install/lib/ipc_native_core/ipc_node": "2a13f8f9a1562fdb78ac439e39da0ddd6ec91cb9e9c2e27815e7857c1c8d1654",
+        "log/ipc/control-overlay/install/lib/libfollow_reference_acro_plugin.so": "bf585128ea542b24ee932451f9d5649474ca14390dee21f587e677e7ba946b9e",
+        "log/ipc/control-overlay/install/lib/libas2_motion_controller.so": "692e9b976bbbd544a235fd5208e908485e9750e4b9845d7efd1aa1c93c52b21b",
+        "log/ipc/control-overlay/install/lib/as2_motion_controller/as2_motion_controller_node": "88b4eb6d124abb14cb67d3182d92725b1c53d09e47c64c9fe10bb320cce35416",
+        "log/ipc/control-overlay/install/lib/as2_platform_pixhawk/as2_platform_pixhawk_node": "28eebdf8d12bb5d18e0cd8133712db75aa99dbcbdbc0037ec214aa52a1f88694",
+        "log/ipc/control-overlay/install/lib/uav_follow_reference_acro/follow_reference_acro_node": "9a07d753b09a1e642417f789210d6f895ebc2730cc54a8c0b30d7a83f74303c5",
+        "log/ipc/native-deps/install/lib/libOsqpEigen.so": "4a69914ae88975939c3a0925d1d18f2b65f4bcb1630165e1b2763a842a61a2fd",
+        "log/ipc/native-deps/install/lib/libosqp.so": "b95aee4609e3c359158228ad1bdc72bd34c33c5324adde567f5f40061e7e8a11"
+      },
+      "metrics": {
+        "success": true,
+        "planar_path": false,
+        "navigation_sim_s": 12.282261848449707,
+        "travelled_m": 21.437319780053148,
+        "trajectory_average_m_s": 1.7453885973583125,
+        "speed_percentiles_m_s": [
+          0.06283169691121823,
+          2.1444281734494304,
+          3.3385350591475516,
+          3.5095608987533167,
+          3.6213357288215007
+        ],
+        "max_speed_norm_mps": 3.6361578675492834,
+        "cruise_above_threshold_sim_s": 4.620098352432251,
+        "height_range_enu_m": [
+          3.6828079223632812,
+          4.76080322265625
+        ],
+        "truth_goal_error_m": 0.12377680111207397,
+        "stop_max_drift_m": 0.018154047066497567,
+        "landed_and_disarmed": true
+      },
+      "px4_matches": 1263,
+      "px4_samples": 1263,
+      "acceptance": {
+        "success": true,
+        "navigation_passed": true,
+        "control_mapping_passed": true,
+        "landed_and_disarmed": true
+      }
+    }
+  ]
+}

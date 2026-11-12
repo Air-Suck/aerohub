@@ -1,0 +1,60 @@
+setting:
+  name: "pin_slam_airsim"
+  output_root: "/results"
+  random_seed: 42
+  device: "cuda"
+  gpu_id: "0"
+  deskew: False
+  stop_frame_thre: 20
+process:
+  min_range_m: 0.8
+  max_range_m: 25.0
+  min_z_m: -10.0
+  max_z_m: 10.0
+  vox_down_m: 0.12
+sampler:
+  surface_sample_range_m: 0.18
+  surface_sample_n: 3
+  free_sample_begin_ratio: 0.3
+  free_sample_end_dist_m: 0.8
+  free_front_sample_n: 2
+  free_behind_sample_n: 1
+neuralpoints:
+  voxel_size_m: 0.45
+  feature_dim: 8
+  query_nn_k: 5
+  search_alpha: 0.4
+  weighted_first: False
+  local_map_travel_dist_ratio: 5.0
+decoder:
+  freeze_after_frame: 40
+loss:
+  main_loss_type: "bce"
+  sigma_sigmoid_m: 0.12
+  loss_weight_on: True
+  dist_weight_scale: 0.8
+  ekional_loss_on: True
+  weight_e: 0.5
+continual:
+  batch_size_new_sample: 1000
+  pool_capacity: 10000000
+  pool_filter_freq: 10
+tracker:
+  source_vox_down_m: 0.55
+  iter_n: 70
+  valid_nn_k: 5
+  GM_grad: 0.1
+  GM_dist: 0.25
+pgo:
+  pgo_freq_frame: 30
+  map_context: True
+  context_cosdist: 0.3
+  merge_map: False
+optimizer:
+  batch_size: 10000
+  adaptive_iters: True
+eval:
+  o3d_vis_on: False
+  wandb_vis_on: False
+  silence_log: True
+  publish_np_map: True

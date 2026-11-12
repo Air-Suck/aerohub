@@ -1,0 +1,12 @@
+/**:
+  ros__parameters:
+    plugin_name: pin_slam
+    input_world_frame: pin_slam_map
+    input_body_frame: pin_slam_lidar
+    local_odometry_topic: sensor_measurements/odom
+    max_age: 0.5
+    local_max_age: 0.2
+    pairing_tolerance: 0.05
+    local_buffer_duration: 2.0
+    earth_from_pin_world: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+    sensor_from_base: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]

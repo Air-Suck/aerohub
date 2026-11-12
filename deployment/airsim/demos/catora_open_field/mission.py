@@ -48,7 +48,7 @@ class Mission:
         self.spawns = {v:list(d['px4_origin_in_fleet_ned']) for v,d in self.deployment.items()}
         self.vehicles = list(self.deployment)
         self.rpc = Rpc(os.environ.get('AIRSIM_HOST', '127.0.0.1'), int(os.environ.get('AIRSIM_PORT', '42471')), timeout=5)
-        self.node = rclpy.create_node('catora_open_field_app', parameter_overrides=[Parameter('use_sim_time', value=True)])
+        self.node = rclpy.create_node(os.environ.get('CATORA_NODE_NAME', 'catora_open_field_app'), parameter_overrides=[Parameter('use_sim_time', value=True)])
         self.executor=SingleThreadedExecutor()
         self.executor.add_node(self.node)
         self.platforms, self.modes, self.acks = {}, {}, {}

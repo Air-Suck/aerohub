@@ -95,7 +95,17 @@ rosbag2_*/
 .aws/
 .venv/
 /artifacts/
+/src/inference/models/*/artifacts/
+/deployment/dpv_slam/models/
+/deployment/dpv_slam/wheelhouse/
+/config/inference.local.yaml
 /skills/temp/
 
 # Local AirSim executable/resource selection
 /simulator/airsim/config/resources.local.yaml
+/config/resources.local.yaml
+
+# Gallery dependency and generated content
+/gallery/node_modules/
+/gallery/.astro/
+/src/inference/models/*/houmo/artifacts/
