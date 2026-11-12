@@ -42,11 +42,10 @@ def centroid(points: list[tuple[float, float, float]]) -> tuple[float, float, fl
 
 
 def update_camera(
-    rpc: Any, vehicles: list[str], camera: dict[str, Any], pose_source: str = "vehicle"
+    rpc: Any, vehicles: list[str], camera: dict[str, Any]
 ) -> tuple[float, float, float]:
-    method = "simGetObjectPose" if pose_source == "object" else "simGetVehiclePose"
     center = centroid(
-        [pose_position(rpc.call(method, vehicle), vehicle) for vehicle in vehicles]
+        [pose_position(rpc.call("simGetVehiclePose", vehicle), vehicle) for vehicle in vehicles]
     )
     pose = {
         "position": {
@@ -85,10 +84,8 @@ def run(args: argparse.Namespace) -> int:
     while not stopping:
         started = time.monotonic()
         try:
-            center = update_camera(rpc, vehicles, camera, args.pose_source)
+            center = update_camera(rpc, vehicles, camera)
             updates += 1
-            if updates % 25 == 0:
-                print(json.dumps({"updates": updates, "centroid": center, "pose_source": args.pose_source}), flush=True)
             consecutive_failures = 0
             if args.once:
                 print(json.dumps({"vehicles": vehicles, "centroid": center}))
@@ -119,8 +116,6 @@ def main() -> int:
     parser.add_argument("--rpc-timeout", type=float, default=2.0)
     parser.add_argument("--max-failures", type=int, default=10)
     parser.add_argument("--once", action="store_true")
-    parser.add_argument("--pose-source", choices=("vehicle", "object"), default="vehicle",
-                        help="object uses global actor coordinates for named vehicles at nonzero spawn")
     args = parser.parse_args()
     if args.max_failures < 1:
         raise ValueError("max-failures must be positive")

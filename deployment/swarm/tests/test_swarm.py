@@ -133,22 +133,6 @@ class OverheadTrackerTest(unittest.TestCase):
             pose["position"],
         )
 
-    def test_nonzero_spawn_uses_global_actor_for_external_camera(self):
-        class Rpc:
-            def call(self, method, *args):
-                if method == 'simGetVehiclePose':
-                    return {'position': dict(x_val=10, y_val=20, z_val=-3)}
-                if method == 'simGetObjectPose':
-                    return {'position': dict(x_val=52.6, y_val=180.11, z_val=-2.85)}
-                if method == 'simSetCameraPose':
-                    self.pose = args[1]
-                    return True
-                raise AssertionError(method)
-        rpc = Rpc()
-        center = update_camera(rpc, ['PX4'], {'name': 'swarm_overhead', 'altitude_m': 25}, 'object')
-        self.assertEqual(center, (52.6, 180.11, -2.85))
-        self.assertEqual(rpc.pose['position'], dict(x_val=52.6, y_val=180.11, z_val=-27.85))
-
 
 
 class ManagerTrackerDependencyTest(unittest.TestCase):

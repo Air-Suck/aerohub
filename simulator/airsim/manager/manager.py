@@ -108,8 +108,6 @@ def start_overhead_tracker(profile, runtime_settings, directory):
         '--altitude', str(options['altitude_m']),
         '--update-hz', str(options['update_hz']),
     ]
-    if profile.get('overhead_pose_source') == 'object':
-        command.extend(['--pose-source', 'object'])
     log_path = directory / 'overhead-view.log'
     with log_path.open('w') as log:
         child = subprocess.Popen(
