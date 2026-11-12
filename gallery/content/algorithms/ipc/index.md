@@ -1,23 +1,36 @@
 ---
 title: IPC
 summary: 将局部路径、安全飞行走廊与模型预测控制紧密结合，直接生成机体角速度和推力，用安全走廊硬约束衔接避障规划与高频控制。
-keywords: [联合规划控制, 安全走廊硬约束, MPC, A星路径搜索, 角速度与推力]
+keywords:
+- 联合规划控制
+- 安全走廊硬约束
+- MPC
+- A星路径搜索
+- 角速度与推力
 category: planner
 source: https://github.com/hku-mars/IPC
-revision: 'Aerohub native adapter; upstream 0f959ca7995e71a1fcc4942bd4a86869ab6ee975'
+revision: Aerohub native adapter; upstream 0f959ca7995e71a1fcc4942bd4a86869ab6ee975
 demo:
   image: content/algorithms/ipc/assets/demo-cover.jpg
   alt: IPC 作者 README 的机载平台与论文演示封面，点击观看官方视频
   caption: 作者官方平台与演示入口；突发障碍和扰动效果不代表 Aerohub 已验收。
   source: https://github.com/hku-mars/IPC/blob/0f959ca7995e71a1fcc4942bd4a86869ab6ee975/IPC/img/out.png
-  video: https://www.youtube.com/watch?v=EZFxTkqqat4
+  video: https://www.bilibili.com/video/BV1NM4y117TH/
 integration: integrated
 validation: unverified
+showcase:
+  headline: 把安全走廊带进控制求解
+  highlights:
+  - title: 规划与控制联合
+    text: 局部路径经安全走廊衔接 MPC，将避障与动力学约束带入滚动优化，输出角速度和推力。
+  - title: 硬约束，不止路径检测
+    text: 走廊边界进入控制优化约束；上游还演示突发障碍与扰动，本项目验证范围仍以正文为准。
+videos:
+- label: YouTube
+  url: https://www.youtube.com/watch?v=EZFxTkqqat4
 ---
 
-IPC（Integrated Planning and Control）将无人机避障规划和控制联合起来：A*/Floyd 生成局部参考路径，EMVP 构建凸安全走廊，MPC 在走廊和动力学约束下滚动求解，再转换为角速度与推力。与只输出路径的规划器不同，它的最终执行接口是控制流。
-
-作者演示包含森林导航、突发障碍与扰动；**Aerohub 当前验收仅限单机 PC 静态森林，不包括后两类场景**。
+**当前验证范围：单机 PC 静态森林，未覆盖上游演示的突发障碍与扰动。**
 
 ## 算法核心
 
@@ -42,8 +55,6 @@ IPC（Integrated Planning and Control）将无人机避障规划和控制联合�
 - **Function**：IPC 负责局部地图、路径、安全走廊、MPC 和控制转换，复用 AS2 状态、注册点云与控制器 / 平台。
 
 当前是一台 `drone0`，无多机同步或共享规划声明。同一个接入同时涉及 Tool 侧协调、Behavior 执行与 Function 求解，不能因通用 Tool 未发布而把 Tool 层留空。联合内核保留在 Function，不强拆进程；它不是 FollowTimedPath 后端，也不是把求解器装进 Behavior。
-
-[Bilibili 官方演示](https://www.bilibili.com/video/BV1NM4y117TH)
 
 ## 案例
 

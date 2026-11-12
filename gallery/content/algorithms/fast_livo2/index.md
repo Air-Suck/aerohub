@@ -1,7 +1,12 @@
 ---
 title: FAST-LIVO2
 summary: 融合激光雷达、IMU 与图像的实时定位建图系统。FAST-LIVO2 在运动中估计自身位姿，并输出三维配准点云，为机器人定位和环境重建提供基础能力。
-keywords: [激光惯性视觉融合, 直接法, 顺序滤波更新, 统一体素地图, 定位建图]
+keywords:
+- 激光惯性视觉融合
+- 直接法
+- 顺序滤波更新
+- 统一体素地图
+- 定位建图
 category: state_estimator
 source: https://github.com/hku-mars/FAST-LIVO2
 revision: 0d2c0346107b75b59934975adec9a6eeeb913c64
@@ -10,14 +15,48 @@ demo:
   alt: FAST-LIVO2 作者视频中的三维重建与飞行平台封面，点击观看官方视频
   caption: 作者公开的定位与建图演示；不代表本项目已完成真实数据或飞行验收。
   source: https://github.com/hku-mars/FAST-LIVO2#11-related-video
-  video: https://www.youtube.com/watch?v=6dF2DzgbtlY
+  video: https://www.bilibili.com/video/BV1Ezxge7EEi/
 integration: integrated
 validation: unverified
+showcase:
+  headline: 融合几何与图像，让定位和建图共享信息
+  highlights:
+  - title: 顺序融合，多源互补
+    text: IMU 传播后依次用激光几何和图像光度约束更新状态，补充不同观测中的有效信息。
+  - title: 一个内核，两类输出
+    text: 统一体素地图支撑位姿估计与三维配准点云；状态与环境输出共享同一算法实例。
+  sourceNote: 平台图片来自作者关联的 LIV_handhold 硬件项目；不表示本项目采用相同机体或已完成硬件验证。
+  methodSources:
+  - label: 上游系统总览图
+    url: https://github.com/hku-mars/FAST-LIVO2/blob/0d2c0346107b75b59934975adec9a6eeeb913c64/pics/Framework.png
+videos:
+- label: YouTube
+  url: https://www.youtube.com/watch?v=6dF2DzgbtlY
+media:
+- title: 手持采集平台
+  image: content/algorithms/fast_livo2/assets/handheld.webp
+  alt: 手持采集平台的传感器与结构展示
+  caption: 激光、相机、IMU 与同步模块集成在同一平台，硬件时间同步支撑多源测量对齐。
+  source: https://github.com/xuankuzcr/LIV_handhold/blob/4567a0543a2d8e7f098e69b2f3e3d7aa41933c90/pics/cover.jpg
+- title: 机载传感器平台
+  image: content/algorithms/fast_livo2/assets/onboard.webp
+  alt: 机载传感器平台的传感器与结构展示
+  caption: 关联硬件项目公开机载安装与结构设计，展示联合定位建图的空中部署形态。
+  source: https://github.com/xuankuzcr/LIV_handhold/blob/4567a0543a2d8e7f098e69b2f3e3d7aa41933c90/pics/uav.jpg
 ---
 
-FAST-LIVO2 面向机器人运动中的实时定位与三维重建，将激光雷达、IMU 与图像融合到同一状态估计中。算法采用顺序滤波更新：激光直接配准提供几何约束，图像直接对齐提供光度约束，两者复用统一体素地图中的几何与视觉信息。
-
 ## 算法核心
+
+<div class="method-cards" aria-label="FAST-LIVO2 上游方法示意">
+<figure class="method-card">
+<div class="method-card-image">
+
+![FAST-LIVO2 上游系统总览，含 IMU 传播、激光更新、视觉更新与共享体素地图](./assets/upstream-framework.webp)
+
+</div>
+<figcaption><h3>顺序更新，共享地图</h3><p>几何与光度测量在同一状态估计中顺序更新；地图保存两类观测信息。完整原图见来源。</p></figcaption>
+</figure>
+</div>
 
 <div class="diagram-scroll" style="--diagram-min-width: 1120px" tabindex="0" role="region" aria-label="FAST-LIVO2 算法核心图，可横向滚动">
 
@@ -40,8 +79,6 @@ FAST-LIVO2 面向机器人运动中的实时定位与三维重建，将激光雷
 - **Function**：一个联合算法实例，经共享输出桥分别接入 State Estimator 与 Perception；两路能力共用算法和部署依赖。
 
 联合算法只保留一个实例。配准点云不自动等于占据图或 ESDF，AS2 接入也不代表 PX4 已融合外部定位。
-
-[Bilibili 备用观看入口](https://www.bilibili.com/video/BV1Ezxge7EEi)
 
 ## 案例
 

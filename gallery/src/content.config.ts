@@ -29,6 +29,6 @@ export const collections = {
   algorithms: defineCollection({
     loader: registeredAlgorithms(),
     // Reject unknown display metadata; retain keywords, curated scenes, compact showcases and video alternatives.
-    schema: algorithmSchema.strict().describe('Algorithm display metadata with compact showcase, keywords and method sources'),
+    schema: algorithmSchema.strict().describe('Algorithm display metadata with compact showcases with static or animated cards and method sources'),
   }),
 };

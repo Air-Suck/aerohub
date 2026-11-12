@@ -1,7 +1,12 @@
 ---
 title: Swarm-Formation
 summary: 面向障碍密集环境的多机编队飞行。Swarm-Formation 通过分布式轨迹优化，结合队形保持、避障和动力学约束，随飞行过程持续更新各机路径。
-keywords: [分布式编队, 编队图约束, MINCO, 滚动优化, 邻机轨迹广播]
+keywords:
+- 分布式编队
+- 编队图约束
+- MINCO
+- 滚动优化
+- 邻机轨迹广播
 category: planner
 source: https://github.com/ZJU-FAST-Lab/Swarm-Formation
 revision: 967a4bdfae949e994691f8ffc87dbb0147cbebb7
@@ -10,12 +15,33 @@ demo:
   alt: Swarm-Formation 作者发布的室内多机编队演示封面，点击观看官方视频
   caption: 作者公开的编队飞行 Demo；本项目不同机数、运行后端和验收范围单独记录。
   source: https://github.com/ZJU-FAST-Lab/Swarm-Formation#1-about
-  video: https://www.youtube.com/watch?v=lFumt0rJci4
+  video: https://www.bilibili.com/video/BV1qv41137Si/
 integration: integrated
 validation: unverified
+showcase:
+  headline: 保持编队，也为障碍留出通路
+  highlights:
+  - title: 用图约束描述队形
+    text: 以编队图衡量形状误差，让队形保持与障碍规避共同进入轨迹优化。
+  - title: 各机独立，交换预测
+    text: 结合本机状态、地图和邻机预测轨迹滚动求解；共享通信不改变逐机规划的职责。
+videos:
+- label: YouTube
+  url: https://www.youtube.com/watch?v=lFumt0rJci4
+media:
+- title: 编队穿障
+  image: content/algorithms/swarm_formation/assets/formation-flight-poster.webp
+  animation: content/algorithms/swarm_formation/assets/formation-flight.webp
+  alt: 六边形编队在随机障碍环境中的轨迹可视化
+  caption: 在随机森林中保持编队并规划绕障轨迹，观察队形约束与环境避障如何共同作用。
+  source: https://github.com/ZJU-FAST-Lab/Swarm-Formation/blob/967a4bdfae949e994691f8ffc87dbb0147cbebb7/fig/normal_hexagon_2.gif
+- title: 交互目标
+  image: content/algorithms/swarm_formation/assets/formation-goal-poster.webp
+  animation: content/algorithms/swarm_formation/assets/formation-goal.webp
+  alt: RViz 中为编队选择导航目标的演示
+  caption: 在 RViz 选择目标后更新机群路径，展示目标输入与滚动编队导航的衔接。
+  source: https://github.com/ZJU-FAST-Lab/Swarm-Formation/blob/967a4bdfae949e994691f8ffc87dbb0147cbebb7/fig/set_goal_normal_hexagon.gif
 ---
-
-Swarm-Formation 面向多机穿越障碍环境时的队形保持与避碰。每台飞机结合本机状态、地图和邻机预测轨迹独立优化，用编队图描述形状误差，将平滑性、时间、动力学及碰撞代价共同纳入滚动轨迹优化。共享通信与采样代理不改变分布式求解的本质。
 
 ## 算法核心
 
@@ -40,8 +66,6 @@ Swarm-Formation 面向多机穿越障碍环境时的队形保持与避碰。每�
 - **Function**：复用逐机状态、传感器和控制，算法内维护各机 GridMap / ESDF；地图与本机规划可共享进程。
 
 当前原生入口支持 `N=3…7`，每机独立规划、独立 namespace。一个 UAV 计算节点在 RoboPi，其余分别由 PC 独立线程监管独立容器；PC 工作站调用任务。角色、机数和执行后端的验收须分别核对。
-
-[Bilibili 官方演示](https://www.bilibili.com/video/BV1qv41137Si)
 
 ## 案例
 

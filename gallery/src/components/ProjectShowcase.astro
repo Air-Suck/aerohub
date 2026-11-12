@@ -8,9 +8,10 @@ interface Props {
   highlights: { title: string; text: string }[];
   demo: { image: string; alt: string; video: string; source: string };
   videos: { label: string; url: string }[];
-  media: { title: string; image: string; animation: string; alt: string; caption: string; source: string }[];
+  media: { title: string; image: string; animation?: string; alt: string; caption: string; source: string }[];
 }
 const { title, headline, keywords, methodSources = [], sourceNote, highlights, demo, videos, media } = Astro.props;
+const platformLabel = new URL(demo.video).hostname.endsWith('bilibili.com') ? 'Bilibili' : new URL(demo.video).hostname.includes('youtu') ? 'YouTube' : '观看演示';
 ---
 <section class="project-showcase" aria-label={`${title} 演示与特色`}>
   <div class="showcase-hero">
@@ -20,7 +21,7 @@ const { title, headline, keywords, methodSources = [], sourceNote, highlights, d
         <span class="video-play" aria-hidden="true">▶</span>
       </a>
       <nav class="showcase-video-links" aria-label="演示视频">
-        <a href={demo.video}>Bilibili ↗</a>
+        <a href={demo.video}>{platformLabel} ↗</a>
         {videos.map((video) => <a href={video.url}>{video.label} ↗</a>)}
       </nav>
     </div>
@@ -39,10 +40,10 @@ const { title, headline, keywords, methodSources = [], sourceNote, highlights, d
     </div></div>
     <div class="scenes-track" tabindex="0" role="region" aria-label="应用素材，可左右滚动">
       {media.map((item) => <figure class="scene-card">
-        <button class="scene-play" type="button" data-animation={item.animation} aria-label={`播放${item.title}动图`}>
+        {item.animation ? <button class="scene-play" type="button" data-animation={item.animation} aria-label={`播放${item.title}动图`}>
           <img src={item.image} alt={item.alt} loading="lazy" decoding="async" width="568" height="320" />
           <span class="scene-play-icon" aria-hidden="true">▶</span>
-        </button>
+        </button> : <div class="scene-still"><img src={item.image} alt={item.alt} loading="lazy" decoding="async" /></div>}
         <figcaption><h3>{item.title}</h3><p>{item.caption}</p></figcaption>
       </figure>)}
     </div>
@@ -129,6 +130,8 @@ const { title, headline, keywords, methodSources = [], sourceNote, highlights, d
   .scene-controls button:disabled { opacity:.3; cursor:default; }
   .scenes-track { display:flex; gap:16px; overflow-x:auto; scroll-snap-type:x mandatory; scrollbar-width:thin; overscroll-behavior-x:contain; }
   .scene-card { display:grid; grid-template-columns:48% minmax(0,1fr); flex:0 0 calc((100% - 16px)/2); margin:0; border:1px solid var(--line); border-radius:8px; overflow:hidden; scroll-snap-align:start; background:var(--surface); }
+  .scene-still { position:relative; min-height:160px; background:#fff; }
+  .scene-still img { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; }
   .scene-play { position:relative; padding:0; border:0; background:#15191c; cursor:pointer; min-width:0; min-height:160px; align-self:stretch; }
   .scene-play img { position:absolute; inset:0; display:block; width:100%; height:100%; object-fit:contain; }
   .scene-play-icon { position:absolute; left:.65rem; bottom:.65rem; color:white; font-size:.8rem; text-shadow:0 1px 5px #000; }
@@ -142,5 +145,5 @@ const { title, headline, keywords, methodSources = [], sourceNote, highlights, d
   .showcase-attribution summary { cursor:pointer; text-decoration:underline; text-underline-offset:3px; }
   .showcase-attribution ul { margin:.5rem 0; padding-left:1rem; }
   @media (max-width:1000px) { .showcase-hero { gap:1.25rem; } .showcase-copy h2 { margin-bottom:1rem; } .scene-card { grid-template-columns:44% minmax(0,1fr); } .scene-card figcaption { padding:.8rem; } }
-  @media (max-width:760px) { .showcase-hero { grid-template-columns:1fr; gap:1rem; } .showcase-copy h2 { font-size:1.35rem; } .showcase-kicker { display:none; } .scene-card { flex-basis:100%; grid-template-columns:45% minmax(0,1fr); } .scene-play { min-height:155px; } }
+  @media (max-width:760px) { .showcase-hero { grid-template-columns:1fr; gap:1rem; } .showcase-copy h2 { font-size:1.35rem; } .showcase-kicker { display:none; } .scene-card { flex-basis:100%; grid-template-columns:45% minmax(0,1fr); } .scene-play, .scene-still { min-height:155px; } }
 </style>

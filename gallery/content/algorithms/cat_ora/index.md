@@ -1,21 +1,32 @@
 ---
 title: CAT-ORA
 summary: 面向多机器人三维队形变换。CAT-ORA 联合考虑目标分配与机间避碰，生成满足速度、加速度约束的轨迹，减少整队完成形状切换所需的时间。
-keywords: [多机协同, 队形变换, 目标分配, 机间避碰, 共同时间参数化]
+keywords:
+- 多机协同
+- 队形变换
+- 目标分配
+- 机间避碰
+- 共同时间参数化
 category: planner
 source: https://github.com/ctu-mrs/catora
 revision: 4bc41f593eebde65dd74108a97e80430a145dfa0
 demo:
   image: content/algorithms/cat_ora/assets/demo-cover.jpg
   alt: CAT-ORA 作者论文中的实机队形变换，点击观看官方视频
-  caption: 作者论文 Figure 1 的实机队形变换；不代表本项目四机复现结果。
+  caption: 作者公开的多机队形变换画面。
   source: https://arxiv.org/html/2412.00603v2#S1.F1
   video: https://www.youtube.com/watch?v=FOCyGhxazMI
 integration: integrated
 validation: unverified
+showcase:
+  headline: 队形切换，联合决定目标分配与机间避碰
+  highlights:
+  - title: 分配与运动一起考虑
+    text: 同时处理每台机器人去哪个目标点，以及变换过程中的机间冲突，而不是先分配再独立飞行。
+  - title: 整队共同完成
+    text: 按速度和加速度约束生成共同完成时长的轨迹；本项目另有固定车辆与目标对应约束。
+  sourceNote: 主视频仅核实到上游 README 的 YouTube 入口；现有封面为早期收录的作者 Figure 1，本轮未新增论文素材。
 ---
-
-CAT-ORA 面向多机器人从一种空间队形切换到另一种队形的场景。它把“每台机器人去哪个目标点”与“变换过程中是否发生机间碰撞”放在一起求解，再按速度和加速度约束为整队生成共同完成时长的轨迹。它的特色在多机分配与运动的协调，而不是环境感知或未知障碍导航。
 
 ## 算法核心
 

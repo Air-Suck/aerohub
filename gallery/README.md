@@ -98,7 +98,7 @@ demo:
   video: https://www.youtube.com/watch?v=VIDEO_ID
 ```
 
-`image` 也支持 HTTP(S) 地址，本地素材优先。未配置 `showcase` 的条目沿用封面、简介与关键词的原有布局。SUPER / YOPO 使用下节的桌面紧凑展示；CAT-ORA 等其他条目按明确任务逐步迁移。
+`image` 也支持 HTTP(S) 地址，本地素材优先。未配置 `showcase` 的条目沿用封面、简介与关键词的原有布局。当前六个已登记条目均使用下节的桌面紧凑展示。
 
 核心图聚焦算法自身方法，三层图解释能力链路；技术接口、进程和运行记录放在 `<details>`，案例按任务要求留空或提供真实内容。宽图使用可聚焦的 `.diagram-scroll` 保留窄屏横向滚动。上游素材不计入本项目验证证据。
 
@@ -123,9 +123,9 @@ demo:
 | `showcase.methodSources` | 可选 `label` / HTTP(S) `url` 列表，登记正文方法图来源 |
 | `showcase.sourceNote` | 可选合作署名等来源补充 |
 | `videos` | 最多 6 项 `label` / HTTP(S) `url`，提供其他视频入口 |
-| `media` | 最多 6 张卡片，包含 `title`、`image`、`animation`、`alt`、`caption`、`source` |
+| `media` | 最多 6 张卡片，包含 `title`、`image`、`alt`、`caption`、`source`，动图另配可选 `animation` |
 
-`media.image` 和 `media.animation` 当前均为条目 `assets/` 内的 WebP，字段路径以 `content/algorithms/<id>/assets/` 开头；图片作静态封面，动画通过原始资源 URL 发布以保留多帧。素材从上游仓库、README 链接到的项目网站和作者页面搜集，实际查看后筛选；论文暂不纳入默认素材搜集。Bilibili 优先仍须核查内容与作者对应关系，相关介绍和转载不能冒充官方演示。
+`media.image` 为条目 `assets/` 内的 WebP；`media.animation` 为可选的动画 WebP，字段路径以 `content/algorithms/<id>/assets/` 开头；未配置 animation 时显示普通静态卡片，无播放按钮；配置时图片作静态封面，动画通过原始资源 URL 发布以保留多帧。素材从上游仓库、README 链接到的项目网站和作者页面搜集，实际查看后筛选；论文暂不纳入默认素材搜集。Bilibili 优先仍须核查内容与作者对应关系，相关介绍和转载不能冒充官方演示。
 
 配置示例（省略已有 `demo` 等基础字段）：
 
@@ -173,7 +173,19 @@ media:
 
 执行 `npm --prefix gallery run bundle`，再检查用户当前开发服务。桌面 1440 / 1920、手机约 390 视口分别查看：关键词、图文比例、图片解码、动图循环、固定高度、全部分页、首尾按钮、方向键、来源展开、宽图滚动与整页溢出；静态构建不代替在线显示检查。检查截图与报告保存在根目录 `log/gallery-review/`。
 
-当前 SUPER 两张应用卡片桌面一页；YOPO 四张（森林实飞、深度视觉平台、随机场景导航、交互目标导航）桌面两页、手机四页，其两张上游方法图位于算法核心并采用统一卡片样式。两页上述布局与交互已检查；外部视频播放未独立核验。其他条目不因本约定自动批量迁移。
+当前六个已登记算法均启用紧凑布局：
+
+| 条目 | 素材整理结果 |
+| --- | --- |
+| CAT-ORA | 保留既有作者实机封面；仅核实到官方 YouTube，不虚构 Bilibili 或额外应用素材 |
+| Swarm-Formation | Bilibili 主入口，新增编队穿障与交互目标两段仿真动图 |
+| SUPER | Bilibili 主入口，自主探索与目标跟踪两张应用卡片 |
+| FAST-LIVO2 | Bilibili 主入口，作者关联手持/机载平台两张静态卡片，系统总览以方法卡片呈现 |
+| YOPO | Bilibili 主入口，四张应用卡片桌面两页/手机四页，两张方法卡片位于算法核心 |
+| IPC | Bilibili 主入口，仓库仅有现有封面，应用区不重复填充；保留本项目静态森林验证边界 |
+
+2026-11-12 全量检查覆盖 1440 / 1920 / 390 视口、关键词、全部图片和动画、分页、来源与核心图；素材较密的原图可从来源查看。外部平台视频播放未独立验收。来源清单位于各条目 assets/SOURCES.md；后续新增条目按同样规则维护，不按固定数量凑卡片。
+
 
 ## 验证记录与开发服务
 

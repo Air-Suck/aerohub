@@ -44,7 +44,7 @@ if (data.demo?.image.startsWith('content/') && demoImage === data.demo.image) {
   {data.showcase && data.demo ? <ProjectShowcase
     title={data.title} keywords={keywords} methodSources={data.showcase.methodSources} headline={data.showcase.headline} sourceNote={data.showcase.sourceNote} highlights={data.showcase.highlights}
     demo={{ ...data.demo, image: demoImage! }} videos={data.videos ?? []}
-    media={(data.media ?? []).map(item => ({ ...item, image: mediaUrl(item.image), animation: mediaUrl(item.animation) }))}
+    media={(data.media ?? []).map(item => ({ ...item, image: mediaUrl(item.image), animation: item.animation ? mediaUrl(item.animation) : undefined }))}
   /> : <>
   {data.demo && <figure class="algorithm-demo">
     <a class="demo-cover" href={data.demo.video}>
@@ -62,10 +62,10 @@ if (data.demo?.image.startsWith('content/') && demoImage === data.demo.image) {
   {(data.media ?? []).length > 0 && <section class="upstream-media" aria-label="上游应用与场景">
     <div class="media-heading"><h2>从上游现场看应用</h2><p>上游公开素材 · 点击展开动图</p></div>
     <div class="media-grid">{data.media.map((item) => <figure class="media-card">
-      <details class="media-animation">
+      {item.animation ? <details class="media-animation">
         <summary><img src={mediaUrl(item.image)} alt={item.alt} loading="lazy" decoding="async" /><span class="media-toggle"><span class="when-closed">▶ 播放动图</span><span class="when-open">收起动图 ↑</span></span></summary>
         <img src={mediaUrl(item.animation)} alt={item.alt} loading="lazy" decoding="async" />
-      </details>
+      </details> : <img src={mediaUrl(item.image)} alt={item.alt} loading="lazy" decoding="async" />}
       <figcaption><h3>{item.title}</h3><p>{item.caption}</p><a href={item.source}>上游素材来源 ↗</a></figcaption>
     </figure>)}</div>
   </section>}

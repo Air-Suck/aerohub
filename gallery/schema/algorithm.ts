@@ -26,7 +26,7 @@ export const algorithmSchema = z.object({
   media: z.array(z.object({
     title: z.string().min(1),
     image: z.string().regex(/^content\/algorithms\/[a-z0-9_-]+\/assets\/[a-zA-Z0-9_.-]+\.webp$/),
-    animation: z.string().regex(/^content\/algorithms\/[a-z0-9_-]+\/assets\/[a-zA-Z0-9_.-]+\.webp$/),
+    animation: z.string().regex(/^content\/algorithms\/[a-z0-9_-]+\/assets\/[a-zA-Z0-9_.-]+\.webp$/).optional(),
     alt: z.string().min(1),
     caption: z.string().min(1),
     source: z.url().refine((url) => /^https?:\/\//.test(url), 'Use an HTTP(S) source URL'),
