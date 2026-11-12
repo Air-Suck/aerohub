@@ -1,0 +1,49 @@
+schema_version: '0.1'
+id: planner.gcopter
+name: GCOPTER LiDAR local trajectory planning
+version: '0.1.0'
+type: planner
+description: Private ROG-Map copy, independent local frontend, FIRI and GCOPTER/MINCO optimization; FollowTimedPath owns execution.
+component:
+  id: aerohub.planner.gcopter
+  manifest: deployment/gcopter/component.yaml
+  shared_process_group: gcopter-function-and-adapter
+  coupled_capabilities: []
+usage:
+  mode: local-rolling; explicit-stationary-snapshot-baseline-retained
+  selection_phase: deployment
+  invocation_interface: std_srvs/srv/Trigger-gcopter/plan_once
+  switching_constraints: [stop-confirmed-before-replan-or-map-reset, native-Takeoff-completed-separately]
+inputs:
+  - topic: '<namespace>/sensor_measurements/odom'
+    frame: '<vehicle>/odom fixed ENU; speed norm independent of body/world rotation'
+    freshness: 0.2s
+  - topic: '<namespace>/navigation/points'
+    semantics: live registered LiDAR; private sliding probability map; unknown is excluded from reachable route
+    freshness: 1s; paired-to-navigation-odom-within-50ms
+  - topic: '<namespace>/navigation/odom'
+    semantics: measured pose history for LiDAR ray origin
+    freshness: 0.3s
+outputs:
+  - topic: '<namespace>/gcopter/plan'
+    schema: uav_planner_interfaces/msg/TimedPath
+    semantics: local plans preserve future execution time, task and revision, PVA/yaw; 20ms samples plus boundaries
+  - action: '<namespace>/follow_timed_path'
+    semantics: first stationary start then rolling PVA handoff using existing modify interface
+preconditions: [fresh-live-lidar-and-state, stationary-first-start, matching-AS2-overlay]
+resources:
+  reads: [authority-state, live-lidar-private-local-map]
+  writes: [FollowTimedPath-session]
+  conflicts: [other-motion-behaviors]
+  enforcement: timed/native-FollowPath-exclusive-in-server; no-general-cross-Behavior-arbiter
+lifecycle:
+  readiness: gcopter/health-and-Behavior-discovery
+  completion: Action-success-and-actual-arrival-hold
+  cancel_or_stop: enable-false-then-await-stop_confirmed
+  failure: stale-input-or-blocked-trajectory-or-plan-exhaustion-cancels; ordinary-solve-failure-retains-existing-stopping-trajectory
+  recovery: stop-then-native-Land-confirm-disarmed-before-reset-or-restart
+validation:
+  status: accepted
+  evidence: [src/planner/gcopter/VALIDATION.md]
+  verified_slice: single-UAV-live-LiDAR-local-forest-about-3m_s-AirSim-PX4
+  limitations: [no-SUPER-exploration-or-backup-optimizer, no-global-exploration-completeness, no-multi-UAV, no-RoboPi, no-real-flight, fault-matrix-incomplete]

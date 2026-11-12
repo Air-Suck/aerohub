@@ -1,0 +1,32 @@
+# Copied ROG-Map configuration, owned by GCOPTER. No PCD or simulator geometry.
+rog_map:
+  resolution: 0.2
+  inflation_resolution: 0.2
+  # Keep the perception/safety envelope aligned with the SUPER forest baseline.
+  inflation_step: 5
+  unk_inflation_en: false
+  unk_inflation_step: 1
+  map_size: [60, 60, 16]
+  fix_map_origin: [0, 0, 2]
+  virtual_ground_height: -0.1
+  virtual_ceil_height: 10.0
+  frontier_extraction_en: false
+  load_pcd_en: false
+  map_sliding: {enable: true, threshold: 0.3}
+  esdf: {enable: false}
+  ros_callback: {enable: false}
+  visualization: {enable: false}
+  intensity_thresh: -10
+  point_filt_num: 1
+  raycasting:
+    enable: true
+    batch_update_size: 1
+    local_update_box: [30, 30, 10]
+    ray_range: [0.6, 45]
+    p_min: 0.12
+    p_miss: 0.4
+    p_free: 0.499
+    p_occ: 0.85
+    p_hit: 0.9
+    p_max: 0.98
+    unk_thresh: 1.0

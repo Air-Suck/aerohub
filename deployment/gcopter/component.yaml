@@ -1,0 +1,45 @@
+schema_version: '0.1'
+id: aerohub.planner.gcopter
+version: '0.1.0'
+source:
+  upstream: src/planner/gcopter/upstream
+  revision: e0444f6d47b84f972ced91746b05feb36ce1fd4f
+  integration: src/planner/gcopter/ros2_adapter
+  license: MIT-core; LGPL-3.0-or-later-private-ROG-Map; bundled-notices-preserved
+  metadata_discrepancy: upstream-package.xml-says-BSD-root-and-core-say-MIT
+provides: [planner.gcopter]
+cards: [cards/planner/gcopter.yaml]
+roles:
+  compute: [gcopter_local_function, gcopter_adapter, AS2, FollowTimedPath]
+  workstation: [ROS-task-client, collision-scoring]
+  simulator: [AirSim, sensor-bridge]
+  flight_controller: [PX4-SITL]
+runtime:
+  platform: linux-x86_64
+  build_image: 'uav/apps-super-forest:onboard-v0.1.1@local-3e5d82c5dce5'
+  execution_image: 'uav/apps-super-forest:onboard-v0.1.1@local-3e5d82c5dce5'
+  workstation_image: 'osrf/ros:humble-desktop-full-jammy@local-592f97da6b87'
+  dependencies: [ROS-2-Humble, Eigen3, OMPL-1.5.2, PCL, yaml-cpp, uav_planner_interfaces, uav_planner_framework, uav_follow_path_execution]
+  build: bash deployment/gcopter/build.sh
+  check: bash deployment/gcopter/check.sh
+  local_check: bash deployment/gcopter/local_check.sh
+  launch: deployment/gcopter/run.py
+  compute_runtime: deployment/gcopter/compute_runtime.py
+  workstation_client: deployment/gcopter/mission.py
+  overlay: log/gcopter/install
+  clock: ROS-clock-from-AirSim
+  namespaces: [drone0]
+  ports: {rpc: 43482, px4_tcp: 4891, relay: 4991, xrce: 8961}
+  readiness: gcopter/health-plus-fresh-live-LiDAR-and-state-and-Behavior-ready
+  stop: gcopter/enable-false-await-state.stop_confirmed-then-native-Land-and-disarmed
+  rollback: stop-and-disarm-then-restore-reviewed-source-and-rebuild-overlay-map-and-task-are-lost
+resources:
+  reads: [authority-odometry, registered-live-LiDAR, private-sliding-ROG-Map]
+  writes: [FollowTimedPath-session]
+  coupling: Function-and-execution-adapter-share-task-and-map-generation-do-not-restart-independently-in-flight
+  conflicts: [other-motion-behaviors, duplicate-gcopter-adapter]
+validation:
+  status: accepted
+  evidence: src/planner/gcopter/VALIDATION.md
+  verified_slice: single-UAV-live-LiDAR-local-forest-about-3m_s-AirSim-PX4
+  limitations: [no-SUPER-exploration-or-backup-optimizer, no-global-exploration-completeness, full-fault-matrix-pending, no-RoboPi, no-real-hardware]
