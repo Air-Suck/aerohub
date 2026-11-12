@@ -1,0 +1,146 @@
+---
+interface Props {
+  title: string;
+  headline: string;
+  keywords: string[];
+  methodSources?: { label: string; url: string }[];
+  sourceNote?: string;
+  highlights: { title: string; text: string }[];
+  demo: { image: string; alt: string; video: string; source: string };
+  videos: { label: string; url: string }[];
+  media: { title: string; image: string; animation: string; alt: string; caption: string; source: string }[];
+}
+const { title, headline, keywords, methodSources = [], sourceNote, highlights, demo, videos, media } = Astro.props;
+---
+<section class="project-showcase" aria-label={`${title} 演示与特色`}>
+  <div class="showcase-hero">
+    <div>
+      <a class="showcase-video" href={demo.video} aria-label={`观看 ${title} 完整演示`}>
+        <img src={demo.image} alt={demo.alt} width="1280" height="720" fetchpriority="high" />
+        <span class="video-play" aria-hidden="true">▶</span>
+      </a>
+      <nav class="showcase-video-links" aria-label="演示视频">
+        <a href={demo.video}>Bilibili ↗</a>
+        {videos.map((video) => <a href={video.url}>{video.label} ↗</a>)}
+      </nav>
+    </div>
+    <div class="showcase-copy">
+      <p class="showcase-kicker">核心特色</p>
+      <h2>{headline}</h2>
+      {highlights.map((highlight) => <div class="showcase-highlight"><h3>{highlight.title}</h3><p>{highlight.text}</p></div>)}
+      {keywords.length > 0 && <ul class="showcase-keywords" aria-label="算法特色关键词">{keywords.map(keyword => <li>{keyword}</li>)}</ul>}
+    </div>
+  </div>
+  {media.length > 0 && <showcase-scenes>
+    <div class="scenes-heading"><h2>应用与演示</h2><div class="scene-controls" hidden>
+      <button type="button" data-direction="-1" aria-label="上一组素材">←</button>
+      <span class="scene-position" aria-live="polite"></span>
+      <button type="button" data-direction="1" aria-label="下一组素材">→</button>
+    </div></div>
+    <div class="scenes-track" tabindex="0" role="region" aria-label="应用素材，可左右滚动">
+      {media.map((item) => <figure class="scene-card">
+        <button class="scene-play" type="button" data-animation={item.animation} aria-label={`播放${item.title}动图`}>
+          <img src={item.image} alt={item.alt} loading="lazy" decoding="async" width="568" height="320" />
+          <span class="scene-play-icon" aria-hidden="true">▶</span>
+        </button>
+        <figcaption><h3>{item.title}</h3><p>{item.caption}</p></figcaption>
+      </figure>)}
+    </div>
+  </showcase-scenes>}
+  <div class="showcase-attribution">
+    <span>素材来自上游项目，非本项目验证结果</span>
+    <details><summary>来源</summary><ul>
+      <li><a href={demo.source}>主视频与封面 ↗</a></li>
+      {media.map((item) => <li><a href={item.source}>{item.title} ↗</a></li>)}
+      {methodSources.map(item => <li><a href={item.url}>{item.label} ↗</a></li>)}
+      {sourceNote && <li>{sourceNote}</li>}
+    </ul></details>
+  </div>
+</section>
+<script>
+  class ShowcaseScenes extends HTMLElement {
+    connectedCallback() {
+      if (this.dataset.ready) return;
+      this.dataset.ready = 'true';
+      const track = this.querySelector<HTMLElement>('.scenes-track')!;
+      const controls = this.querySelector<HTMLElement>('.scene-controls')!;
+      const buttons = [...controls.querySelectorAll<HTMLButtonElement>('button')];
+      const position = controls.querySelector<HTMLElement>('.scene-position')!;
+      const update = () => {
+        const max = track.scrollWidth - track.clientWidth;
+        controls.hidden = max < 2;
+        buttons[0].disabled = track.scrollLeft < 2;
+        buttons[1].disabled = track.scrollLeft >= max - 2;
+        position.textContent = `${Math.round(track.scrollLeft / (track.clientWidth + 16)) + 1} / ${Math.ceil((track.scrollWidth + 16) / (track.clientWidth + 16))}`;
+      };
+      const move = (direction: number) => track.scrollBy({ left: direction * (track.clientWidth + 16), behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
+      buttons.forEach(button => button.addEventListener('click', () => move(Number(button.dataset.direction))));
+      track.addEventListener('keydown', event => {
+        if (event.target === track && ['ArrowLeft', 'ArrowRight'].includes(event.key)) {
+          event.preventDefault(); move(event.key === 'ArrowRight' ? 1 : -1);
+        }
+      });
+      track.addEventListener('scroll', update, { passive: true });
+      this.querySelectorAll<HTMLButtonElement>('.scene-play').forEach(button => {
+        button.addEventListener('click', async () => {
+          if (button.classList.contains('is-playing') || button.hasAttribute('aria-busy')) return;
+          button.setAttribute('aria-busy', 'true');
+          const image = button.querySelector('img')!;
+          const animation = new Image();
+          animation.src = button.dataset.animation!;
+          try { await animation.decode(); } catch { button.removeAttribute('aria-busy'); return; }
+          button.removeAttribute('aria-busy');
+          image.src = animation.src;
+          button.classList.add('is-playing');
+          button.setAttribute('aria-label', '动图正在循环播放');
+          button.setAttribute('aria-disabled', 'true');
+        });
+      });
+      const observer = new ResizeObserver(update);
+      observer.observe(track);
+      this.addEventListener('showcase-cleanup', () => observer.disconnect(), { once: true });
+      update();
+    }
+    disconnectedCallback() { this.dispatchEvent(new Event('showcase-cleanup')); }
+  }
+  if (!customElements.get('showcase-scenes')) customElements.define('showcase-scenes', ShowcaseScenes);
+</script>
+<style>
+  .project-showcase { margin: 1.5rem 0 2rem; }
+  .showcase-hero { display:grid; grid-template-columns:minmax(0,7fr) minmax(0,3fr); gap:2rem; align-items:center; }
+  .showcase-video { display:block; position:relative; border-radius:8px; overflow:hidden; background:#15191c; }
+  .showcase-video img { display:block; width:100%; height:auto; aspect-ratio:16/9; object-fit:contain; }
+  .video-play { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); display:grid; place-items:center; width:52px; height:52px; border-radius:50%; background:#10182099; color:#fff; font-size:1.1rem; padding-left:3px; }
+  .showcase-video:hover .video-play { background:#101820dc; }
+  .showcase-video-links { display:flex; flex-wrap:wrap; gap:1.2rem; margin-top:.5rem; font-size:.75rem; color:var(--muted); }
+  .showcase-kicker { font-size:.75rem; color:var(--muted); margin:0 0 .8rem; }
+  .showcase-copy h2 { margin:0 0 1.5rem; font-size:clamp(1.35rem,2vw,1.8rem); line-height:1.5; }
+  .showcase-keywords { display:flex; flex-wrap:wrap; gap:.4rem; list-style:none; padding:0; margin:1rem 0 0; }
+  .showcase-keywords li { font-size:.7rem; line-height:1.6; padding:.18rem .5rem; border:1px solid var(--line); border-radius:4px; }
+  .showcase-highlight + .showcase-highlight { margin-top:1rem; }
+  .showcase-highlight h3 { font-size:.95rem; margin:0 0 .3rem; font-weight:600; }
+  .showcase-highlight p { font-size:.88rem; color:var(--muted); margin:0; line-height:1.8; }
+  showcase-scenes { display:block; margin-top:1.5rem; }
+  .scenes-heading { display:flex; align-items:center; justify-content:space-between; margin-bottom:.65rem; }
+  .scenes-heading h2 { font-size:1rem; margin:0; }
+  .scene-controls { display:flex; align-items:center; gap:.65rem; font-size:.75rem; color:var(--muted); }
+  .scene-controls[hidden] { display:none; }
+  .scene-controls button { border:1px solid var(--line); background:transparent; border-radius:4px; cursor:pointer; color:var(--fg); }
+  .scene-controls button:disabled { opacity:.3; cursor:default; }
+  .scenes-track { display:flex; gap:16px; overflow-x:auto; scroll-snap-type:x mandatory; scrollbar-width:thin; overscroll-behavior-x:contain; }
+  .scene-card { display:grid; grid-template-columns:48% minmax(0,1fr); flex:0 0 calc((100% - 16px)/2); margin:0; border:1px solid var(--line); border-radius:8px; overflow:hidden; scroll-snap-align:start; background:var(--surface); }
+  .scene-play { position:relative; padding:0; border:0; background:#15191c; cursor:pointer; min-width:0; min-height:160px; align-self:stretch; }
+  .scene-play img { position:absolute; inset:0; display:block; width:100%; height:100%; object-fit:contain; }
+  .scene-play-icon { position:absolute; left:.65rem; bottom:.65rem; color:white; font-size:.8rem; text-shadow:0 1px 5px #000; }
+  .scene-play.is-playing { cursor:default; }
+  .scene-play.is-playing .scene-play-icon { display:none; }
+  .scene-card figcaption { padding:1rem; align-self:center; }
+  .scene-card h3 { font-size:.95rem; margin:0 0 .4rem; font-weight:600; }
+  .scene-card p { font-size:.8rem; line-height:1.8; margin:0; color:var(--muted); }
+  button:focus-visible, .scenes-track:focus-visible { outline:2px solid var(--fg); outline-offset:-3px; }
+  .showcase-attribution { display:flex; align-items:baseline; flex-wrap:wrap; gap:.7rem; margin-top:.7rem; color:var(--muted); font-size:.7rem; }
+  .showcase-attribution summary { cursor:pointer; text-decoration:underline; text-underline-offset:3px; }
+  .showcase-attribution ul { margin:.5rem 0; padding-left:1rem; }
+  @media (max-width:1000px) { .showcase-hero { gap:1.25rem; } .showcase-copy h2 { margin-bottom:1rem; } .scene-card { grid-template-columns:44% minmax(0,1fr); } .scene-card figcaption { padding:.8rem; } }
+  @media (max-width:760px) { .showcase-hero { grid-template-columns:1fr; gap:1rem; } .showcase-copy h2 { font-size:1.35rem; } .showcase-kicker { display:none; } .scene-card { flex-basis:100%; grid-template-columns:45% minmax(0,1fr); } .scene-play { min-height:155px; } }
+</style>

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="640" viewBox="0 0 1000 640" role="img" aria-labelledby="title desc">
+<title id="title">三层能力 / 视觉模板</title><desc id="desc">中性职责模板，不推断进程拆分。</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10z" fill="#716b60"/></marker></defs>
+<rect width="1000" height="640" rx="12" fill="#fcfaf7"/>
+<g font-family="Arial, Noto Sans CJK SC, sans-serif" fill="#242522">
+<text x="32" y="38" font-size="22" fill="#242522" font-weight="600">三层能力 / 视觉模板</text>
+<rect x="25" y="65" width="950" height="145" rx="8" fill="none" stroke="#d8d3cc"/><text x="45" y="95" font-size="17" fill="#62605c" font-weight="600">TOOL</text><rect x="25" y="230" width="950" height="145" rx="8" fill="none" stroke="#d8d3cc"/><text x="45" y="260" font-size="17" fill="#62605c" font-weight="600">BEHAVIOR</text><rect x="25" y="395" width="950" height="160" rx="8" fill="none" stroke="#d8d3cc"/><text x="45" y="425" font-size="17" fill="#62605c" font-weight="600">FUNCTION</text><rect x="230" y="85" width="580" height="105" rx="8" fill="#e4eee6" stroke="#8fa693"/>
+<text x="248" y="119" font-size="23" fill="#242522" font-weight="600">目标与调用协调</text>
+<text x="248" y="151" font-size="18" fill="#62605c">有实现基础 ≠ 已发布通用 Tool API</text><rect x="230" y="250" width="580" height="105" rx="8" fill="#e8edf1" stroke="#9aaab7"/>
+<text x="248" y="284" font-size="23" fill="#242522" font-weight="600">实际调用的基础执行</text>
+<text x="248" y="316" font-size="18" fill="#62605c">按源码填写 / 未涉及则弱化</text><rect x="230" y="420" width="280" height="110" rx="8" fill="#e4eee6" stroke="#8fa693"/>
+<text x="248" y="454" font-size="23" fill="#242522" font-weight="600">实际算法能力</text>
+<text x="248" y="486" font-size="18" fill="#62605c">核查职责及进程共享</text><rect x="560" y="420" width="250" height="110" rx="8" fill="#e8edf1" stroke="#9aaab7"/>
+<text x="578" y="454" font-size="23" fill="#242522" font-weight="600">基础输入 / 平台</text>
+<text x="578" y="486" font-size="18" fill="#62605c">外部复用</text><path d="M670 190 V250" fill="none" stroke="#716b60" stroke-width="2" marker-end="url(#arrow)"/><path d="M370 420 V355" fill="none" stroke="#716b60" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arrow)"/><path d="M810 300 H920 V475 H810" fill="none" stroke="#716b60" stroke-width="2" marker-end="url(#arrow)"/><text x="32" y="600" font-size="17" fill="#62605c">实线：执行；虚线：数据。节点与连线须由职责表决定，不按模板填满三层。</text>
+</g></svg>

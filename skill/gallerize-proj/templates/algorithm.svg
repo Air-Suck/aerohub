@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="970" height="460" viewBox="0 0 970 460" role="img" aria-labelledby="title desc">
+<title id="title">算法核心 / 视觉模板</title><desc id="desc">通用样式示例，不是算法事实。</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10z" fill="#716b60"/></marker></defs>
+<rect width="970" height="460" rx="12" fill="#fcfaf7"/>
+<g font-family="Arial, Noto Sans CJK SC, sans-serif" fill="#242522">
+<text x="32" y="38" font-size="22" fill="#242522" font-weight="600">算法核心 / 视觉模板</text>
+<rect x="30" y="95" width="220" height="100" rx="8" fill="#f5e3e1" stroke="#b96c67"/>
+<text x="48" y="129" font-size="23" fill="#943f3d" font-weight="600">输入 / A</text>
+<text x="48" y="161" font-size="18" fill="#62605c">真实输入语义</text><rect x="30" y="240" width="220" height="100" rx="8" fill="#f5e3e1" stroke="#b96c67"/>
+<text x="48" y="274" font-size="23" fill="#943f3d" font-weight="600">输入 / B</text>
+<text x="48" y="306" font-size="18" fill="#62605c">时间 / 坐标 / 约束</text><rect x="330" y="150" width="280" height="125" rx="8" fill="#e4eee6" stroke="#8fa693"/>
+<text x="348" y="184" font-size="23" fill="#242522" font-weight="600">实际方法步骤</text>
+<text x="348" y="216" font-size="18" fill="#62605c">由源码核查填入</text>
+<text x="348" y="243" font-size="18" fill="#62605c">节点数量按算法决定</text><rect x="700" y="95" width="235" height="100" rx="8" fill="#f5e3e1" stroke="#b96c67"/>
+<text x="718" y="129" font-size="23" fill="#943f3d" font-weight="600">输出 / A</text>
+<text x="718" y="161" font-size="18" fill="#62605c">最终输出 / 非候选</text><rect x="700" y="270" width="235" height="100" rx="8" fill="#f5e3e1" stroke="#b96c67"/>
+<text x="718" y="304" font-size="23" fill="#943f3d" font-weight="600">输出 / B</text>
+<text x="718" y="336" font-size="18" fill="#62605c">与其他输出关系</text><path d="M250 145 H290 V180 H330" fill="none" stroke="#716b60" stroke-width="2" marker-end="url(#arrow)"/><path d="M250 290 H290 V225 H330" fill="none" stroke="#716b60" stroke-width="2" marker-end="url(#arrow)"/><path d="M610 190 H655 V145 H700" fill="none" stroke="#716b60" stroke-width="2" marker-end="url(#arrow)"/><path d="M610 240 H655 V320 H700" fill="none" stroke="#716b60" stroke-width="2" marker-end="url(#arrow)"/><text x="32" y="420" font-size="17" fill="#62605c">视觉模板：多输入 / 多输出分别设端口；不要求真实算法拥有这些步骤或输出。</text>
+</g></svg>

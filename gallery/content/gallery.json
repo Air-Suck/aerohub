@@ -19,6 +19,10 @@
     {
       "id": "yopo",
       "markdown": "content/algorithms/yopo/index.md"
+    },
+    {
+      "id": "ipc",
+      "markdown": "content/algorithms/ipc/index.md"
     }
   ]
 }

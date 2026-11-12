@@ -4,6 +4,7 @@ import type { CollectionEntry } from 'astro:content';
 import type { ImageMetadata } from 'astro';
 import Base from '../../layouts/Base.astro';
 import { sitePath } from '../../lib/algorithms';
+import ProjectShowcase from '../../components/ProjectShowcase.astro';
 import IntegrationStatus from '../../components/IntegrationStatus.astro';
 export async function getStaticPaths() {
   return (await getCollection('algorithms')).map((algorithm) => ({
@@ -13,10 +14,20 @@ export async function getStaticPaths() {
 interface Props { algorithm: CollectionEntry<'algorithms'> }
 const { algorithm } = Astro.props;
 const { data } = algorithm;
+const keywords = data.keywords ?? [];
 const { Content } = await render(algorithm);
 const covers = import.meta.glob<ImageMetadata>('../../../content/algorithms/**/assets/*.{jpg,jpeg,png,webp}', {
   eager: true, import: 'default',
 });
+const mediaAssets = import.meta.glob<string>('../../../content/algorithms/**/assets/*.webp', {
+  eager: true, query: '?url', import: 'default',
+});
+const mediaUrl = (path: string) => {
+  const url = mediaAssets[`../../../${path}`];
+  if (!url) throw new Error(`Missing media asset: ${path}`);
+  return url;
+};
+const videoLabel = data.demo?.video.includes('bilibili.com') ? 'Bilibili' : '官方视频';
 const cover = data.demo && covers[`../../../${data.demo.image}`];
 const demoImage = data.demo && (cover?.src ?? data.demo.image);
 if (data.demo?.image.startsWith('content/') && demoImage === data.demo.image) {
@@ -28,17 +39,38 @@ if (data.demo?.image.startsWith('content/') && demoImage === data.demo.image) {
   <div class="algorithm-heading"><h1>{data.title}</h1><IntegrationStatus status={data.integration} /></div>
   <p class="algorithm-links">
     <a href={data.source}>官方仓库 ↗</a>
-    {data.demo && <a href={data.demo.video}>官方视频 ↗</a>}
+    {data.demo && <a href={data.demo.video}>{videoLabel} ↗</a>}
   </p>
+  {data.showcase && data.demo ? <ProjectShowcase
+    title={data.title} keywords={keywords} methodSources={data.showcase.methodSources} headline={data.showcase.headline} sourceNote={data.showcase.sourceNote} highlights={data.showcase.highlights}
+    demo={{ ...data.demo, image: demoImage! }} videos={data.videos ?? []}
+    media={(data.media ?? []).map(item => ({ ...item, image: mediaUrl(item.image), animation: mediaUrl(item.animation) }))}
+  /> : <>
   {data.demo && <figure class="algorithm-demo">
     <a class="demo-cover" href={data.demo.video}>
       <img src={demoImage} alt={data.demo.alt} width={cover?.width ?? 1280} height={cover?.height ?? 720} fetchpriority="high" />
-      <span class="demo-play">▶ 观看官方 Demo</span>
+      <span class="demo-play">▶ {videoLabel === 'Bilibili' ? '在 Bilibili 观看' : '观看官方 Demo'}</span>
     </a>
     <figcaption>{data.demo.caption} <a href={data.demo.source}>上游来源 ↗</a></figcaption>
   </figure>}
+  {(data.videos ?? []).length > 0 && <nav class="demo-alternatives" aria-label="更多上游视频">
+    <span>更多演示</span>{data.videos.map((video) => <a href={video.url}>{video.label} ↗</a>)}
+  </nav>}
   <p class="lead">{data.summary}</p>
-  <p><a href={sitePath('docs/running-demos/')}>如何运行 Demo →</a> · <a href={sitePath('quickstart/')}>首次使用准备</a></p>
+  {keywords.length > 0 && <ul class="algorithm-keywords" aria-label="算法特色关键词">{keywords.map((keyword) => <li>{keyword}</li>)}</ul>}
+  {!keywords.length && <p><a href={sitePath('docs/running-demos/')}>如何运行 Demo →</a> · <a href={sitePath('quickstart/')}>首次使用准备</a></p>}
+  {(data.media ?? []).length > 0 && <section class="upstream-media" aria-label="上游应用与场景">
+    <div class="media-heading"><h2>从上游现场看应用</h2><p>上游公开素材 · 点击展开动图</p></div>
+    <div class="media-grid">{data.media.map((item) => <figure class="media-card">
+      <details class="media-animation">
+        <summary><img src={mediaUrl(item.image)} alt={item.alt} loading="lazy" decoding="async" /><span class="media-toggle"><span class="when-closed">▶ 播放动图</span><span class="when-open">收起动图 ↑</span></span></summary>
+        <img src={mediaUrl(item.animation)} alt={item.alt} loading="lazy" decoding="async" />
+      </details>
+      <figcaption><h3>{item.title}</h3><p>{item.caption}</p><a href={item.source}>上游素材来源 ↗</a></figcaption>
+    </figure>)}</div>
+  </section>}
+  </>}
   <article class="prose"><Content /></article>
+  {keywords.length > 0 && <p class="algorithm-guide"><a href={sitePath('docs/running-demos/')}>如何运行 Demo →</a> · <a href={sitePath('quickstart/')}>首次使用准备</a></p>}
   {data.evidence.length > 0 && <section><h2>验证证据</h2><ul>{data.evidence.map((item) => <li><a href={item.url}>{item.label}</a></li>)}</ul></section>}
 </Base>

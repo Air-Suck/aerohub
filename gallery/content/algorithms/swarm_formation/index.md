@@ -1,90 +1,99 @@
 ---
 title: Swarm-Formation
 summary: 面向障碍密集环境的多机编队飞行。Swarm-Formation 通过分布式轨迹优化，结合队形保持、避障和动力学约束，随飞行过程持续更新各机路径。
+keywords: [分布式编队, 编队图约束, MINCO, 滚动优化, 邻机轨迹广播]
 category: planner
 source: https://github.com/ZJU-FAST-Lab/Swarm-Formation
 revision: 967a4bdfae949e994691f8ffc87dbb0147cbebb7
 demo:
   image: content/algorithms/swarm_formation/assets/demo-cover.jpg
   alt: Swarm-Formation 作者发布的室内多机编队演示封面，点击观看官方视频
-  caption: 作者公开的编队飞行 Demo；本项目七机接入及其验收范围单独记录。
+  caption: 作者公开的编队飞行 Demo；本项目不同机数、运行后端和验收范围单独记录。
   source: https://github.com/ZJU-FAST-Lab/Swarm-Formation#1-about
   video: https://www.youtube.com/watch?v=lFumt0rJci4
 integration: integrated
 validation: unverified
 ---
 
+Swarm-Formation 面向多机穿越障碍环境时的队形保持与避碰。每台飞机结合本机状态、地图和邻机预测轨迹独立优化，用编队图描述形状误差，将平滑性、时间、动力学及碰撞代价共同纳入滚动轨迹优化。共享通信与采样代理不改变分布式求解的本质。
+
+## 算法核心
+
+<div class="diagram-scroll" style="--diagram-min-width: 1120px" tabindex="0" role="region" aria-label="Swarm-Formation 算法核心，可横向滚动">
+
+![输入目标队形、本机状态、地图与邻机轨迹，经编队图约束及 MINCO/L-BFGS 优化输出本机多项式轨迹](./assets/algorithm-unified.svg)
+
+</div>
+
+编队约束使用归一化拉普拉斯矩阵与期望图的差异，机间避碰则按邻机轨迹预测位置计算，两者不是同一个代价。图中滚动反馈代表跨时刻重规划，不能视为多机执行已天然同步。
+
 ## 在 Aerohub 中如何接入
 
-![Swarm-Formation 在 Tool、Behavior、Function 三层中的接入、调用与依赖](./assets/layers.svg)
+<div class="diagram-scroll" style="--diagram-min-width: 1120px" tabindex="0" role="region" aria-label="Swarm-Formation 三层能力，可横向滚动">
 
-- **Tool**：逐机规划器 `×7`，经共享 proxy、Adapter 和公共机群协调汇总滚动轨迹。
-- **Behavior**：复用扩展 FollowPath `×7`，持续处理轨迹更新、结果和取消。
-- **Function**：复用逐机状态估计与控制，使用算法内部 `grid_map ×7`；历史样例地图为 `obs_num=0`。
+![Tool 逐机规划与共享协调，Behavior 时间化跟随，Function 状态、传感器、地图与控制](./assets/layers-capabilities-unified.svg)
 
-架构图对应 ROS 1 七机接入配置，`drone0`–`drone6` 按实例聚合展示。上游障碍场景演示不等于本项目完成了同场景验收。
+</div>
 
-[Bilibili 备用观看入口](https://www.bilibili.com/video/BV1qv41137Si)
+- **Tool**：逐机编队规划与公共协调构成 Navigation Tool 的实现基础，通用 Tool / Mission 尚未实现。
+- **Behavior**：默认复用扩展 FollowPath 的时间化路径跟随；起降由任务入口另行调用原生 Behavior。
+- **Function**：复用逐机状态、传感器和控制，算法内维护各机 GridMap / ESDF；地图与本机规划可共享进程。
+
+当前原生入口支持 `N=3…7`，每机独立规划、独立 namespace。一个 UAV 计算节点在 RoboPi，其余分别由 PC 独立线程监管独立容器；PC 工作站调用任务。角色、机数和执行后端的验收须分别核对。
+
+[Bilibili 官方演示](https://www.bilibili.com/video/BV1qv41137Si)
+
+## 案例
+
+<!-- 暂留空，不将作者 Demo 或历史结构图改称本项目案例。 -->
+
+## 补充信息
 
 <details>
-<summary>接入细节与验证记录</summary>
+<summary>实现、部署与验证范围</summary>
 
-Demo 画面来自[作者公开素材](https://raw.githubusercontent.com/ZJU-FAST-Lab/Swarm-Formation/main/fig/post.jpg)，保留未修改的本地副本，用于链接官方演示；素材来源见上方作者仓库，演示效果不计入本项目验收。
+### 来源与算法核查
 
-### 七机滚动规划
+上游锁定 `967a4bdfae949e994691f8ffc87dbb0147cbebb7`，本工作区子模块未检出；本次核查本仓库的 Humble native 移植，不自动拉取或运行算法。Demo 沿用作者 README 中的[原始封面](https://raw.githubusercontent.com/ZJU-FAST-Lab/Swarm-Formation/main/fig/post.jpg)，不代表 Aerohub 实测；上游 GPLv3 与素材来源保留，不另外声称封面具备宽松授权。
 
-Swarm-Formation 持续生成短时轨迹窗口。与 CAT-ORA 一次生成有限轨迹不同，它需要在执行中更新路径，并保持轨迹覆盖和首点连续性。公共 Registry 当前固定七机，不支持通过任务 YAML 任意重定义队形偏移。
-
-### 三层接入关系
-
-
-图示对应公共 Registry 的 **ROS 1 七机接入配置**。七个原生规划实例协作、广播轨迹，一个共享代理与 ROS 2 Adapter 聚合输出，公共协调器再逐机调用执行。绿色表示算法及其接入，蓝灰表示复用能力；图示不代表通用 Tool 已完成，也不是实际飞行回放。
-
-| 架构层 | 涉及的能力 | 实现或依赖关系 |
+| 模块 / 职责 | 输入 → 输出 | 本次核查位置 |
 | --- | --- | --- |
-| Tool | 原生逐机规划器 `×7`、共享 proxy、Adapter、机群调用协调 | 算法与接入构成 Navigation Tool 实现基础；共享代理不等于集中式单次规划 |
-| Behavior | 扩展 FollowPath `×7` | 调用公共执行扩展；Takeoff 由外部部署入口先行调用 |
-| Function | State Estimator `×7`、Motion Controller `×7` | 复用现有逐机定位与控制，不新增对应算法 |
-| Function | 上游 `grid_map ×7` 与仿真地图输入 | 原生规划器内维护环境表示；历史地图配置 `obs_num=0`，不证明真实传感器感知已接入 |
+| 编队图 | 邻机位置与目标图 → 图差异 / 梯度 | `native/swarm_graph/src/swarm_graph.cpp`：`calcMatrices`、`calcFNorm2` |
+| 逐机优化 | 初始化轨迹、地图、邻机轨迹 → 本机 PolyTraj | `native/plan_manage/src/planner_manager.cpp`：`reboundReplan`；`native/traj_opt/src/poly_traj_optimizer.cpp`：`costFunctionCallback`、`swarmGraphGradCostP` |
+| 输入与地图 | 注册点云、body twist 里程计 → 共享 ENU / GridMap / ESDF | `native/plan_manage/launch/seven_planners.launch.py`；`native/plan_env/` |
+| 聚合与执行 | 各机 PolyTraj → 采样 PVA → 公共协调 / 执行 | `native/plan_manage/scripts/ros2_proxy.py`、`ros2_adapter/bridge/`、公共 `follow_path_client.py` |
 
-`×7` 聚合表示 `drone0` 至 `drone6` 的独立实例；图中的共享 proxy、Adapter 和机群协调均只画一次。
+表中 `native/` 位于 `src/planner/swarm_formation/ros2_adapter/`。地图输入从当前 AirSim LiDAR 经真实 TF 注册接入，不再只描述历史 `obs_num=0` 仿真地图。旧 ROS 1 七机代理链仍保留，但不是当前 Humble 进程边界。
 
-### Tool：规划、适配与共享协调
+### 车辆、时间与部署差异
 
-| 模块 | 输入 → 输出 | 实现与职责 |
+当前 native launch、编队图与 adapter 接受连续编号的 3…7 机，目标按原生六边形顶点前 N 项与 scale 映射；没有任意队形自动重排。真实模式显式使用消息高度，公共 `formation_scale` 必须与原生 `swarm_scale` 一致。逐机里程计与地图注册到共享 ENU，保留采样时间、body twist 及多项式的 duration / start_time；历史 ROS 1 代理的 NED 转换不能套到此 native 链。
+
+公共 FollowTimedPath 链保留 PVA、共同 valid_from、滚动确认和失败收口；不以仅发送终点替代完整轨迹。暂停后取消重规划，不续用旧执行基准。起飞在导航前另行调用。
+
+**默认链路和历史混合验收必须分开**：纯 PC `run.py` 显式选择 `follow_path`；混合 worker 的缺省仍为 `legacy_setpoint`，板端入口只启动 takeoff/land，并通过专用输出 adapter 执行 FleetSetpoint。三机/五机混合结果不能当作 FollowTimedPath 后端在这些拓扑上通过。页面主图表示默认目标执行链，不将 legacy 画成其已验证替身。
+
+当前混合入口说明明确任务客户端在 PC ground 容器、中心 proxy 可在板端或 PC；文档后段旧的“Planner 在 RoboPi”描述属于早期固定三机拓扑，不能覆盖当前角色归属。分布式算法广播与集中式输出汇总分开理解。
+
+### 历史验证报告与未覆盖项
+
+| 范围 | 组件 / Demo 文档报告 | 限定 |
 | --- | --- | --- |
-| 上游算法与 ROS 1 proxy | 七机状态、编队中心 → `PolyTraj` 采样 | `src/planner/swarm_formation/upstream/` 与 `ros1_proxy/ros1_proxy.py`；TCP/JSON 代理保留原算法进程 |
-| ROS 2 adapter | 逐机目标、状态、轨迹采样 → `TimedTrajectorySegment` | `src/planner/swarm_formation/ros2_adapter/bridge/uav_swarm_formation_adapter/node.py`；校验七机偏移，保留位置、速度和加速度 |
-| 公共执行协调 | 完整机群轨迹 → 逐机 Action 与滚动更新 | `src/planner/framework/uav_planner_framework/follow_path_client.py`；校验、共同执行时间、更新确认和失败收口 |
+| 七机 Humble | 固定输入数值回归与合成里程计滚动回放通过 | 不是七机 AirSim 动力学飞行 |
+| 2026-11-06 三机 PC/RoboPi | SUCCEEDED，降落解除武装；最小真值间距 2.746 m，最大终点误差 0.524 m | 111 段；一条广播因 269 ms 起始时间差被拒收，不宣称零通信问题 |
+| 2026-11-11 三机角色矩阵 | board_center / board_worker 完整飞行；worker planner 和 PC center proxy 故障均 FAILED 后 HOVER、降落 | 进程故障不等于整机 / 容器失联覆盖 |
+| 2026-11-11 五机 | board_center 飞行通过，五机降落解除武装，最小真值间距 3.02 m | 按索引映射原生顶点，不是自动队形重排或七机通过 |
 
-`ros2_adapter/native/` 另有 Humble 移植代码。主文档区分原生 Humble 与 ROS 1 代理部署；上表描述统一框架的代理接入链，不表示每种部署都运行 ROS 1。
+默认 `swarm_clearance=0.5` 不满足应用 2 m 门限的失败记录仍保留；后续显式配置 2.0，并未降低验收门槛。Gazebo 历史结果只作追溯，不替代 AirSim 验收。
 
-### Behavior：七个执行实例
+本次只整理页面，未启动 ROS、RoboPi 或仿真。以上为源文档报告；本工作区缺少其 `log/swarm-infra/` 与历史原始证据包，未独立复核，元数据保留 `unverified`。不据此扩展为七机混合飞行、长期稳定、真机或所有复杂障碍场景通过。
 
-`drone0` 至 `drone6` 各有扩展 FollowPath 实例，通过 `/<vehicle>/follow_timed_path` 接收 `uav_planner_interfaces/action/FollowTimedPath`。一个机群任务共用协调逻辑，逐机发送请求，使用同一执行基时间；逐机调用本身不保证同步。
+### 文档入口
 
-扩展组件继承原生 `FollowPathBehavior`，保留原入口并与时间化入口互斥。Behavior 内部采样后，经 Motion Reference、AS2 控制器和平台送达 PX4。原生 TakeoffBehavior 由部署/测试入口先行调用。
+- [组件说明](https://github.com/Air-Suck/aerohub/blob/main/src/planner/swarm_formation/README.md)
+- [混合部署与角色矩阵](https://github.com/Air-Suck/aerohub/blob/main/deployment/airsim/demos/swarm_open_field/README.md)
+- [共享机群配置](https://github.com/Air-Suck/aerohub/blob/main/deployment/swarm/configs/swarm_open_field.yaml)
 
-- 轨迹使用共享 NED，执行前按逐机原点转换到本地 ENU；原点和 namespace 来自部署配置。
-- 默认提前量为 0.5 秒，保留多项式的速度与加速度，不提供算法 yaw。
-- 发布前检查完整机群和首点与实际位置的距离，默认阈值为 1.5 米。
-- 全部终点进入指定目标 0.1 米内且末两点距离不超过 0.01 米时，将原窗口标记 final 并停止发布；最终完成仍由执行结果及实际位置判定。
-- 滚动轨迹断流、更新失败或任一机执行失败需机群收口。暂停后取消并重规划，不能直接续跑旧时间基准。
-
-### Function：自身状态、控制与环境表示
-
-Adapter 从各机 `self_localization/pose` 读取实际位姿，转换到共享坐标后交给代理；代理为七个原生规划器发布 Odometry，并接收各机 `PolyTraj` 与广播轨迹。逐机规划关系可核查 `deployment/swarm_formation_ros1/four_planner.launch`，虽然文件名沿用 four，内容实际启动编号 0–6 的七个规划实例。
-
-同一启动文件还启动仿真地图生成器。`upstream-integration.patch` 将逐机 `grid_map/cloud` 接到 `/map_generator/global_cloud`，地图由规划进程内的 `grid_map` 维护；图中跨层连线表达环境数据依赖，不要求将地图模块拆成独立进程。当前历史配置障碍物数量为零，不能把这条链路写成已验证的真实点云感知或物理一致避障。
-
-Behavior 与 Motion Controller 直接使用所需状态，运动参考在 Behavior 内产生。定位、控制实例与各机 namespace 对应，平台仍通过 AS2 适配连接 PX4；选择原生 Humble 或其他部署时应重新核查地图与输入链，不能直接套用本图。
-
-### 历史结果与当前边界
-
-主文档记录七机 PX4/Gazebo 历史验收。目录重组后首轮在 43 段后因 drone2 首点距实际位置 1.825 米而拒绝；独立运行目录复测以 286 段成功。该复测不证明首轮根因已被永久修复，校验阈值没有放宽。
-
-后续复现统一使用 AirSim + PX4 SITL。已有构建、适配回归及采样测试不能替代 Swarm 的 AirSim 多机动力学闭环。本次只同步展示内容，没有启动算法或仿真；未随页面整理公开运行证据，因此验证记录保留“未登记验证证据”。
-
-内容来源：[项目简介](https://github.com/Air-Suck/aerohub/blob/ca3581e6c8a1fddce4c521736e2959af81780333/docs/项目简介.md)，同步版本 `ca3581e`。源码目录用于定位实现，不由网页构建直接加载。
+同步依据为 2026-11-12 本地工作区；main 链接仅供定位，不作为不可变公开验收证据。
 
 </details>

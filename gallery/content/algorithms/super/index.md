@@ -1,6 +1,7 @@
 ---
 title: SUPER
 summary: 面向未知、障碍密集环境的无人机自主导航。SUPER 将局部建图与轨迹规划结合，随新观测滚动更新飞行路径，适用于点到点导航和避障。
+keywords: [未知环境导航, 模块化规划, ROG-Map, 探索与安全备份, 滚动重规划]
 category: planner
 source: https://github.com/hku-mars/SUPER
 demo:
@@ -8,22 +9,62 @@ demo:
   alt: SUPER 作者官方导航演示视频封面，点击观看完整 Demo
   caption: 上游作者公开的导航演示，展示原项目效果；不代表 Aerohub 已达到相同效果。
   source: https://github.com/hku-mars/SUPER#11-autonomous-navigation-in-challenging-environments
-  video: https://www.youtube.com/watch?v=GPHuzG0ANmI
+  video: https://www.bilibili.com/video/BV1BSFgeJEJn/
+showcase:
+  sourceNote: 自主探索片段：Kong 等人与 STAR Lab 合作工作。
+  headline: 向未知环境探索，为下一步保留安全退路
+  highlights:
+    - title: 探索轨迹 + 安全备份
+      text: 主轨迹向目标推进，备份轨迹保留可衔接的退路；两者在同一规划过程中配合。
+    - title: 随观测滚动重规划
+      text: LiDAR 更新局部地图，规划器据此调整路径与轨迹，持续应对新出现的障碍。
+videos:
+  - label: YouTube
+    url: https://www.youtube.com/watch?v=GPHuzG0ANmI
+media:
+  - title: 自主探索
+    image: content/algorithms/super/assets/exploration-poster.webp
+    animation: content/algorithms/super/assets/exploration.webp
+    alt: 机载视角穿过建筑与植被，展示 SUPER 的自主探索应用
+    caption: 将局部导航用于更大范围的探索，随新观测持续规划穿行路径。
+    source: https://github.com/hku-mars/SUPER/blob/3bfa4033361bbdc7cd814c94aff826e6e1679018/misc/exp.gif
+  - title: 目标跟踪
+    image: content/algorithms/super/assets/tracking-poster.webp
+    animation: content/algorithms/super/assets/tracking.webp
+    alt: 树林中的目标跟踪画面与局部环境可视化
+    caption: 目标持续移动时，随目标位置和周围障碍更新飞行路径。
+    source: https://github.com/hku-mars/SUPER/blob/3bfa4033361bbdc7cd814c94aff826e6e1679018/misc/tracking.gif
 integration: integrated
 validation: unverified
 ---
 
-## 在 Aerohub 中如何接入
+## 算法核心
 
-![SUPER 三层接入：Tool 层规划与适配、Behavior 层路径执行、Function 层定位控制与 ROG-Map](./assets/layers.svg)
+<div class="diagram-scroll" style="--diagram-min-width: 1120px" tabindex="0" role="region" aria-label="SUPER 算法核心图，可横向滚动">
 
-- **Tool**：SUPER 生成路径，Adapter 转换原生多项式，并协调滚动执行；这是 Navigation Tool 的实现基础。
-- **Behavior**：复用扩展 FollowPath 执行单机时间化轨迹，处理反馈、结果和取消。
-- **Function**：接入导航输入与 ROG-Map，复用现有定位和运动控制；ROG-Map 与规划在同一 SUPER 进程内。
+![SUPER：输入目标航点、LiDAR 点云与自身状态，经探索和安全备份规划输出时间化轨迹；红色标明输入输出，按从左到右阅读](./assets/algorithm-unified.svg)
 
-架构图按单机 `drone0` 展示当前接入关系，不是飞行回放。通用 Tool 与目标四方部署仍有待完成。
+</div>
 
-[Bilibili 备用观看入口](https://www.bilibili.com/video/BV1BSFgeJEJn/)
+## 在 Aerohub 中如何结合
+
+<div class="diagram-scroll" tabindex="0" role="region" aria-label="SUPER 三层架构图，可横向滚动">
+
+![SUPER 在 Tool、Behavior、Function 三层中的能力及调用关系](./assets/layers.svg)
+
+</div>
+
+- **Tool**：局部导航与滚动规划，将提交轨迹交给基础执行能力；是 Navigation Tool 的实现基础。
+- **Behavior**：复用时间化路径跟随，保持轨迹时间与滚动接续语义。
+- **Function**：提供 ROG-Map 局部环境表示，复用自身状态与运动控制。
+
+三层图表达单机能力及依赖，不表达进程拆分。当前 `four-part` 入口已接通工作站任务调用算力侧规划与执行；通用 Tool 尚未实现。
+
+## 案例
+
+<!-- 按展示约定保留案例位置，内容暂留空。 -->
+
+## 补充信息
 
 <details>
 <summary>接入细节与验证记录</summary>
@@ -59,7 +100,7 @@ Adapter 通过 `/<vehicle>/follow_timed_path` 调用 `uav_planner_interfaces/act
 
 `as2_navigation_inputs` 是独立 ROS 2 节点，将平台 Odometry 和传感器点云变换到统一局部世界系，输出 `/<vehicle>/navigation/odom`、`navigation/points`。该节点保留输入时间，并按点云时刻查询 TF，不发布自身 TF，也不把同源平台里程计自动升级为融合定位。
 
-SUPER 内部 ROG-Map 消费对齐点云和对应时刻的 TF，维护环境占据表示，供规划使用。规划与地图使用同一局部参考系；图中橙色线表示数据依赖，ROG-Map 是同一个 SUPER 进程的组成部分。图中“Navigation / ROG-Map”聚合的是这两项相关职责，不表示导航输入节点也运行在 SUPER 进程中。
+SUPER 内部 ROG-Map 消费对齐点云和对应时刻的 TF，维护环境占据表示，供规划使用。规划与地图使用同一局部参考系。三层图的虚线表示数据依赖；ROG-Map 与规划同进程，导航输入节点独立运行，能力分层不表示进程拆分。
 
 AS2 State Estimator 继续提供现有状态及 TF，Motion Controller 直接消费参考与自身状态。Adapter 还读取 `sensor_measurements/odom` 监测位姿时效。传感器、TF 与时钟是启动依赖；仿真时间回退不能直接沿用旧地图。平台边界仍为 AS2 平台适配与 PX4。
 
@@ -69,7 +110,7 @@ AS2 State Estimator 继续提供现有状态及 TF，Motion Controller 直接消
 
 目标为工作站经 ROS 调用就绪的 RoboPi 能力；SUPER、Adapter 和 AS2 执行链在算力板，高频控制由板内产生与消费。AirSim 提供环境与模拟传感器，PX4 SITL 对应飞控板。工作站负责交互、任务编排及仿真验收。
 
-历史 `robopi-all` 把 `mission.py` 也放在 RoboPi，脚本同时启动算法、编排任务和查询碰撞真值。它尚未按目标边界拆分，不能据此宣称通用 Mission/Tool 或目标四方拓扑已经完成。
+历史 `robopi-all` 把 `mission.py` 也放在 RoboPi，脚本同时启动算法、编排任务和查询碰撞真值。当前已提供 `four-part` 入口，将任务放在工作站、算法与执行放在算力侧；`robopi-all` 保留为历史拓扑。入口接通不代表通用 Mission/Tool 已实现，也不扩大下方历史短程结果的验收范围。当前运行边界以 `deployment/airsim/demos/super_forest/README.md` 为准。
 
 ### 已记录的短程结果
 
