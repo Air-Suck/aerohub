@@ -1,0 +1,4 @@
+# Board already provides pydantic, numpy, cv2, rclpy and Python 3.12 runtime.
+fastapi==0.115.14
+starlette==0.44.0
+uvicorn==0.33.0

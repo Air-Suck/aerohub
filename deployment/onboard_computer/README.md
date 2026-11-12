@@ -8,14 +8,34 @@ AeroHub 正式维护的 PC 机载计算开发与仿真验证环境，承载 AS2�
 通用 AS2 启动代码与配置由 `deployment/airsim/as2/`、`deployment/airsim/config/` 共享。该镜像随项目交付，用户可选择是否使用 PC 开发；
 日常源码迭代按下节使用工作区补编译，基础镜像维护单独处理。Library 接入仍必须完成 RoboPi 验证。
 
-镜像：`onboard_computer:v0.1.0`，与[固定 flight_board 镜像](../flight_board/README.md#使用固定镜像)配套。
-GHCR 地址为 `ghcr.io/popc0rn7/aerohub/onboard-computer:v0.1.0`，
-拉取、权限与实际摘要见[发布说明](../releases/README.md#从-ghcr-获取)。
+新构建与已发布版本为 `onboard_computer:v0.1.1`，配套
+[固定 flight_board 镜像](../flight_board/README.md#使用固定镜像)仍为 `v0.1.0`。
+GHCR 地址、不可变 digest 和历史 `v0.1.0` 均见
+[发布说明](../releases/README.md)。现有各功能启动默认值未统一迁移，
+使用新镜像时显式设置 `ONBOARD_COMPUTER_IMAGE=onboard_computer:v0.1.1`。
 基础环境使用 `onboard_computer_dependencies:humble-px4-1.18`，其中固定 PX4 消息已编译。
 该依赖镜像基于 `osrf/ros:humble-desktop-full-jammy`，默认锁定其 digest：
 `sha256:592f97da6b871a438fdb97f86b422ab9f80657e80efa7b98d258894738c8a0c0`。
 
 ## 固定镜像与源码开发（用户确认的目标）
+
+基础镜像的显式升级使用 `bash deployment/onboard_computer/build.sh`；默认输出
+本地 `onboard_computer:v0.1.1`，不覆盖历史 `v0.1.0`。默认重新构建固定
+px4_msgs 依赖，再编译 AS2/Pixhawk 及消费者；依赖与消费者两个阶段均断言
+`VehicleStatus.MESSAGE_VERSION == 4`，配套 `flight_board:v0.1.0` 不变。
+
+可用 `ONBOARD_COMPUTER_IMAGE`、`ONBOARD_IMAGE_VERSION`、`ONBOARD_DEPS_IMAGE`
+指定标签；仅在确认依赖正确后使用 `BUILD_PX4_DEPS=0` 复用本地依赖镜像。
+镜像 labels 记录主仓库 revision/dirty、两个 fork 的来源/revision/dirty，
+以及消息覆盖清单的 SHA256；本地工作树有修改时镜像会明确标为 dirty，
+不能仅凭主仓库 revision 声称可精确复建。检查方式：
+
+```bash
+docker image inspect onboard_computer:v0.1.1 --format '{{json .Config.Labels}}'
+```
+
+普通源码迭代仍使用外部工作区补编译并显式加载 overlay。基础镜像升级需要
+重新编译受影响的消费者；不要把旧镜像里的插件与新 AS2 ABI 混用。
 
 共享镜像作为稳定的 ROS/编译工具与依赖环境，各开发者保留自己的源码、build/install
 缓存和日志。普通 AS2、算法或 Adapter 修改通过工作区补编译及显式加载 install overlay
@@ -46,15 +66,18 @@ main 中的原 `deployment/platform/Dockerfile` 从第三方 Humble Desktop 镜�
 组件安装依赖。DDS Agent、PX4、传感器桥、时钟桥全部由 flight_board 提供，
 不在 onboard_computer 中安装或启动。源码和编译工具保留在镜像中，便于开发。
 
-AS2 直接使用主仓库锁定的 AeroHub fork 子模块，不再在 Docker 构建时应用等价的 AS2 补丁。Pixhawk 使用官方子模块，并在构建副本应用 `as2-platform-px4-v1.18.patch`。
-主仓库通过 submodule 指针锁定版本；未提交的子仓库改动也会进入本地构建，
-分享版本时须先提交到对应 fork。
-当前源码基线如下：
+AS2 和 Pixhawk 以 `.gitmodules` 声明的 AeroHub fork 为源码权威；主仓库 gitlink
+锁定版本。onboard、CAT-ORA hybrid 和 OHOS 源码准备直接使用 fork，不再应用
+等价的 AS2/Pixhawk 构建补丁。旧补丁和 provenance 仅保留给尚未迁移的历史
+Gazebo/PX4 1.17 部署链，不作为当前 AirSim 构建输入。
 
-| 源码 | Commit |
+本地 Docker 构建使用当前子仓库工作树；OHOS 准备继续导出主仓库锁定提交。
+分享修改时先提交到对应 fork，再更新主仓库 gitlink；不自动跟随远端分支最新值。
+
+| 源码 | 锁定 Commit |
 | --- | --- |
-| Aerostack2 | f387e0d733a5102808508bcbec1b9eca2c29d1f0 |
-| as2_platform_pixhawk | fcba062219935acef69dfa009c8be376c707ee8a |
+| Aerostack2 | 1a8e52478474f25f13c0beee332fb3758c7777e9 |
+| as2_platform_pixhawk | 4e5616408e0078abf38387d5b8c681f1387cfed6 |
 | px4_msgs | 86d8239e962f6939e05c3737784f60c02fa884db |
 
 PX4 接口基础提交仍固定在依赖镜像中，并覆盖三个存在布局差异的消息。

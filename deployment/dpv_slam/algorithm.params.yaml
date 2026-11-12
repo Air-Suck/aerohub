@@ -1,0 +1,21 @@
+/**:
+  ros__parameters:
+    use_sim_time: true
+    image_topic: sensor_measurements/FrontCamera/rgb/image
+    camera_info_topic: sensor_measurements/FrontCamera/rgb/camera_info
+    local_odometry_topic: sensor_measurements/odom
+    expected_camera_frame: drone0/FrontCamera_optical
+    map_frame: dpv_slam_map
+    camera_frame: dpv_slam_camera
+    config_path: /opt/dpv_slam/default.yaml
+    network_path: /opt/dpv_slam/dpvo.pth
+    pairing_tolerance: 0.05
+    alignment_window: 120
+    alignment_freeze_samples: 30
+    minimum_alignment_baseline: 1.0
+    minimum_alignment_horizontal_baseline: 1.0
+    minimum_alignment_horizontal_excitation: 0.2
+    alignment_rmse_max: 0.35
+    scale_min: 0.05
+    scale_max: 20.0
+    map_max_points: 20000
