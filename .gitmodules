@@ -3,7 +3,7 @@
 	url = https://github.com/Popc0rn7/aerostack2-aerohub.git
 [submodule "pixhawk"]
 	path = as2/as2_platform_pixhawk
-	url = https://github.com/aerostack2/as2_platform_pixhawk.git
+	url = https://github.com/Popc0rn7/as2_platform-aerohub.git
 [submodule "px4"]
 	path = px4
 	url = https://github.com/PX4/PX4-Autopilot.git
