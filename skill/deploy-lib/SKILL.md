@@ -19,6 +19,7 @@ description: 使用现有 OHOS build Docker，将 AS2 和指定算法库部署�
 
 - 从用户请求确定目标库，检查已有 AS2、算法包及必要依赖。复用匹配的 AS2 安装，只构建缺失或需要更新的包；不默认带上整套 Planner 应用。
 - 从 `.env` 和现有入口定位设备、builder、隔离 SDK、工作区及安装前缀。构建使用 [oh-ros-build](../oh-ros-build/SKILL.md)，板端交互使用 [hdc-helper](../hdc-helper/SKILL.md)。
+- 组件包含需要在 Houmo 工具链量化编译的 ONNX 模型时，先使用 [model-migration-houmo](../model-migration-houmo/SKILL.md) 生成并验证 HMM；`deploy-lib` 只消费其产物、版本和目标依赖，不复制模型编译流程。
 - 同步源码前检查共享锁、builder 的真实挂载及板端占用。`log/airsim/robopi-runtime/cli.lock` 不能覆盖未遵守此锁的其他入口；不同容器名或 ROS 域也不能隔离同一可写 SDK、构建目录和 overlay。与其他任务冲突时报告并让出资源，不停止对方任务。
 - 记录本次源码版本和本地修改，确认工作区副本已同步，复用现有 build Docker 按依赖增量构建。具体入口见 [构建文档](../../deployment/oh-ros-build/README.md)。
 

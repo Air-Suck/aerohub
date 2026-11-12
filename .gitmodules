@@ -42,3 +42,6 @@
 [submodule "src/state_estimator/dpv_slam/upstream"]
 	path = src/state_estimator/dpv_slam/upstream
 	url = https://github.com/princeton-vl/DPVO.git
+[submodule "src/planner/gcopter/upstream"]
+	path = src/planner/gcopter/upstream
+	url = https://github.com/ZJU-FAST-Lab/GCOPTER.git
