@@ -2,6 +2,7 @@ from copy import deepcopy
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 import yaml
 
@@ -32,6 +33,25 @@ class YamlConfigTest(unittest.TestCase):
             self.assertEqual(profile["sensor_options"], {"Drone1": {"cam": {"width": 640}}})
             self.assertIn("-RenderOffscreen", profile["args"])
             self.assertNotIn("sensors", profile["vehicles"][0])
+
+    def test_resource_paths_and_local_override_preserve_venv(self):
+        from simulator.manager.resources import resolve_resource
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "config").mkdir()
+            (root / "config/resources.yaml").write_text(
+                "resources:\n  python:\n    path: ../shared/python\n")
+            (root / "config/resources.local.yaml").write_text(
+                "resources:\n  python:\n    path: ../local/bin/python\n")
+            target = root / "local/bin"
+            target.mkdir(parents=True)
+            (target / "python").symlink_to("/usr/bin/python3")
+            with patch("simulator.manager.resources.__file__",
+                       str(root / "simulator/manager/resources.py")), patch.dict(
+                           "os.environ", {"XDG_CONFIG_HOME": str(root / "xdg")}):
+                result = resolve_resource("python")
+            self.assertEqual(result, root / "config/../local/bin/python")
+            self.assertNotEqual(str(result), "/usr/bin/python3")
 
     def test_sensor_settings_preserve_native_model_and_source(self):
         camera = {"id": "cam", "type": "camera", "parent-link": "Frame",

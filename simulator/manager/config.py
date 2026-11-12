@@ -86,6 +86,7 @@ def load_profile(profile_path: Path, binary_override: str | None = None) -> dict
             if not isinstance(adapter.get("sensor_contract", False), bool):
                 raise ValueError("adapter.sensor_contract must be boolean")
             if "setup_resource" in adapter:
+                from simulator.manager.resources import resolve_resource
                 adapter["setup"] = str(resolve_resource(adapter["setup_resource"]))
                 adapter.setdefault("command", [
                     str(Path(__file__).with_name("projectairsim_adapter.sh")),

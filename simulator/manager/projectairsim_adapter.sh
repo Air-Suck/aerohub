@@ -8,6 +8,7 @@ fi
 if [[ -n ${PROJECTAIRSIM_ROS_IMAGE:-} ]]; then
   # Reuse the fixed ROS tool/runtime image; the overlay remains external.
   overlay=$(dirname "$PROJECTAIRSIM_ROS_SETUP")
+  bridge_script=$(cd "$(dirname "$0")" && pwd)/$(basename "$0")
   mounts=()
   if [[ -n ${PROJECTAIRSIM_SENSOR_RUNTIME:-} ]]; then
     simulator_root=$(cd "$(dirname "$0")/.." && pwd)
@@ -25,7 +26,7 @@ if [[ -n ${PROJECTAIRSIM_ROS_IMAGE:-} ]]; then
     -e "PROJECTAIRSIM_SENSOR_TOPIC_ROOT=${PROJECTAIRSIM_SENSOR_TOPIC_ROOT:-/ProjectAirsim}" \
     -e PROJECTAIRSIM_ROS_SETUP=/overlay/setup.bash \
     "${mounts[@]}" \
-    -v "$overlay:/overlay:ro" -v "$0:/adapter.sh:ro" \
+    -v "$overlay:/overlay:ro" -v "$bridge_script:/adapter.sh:ro" \
     --entrypoint bash "$PROJECTAIRSIM_ROS_IMAGE" /adapter.sh
 fi
 set +u

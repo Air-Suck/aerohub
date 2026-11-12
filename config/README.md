@@ -11,6 +11,21 @@ config/simulator/
 └── forest.yaml          共享场景配置，可纳入 Git
 ```
 
+安装资源统一登记在 `config/resources.yaml`，包括 UE4、UE5、AirSim 和 ProjectAirSim。
+本机路径差异放在已忽略的 `config/resources.local.yaml`，同名资源覆盖共享值。
+旧用户级及 AirSim 资源配置仍可读取；根目录配置优先，本机覆盖最后生效。
+场景 YAML 通过 `source_resource`、`binary_resource`、`python_resource` 和
+`ros_setup_resource` 引用资源名；原先直接填写路径的方式仍可使用。
+UE 资源目前用于登记和查询，尚未提供自动启动编辑器的命令。
+
+客户端环境归属 ProjectAirSim，放在 `~/ProjectAirSim/.venv/`。在仓库根目录准备：
+
+```bash
+uv venv --python 3.12 ~/ProjectAirSim/.venv
+uv pip install --python ~/ProjectAirSim/.venv/bin/python \
+  -r simulator/projectairsim/requirements-client.txt
+```
+
 ```bash
 # 使用默认配置（先设置其中的安装路径）
 bash simulator/simulator.sh start
@@ -34,7 +49,7 @@ config/simulator/default.yaml（或 --config 指定的 YAML）
 ├── backend              仿真后端
 ├── render               windowed / offscreen
 ├── ros_domain_id        仿真传感器 ROS 通信域，需与部署侧一致
-├── projectairsim        安装路径：source / binary / python / ros_setup
+├── projectairsim        安装资源引用，或直接填写 source / binary / python / ros_setup
 ├── scene                原生场景名，或自定义场景绝对路径
 └── vehicles
     └── name / namespace
@@ -74,3 +89,36 @@ args: [-RenderOffscreen, -vulkan, -nosound]
 
 AirSim 的传感器仍在其原生 settings 中维护；本次简单传感器 YAML 选项已实现于
 ProjectAirSim，尚未将其自动翻译到 AirSim settings。两种后端均从 config/ 选择入口。
+
+## UE 编辑器开发
+
+打开 Blocks 工程，点击 Play 后，从仓库根目录连接当前实例：
+
+```bash
+bash simulator/simulator.sh attach --config config/simulator/blocks.local.yaml
+bash simulator/simulator.sh status
+bash simulator/simulator.sh stop
+```
+
+`attach` 会按同一份 YAML 重新加载无人机和传感器，并启动桥接；只在没有活动
+飞行任务时使用。它不会启动第二个 Blocks，也不会管理编辑器进程。
+`stop` 仅停止该会话启动的桥接，不停止 UE Play、不卸载无人机、不停止 PX4。
+因此飞行结束并降落、disarm 后再 stop。停止 Play 后端口失活时 status 返回失败。
+重新 Play 前先 stop 旧桥接，再 attach。当前 status 检查服务端口及桥接进程存活，
+不代表传感器持续出数或 PX4 已连接；仍须检查下游数据新鲜度。
+
+## 观察显示
+
+安装独立的 `AerohubDisplay` UE 插件后，同一份场景 YAML 的 `display` 字段控制
+顶部状态条与速度仪表盘。启用 display 时 manager 自动管理真实运动学速度转发进程；
+当前相机小画面不绘制。初始化安装、数据语义和接口见
+[UE 显示说明](../simulator/projectairsim/unreal/README.md)。
+
+```bash
+bash simulator/simulator.sh display --event status
+bash simulator/simulator.sh display --event start
+bash simulator/simulator.sh display --event finish
+bash simulator/simulator.sh display --event reset
+```
+
+这些事件只操作显示计时器，不代替实际任务或飞控指令。

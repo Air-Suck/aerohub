@@ -27,6 +27,18 @@ def _ticks(pid: int) -> str:
 
 
 def _alive(state: dict) -> bool:
+    if state.get("owns_host") is False:
+        if state.get("phase") == "stopped":
+            return False
+        try:
+            for port in state["profile"]["ports"].values():
+                with socket.create_connection(
+                    (state["profile"].get("address", "127.0.0.1"), port), timeout=0.5
+                ):
+                    pass
+            return True
+        except (OSError, KeyError):
+            return False
     try:
         return (
             _ticks(int(state["pid"])) == state["start_ticks"]
@@ -71,7 +83,7 @@ def _terminate(state: dict, run_dir: Path) -> None:
                 time.sleep(0.1)
             if _process_alive(process):
                 os.killpg(int(process["pid"]), signal.SIGKILL)
-    if _alive(state):
+    if state.get("owns_host", True) and _alive(state):
         os.killpg(int(state["pid"]), signal.SIGTERM)
         deadline = time.monotonic() + 8
         while _alive(state) and time.monotonic() < deadline:
@@ -99,31 +111,33 @@ def _airsim_command(args, action: str) -> list[str]:
     return command
 
 
-def _start_projectairsim(profile: dict, run_dir: Path, timeout: float) -> dict:
-    binary = Path(profile["binary"])
-    if not binary.is_file() or not os.access(binary, os.X_OK):
-        raise ValueError(f"ProjectAirSim host is not executable: {binary}")
-    ports = list(profile["ports"].values())
-    _ports_free(ports)
-    command = [str(binary), *profile["args"],
-               f"-topicsport={profile['ports']['topics']}",
-               f"-servicesport={profile['ports']['services']}"]
-    log_path = run_dir / "projectairsim.log"
-    with log_path.open("w") as log:
-        child = subprocess.Popen(
-            command, cwd=binary.parent, stdout=log, stderr=subprocess.STDOUT,
-            start_new_session=True
-        )
+def _start_projectairsim(profile: dict, run_dir: Path, timeout: float, attach: bool = False) -> dict:
+    child = None
     state = {
-        "backend": "projectairsim",
-        "pid": child.pid,
-        "start_ticks": _ticks(child.pid),
-        "binary": str(binary),
-        "command": command,
-        "profile": profile,
-        "phase": "starting",
-        "log": str(log_path),
+        "backend": "projectairsim", "owns_host": not attach,
+        "profile": profile, "phase": "starting", "auxiliaries": [],
     }
+    from simulator.manager.display import write_display_config
+    display_path = write_display_config(profile, run_dir, attach=attach)
+    if not attach:
+        binary = Path(profile["binary"])
+        if not binary.is_file() or not os.access(binary, os.X_OK):
+            raise ValueError(f"ProjectAirSim host is not executable: {binary}")
+        _ports_free(list(profile["ports"].values()))
+        command = [str(binary), *profile["args"],
+                   f"-topicsport={profile['ports']['topics']}",
+                   f"-servicesport={profile['ports']['services']}"]
+        log_path = run_dir / "projectairsim.log"
+        with log_path.open("w") as log:
+            environment = dict(os.environ)
+            if display_path:
+                environment["AEROHUB_DISPLAY_CONFIG"] = str(display_path)
+            child = subprocess.Popen(
+                command, cwd=binary.parent, env=environment, stdout=log, stderr=subprocess.STDOUT,
+                start_new_session=True,
+            )
+        state.update(pid=child.pid, start_ticks=_ticks(child.pid), binary=str(binary),
+                     command=command, log=str(log_path))
     (run_dir / "runtime.json").write_text(json.dumps(runtime_manifest(profile), indent=2) + "\n")
     (run_dir / "profile.json").write_text(json.dumps(profile, indent=2) + "\n")
     _write(run_dir, state)
@@ -148,7 +162,7 @@ def _start_projectairsim(profile: dict, run_dir: Path, timeout: float) -> dict:
             raise RuntimeError(
                 "ProjectAirSim scene load failed: " + (result.stderr.strip() or result.stdout.strip())
             )
-        if child.poll() is not None:
+        if child is not None and child.poll() is not None:
             raise RuntimeError(f"ProjectAirSim exited; see {log_path}")
         state["phase"] = "ready"
         state["scene_loader"] = loader
@@ -189,6 +203,24 @@ def _start_projectairsim(profile: dict, run_dir: Path, timeout: float) -> dict:
             time.sleep(1)
             if process.poll() is not None:
                 raise RuntimeError(f"simulator adapter exited; see {adapter_log}")
+        if profile.get("display", {}).get("enabled", False):
+            settings = profile["display"]
+            command = [profile["client_python"],
+                       str(Path(__file__).parents[1] / "projectairsim/display_telemetry.py"),
+                       "--scene", str(run_dir / "resolved_scene.json"),
+                       "--address", profile.get("address", "127.0.0.1"),
+                       "--vehicle", settings["vehicle"],
+                       "--topic-port", str(profile["ports"]["topics"]),
+                       "--service-port", str(profile["ports"]["services"]),
+                       "--display-port", str(settings["port"])]
+            environment = dict(os.environ)
+            environment["PYTHONPATH"] = profile["client_path"] + os.pathsep + environment.get("PYTHONPATH", "")
+            telemetry_log = run_dir / "display-telemetry.log"
+            with telemetry_log.open("w") as output:
+                process = subprocess.Popen(command, env=environment, stdout=output,
+                                           stderr=subprocess.STDOUT, start_new_session=True)
+            state["auxiliaries"].append({"role": "display-telemetry", "pid": process.pid,
+                "start_ticks": _ticks(process.pid), "command": command, "log": str(telemetry_log)})
         _write(run_dir, state)
         return state
     except BaseException:
@@ -198,9 +230,10 @@ def _start_projectairsim(profile: dict, run_dir: Path, timeout: float) -> dict:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("action", choices=("check", "start", "status", "stop"))
+    parser.add_argument("action", choices=("check", "start", "attach", "status", "stop", "display"))
     parser.add_argument("--config", "--profile", dest="profile", type=Path)
     parser.add_argument("--binary")
+    parser.add_argument("--event", choices=("status", "start", "finish", "reset"), default="status")
     parser.add_argument("--run-dir", type=Path, required=True)
     parser.add_argument("--timeout", type=float, default=45.0)
     parser.add_argument("--render-mode", choices=("windowed", "offscreen"))
@@ -217,6 +250,16 @@ def main() -> int:
     state_path = args.run_dir.expanduser().resolve() / "state.json"
     if backend is None and state_path.exists():
         backend = json.loads(state_path.read_text()).get("backend", "airsim")
+    if args.action == "display":
+        from simulator.manager.display import request_display
+        if profile is None and state_path.exists():
+            profile = json.loads(state_path.read_text())["profile"]
+        if not profile or profile["backend"] != "projectairsim":
+            raise ValueError("display requires a ProjectAirSim session or --config")
+        print(json.dumps(request_display(profile, args.event), indent=2))
+        return 0
+    if args.action == "attach" and backend != "projectairsim":
+        raise ValueError("attach requires a ProjectAirSim config")
     if backend in (None, "airsim"):
         return subprocess.run(_airsim_command(args, args.action)).returncode
     if args.timeout <= 0:
@@ -240,9 +283,9 @@ def main() -> int:
         if args.action == "stop":
             _terminate(state, run_dir)
             return 0
-        if _alive(state):
-            raise RuntimeError("this run directory already owns a live simulator")
-        print(json.dumps(_start_projectairsim(profile, run_dir, args.timeout), indent=2))
+        if _alive(state) or any(_process_alive(p) for p in state.get("auxiliaries", [])):
+            raise RuntimeError("this run directory has a live session; stop it before starting or attaching")
+        print(json.dumps(_start_projectairsim(profile, run_dir, args.timeout, attach=args.action == "attach"), indent=2))
     return 0
 
 

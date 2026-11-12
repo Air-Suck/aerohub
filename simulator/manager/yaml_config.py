@@ -6,10 +6,14 @@ from pathlib import Path
 def projectairsim_profile(config: dict, config_path: Path) -> dict:
     """Keep native bridge arguments and backend paths out of the user interface."""
     config = deepcopy(config)
-    unknown = set(config) - {"backend", "render", "ros_domain_id", "projectairsim", "scene", "vehicles", "ports"}
+    unknown = set(config) - {"backend", "render", "ros_domain_id", "projectairsim", "scene", "vehicles", "ports", "display"}
     if unknown:
         raise ValueError(f"unknown simulator settings: {sorted(unknown)}")
     installation = config["projectairsim"]
+    from simulator.manager.resources import resolve_resource
+    for field in ("source", "binary", "python", "ros_setup", "project"):
+        if field not in installation and field + "_resource" in installation:
+            installation[field] = str(resolve_resource(installation[field + "_resource"]))
 
     def path(value):
         value = Path(value).expanduser()
@@ -33,7 +37,7 @@ def projectairsim_profile(config: dict, config_path: Path) -> dict:
         raise ValueError("render must be windowed or offscreen")
     if render == "offscreen":
         args.append("-RenderOffscreen")
-    return {
+    profile = {
         "backend": "projectairsim", "binary": path(installation["binary"]),
         "client_path": str(source / "client/python/projectairsim/src"),
         "client_python": path(installation["python"]), "scene_config": str(scene_path),
@@ -52,3 +56,29 @@ def projectairsim_profile(config: dict, config_path: Path) -> dict:
                          "-p", "ros_topic_root:=/ProjectAirsim", "-p", "image_qos_depth:=1"],
         },
     }
+
+    if "display" in config:
+        display = {"enabled": True, "camera_enabled": False, "vehicle": vehicles[0]["name"],
+                   "camera": "DownCamera", "camera_width": 320,
+                   "speed_max_mps": 20, "port": 8991}
+        if not isinstance(config["display"], dict) or set(config["display"]) - set(display):
+            raise ValueError("unknown display settings")
+        display.update(config["display"])
+        for field in ("enabled", "camera_enabled"):
+            if not isinstance(display[field], bool):
+                raise ValueError(f"display.{field} must be boolean")
+        for field in ("vehicle", "camera"):
+            if not isinstance(display[field], str) or not display[field]:
+                raise ValueError(f"display.{field} must be a nonempty name")
+        if (type(display["port"]) is not int or not 1 <= display["port"] <= 65535
+                or display["port"] in profile["ports"].values()):
+            raise ValueError("display.port must be a distinct valid port")
+        if (type(display["camera_width"]) not in (int, float)
+                or not 160 <= display["camera_width"] <= 640):
+            raise ValueError("display.camera_width must be between 160 and 640")
+        if (type(display["speed_max_mps"]) not in (int, float)
+                or not 1 <= display["speed_max_mps"] <= 100):
+            raise ValueError("display.speed_max_mps must be between 1 and 100")
+        profile["display"] = display
+        profile["editor_project"] = path(installation.get("project", str(source / "unreal/Blocks/Blocks.uproject")))
+    return profile

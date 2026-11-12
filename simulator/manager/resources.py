@@ -10,7 +10,9 @@ def resolve_resource(name):
     config_home = Path(os.environ.get('XDG_CONFIG_HOME') or Path.home() / '.config')
     resources = {}
     for config in (config_home / 'aerohub/resources.yaml',
-                   root / 'simulator/airsim/config/resources.local.yaml'):
+                   root / 'simulator/airsim/config/resources.local.yaml',
+                   root / 'config/resources.yaml',
+                   root / 'config/resources.local.yaml'):
         if not config.exists():
             continue
         try:
@@ -34,5 +36,5 @@ def resolve_resource(name):
             resources[key] = (config.parent / path).absolute()
     if name not in resources:
         raise ValueError(f'Resource {name!r} is not configured; set resources.{name}.path '
-                         'in simulator/airsim/config/resources.local.yaml or ~/.config/aerohub/resources.yaml')
+                         'in config/resources.yaml or config/resources.local.yaml')
     return resources[name]

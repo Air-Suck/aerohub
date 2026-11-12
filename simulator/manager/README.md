@@ -84,6 +84,11 @@ namespace，以及 PX4 的 tcp_port、control_local_port、control_remote_port�
 ProjectAirSim 场景中的 robot 集合必须与 vehicles 一致，controller 必须是原生
 `px4-api`。连接配置在场景副本中同步，不改上游原始场景文件。
 
+飞控镜像使用 `flight_board:v0.1.1`，构建与加载见
+[flight_board 使用说明](../../deployment/flight_board/README.md#使用固定镜像)。
+支持镜像环境变量的部署入口显式设置 `FLIGHT_BOARD_IMAGE=flight_board:v0.1.1`；
+manager 不会替部署入口切换镜像。
+
 将 runtime.json 只读挂载到 flight_board，并设置 `SIMULATOR_RUNTIME_CONFIG` 与
 `VEHICLE_NAME`。ProjectAirSim 必须设置 `FLIGHT_BOARD_SENSORS=0`，由 manager-owned
 原生 bridge 提供唯一 `/clock`，不再启动 AirSim 的 sensor/clock 进程。
@@ -118,3 +123,10 @@ reset/断连完整矩阵、实际下游算法、同套 AirSim 对照及正式四
 `log/projectairsim/windowed-px4/`，过程记录见
 `skill/temp/projectairsim-manager/progress.md`。失败报告保留，不将基础飞行和接口通过
 等同于所有算法、所有传感器或多机兼容完成。
+
+### 连接编辑器 Play 实例
+
+`bash simulator/simulator.sh attach --config config/simulator/blocks.local.yaml`
+复用已有 ProjectAirSim 服务，执行与 start 相同的原生场景加载和传感器桥接。
+会话记录 `owns_host: false`，失败清理和 stop 均只终止本会话辅助进程。
+AirSim 后端暂不支持 attach。详见根目录 `config/README.md`。

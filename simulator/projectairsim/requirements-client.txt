@@ -1,0 +1,3 @@
+# Client dependency version used with the locked upstream source.
+# The scene loader imports SDK code from projectairsim.source/client/python/projectairsim/src.
+projectairsim==1.0.1
