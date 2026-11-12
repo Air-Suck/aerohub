@@ -1,0 +1,38 @@
+# Default configuration. Set installation paths here, or copy to another YAML
+# and select it with: bash simulator/simulator.sh start --config config/simulator/your-scene.yaml
+backend: projectairsim
+render: windowed                  # windowed / offscreen
+ros_domain_id: 188                # use the same domain in PX4 / AS2 / task clients
+
+projectairsim:
+  source: ~/ProjectAirSim
+  binary: ~/ProjectAirSim/packages/Blocks/Development/Linux/Blocks/Binaries/Linux/Blocks
+  python: ~/ProjectAirSim/.venv/bin/python
+  ros_setup: ~/ProjectAirSim/ros2-overlay/install/setup.bash
+
+# An upstream scene filename, or an absolute path to your own native scene.
+scene: scene_px4_sitl.jsonc
+
+vehicles:
+  - name: Drone1                  # actor name in the native scene
+    namespace: drone0
+    # PX4 ports and lockstep have single-aircraft defaults; override when needed.
+    sensors:
+      DownCamera:
+        enabled: true
+        position: [0, 0, 0]       # metres, native body FRD
+        rotation: [0, -90, 0]     # roll / pitch / yaw, degrees
+        width: 400
+        height: 225
+        fov: 90
+        captures: [rgb, depth_perspective]
+      IMU1:
+        enabled: true
+      lidar1:
+        type: lidar              # copies the upstream LiDAR model if absent
+        enabled: true
+        position: [0, 0, 0.2]
+        channels: 16
+        range: 100
+        points_per_second: 100000
+        rotation_hz: 10

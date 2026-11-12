@@ -1,6 +1,9 @@
 # ProjectAirSim 传感器接入
 
-`basic_px4.json` 的 `adapter.sensor_contract=true` 启用项目传感器接口。数据路径为
+用户入口为 `config/simulator/default.yaml`，其他场景配置放在同目录并用
+`--config` 选择，仅 `*.local.yaml` 本机配置被 Git 忽略。可直接设置
+常用相机、IMU、LiDAR 参数；启动时基于上游场景生成实际配置。旧
+`basic_px4.json` 的 `adapter.sensor_contract=true` 同样可启用项目传感器接口。数据路径为
 ProjectAirSim → 上游 C++ ROS bridge → 本项目 ROS 消息适配器。原生话题保留，
 适配器不访问仿真 SDK、不调用运动控制 API，也不发布 `/clock` 或车辆动态位姿。
 

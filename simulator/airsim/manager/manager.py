@@ -138,7 +138,11 @@ def require_tracker_dependencies():
 
 def load_profile(profile_path, binary_override=None):
     require_tracker_dependencies()
-    profile = json.loads(profile_path.read_text())
+    if profile_path.suffix in ('.yaml', '.yml'):
+        import yaml
+        profile = yaml.safe_load(profile_path.read_text())
+    else:
+        profile = json.loads(profile_path.read_text())
     if binary_override:
         profile['binary'] = binary_override
     def resolve(value):

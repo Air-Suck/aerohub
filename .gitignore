@@ -109,3 +109,6 @@ rosbag2_*/
 /gallery/node_modules/
 /gallery/.astro/
 /src/inference/models/*/houmo/artifacts/
+
+# Machine-specific simulator configurations
+/config/simulator/*.local.yaml

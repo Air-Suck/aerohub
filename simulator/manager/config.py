@@ -17,9 +17,18 @@ def _resolve(profile_path: Path, value: str) -> Path:
 
 def load_profile(profile_path: Path, binary_override: str | None = None) -> dict[str, Any]:
     profile_path = profile_path.expanduser().resolve()
-    profile = json.loads(profile_path.read_text())
+    if profile_path.suffix in (".yaml", ".yml"):
+        import yaml
+        profile = yaml.safe_load(profile_path.read_text())
+    else:
+        profile = json.loads(profile_path.read_text())
     if not isinstance(profile, dict):
-        raise ValueError("simulator profile must be a JSON object")
+        raise ValueError("simulator config must be a mapping")
+    if "projectairsim" in profile:
+        if profile.get("backend", "projectairsim") != "projectairsim":
+            raise ValueError("projectairsim installation requires backend: projectairsim")
+        from simulator.manager.yaml_config import projectairsim_profile
+        profile = projectairsim_profile(profile, profile_path)
     backend = profile.get("backend", "airsim")
     if backend not in SUPPORTED_BACKENDS:
         raise ValueError(f"unsupported simulator backend: {backend!r}")
@@ -71,7 +80,7 @@ def load_profile(profile_path: Path, binary_override: str | None = None) -> dict
                 raise ValueError(f"ProjectAirSim {key} does not exist: {profile[key]}")
         adapter = profile.get("adapter")
         if adapter is not None:
-            allowed = {"command", "environment", "setup_resource", "ros_args", "sensor_contract"}
+            allowed = {"command", "environment", "setup", "setup_resource", "ros_args", "sensor_contract"}
             if not isinstance(adapter, dict) or set(adapter) - allowed:
                 raise ValueError("adapter contains unknown fields")
             if not isinstance(adapter.get("sensor_contract", False), bool):

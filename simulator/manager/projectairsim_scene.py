@@ -17,12 +17,26 @@ def main() -> int:
     parser.add_argument("--topic-port", type=int, default=8989)
     parser.add_argument("--service-port", type=int, default=8990)
     parser.add_argument("--runtime", type=Path)
+    parser.add_argument("--profile", type=Path)
     args = parser.parse_args()
     sys.path.insert(0, str(args.client_path))
     from projectairsim import ProjectAirSimClient, World
+    profile = json.loads(args.profile.read_text()) if args.profile else {}
+    lidar_template = None
+    if any(s.get("type") == "lidar" for sensors in profile.get("sensor_options", {}).values()
+           for s in sensors.values()):
+        from projectairsim.utils import load_scene_config_as_dict
+        template_path = Path(profile["lidar_template"])
+        template_scene, _ = load_scene_config_as_dict(template_path.name, str(template_path.parent))
+        lidar_template = next(s for s in template_scene["actors"][0]["robot-config"]["sensors"]
+                              if s["type"] == "lidar" and s.get("enabled", True))
 
     class ManagedWorld(World):
         def load_scene(self, scene_config_dict, delay_after_load_sec=0):
+            if profile.get("sensor_options"):
+                sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+                from simulator.projectairsim.scene_config import configure_sensors
+                scene_config_dict = configure_sensors(scene_config_dict, profile["sensor_options"], lidar_template)
             if args.runtime:
                 from projectairsim_config import configure_scene
                 scene_config_dict = configure_scene(

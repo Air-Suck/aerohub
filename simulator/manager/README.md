@@ -1,6 +1,12 @@
 # Simulator Manager
 
-统一入口为 `simulator/simulator.sh`，通过 profile 的 `backend` 选择 `airsim` 或
+用户配置入口为根目录 [config/](../../config/README.md)，默认读取
+`config/simulator/default.yaml`；同目录其他场景 YAML 使用 `--config` 显式选择。
+普通场景 YAML 可纳入 Git，只有 `*.local.yaml` 被忽略。启动命令为
+`bash simulator/simulator.sh start`，可用 `--config` 选择另一份 YAML。
+YAML 可直接配置安装路径、场景、车辆与常用传感器参数；bridge 参数在内部生成。
+
+统一入口为 `simulator/simulator.sh`，通过配置的 `backend` 选择 `airsim` 或
 `projectairsim`。未填写 backend 的历史 profile 继续按 AirSim 处理。
 
 Manager 管理仿真进程、原生场景/settings、PX4 连接清单和仿真侧 adapter。
@@ -29,7 +35,9 @@ truth TF 与 PX4/AS2 状态权威冲突。AS2 状态仍来自 PX4 raw odometry�
 AS2 的 Gazebo、multirotor simulator 和 Pixhawk 平台各自处理对应平台；这里保持
 Pixhawk 平台，通过切换 PX4 的仿真环境接入 ProjectAirSim，无需增加 AS2 平台插件。
 
-## 准备与启动
+## 旧 profile / 资源配置方式
+
+以下保留给原有部署脚本；新用户按根目录 config/ 的 YAML 操作即可。
 
 在现有本地资源配置 `simulator/airsim/config/resources.local.yaml` 中登记以下资源，
 格式参考相邻的 `resources.example.yaml`：

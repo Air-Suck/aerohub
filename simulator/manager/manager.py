@@ -125,6 +125,7 @@ def _start_projectairsim(profile: dict, run_dir: Path, timeout: float) -> dict:
         "log": str(log_path),
     }
     (run_dir / "runtime.json").write_text(json.dumps(runtime_manifest(profile), indent=2) + "\n")
+    (run_dir / "profile.json").write_text(json.dumps(profile, indent=2) + "\n")
     _write(run_dir, state)
     loader = [
         profile["client_python"],
@@ -139,6 +140,7 @@ def _start_projectairsim(profile: dict, run_dir: Path, timeout: float) -> dict:
         "--topic-port", str(profile["ports"]["topics"]),
         "--service-port", str(profile["ports"]["services"]),
         "--runtime", str(run_dir / "runtime.json"),
+        "--profile", str(run_dir / "profile.json"),
     ]
     try:
         result = subprocess.run(loader, text=True, capture_output=True, timeout=timeout + 5)
@@ -197,7 +199,7 @@ def _start_projectairsim(profile: dict, run_dir: Path, timeout: float) -> dict:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("action", choices=("check", "start", "status", "stop"))
-    parser.add_argument("--profile", type=Path)
+    parser.add_argument("--config", "--profile", dest="profile", type=Path)
     parser.add_argument("--binary")
     parser.add_argument("--run-dir", type=Path, required=True)
     parser.add_argument("--timeout", type=float, default=45.0)
