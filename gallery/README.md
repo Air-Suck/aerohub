@@ -1,6 +1,6 @@
 # Aerohub Gallery
 
-本目录是仓库网站工程，承载项目主页、Quickstart、Gallery 和 Docs 文档中心。采用 Astro 静态构建，本地开发与 GitHub Pages 使用同一份内容和页面代码。当前展示 CAT-ORA、Swarm-Formation、SUPER、FAST-LIVO2、YOPO 和 IPC，以官方 Demo、简短介绍和 Tool / Behavior / Function 三层接入图为核心，接入细节和验证记录放在折叠区域。示例 Markdown 保留为新增条目模板，不登记到公开列表。
+本目录是仓库网站工程，承载项目主页、Quickstart、Gallery 和 Docs 文档中心。采用 Astro 静态构建，本地开发与 GitHub Pages 使用同一份内容和页面代码。当前展示 CAT-ORA、Swarm-Formation、SUPER、FAST-LIVO2、YOPO、IPC 和 DiffPhys，以官方 Demo、简短介绍和 Tool / Behavior / Function 三层接入图为核心，接入细节和验证记录放在折叠区域。示例 Markdown 保留为新增条目模板，不登记到公开列表。
 
 本轮 CAT-ORA、SUPER、YOPO 的展示改进设计见 [算法展示改进约定](plans/algorithm-presentation.md)，该文档记录已确认目标与实现检查记录。
 
