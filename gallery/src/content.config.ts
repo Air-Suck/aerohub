@@ -1,30 +1,8 @@
 import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
-import { statSync } from 'node:fs';
-import registry from '../content/gallery.json';
 import { algorithmSchema } from '../schema/algorithm';
-
-const { items } = z.object({
-  items: z.array(z.object({
-    id: z.string().regex(/^[a-z0-9]+(?:[_-][a-z0-9]+)*$/),
-    markdown: z.string().regex(/^content\/[a-zA-Z0-9_/-]+\.md$/,
-      'Use a Markdown path inside gallery/content/'),
-  }).strict()),
-}).strict().parse(registry);
-
-const ids = new Set<string>();
-const paths = new Map<string, string>();
-for (const item of items) {
-  if (ids.has(item.id) || paths.has(item.markdown)) {
-    throw new Error(`Duplicate Gallery ID or Markdown path: ${item.id}`);
-  }
-  if (!statSync(new URL(`../${item.markdown}`, import.meta.url)).isFile()) {
-    throw new Error(`Missing Gallery Markdown: ${item.markdown}`);
-  }
-  ids.add(item.id);
-  paths.set(item.markdown, item.id);
-}
+import { registeredAlgorithms } from './lib/registered-algorithms';
 
 export const collections = {
   docs: defineCollection({
@@ -49,16 +27,8 @@ export const collections = {
     }),
   }),
   algorithms: defineCollection({
-    loader: items.length === 0 ? async () => [] : glob({
-      base: './content/',
-      pattern: items.map((item) => item.markdown.slice('content/'.length)),
-      generateId: ({ entry }) => {
-        const id = paths.get(`content/${entry}`);
-        if (!id) throw new Error(`Unregistered Gallery Markdown: ${entry}`);
-        return id;
-      },
-    }),
-    // Reject unknown metadata instead of silently dropping fields from the page.
-    schema: algorithmSchema.strict(),
+    loader: registeredAlgorithms(),
+    // Reject unknown display metadata; retain keywords, curated scenes, compact showcases and video alternatives.
+    schema: algorithmSchema.strict().describe('Algorithm display metadata with compact showcases with static or animated cards and method sources'),
   }),
 };

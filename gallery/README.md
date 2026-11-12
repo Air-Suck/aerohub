@@ -1,6 +1,8 @@
 # Aerohub Gallery
 
-本目录是仓库网站工程，承载项目主页、Quickstart、Gallery 和 Docs 文档中心。采用 Astro 静态构建，本地开发与 GitHub Pages 使用同一份内容和页面代码。当前展示 CAT-ORA、Swarm-Formation、SUPER 和 FAST-LIVO2，以官方 Demo、简短介绍和 Tool / Behavior / Function 三层接入图为核心，接入细节和验证记录放在折叠区域。示例 Markdown 保留为新增条目模板，不登记到公开列表。
+本目录是仓库网站工程，承载项目主页、Quickstart、Gallery 和 Docs 文档中心。采用 Astro 静态构建，本地开发与 GitHub Pages 使用同一份内容和页面代码。当前展示 CAT-ORA、Swarm-Formation、SUPER、FAST-LIVO2、YOPO、IPC 和 DiffPhys，以官方 Demo、简短介绍和 Tool / Behavior / Function 三层接入图为核心，接入细节和验证记录放在折叠区域。示例 Markdown 保留为新增条目模板，不登记到公开列表。
+
+本轮 CAT-ORA、SUPER、YOPO 的展示改进设计见 [算法展示改进约定](plans/algorithm-presentation.md)，该文档记录已确认目标与实现检查记录。
 
 ## 网站结构与文档维护
 
@@ -36,6 +38,8 @@ npm run preview
 `build` 先检查内容与类型再生成 `dist/`。依赖由 `package-lock.json` 锁定；`node_modules/`、`.astro/` 与 `dist/` 不进入 Git。
 
 Astro 内容缓存保存在当前工程的 `.astro/cache/`，即使 `node_modules` 软链接到其他工作区也保持内容缓存隔离。
+
+Gallery 登记由 `registered-algorithms` loader 在加载和 `content/gallery.json` 变更时重新读取；新增、删除和清空登记会更新运行中的内容集合，无需重启用户服务。`npm run check:registry-watch` 在 Gallery 内隔离副本验证此行为，不改实际登记文件。
 
 已有 dev 服务与静态构建分别验证。修改内容 schema 后，已有服务可能未重新加载新增字段；出现“构建产物有图、开发页面无图”时，先检查当前页面 HTML 及其图片请求，具体排查见 `skill/bundle-gallery/SKILL.md`。开发服务由使用者启动和停止。
 
@@ -94,7 +98,96 @@ demo:
   video: https://www.youtube.com/watch?v=VIDEO_ID
 ```
 
-`image` 也支持 HTTP(S) 地址，本地素材优先。配置 Demo 后，页面先展示可点击封面，再显示简介与正文；正文将三层图放在前面，详细表格和运行记录可放入 `<details>`。上游 Demo 不计入本项目验证证据，原图来源在补充说明中登记。
+`image` 也支持 HTTP(S) 地址，本地素材优先。未配置 `showcase` 的条目沿用封面、简介与关键词的原有布局。当前六个已登记条目均使用下节的桌面紧凑展示。
+
+核心图聚焦算法自身方法，三层图解释能力链路；技术接口、进程和运行记录放在 `<details>`，案例按任务要求留空或提供真实内容。宽图使用可聚焦的 `.diagram-scroll` 保留窄屏横向滚动。上游素材不计入本项目验证证据。
+
+## 桌面优先的素材展示
+
+页面顺序为：**主视频与精华说明 → 应用卡片 → 算法核心（方法卡片与核心图）→ 三层框架 → 案例 → 折叠技术详情**。桌面为主要使用场景，素材承担引导与解释作用，避免占满宽屏或把核心内容推到很后面。
+
+- 顶部左视频约 70%、右文字约 30%；右侧放核心设计、少量精华说明及 `keywords`，不重复开场简介。当前主视频为封面点击跳转，优先 Bilibili，其他平台保留小型链接。
+- 应用卡片内部左图右文，桌面每页两张、手机每页一张。一页放得下时隐藏翻页控件，多页支持左右按钮、横向滚动与键盘方向键，不自动轮播。
+- 动图默认静态封面，点击后原位循环，播放图标消失，没有开始/收起按钮。图像 contain 显示，固定媒体高度，方形图和宽图不能撑高卡片或使翻页跳动。
+- 算法核心里的上游方法图同样使用紧凑图文卡片，每张讲一个要点，保留自己的核心流程图。上游结果声明仅在整个展示模块底部出现一次，出处与必要署名集中在“来源”。
+
+### 字段与资源
+
+字段约束以 [schema](schema/algorithm.ts) 为准；紧凑展示组件为 [ProjectShowcase](src/components/ProjectShowcase.astro)。`showcase` 必须与 `demo` 一起配置。
+
+| 字段 | 内容与约束 |
+| --- | --- |
+| `keywords` | 最多 8 个关键词；紧凑布局显示在右侧文字下方 |
+| `showcase.headline` | 核心设计的一句话标题 |
+| `showcase.highlights` | 1–3 项 `title` / `text`，解释关键机制 |
+| `showcase.methodSources` | 可选 `label` / HTTP(S) `url` 列表，登记正文方法图来源 |
+| `showcase.sourceNote` | 可选合作署名等来源补充 |
+| `videos` | 最多 6 项 `label` / HTTP(S) `url`，提供其他视频入口 |
+| `media` | 最多 6 张卡片，包含 `title`、`image`、`alt`、`caption`、`source`，动图另配可选 `animation` |
+
+`media.image` 为条目 `assets/` 内的 WebP；`media.animation` 为可选的动画 WebP，字段路径以 `content/algorithms/<id>/assets/` 开头；未配置 animation 时显示普通静态卡片，无播放按钮；配置时图片作静态封面，动画通过原始资源 URL 发布以保留多帧。素材从上游仓库、README 链接到的项目网站和作者页面搜集，实际查看后筛选；论文暂不纳入默认素材搜集。Bilibili 优先仍须核查内容与作者对应关系，相关介绍和转载不能冒充官方演示。
+
+配置示例（省略已有 `demo` 等基础字段）：
+
+```yaml
+keywords: [未知环境导航, 滚动重规划]
+showcase:
+  headline: 用一句话点出算法核心设计
+  highlights:
+    - title: 关键机制
+      text: 解释它解决的具体问题。
+  methodSources:
+    - label: 上游方法示意
+      url: https://github.com/owner/algorithm#method
+  sourceNote: 必要的作者或合作工作署名。
+videos:
+  - label: YouTube
+    url: https://www.youtube.com/watch?v=VIDEO_ID
+media:
+  - title: 场景应用
+    image: content/algorithms/my_algorithm/assets/scene-poster.webp
+    animation: content/algorithms/my_algorithm/assets/scene.webp
+    alt: 对画面内容的具体描述
+    caption: 说明应用价值或观察要点。
+    source: https://github.com/owner/algorithm/blob/REV/docs/scene.gif
+```
+
+正文静态方法卡片沿用 YOPO 的结构；Markdown 图片两侧留空行，确保内容处理器解析图片：
+
+```markdown
+<div class="method-cards" aria-label="上游方法示意">
+<figure class="method-card">
+<div class="method-card-image">
+
+![方法示意的具体替代文字](./assets/method.webp)
+
+</div>
+<figcaption><h3>方法要点</h3><p>解释该图说明的关键机制。</p></figcaption>
+</figure>
+</div>
+```
+
+所有来源、锁定版本、作者归属、许可与转换方式记录在条目 `assets/SOURCES.md`；动画转码或隔帧采样须保留累计时长与播放速度，等比缩放不裁切，查看转换结果。网络不可用时可先采用本地锁定素材，但要明确网站补充搜集及外部播放仍未核验。
+
+### 检查与当前覆盖
+
+执行 `npm --prefix gallery run bundle`，再检查用户当前开发服务。桌面 1440 / 1920、手机约 390 视口分别查看：关键词、图文比例、图片解码、动图循环、固定高度、全部分页、首尾按钮、方向键、来源展开、宽图滚动与整页溢出；静态构建不代替在线显示检查。检查截图与报告保存在根目录 `log/gallery-review/`。
+
+当前六个已登记算法均启用紧凑布局：
+
+| 条目 | 素材整理结果 |
+| --- | --- |
+| CAT-ORA | 保留既有作者实机封面；仅核实到官方 YouTube，不虚构 Bilibili 或额外应用素材 |
+| Swarm-Formation | Bilibili 主入口，新增编队穿障与交互目标两段仿真动图 |
+| SUPER | Bilibili 主入口，自主探索与目标跟踪两张应用卡片 |
+| FAST-LIVO2 | Bilibili 主入口，作者关联手持/机载平台两张静态卡片，系统总览以方法卡片呈现 |
+| YOPO | Bilibili 主入口，四张应用卡片桌面两页/手机四页，两张方法卡片位于算法核心 |
+| IPC | Bilibili 主入口，仓库仅有现有封面，应用区不重复填充；保留本项目静态森林验证边界 |
+
+2026-11-12 全量检查覆盖 1440 / 1920 / 390 视口、关键词、全部图片和动画、分页、来源与核心图；素材较密的原图可从来源查看。外部平台视频播放未独立验收。来源清单位于各条目 assets/SOURCES.md；后续新增条目按同样规则维护，不按固定数量凑卡片。
+
+
+## 验证记录与开发服务
 
 验证记录不是 `unverified` 时，必须填写 `revision` 和至少一条 `evidence`（`label`、HTTP(S) `url`），缺失时构建失败。公开页面不能仅引用读者无法访问的本地 `log/`。未整理公开证据时保留 `unverified`，避免将历史描述自动提升为验收结论。
 

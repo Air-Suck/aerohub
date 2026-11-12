@@ -1,0 +1,36 @@
+<?xml version="1.0" ?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="358" viewBox="0 0 1100 358" role="img" aria-labelledby="title desc">
+  <title id="title">YOPO 算法核心</title>
+  <desc id="desc">红色输入：深度图、自身状态和相对目标；网络预测候选终端状态与评分，经选优和曲线重建，红色输出为局部时间化轨迹。</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10z" fill="#716b60"/>
+    </marker>
+  </defs>
+  <rect width="1100" height="358" rx="12" fill="#fcfaf7"/>
+  <g font-family="Arial, Noto Sans CJK SC, sans-serif" fill="#242522">
+    <text x="32" y="38" font-size="22" fill="#242522" text-anchor="start" font-weight="600">YOPO / 一次推理，多条运动原语</text>
+    <rect x="30" y="90" width="220" height="150" rx="8" fill="#f5e3e1" stroke="#b96c67"/>
+    <text x="48" y="124" font-size="23" fill="#943f3d" text-anchor="start" font-weight="600">输入</text>
+    <text x="48" y="156" font-size="18" fill="#62605c" text-anchor="start">深度图 / 自身状态</text>
+    <text x="48" y="183" font-size="18" fill="#62605c" text-anchor="start">相对目标</text>
+    <rect x="290" y="90" width="260" height="150" rx="8" fill="#eeead8" stroke="#b6a777"/>
+    <text x="308" y="124" font-size="23" fill="#242522" text-anchor="start" font-weight="600">学习：候选与代价预测</text>
+    <text x="308" y="156" font-size="18" fill="#62605c" text-anchor="start">一次前向推理</text>
+    <text x="308" y="183" font-size="18" fill="#62605c" text-anchor="start">候选终端 PVA + cost</text>
+    <rect x="590" y="90" width="225" height="150" rx="8" fill="#e4eee6" stroke="#8fa693"/>
+    <text x="608" y="124" font-size="23" fill="#242522" text-anchor="start" font-weight="600">候选选优与重建</text>
+    <text x="608" y="156" font-size="18" fill="#62605c" text-anchor="start">选择最小预测代价</text>
+    <text x="608" y="183" font-size="18" fill="#62605c" text-anchor="start">五次曲线 + yaw</text>
+    <rect x="855" y="90" width="215" height="150" rx="8" fill="#f5e3e1" stroke="#b96c67"/>
+    <text x="873" y="124" font-size="23" fill="#943f3d" text-anchor="start" font-weight="600">输出 / 轨迹</text>
+    <text x="873" y="156" font-size="18" fill="#62605c" text-anchor="start">局部时间化轨迹</text>
+    <text x="873" y="183" font-size="18" fill="#62605c" text-anchor="start">随新观测滚动更新</text>
+    <path d="M250 165 H290" fill="none" stroke="#716b60" stroke-width="2" marker-end="url(#arrow)"/>
+    <path d="M550 165 H590" fill="none" stroke="#716b60" stroke-width="2" marker-end="url(#arrow)"/>
+    <path d="M815 165 H855" fill="none" stroke="#716b60" stroke-width="2" marker-end="url(#arrow)"/>
+    <text x="32" y="287" font-size="19" fill="#242522" text-anchor="start">关键设计：用学习预测候选运动及其代价，减少在线规划求解；选优与曲线重建仍然保留。</text>
+    <text x="32" y="326" font-size="18" fill="#62605c" text-anchor="start">网络不直接输出飞控指令，也不提供对外可查询的环境地图。PVA：位置 / 速度 / 加速度。</text>
+    <text x="1070" y="38" font-size="16" fill="#943f3d" text-anchor="end">红色：算法输入 / 输出</text>
+  </g>
+</svg>

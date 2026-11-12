@@ -1,56 +1,47 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1010" viewBox="0 0 1080 1010" role="img" aria-labelledby="title desc"><title id="title">YOPO 单机三层接入</title><desc id="desc">Tool 层 Planner 从 Inference Function 获取候选，重建轨迹并调用公共 FollowTimedPath。Function 层复用定位、相机与控制。工作站任务另行调用原生起降。单机职责示意，不表示实测轨迹。</desc><defs><marker id="b" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8" fill="#175da5"/></marker><marker id="o" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8" fill="#b86b20"/></marker></defs><rect width="1080" height="1010" fill="#f8fafc"/><g font-family="sans-serif" fill="#202d3a">
-<text x="30" y="42" font-size="28">YOPO · 单机三层接入</text>
-<text x="30" y="75" font-size="18">drone0 · 参考模式 · 职责分层不等同于进程划分</text>
-<rect x="90" y="105" width="950" height="190" rx="10" fill="white" stroke="#dbe2e9"/>
-<text x="110" y="140" font-size="23">TOOL / 工具层</text>
-<rect x="90" y="370" width="950" height="190" rx="10" fill="white" stroke="#dbe2e9"/>
-<text x="110" y="405" font-size="23">BEHAVIOR / 基础执行层</text>
-<rect x="90" y="645" width="950" height="240" rx="10" fill="white" stroke="#dbe2e9"/>
-<text x="110" y="680" font-size="23">FUNCTION / 基础能力层</text>
-<rect x="130" y="160" width="480" height="105" rx="9" fill="#d9f3ed" stroke="#168b78"/>
-<text x="148" y="192" font-size="20">YOPO ROS 2 Planner</text>
-<text x="148" y="220" font-size="17">冻结观测 / 候选选优 / 五次 PVA 与 yaw</text>
-<text x="148" y="248" font-size="17">Navigation Tool 实现基础；通用 Tool 未实现</text>
-<rect x="700" y="160" width="295" height="105" rx="9" fill="#d9f3ed" stroke="#168b78"/>
-<text x="718" y="192" font-size="20">单机执行客户端</text>
-<text x="718" y="220" font-size="17">Action / modify / stop</text>
-<text x="718" y="248" font-size="17">Planner 同进程 · 确认后接续</text>
-<path d="M610 210 H694" fill="none" stroke="#175da5" stroke-width="2.5" marker-end="url(#b)"/>
-<path d="M995 210 H1020 V470 H956" fill="none" stroke="#175da5" stroke-width="2.5" marker-end="url(#b)"/>
-<text x="215" y="332" font-size="18">未来交接 / revision 反馈 / 迟到丢弃</text>
-<rect x="130" y="425" width="340" height="105" rx="9" fill="#eef3f8" stroke="#175da5"/>
-<text x="148" y="457" font-size="20">原生 Takeoff / Land</text>
-<text x="148" y="485" font-size="17">工作站任务脚本独立调用</text>
-<text x="148" y="513" font-size="17">前置起飞 / 停止后降落</text>
-<rect x="585" y="425" width="365" height="105" rx="9" fill="#eef3f8" stroke="#175da5"/>
-<text x="603" y="457" font-size="20">公共扩展 FollowPath</text>
-<text x="603" y="485" font-size="17">FollowTimedPath · 轨迹采样</text>
-<text x="603" y="513" font-size="17">执行连续性 / 更新 / 停止</text>
-<path d="M950 500 H1005 V613 H885 V699" fill="none" stroke="#175da5" stroke-width="2.5" marker-end="url(#b)"/>
-<text x="710" y="601" font-size="18">Motion Reference</text>
-<rect x="130" y="705" width="265" height="125" rx="9" fill="#d9f3ed" stroke="#168b78"/>
-<text x="148" y="737" font-size="20">YOPO Inference</text>
-<text x="148" y="765" font-size="17">ROS Adapter → GPU worker</text>
-<text x="148" y="793" font-size="17">深度 + 对齐状态 → 候选</text>
-<text x="148" y="821" font-size="17">独立 uv / 公共 runtime</text>
-<rect x="445" y="705" width="275" height="125" rx="9" fill="#eef3f8" stroke="#175da5"/>
-<text x="463" y="737" font-size="20">相机 / State Estimator</text>
-<text x="463" y="765" font-size="17">DepthPlanar / 位姿速度</text>
-<text x="463" y="793" font-size="17">CameraInfo / TF / 时间</text>
-<text x="463" y="821" font-size="17">复用现有传感器与定位</text>
-<rect x="770" y="705" width="225" height="125" rx="9" fill="#eef3f8" stroke="#175da5"/>
-<text x="788" y="737" font-size="20">Motion Controller</text>
-<text x="788" y="765" font-size="17">AS2 控制 / 平台接口</text>
-<text x="788" y="793" font-size="17">参考 + 自身状态</text>
-<text x="788" y="821" font-size="17">复用现有控制</text>
-<path d="M130 750 H75 V310 H190 V271" fill="none" stroke="#b86b20" stroke-width="2.5" marker-end="url(#o)"/>
-<text x="110" y="335" font-size="16">候选 / cost</text>
-<path d="M550 265 V350 H510 V600 H420 V775 H401" fill="none" stroke="#175da5" stroke-width="2.5" marker-end="url(#b)"/>
-<text x="435" y="590" font-size="16">InferYopo</text>
-<path d="M580 705 V630 H55 V195 H124" fill="none" stroke="#b86b20" stroke-width="2.5" marker-end="url(#o)"/>
-<path d="M720 775 H764" fill="none" stroke="#b86b20" stroke-width="2.5" marker-end="url(#o)"/>
-<text x="110" y="864" font-size="17">无新增地图或定位算法；网络候选不是完整轨迹，也不是控制指令</text>
-<text x="30" y="923" font-size="18">绿色：YOPO 专属接入    浅蓝：公共复用    蓝线：请求 / 执行    橙线：结果 / 状态数据</text>
-<text x="30" y="959" font-size="17">平台边界：AirSim 模拟传感器；AS2 平台连接 PX4 SITL。四角色当前共置于 NVIDIA 主机。</text>
-<text x="30" y="990" font-size="17">任务客户端在工作站；规划、推理、执行在算力侧。示意图不代表真机或多机验收。</text>
-</g></svg>
+<?xml version="1.0" ?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="650" viewBox="0 0 1100 650" role="img" aria-labelledby="title desc">
+  <title id="title">YOPO 在 Aerohub 中的三层能力关系</title>
+  <desc id="desc">候选选优、轨迹重建与滚动协调调用时间化路径跟随，读取基础能力数据并经运动控制连接平台。</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10z" fill="#716b60"/>
+    </marker>
+  </defs>
+  <rect width="1100" height="650" rx="12" fill="#fcfaf7"/>
+  <g font-family="Arial, Noto Sans CJK SC, sans-serif" fill="#242522">
+    <text x="30" y="37" font-size="22" fill="#242522" text-anchor="start" font-weight="600">YOPO / Aerohub 能力关系</text>
+    <rect x="25" y="65" width="1050" height="140" rx="8" fill="none" stroke="#d8d3cc"/>
+    <text x="45" y="95" font-size="17" fill="#62605c" text-anchor="start" font-weight="600">TOOL</text>
+    <rect x="25" y="225" width="1050" height="140" rx="8" fill="none" stroke="#d8d3cc"/>
+    <text x="45" y="255" font-size="17" fill="#62605c" text-anchor="start" font-weight="600">BEHAVIOR</text>
+    <rect x="25" y="385" width="1050" height="140" rx="8" fill="none" stroke="#d8d3cc"/>
+    <text x="45" y="415" font-size="17" fill="#62605c" text-anchor="start" font-weight="600">FUNCTION</text>
+    <rect x="240" y="81" width="660" height="105" rx="8" fill="#e4eee6" stroke="#8fa693"/>
+    <text x="258" y="115" font-size="23" fill="#242522" text-anchor="start" font-weight="600">候选选优、轨迹重建与滚动协调</text>
+    <text x="258" y="147" font-size="18" fill="#62605c" text-anchor="start">Navigation Tool 的实现基础；通用 Tool 尚未实现</text>
+    <rect x="240" y="241" width="660" height="105" rx="8" fill="#e8edf1" stroke="#9aaab7"/>
+    <text x="258" y="275" font-size="23" fill="#242522" text-anchor="start" font-weight="600">时间化路径跟随</text>
+    <text x="258" y="307" font-size="18" fill="#62605c" text-anchor="start">扩展 FollowPath / FollowTimedPath · 保留轨迹时间语义</text>
+    <rect x="200" y="413" width="265" height="94" rx="8" fill="#e8edf1" stroke="#9aaab7"/>
+    <text x="218" y="447" font-size="23" fill="#242522" text-anchor="start" font-weight="600">深度与自身状态</text>
+    <text x="218" y="479" font-size="18" fill="#62605c" text-anchor="start">观测 / 位置 / 速度</text>
+    <rect x="490" y="413" width="265" height="94" rx="8" fill="#e4eee6" stroke="#8fa693"/>
+    <text x="508" y="447" font-size="23" fill="#242522" text-anchor="start" font-weight="600">Inference / YOPO 网络</text>
+    <text x="508" y="479" font-size="18" fill="#62605c" text-anchor="start">候选终端状态与评分</text>
+    <rect x="780" y="413" width="265" height="94" rx="8" fill="#e8edf1" stroke="#9aaab7"/>
+    <text x="798" y="447" font-size="23" fill="#242522" text-anchor="start" font-weight="600">运动控制</text>
+    <text x="798" y="479" font-size="18" fill="#62605c" text-anchor="start">参考 + 状态 → 控制</text>
+    <path d="M570 186 V241" fill="none" stroke="#716b60" stroke-width="2" marker-end="url(#arrow)"/>
+    <text x="590" y="219" font-size="17" fill="#62605c" text-anchor="start">完整时间化轨迹</text>
+    <path d="M900 294 H1055 V398 H913 V413" fill="none" stroke="#716b60" stroke-width="2" marker-end="url(#arrow)"/>
+    <text x="940" y="366" font-size="16" fill="#62605c" text-anchor="start">运动参考</text>
+    <path d="M200 460 H180 V134 H240" fill="none" stroke="#716b60" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arrow)"/>
+    <path d="M180 295 H240" fill="none" stroke="#716b60" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arrow)"/>
+    <text x="150" y="372" font-size="16" fill="#62605c" text-anchor="end">观测 / 状态</text>
+    <path d="M622 413 V369 H930 V134 H900" marker-start="url(#arrow)" fill="none" stroke="#716b60" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arrow)"/>
+    <path d="M332 507 V536 H913 V507" fill="none" stroke="#716b60" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arrow)"/>
+    <text x="30" y="563" font-size="17" fill="#62605c" text-anchor="start">绿色：算法能力    蓝灰：公共复用    浅灰：外部输入或未涉及    实线：执行    虚线：数据交互</text>
+    <text x="30" y="595" font-size="17" fill="#62605c" text-anchor="start">平台边界：经 AS2 平台连接 PX4。起飞 / 降落由任务编排另行调用基础 Behavior。</text>
+    <text x="30" y="625" font-size="17" fill="#62605c" text-anchor="start">单机能力示意；职责分层不代表进程拆分，也不表示飞行验收结果。</text>
+  </g>
+</svg>

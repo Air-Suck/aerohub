@@ -1,0 +1,37 @@
+<?xml version="1.0" ?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="355" viewBox="0 0 1100 355" role="img" aria-labelledby="title desc">
+  <title id="title">CAT-ORA 算法核心</title>
+  <desc id="desc">红色输入：当前机器人位置、目标队形点集和运动约束；经分配与避碰、共同时间参数化，红色输出为具有共同完成时长的多机轨迹。</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10z" fill="#716b60"/>
+    </marker>
+  </defs>
+  <rect width="1100" height="355" rx="12" fill="#fcfaf7"/>
+  <g font-family="Arial, Noto Sans CJK SC, sans-serif" fill="#242522">
+    <text x="32" y="38" font-size="22" fill="#242522" text-anchor="start" font-weight="600">CAT-ORA / 多机队形变换</text>
+    <rect x="30" y="86" width="225" height="150" rx="8" fill="#f5e3e1" stroke="#b96c67"/>
+    <text x="48" y="120" font-size="23" fill="#943f3d" text-anchor="start" font-weight="600">输入</text>
+    <text x="48" y="152" font-size="18" fill="#62605c" text-anchor="start">当前机器人位置</text>
+    <text x="48" y="179" font-size="18" fill="#62605c" text-anchor="start">目标队形点集</text>
+    <rect x="295" y="86" width="285" height="150" rx="8" fill="#e4eee6" stroke="#8fa693"/>
+    <text x="313" y="120" font-size="23" fill="#242522" text-anchor="start" font-weight="600">分配与避碰联合求解</text>
+    <text x="313" y="152" font-size="18" fill="#62605c" text-anchor="start">瓶颈代价 / 目标对应</text>
+    <text x="313" y="179" font-size="18" fill="#62605c" text-anchor="start">碰撞检查 → 分支调整</text>
+    <rect x="620" y="86" width="235" height="150" rx="8" fill="#e4eee6" stroke="#8fa693"/>
+    <text x="638" y="120" font-size="23" fill="#242522" text-anchor="start" font-weight="600">共同时间参数化</text>
+    <text x="638" y="152" font-size="18" fill="#62605c" text-anchor="start">速度、加速度约束</text>
+    <text x="638" y="179" font-size="18" fill="#62605c" text-anchor="start">按最长位移确定时长</text>
+    <rect x="895" y="86" width="175" height="150" rx="8" fill="#f5e3e1" stroke="#b96c67"/>
+    <text x="913" y="120" font-size="23" fill="#943f3d" text-anchor="start" font-weight="600">输出 / 轨迹</text>
+    <text x="913" y="152" font-size="18" fill="#62605c" text-anchor="start">每机完整路径</text>
+    <text x="913" y="179" font-size="18" fill="#62605c" text-anchor="start">共同完成时长</text>
+    <path d="M255 161 H295" fill="none" stroke="#716b60" stroke-width="2" marker-end="url(#arrow)"/>
+    <path d="M580 161 H620" fill="none" stroke="#716b60" stroke-width="2" marker-end="url(#arrow)"/>
+    <path d="M855 161 H895" fill="none" stroke="#716b60" stroke-width="2" marker-end="url(#arrow)"/>
+    <text x="32" y="285" font-size="20" fill="#242522" text-anchor="start">关键设计：目标如何分配，与机器人之间能否安全完成变换一起考虑。</text>
+    <text x="32" y="323" font-size="18" fill="#62605c" text-anchor="start">核心范围是队形变换规划；自身定位、环境感知和飞行执行由外部能力提供。</text>
+    <text x="48" y="206" font-size="18" fill="#62605c">速度 / 加速度上限</text>
+    <text x="1070" y="38" font-size="16" fill="#943f3d" text-anchor="end">红色：算法输入 / 输出</text>
+  </g>
+</svg>

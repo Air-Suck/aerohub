@@ -12,7 +12,8 @@
     "check:watch": "node scripts/check-watch-scope.mjs",
     "bundle": "npm run build",
     "build": "npm run check && astro build",
-    "preview": "astro preview --host 127.0.0.1"
+    "preview": "astro preview --host 127.0.0.1",
+    "check:registry-watch": "node scripts/check-registry-watch.mjs"
   },
   "dependencies": {
     "@astrojs/markdown-satteri": "0.4.7",
