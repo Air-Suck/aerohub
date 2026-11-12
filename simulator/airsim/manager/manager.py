@@ -16,6 +16,8 @@ REPOSITORY = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPOSITORY))
 
 from deployment.swarm.view import apply_overhead_view, camera_options
+from simulator.manager.config import runtime_manifest
+from simulator.manager.resources import resolve_resource
 
 
 def start_ticks(pid):
@@ -145,7 +147,6 @@ def load_profile(profile_path, binary_override=None):
     if 'binary' in profile:
         binary = resolve(profile['binary'])
     else:
-        from resources import resolve_resource
         binary = resolve_resource(profile['binary_resource'])
     settings_path = resolve(profile['settings'])
     profile['binary'] = str(binary)
@@ -211,6 +212,9 @@ def start(profile_path, directory, timeout, binary_override=None):
             sock.listen(1)
     runtime_settings = directory / 'settings.json'
     runtime_settings.write_text(json.dumps(settings, indent=2) + '\n')
+    manifest = runtime_manifest({'backend': 'airsim'}, settings)
+    manifest['backend_config'] = {'settings': str(runtime_settings)}
+    (directory / 'runtime.json').write_text(json.dumps(manifest, indent=2) + '\n')
     (directory / 'profile.json').write_text(json.dumps(profile, indent=2) + '\n')
     userdir = directory / 'user'
     userdir.mkdir(exist_ok=True)
@@ -223,7 +227,7 @@ def start(profile_path, directory, timeout, binary_override=None):
         child = subprocess.Popen(command, env=env, stdout=log, stderr=subprocess.STDOUT,
                                  start_new_session=True)
     # exec may not have completed yet; retain the process generation first.
-    state = dict(pid=child.pid, start_ticks=start_ticks(child.pid), binary=str(binary),
+    state = dict(backend='airsim', pid=child.pid, start_ticks=start_ticks(child.pid), binary=str(binary),
                  runtime_settings=str(runtime_settings), command=command, ports=ports,
                  phase='starting', log=str(directory / 'airsim.log'))
     save(directory, state)

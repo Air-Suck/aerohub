@@ -29,7 +29,7 @@ for name in "${names[@]}"; do
 done
 cleanup() {
   docker stop -t 7 "${names[@]}" >/dev/null 2>&1 || true
-  python3 "$root/simulator/airsim/manager/manager.py" stop --run-dir "$out/scene" || true
+  python3 "$root/simulator/manager/manager.py" stop --run-dir "$out/scene" || true
 }
 trap cleanup EXIT
 # Resolve the dedicated NH profile through the same resource mapping as normal runs.
@@ -42,7 +42,7 @@ with open(sys.argv[1]) as stream:
 with open(sys.argv[2], 'w') as stream:
     json.dump(profile, stream, indent=2)
 PYPROFILE
-python3 "$root/simulator/airsim/manager/manager.py" start --profile "$out/profile.json" \
+python3 "$root/simulator/manager/manager.py" start --profile "$out/profile.json" \
   --run-dir "$out/scene" > "$out/scene-start.json"
 docker run --rm --name aerohub-fb-clock --network host \
   -e ROS_DOMAIN_ID="$domain" "$image" clock > "$out/clock.log" 2>&1 &

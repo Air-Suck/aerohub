@@ -18,23 +18,41 @@ def number(name, default, low=1, high=65535):
 
 
 def commands(mode, env):
-    host = env.get('AIRSIM_HOST', '127.0.0.1')
+    runtime_config = env.get('SIMULATOR_RUNTIME_CONFIG')
+    runtime = json.loads(Path(runtime_config).read_text()) if runtime_config else None
+    backend = runtime.get('backend', 'airsim') if runtime else env.get('SIMULATOR_BACKEND', 'airsim')
+    host = env.get('SIMULATOR_HOST', env.get('AIRSIM_HOST', '127.0.0.1'))
     rpc = str(number('AIRSIM_RPC_PORT', 41471))
     vehicle = env.get('VEHICLE_NAME', 'PX4')
     common = ['--ros-args', '-p', f'rpc_host:={host}', '-p', f'rpc_port:={rpc}',
               '-p', f'vehicle_name:={vehicle}']
     if mode == 'clock':
+        if backend != 'airsim':
+            raise ValueError('ProjectAirSim /clock is owned by its ROS adapter, not flight_board')
         return [(['ros2', 'run', 'uav_as2_sensor_adapter', 'airsim_clock_node'] + common,
                  env, None)]
     if mode != 'vehicle':
         raise ValueError('usage: flight-board [vehicle|clock|shell]')
     config_path = env.get('AIRSIM_SETTINGS', '/config/settings.json')
-    settings = json.loads(Path(config_path).read_text())
-    config = settings['Vehicles'][vehicle]
-    if config.get('VehicleType') != 'PX4Multirotor' or not config.get('UseTcp'):
-        raise ValueError('vehicle requires PX4Multirotor and UseTcp=true')
+    if runtime:
+        candidates = [item for item in runtime.get('vehicles', []) if item.get('name') == vehicle]
+        if len(candidates) != 1:
+            raise ValueError(f'runtime config requires exactly one vehicle named {vehicle}')
+        source = candidates[0]
+        px4 = source.get('px4', {})
+        config = {
+            'LockStep': px4.get('lockstep', False),
+            'TcpPort': px4['tcp_port'],
+            'ControlPortLocal': px4['control_local_port'],
+            'ControlPortRemote': px4['control_remote_port'],
+        }
+    else:
+        settings = json.loads(Path(config_path).read_text())
+        config = settings['Vehicles'][vehicle]
+        if config.get('VehicleType') != 'PX4Multirotor' or not config.get('UseTcp'):
+            raise ValueError('vehicle requires PX4Multirotor and UseTcp=true')
     if not config.get('LockStep', False):
-        raise ValueError('vehicle requires LockStep=true')
+        raise ValueError('vehicle requires lockstep')
     tcp_port = int(config.get('TcpPort', 4560))
     if not 1 <= tcp_port <= 65535:
         raise ValueError('invalid TcpPort')
@@ -80,7 +98,7 @@ def commands(mode, env):
         raise ValueError('FLIGHT_BOARD_CAMERAS must be 0 or 1')
     if env.get('FLIGHT_BOARD_SENSORS', '1') not in ('0', '1'):
         raise ValueError('FLIGHT_BOARD_SENSORS must be 0 or 1')
-    if env.get('FLIGHT_BOARD_SENSORS', '1') == '1':
+    if env.get('FLIGHT_BOARD_SENSORS', '1') == '1' and backend == 'airsim':
         lidar_rate = env.get('FLIGHT_BOARD_LIDAR_RATE_HZ', '10.0')
         camera_rate = env.get('FLIGHT_BOARD_CAMERA_RATE_HZ', '5.0')
         result.append(
@@ -89,6 +107,8 @@ def commands(mode, env):
           '-p', 'use_sim_time:=true', '-p', f'lidar_rate_hz:={lidar_rate}',
           '-p', f'camera_rate_hz:={camera_rate}', '-p',
           'camera_enabled:=' + ('true' if env.get('FLIGHT_BOARD_CAMERAS', '1') == '1' else 'false')], env, None))
+    elif env.get('FLIGHT_BOARD_SENSORS', '1') == '1':
+        raise ValueError('ProjectAirSim sensors are owned by the simulator adapter')
     return result
 
 

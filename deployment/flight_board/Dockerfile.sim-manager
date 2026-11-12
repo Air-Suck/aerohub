@@ -1,0 +1,3 @@
+ARG BASE_IMAGE=flight_board:v0.1.0
+FROM ${BASE_IMAGE}
+COPY deployment/flight_board/supervisor.py /opt/flight_board/supervisor.py

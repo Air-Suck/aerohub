@@ -1,0 +1,44 @@
+{
+  "backend": "projectairsim",
+  "binary_resource": "projectairsim_blocks",
+  "scene_config_resource": "projectairsim_scene_px4",
+  "client_resource": "projectairsim_python_client",
+  "client_python_resource": "projectairsim_python",
+  "ports": {
+    "topics": 8989,
+    "services": 8990
+  },
+  "vehicles": [
+    {
+      "name": "Drone1",
+      "namespace": "drone0",
+      "px4": {
+        "tcp_port": 4560,
+        "control_local_port": 14540,
+        "control_remote_port": 14580,
+        "lockstep": true
+      }
+    }
+  ],
+  "adapter": {
+    "setup_resource": "projectairsim_ros2_setup",
+    "environment": {
+      "PROJECTAIRSIM_ROS_IMAGE": "onboard_computer_dependencies:humble-px4-1.18"
+    },
+    "ros_args": [
+      "-p",
+      "vehicle_name:=Drone1",
+      "-p",
+      "ros_topic_root:=/ProjectAirsim",
+      "-p",
+      "image_qos_depth:=1"
+    ],
+    "sensor_contract": true
+  },
+  "args": [
+    "Blocks",
+    "-RenderOffscreen",
+    "-vulkan",
+    "-nosound"
+  ]
+}

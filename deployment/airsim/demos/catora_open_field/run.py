@@ -22,7 +22,7 @@ def execute(command,**kwargs):
 
 
 def manager(action,output):
-    return [sys.executable,str(ROOT/'simulator/airsim/manager/manager.py'),action,
+    return [sys.executable,str(ROOT/'simulator/manager/manager.py'),action,
             '--profile',str(ROOT/'simulator/airsim/scenarios/catora_open_field/profile.json'),'--run-dir',str(output/'scene')]
 
 

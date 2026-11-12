@@ -33,7 +33,7 @@ def execute(command, **kwargs):
 
 
 def manager(action, output):
-    return [sys.executable, ROOT/'simulator/airsim/manager/manager.py', action,
+    return [sys.executable, ROOT/'simulator/manager/manager.py', action,
             '--profile', ROOT/'simulator/airsim/scenarios/fast_livo2/profile.json',
             '--run-dir', output/'scene']
 
