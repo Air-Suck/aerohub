@@ -23,6 +23,12 @@ AS2 的 IMU topic 名不能证明数据未经处理；检查角速度、加速�
 
 先确认 scene 二进制、AirSim/PX4 源码版本与实际配置一致。源码中存在功能不证明下载的预编译场景包含它。检查仿真时间与 PX4 时间如何映射、暂停/reset 后是否清空旧数据，以及各车辆 TF/话题是否隔离。
 
+## 场景真值与观察坐标
+
+AirSim碰撞几何或体素导出属于场景真值，只能用于评分、诊断或明确的已知地图基线，不能替代LiDAR建图。局部点云对齐通过不证明远端传感器覆盖；若任务要求未知环境导航，规划输入必须来自实际传感器更新链。
+
+非零出生位置时`simGetVehiclePose`使用车辆局部NED，外部相机使用场景坐标。本GCOPTER实例用已确认同名的`simGetObjectPose`全局Actor位姿更新相机，其他场景先核对Actor名称。以实际相机/Actor位姿差和画面确认正上方跟随；仅RPC成功或更新次数不足以证明。保留旧入口的兼容默认，不自动改变其他Demo。
+
 ## FAST-LIVO2 案例的已验证边界
 
 项目已新增算法专用 AirSim RPC 输入桥，提供 IMU、RGB 图像和 Velodyne 兼容 PointCloud2。点云包含 `x/y/z/intensity/time/ring`；`time` 全零并明确表示 AirSim 1.8.1 没有逐点采样时间，上游补丁通过 `preprocess/instantaneous_scan=true` 禁止按扫描角速度伪造偏移。ring 由配置的垂直视场和点的仰角推导；这是一种仿真适配属性，不应描述成真实硬件回传值。
