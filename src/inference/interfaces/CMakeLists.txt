@@ -7,8 +7,11 @@ find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/YopoCandidate.msg"
+  "msg/Detection.msg"
+  "msg/DetectionFrame.msg"
   "srv/InferYopo.srv"
   "srv/InferDiffphys.srv"
+  "srv/InferDetections.srv"
   DEPENDENCIES std_msgs sensor_msgs geometry_msgs)
 ament_export_dependencies(rosidl_default_runtime)
 ament_package()

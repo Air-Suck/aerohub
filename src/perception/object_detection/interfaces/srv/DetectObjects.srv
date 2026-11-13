@@ -1,0 +1,7 @@
+string request_id
+uint64 generation
+sensor_msgs/Image image
+---
+bool success
+string error
+ObjectDetectionFrame result

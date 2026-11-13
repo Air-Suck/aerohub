@@ -1,0 +1,12 @@
+This package includes numeric depth functions from:
+https://github.com/fangxiangbiaostudyhard/yolo11_gemini2_detection-distance
+Pinned commit: e7ea03c7be30f5675f463b84569f981aae3cd0be
+Source file: yolo11_detection.py
+Source SHA256: d1efc221c37b5241cc982d7351854cc26ff47901a3ff419d5d1c023be0fe7ce7
+License: Apache-2.0 (upstream LICENSE is included alongside this notice).
+
+DepthEstimate, create_center_roi_mask, prepare_segmentation_mask and estimate_depth_from_region are
+copied verbatim into elastic_vision/gemini2_depth.py, with necessary imports
+and their original constants. The surrounding ROS/world-coordinate adapter
+in core.py is maintained by this integration project. Camera SDK, weights,
+YOLO inference and visualization code are not copied.

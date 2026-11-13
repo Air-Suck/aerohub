@@ -1,0 +1,35 @@
+schema_version: '0.1'
+id: aerohub.inference.yolo26n-seg
+version: 0.1.0
+source:
+  inference: src/inference/models/yolo26n_seg
+  local_origin: Elastic-Tracker stage2 YOLO adapter, narrowed to YOLO26n-seg
+  upstream: https://github.com/ultralytics/ultralytics
+  version: 8.4.210
+  artifacts: src/inference/models/yolo26n_seg/artifacts.json
+  license: Local adapter GPL-3.0-or-later; Ultralytics/weights AGPL-3.0 or applicable Enterprise license
+provides: [inference.yolo26n-seg]
+cards: [cards/inference/yolo26n-seg.yaml]
+roles:
+  compute: [yolo26n-seg-worker, yolo-inference-adapter]
+  workstation: [ROS-client]
+runtime:
+  model_environment: src/inference/models/yolo26n_seg/uv.lock
+  prepare: bash src/inference/models/yolo26n_seg/setup.sh --check-cuda
+  build_ros: bash deployment/inference/build_yolo26n_seg_ros.sh
+  worker: bash deployment/inference/start_yolo26n_seg.sh
+  ros_adapter: python3 -m uav_inference.yolo_node
+  endpoint: http://127.0.0.1:8002
+  namespace: configurable
+  platform: linux-x86_64
+  prerequisites: [ROS-2-Humble, Python-3.10, uv, compatible-NVIDIA-driver, CUDA-capable-GPU]
+  readiness: HTTP-/health/ready and inference/yolo/status.ready; verify actual ROS calls
+  stop: SIGINT to owned adapter and worker; confirm process exit
+  rollback: stop, restore selected source/config/lock, rebuild ROS overlay, restart caller generation
+resources:
+  gpu: CUDA_VISIBLE_DEVICES selects visible GPU; device 0 inside selected environment
+  arbitration: single-inflight-per-worker; no global GPU arbiter
+  publishing_authority: detection-only; no pose, TF, map or motion publisher
+validation:
+  stage: partial
+  evidence: src/inference/models/yolo26n_seg/validation.json

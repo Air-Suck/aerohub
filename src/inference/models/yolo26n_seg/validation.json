@@ -1,0 +1,79 @@
+{
+  "stage": "partial",
+  "scope": "Local Aerohub migration of YOLO26n-seg Inference and RGB-D Object Detection Tool; not full algorithm reproduction or flight acceptance",
+  "model": "yolo26n-seg",
+  "model_version": "6dbcc21b4c567fe2d1e1e21cd9e727185335e68a10484d9cc0a9578205601cd5",
+  "checkpoint_sha256": "361fbfabab285c3237700b6bb91d7ecfa602cd945fffda8dbe1242829b71e73f",
+  "environment": {
+    "lock": "src/inference/models/yolo26n_seg/uv.lock",
+    "prepared_from_lock": true,
+    "cpu_warmup": true,
+    "cuda_warmup": true,
+    "actual_device": "cuda:0"
+  },
+  "build": {
+    "passed": true,
+    "ros": "Humble",
+    "packages": [
+      "uav_inference_interfaces",
+      "uav_inference",
+      "uav_object_detection_interfaces",
+      "uav_object_detection"
+    ]
+  },
+  "numerical": {
+    "passed": true,
+    "input_sha256": "11777bf5def5935fd252b8a2130ed734a196368bb4e778f57345dffcc997ee83",
+    "legacy_boxes_masks_transform_equal": true,
+    "official_comparisons": [
+      {
+        "category": "person",
+        "mask_iou": 1.0,
+        "box_max_error_px": 0.00372314453125
+      }
+    ]
+  },
+  "software_tests": {
+    "projection-tests.log": {
+      "passed": true,
+      "count": 5
+    },
+    "contract-tests.log": {
+      "passed": true,
+      "count": 4
+    },
+    "selection-tests.log": {
+      "passed": true,
+      "count": 3
+    }
+  },
+  "recorded_depth_replay": {
+    "passed": true,
+    "samples": 10,
+    "maximum_component_error": 4.440892098500626e-16,
+    "scope": "recorded stage2 measurement and composed-camera-transform numerical equivalence; no corrected pose or accuracy claim"
+  },
+  "independent_ros_services": {
+    "passed": true,
+    "checks": [
+      "ROS RGB/depth/CameraInfo subscriptions -> real CUDA -> streaming 3D measurement",
+      "independent Inference service with original header and binary masks",
+      "Tool stop rejects calls; explicit resume changes generation and returns 3D",
+      "unmatched depth never produces a valid position"
+    ],
+    "scope": "separate ROS client -> Inference/Tool -> CUDA worker; recorded RGB, synthetic depth/TF; no live sensor accuracy or flight claim"
+  },
+  "cleanup": {
+    "passed": true
+  },
+  "existing_runtime_and_stage2_sources_unchanged": true,
+  "raw_evidence": "log/yolo26n-seg-migration/",
+  "limitations": [
+    "CUDA model comparison uses one recorded RGB image, not a detection benchmark",
+    "ROS integration uses real CUDA with recorded RGB and synthetic depth/TF",
+    "Recorded depth/mask replay preserves previous measurements; does not correct pose/time/registration errors",
+    "No new AirSim run, PX4 command, flight, target KF migration or physical-camera validation",
+    "Other YOLO models and RoboPi backend are not migrated",
+    "No generic Mission/Agent framework or global GPU arbitration"
+  ]
+}

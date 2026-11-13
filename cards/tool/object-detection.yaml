@@ -1,0 +1,51 @@
+schema_version: '0.1'
+id: tool.object-detection
+name: RGB-D Object Detection Tool
+version: 0.1.0
+type: tool
+description: Category-selected instance masks and capture-time 3D measurements from ROS RGB-D and TF.
+component:
+  id: aerohub.tool.object-detection
+  manifest: deployment/object_detection/component.yaml
+  shared_process_group: object-detection-tool
+  coupled_capabilities: []
+usage:
+  mode: task-call
+  selection_phase: runtime
+  invocation_interface: uav_object_detection_interfaces/srv/DetectObjects
+  switching_constraints: [stop-tool-before-model-or-camera-reconfiguration]
+inputs:
+  - service: <namespace>/tools/object_detection/detect
+    schema: request_id, generation and RGB8/BGR8 Image with source header
+  - subscriptions: configurable RGB/depth/CameraInfo topics
+    geometry: registered rectified RGB-D; CameraInfo and optical frame must agree
+    depth: 32FC1 meters or scaled16UC1; planar Z unless explicitly configured radial
+  - tf: output_frame -> camera optical at paired depth integer acquisition stamp
+outputs:
+  - schema: uav_object_detection_interfaces/msg/ObjectDetectionFrame
+    content: category, confidence, box, mask, valid 3D position, measured depth/spread/pixel-count
+    timing: output header is depth capture time; RGB/depth headers preserved separately
+    invalid: ignore position unless position_valid; no KF, velocity or target prediction
+preconditions: [Inference-ready, explicitly-registered-RGBD, valid-CameraInfo, capture-time-TF]
+resources:
+  reads: [camera-topics, historical-TF, inference/yolo/infer]
+  writes: [measurements, status, optional-overlay]
+  conflicts: [concurrent-requests-to-same-worker]
+  enforcement: local single-call lock and latest-only stream; no global mission arbiter
+lifecycle:
+  startup: separate ROS node after Inference; no model imports
+  readiness: successful measured Tool call; status reports model/input errors
+  freshness: source pairing and historical TF; no target observation-age policy
+  feedback: tools/object_detection/status
+  completion: typed measurement response; optional topic stream
+  cancel_or_stop: enable false discards pending generation and late results; no flight stop
+  failure: BUSY, STOPPED, inference failure, missing calibration/depth/TF, invalid depth
+  recovery: explicit enable; clock rollback clears histories and changes tool generation
+type_specific:
+  parameters: deployment/object_detection/params.example.yaml
+  measurement_scope: selected visible surface point; not guaranteed actor center
+  state_estimator: consumed through TF; this component is not own-state estimation
+validation:
+  stage: partial
+  evidence: [src/inference/models/yolo26n_seg/validation.json]
+  limitations: [no-generic-Mission-framework, no-target-KF, no-validated-live-position-accuracy]

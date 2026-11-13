@@ -8,6 +8,10 @@
     "yopo": {
       "directory": "src/inference/models/yopo",
       "description": "YOPO candidate relative PVA/cost inference in an isolated CUDA environment"
+    },
+    "yolo26n-seg": {
+      "directory": "src/inference/models/yolo26n_seg",
+      "description": "YOLO26n-seg original-pixel boxes and instance masks through isolated CUDA inference"
     }
   }
 }

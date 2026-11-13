@@ -1,0 +1,49 @@
+schema_version: '0.1'
+id: inference.yolo26n-seg
+name: YOLO26n-seg instance segmentation inference
+version: 0.1.0
+type: inference
+description: Original-image boxes, categories, confidence and binary masks; no depth or flight control.
+component:
+  id: aerohub.inference.yolo26n-seg
+  manifest: deployment/inference/yolo26n_seg.component.yaml
+  shared_process_group: yolo26n-seg-worker-and-ros-facade
+  coupled_capabilities: []
+usage:
+  mode: query
+  selection_phase: deployment
+  invocation_interface: uav_inference_interfaces/srv/InferDetections
+  switching_constraints: [stop-worker-before-model-replacement, restart-facade-and-caller-generation]
+inputs:
+  - service: <namespace>/inference/yolo/infer
+    schema: request_id, generation, RGB8/BGR8 Image with acquisition header
+    geometry: optical frame and original pixel dimensions; maximum 2048x2048
+    timing: preserve positive source nanoseconds; no navigation target-age policy
+outputs:
+  - schema: uav_inference_interfaces/msg/DetectionFrame
+    coordinates: original image pixels
+    masks: mono8 values 0/1 with original image geometry and header
+    metadata: request/model/worker identity and timing breakdown
+preconditions: [verified-checkpoint, worker-ready, compatible-ROS-overlay, reachable-internal-endpoint]
+resources:
+  reads: [caller-image, pinned-checkpoint]
+  writes: [GPU-memory-and-compute, detection-response]
+  conflicts: [other-workloads-on-selected-GPU]
+  enforcement: single-inflight-worker-and-facade; no global GPU arbiter
+lifecycle:
+  startup: prepare model, start worker, wait HTTP ready, start ROS facade
+  readiness: inference/yolo/status.ready and successful independent ROS call
+  freshness: preserve acquisition header; verify request/model/worker identity
+  completion: one ROS Service response
+  cancel_or_stop: timeout does not cancel GPU kernel; no automatic retry
+  failure: BUSY, invalid image/mask, timeout, changed worker/model identity
+  recovery: explicit restart and caller generation invalidation
+type_specific:
+  inference_module: src/inference/models/yolo26n_seg
+  artifacts: src/inference/models/yolo26n_seg/artifacts.json
+  weights_license: Ultralytics AGPL-3.0 or applicable Enterprise license
+  public_runtime: unchanged Aerohub FastAPI/TorchBackend/ModelClient
+validation:
+  stage: partial
+  evidence: [src/inference/models/yolo26n_seg/validation.json]
+  limitations: [no-physical-camera-validation, no-live-RGBD-accuracy-or-flight-acceptance]

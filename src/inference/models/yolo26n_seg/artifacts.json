@@ -1,0 +1,8 @@
+{
+  "model": "yolo26n-seg",
+  "url": "https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26n-seg.pt",
+  "filename": "yolo26n-seg.pt",
+  "sha256": "361fbfabab285c3237700b6bb91d7ecfa602cd945fffda8dbe1242829b71e73f",
+  "license": "Ultralytics AGPL-3.0 or applicable Enterprise license",
+  "processing": "Ultralytics 8.4.210 one-to-many head, official NMS and process_mask_native; no ONNX conversion"
+}

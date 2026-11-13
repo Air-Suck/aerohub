@@ -1,0 +1,11 @@
+model_type: yolo26n-seg
+weights: artifacts/yolo26n-seg.pt
+backend: ultralytics_pt
+device: '0'
+input_size: 640
+confidence: 0.35
+class_map:
+  person: person
+  car: car
+  truck: truck
+  bus: bus

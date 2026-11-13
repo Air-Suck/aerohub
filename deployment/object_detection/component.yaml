@@ -1,0 +1,30 @@
+schema_version: '0.1'
+id: aerohub.tool.object-detection
+version: 0.1.0
+source:
+  directory: src/perception/object_detection
+  license: GPL-3.0-or-later
+provides: [tool.object-detection]
+cards: [cards/tool/object-detection.yaml]
+roles:
+  compute: [object-detection-tool]
+  workstation: [ROS-client]
+dependencies:
+  inference: deployment/inference/yolo26n_seg.component.yaml
+runtime:
+  build: bash deployment/inference/build_yolo26n_seg_ros.sh
+  start: ros2 run uav_object_detection object_detection
+  namespace: configurable
+  readiness: inference/yolo/status.ready and a successful Tool call
+  stream_default: false
+  stop: tools/object_detection/enable false discards pending generation; SIGINT exits owned Tool
+  rollback: stop, restore code, rebuild overlay, restart caller generation
+resources:
+  reads: [caller-image, inference/yolo/infer]
+  subscriptions: [registered-RGB-depth, RGB-depth-CameraInfo]
+  tf: camera-optical-to-output-frame at depth capture time; no state publishing authority
+  writes: [typed-3D-measurements, status, optional-overlay]
+  enforcement: local single-call lock and latest-only stream queue; no global task arbiter
+validation:
+  stage: partial
+  evidence: src/inference/models/yolo26n_seg/validation.json

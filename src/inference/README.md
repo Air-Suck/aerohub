@@ -1,5 +1,12 @@
 # Inference Robotic Function
 
+YOLO26n-seg is available as an isolated segmentation worker and typed ROS service:
+see [model preparation and validation](models/yolo26n_seg/README.md). Its separate
+[Object Detection Tool](../perception/object_detection/README.md) adds registered
+ROS depth/CameraInfo and historical TF for measured 3D positions; target KF and
+motion execution remain outside Inference. Select only `yolo26n-seg` with
+`config/inference.yolo26n-seg.example.yaml`; existing model selections are retained.
+
 Inference 是与 Perception、State Estimator 并列的基础能力：目标对外使用 ROS 2，对内通过 FastAPI 隔离每模型运行环境；CUDA 使用独立 uv 环境，RoboPi HMM 使用板端 Python 与应用私有运行包。
 
 当前提供公共 FastAPI runtime、ROS HTTP 客户端、模型 manifest、用户 YAML 准备入口、原生 AS2 双容器通信基准，以及 [YOPO](models/yopo/README.md) 和 [DiffPhys](models/diffphys/README.md) typed ROS 推理服务。YOPO Planner 的轨迹重建和执行在 `src/planner/yopo/`，模型服务只返回候选 PVA/cost；DiffPhys返回原始策略输出和显式GRU隐状态，尚无运动执行接入。

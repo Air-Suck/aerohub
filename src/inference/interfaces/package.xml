@@ -5,6 +5,7 @@
   <description>Typed ROS contracts for the inference robotic function.</description>
   <maintainer email="noah@example.com">noah</maintainer>
   <license>Apache-2.0</license>
+  <license>GPL-3.0-or-later</license>
   <buildtool_depend>ament_cmake</buildtool_depend>
   <build_depend>rosidl_default_generators</build_depend>
   <exec_depend>rosidl_default_runtime</exec_depend>

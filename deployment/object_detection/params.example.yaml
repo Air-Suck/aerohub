@@ -1,0 +1,17 @@
+/**:
+  ros__parameters:
+    target_class: person
+    registered_depth: true
+    depth_is_perspective: false
+    depth_scale_16u: 0.001
+    stream_enabled: true
+    image_topic: sensor_measurements/FrontCamera/rgb/image
+    depth_topic: sensor_measurements/FrontCamera/depth_planar/image
+    rgb_info_topic: sensor_measurements/FrontCamera/rgb/camera_info
+    depth_info_topic: sensor_measurements/FrontCamera/depth_planar/camera_info
+    output_frame: drone0/odom
+    optical_frame: drone0/FrontCamera_optical
+    sync_tolerance: 0.05
+    transform_wait: 0.25
+    timeout_s: 0.4
+    use_sim_time: true

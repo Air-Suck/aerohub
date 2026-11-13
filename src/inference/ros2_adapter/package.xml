@@ -5,10 +5,14 @@
   <description>ROS inference function backed by isolated HTTP model workers.</description>
   <maintainer email="noah@example.com">noah</maintainer>
   <license>Apache-2.0</license>
+  <license>GPL-3.0-or-later</license>
   <buildtool_depend>ament_python</buildtool_depend>
   <exec_depend>rclpy</exec_depend>
   <exec_depend>uav_inference_interfaces</exec_depend>
   <exec_depend>std_msgs</exec_depend>
   <exec_depend>diagnostic_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-opencv</exec_depend>
   <export><build_type>ament_python</build_type></export>
 </package>
