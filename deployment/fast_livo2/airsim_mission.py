@@ -16,7 +16,7 @@ from as2_msgs.srv import SetControlMode
 from geometry_msgs.msg import PoseStamped, TwistStamped
 from nav_msgs.msg import Odometry
 from px4_msgs.msg import VehicleCommand, VehicleCommandAck, VehicleControlMode, VehicleStatus
-from sensor_msgs.msg import PointCloud2
+from sensor_msgs.msg import Image, PointCloud2
 from std_srvs.srv import SetBool
 
 from airsim_rpc import Rpc
@@ -27,7 +27,7 @@ class Mission:
         self.output = Path(os.environ.get('FAST_LIVO_RESULTS', '/results'))
         self.output.mkdir(parents=True, exist_ok=True)
         self.scenario = os.environ.get('FAST_LIVO_SCENARIO', 'authority')
-        if self.scenario not in ('shadow', 'authority'):
+        if self.scenario not in ('shadow', 'authority', 'sensor_fault', 'algorithm_fault'):
             raise ValueError('invalid FAST_LIVO_SCENARIO')
         self.warmup_seconds = float(os.environ.get('FAST_LIVO_WARMUP_SECONDS', '0'))
         if not 0 <= self.warmup_seconds <= 30:
@@ -35,21 +35,25 @@ class Mission:
         self.rpc = Rpc(os.environ.get('AIRSIM_HOST', '127.0.0.1'),
                        int(os.environ.get('AIRSIM_RPC_PORT', '44471')), timeout=5)
         self.node = rclpy.create_node('fast_livo2_airsim_acceptance')
-        self.latest, self.counts, self.acks = {}, {}, {}
+        self.latest, self.counts, self.received_at, self.acks = {}, {}, {}, {}
         self.cloud_metrics = {'messages': 0, 'nonempty': 0, 'max_width': 0, 'max_span_m': 0.0}
         self.truth_samples = []
         self.fast_truth_samples = []
+        self.synchronized_samples = []
         self.pose_origin = None
         self.truth_origin = None
         self.fast_pose_origin = None
         self.fast_truth_origin = None
         self.guard_enabled = False
+        self.preflight_checks_pass_before_arming = False
         topics = {
             '/drone0/self_localization/pose': PoseStamped,
             '/drone0/self_localization/twist': TwistStamped,
             '/drone0/fast_livo2/odometry': Odometry,
             '/drone0/platform/info': PlatformInfo,
             '/drone0/controller/info': ControllerInfo,
+            '/drone0/sensor_measurements/FrontCamera/rgb/image': Image,
+            '/drone0/sensor_measurements/Lidar/points': PointCloud2,
             '/drone0/fmu/out/vehicle_control_mode': VehicleControlMode,
             '/drone0/fmu/out/vehicle_status_v4': VehicleStatus,
         }
@@ -71,11 +75,15 @@ class Mission:
             return
         self.latest[topic] = message
         self.counts[topic] = self.counts.get(topic, 0) + 1
+        self.received_at[topic] = time.monotonic()
 
     def ack(self, message):
         self.acks[message.command] = message.result
 
     def cloud(self, message):
+        topic = '/drone0/perception/fast_livo2/registered_points'
+        self.received_at[topic] = time.monotonic()
+        self.counts[topic] = self.counts.get(topic, 0) + 1
         self.cloud_metrics['messages'] += 1
         if message.header.frame_id != 'drone0/livo_world' or message.width == 0:
             return
@@ -99,8 +107,15 @@ class Mission:
         self.cloud_metrics['max_width'] = max(self.cloud_metrics['max_width'], message.width)
         self.cloud_metrics['max_span_m'] = max(self.cloud_metrics['max_span_m'], span)
 
+    def airsim_position(self):
+        return self.rpc.call('simGetVehiclePose', 'PX4')['position']
+
     def truth(self):
-        point = self.rpc.call('simGetVehiclePose', 'PX4')['position']
+        point = self.airsim_position()
+        return (float(point['y_val']), float(point['x_val']), -float(point['z_val']))
+
+    def livo_truth(self):
+        point = self.airsim_position()
         return (float(point['x_val']), -float(point['y_val']), -float(point['z_val']))
 
     def sample(self):
@@ -111,6 +126,7 @@ class Mission:
         p = self.latest[topic].pose.position
         estimate = (p.x, p.y, p.z)
         actual = self.truth()
+        livo_actual = self.livo_truth()
         if self.pose_origin is None:
             self.pose_origin, self.truth_origin = estimate, actual
         estimate_relative = tuple(estimate[i] - self.pose_origin[i] for i in range(3))
@@ -121,13 +137,23 @@ class Mission:
         fp = self.latest[fast_topic].pose.pose.position
         fast = (fp.x, fp.y, fp.z)
         if self.fast_pose_origin is None:
-            self.fast_pose_origin, self.fast_truth_origin = fast, actual
+            self.fast_pose_origin, self.fast_truth_origin = fast, livo_actual
         fast_relative = tuple(fast[i] - self.fast_pose_origin[i] for i in range(3))
-        fast_truth_relative = tuple(actual[i] - self.fast_truth_origin[i] for i in range(3))
+        fast_truth_relative = tuple(livo_actual[i] - self.fast_truth_origin[i] for i in range(3))
+        wall_time = time.time()
         self.fast_truth_samples.append({
             'estimate': fast_relative, 'truth': fast_truth_relative,
             'error_m': math.dist(fast_relative, fast_truth_relative),
-            'wall_time': time.time(),
+            'wall_time': wall_time,
+        })
+        self.synchronized_samples.append({
+            'canonical_estimate': estimate_relative,
+            'canonical_truth': truth_relative,
+            'canonical_error_m': math.dist(estimate_relative, truth_relative),
+            'raw_estimate': fast_relative,
+            'raw_truth': fast_truth_relative,
+            'raw_error_m': math.dist(fast_relative, fast_truth_relative),
+            'wall_time': wall_time,
         })
 
     def write_samples(self):
@@ -136,6 +162,9 @@ class Mission:
         (self.output/'fast-livo2-shadow-truth.json').write_text(
             json.dumps(self.fast_truth_samples, indent=2)+'\n')
 
+
+        (self.output/'synchronized-state-truth.json').write_text(
+            json.dumps(self.synchronized_samples, indent=2)+'\n')
     def spin_until(self, predicate, timeout=45):
         deadline = time.monotonic() + timeout
         next_sample = 0.0
@@ -148,6 +177,9 @@ class Mission:
                 if (self.guard_enabled and self.fast_truth_samples and
                         self.fast_truth_samples[-1]['error_m'] > 1.0):
                     raise RuntimeError('FAST-LIVO2 flight guard exceeded 1.0 m')
+
+    def stream_age(self, topic):
+        return time.monotonic() - self.received_at.get(topic, 0.0)
 
     def service(self, name, command, feedback):
         client = self.node.create_client(SetBool, '/drone0/' + name); self.clients.append(client)
@@ -218,14 +250,38 @@ class Mission:
         self.spin_until(lambda: all(self.counts.get(topic, 0) >= 20 for topic in required[:3]) and
                         all(topic in self.latest for topic in required[3:]) and
                         self.cloud_metrics['nonempty'] >= 3, 120)
-        self.spin_until(lambda:self.latest['/drone0/fmu/out/vehicle_status_v4'].pre_flight_checks_pass, 120)
+        ready_since = None
+
+        def stable_preflight():
+            nonlocal ready_since
+            ready = bool(
+                self.latest['/drone0/fmu/out/vehicle_status_v4'].pre_flight_checks_pass)
+            if not ready:
+                ready_since = None
+                return False
+            ready_since = ready_since or time.monotonic()
+            return time.monotonic() - ready_since >= 2.0
+
+        self.spin_until(stable_preflight, 120)
+        self.preflight_checks_pass_before_arming = True
         self.screenshot('initialized')
 
+    def retry_service(self, name, command, feedback):
+        for attempt in range(12):
+            try:
+                self.service(name, command, feedback)
+                return
+            except (RuntimeError, TimeoutError):
+                if attempt == 11:
+                    raise
+                retry_at = time.monotonic() + 5.0
+                self.spin_until(lambda: time.monotonic() >= retry_at, 6)
+
     def arm_and_offboard(self):
-        self.service('set_arming_state', 400,
-                     lambda:self.latest['/drone0/fmu/out/vehicle_control_mode'].flag_armed)
-        self.service('set_offboard_mode', 176,
-                     lambda:self.latest['/drone0/fmu/out/vehicle_control_mode'].flag_control_offboard_enabled)
+        self.retry_service('set_arming_state', 400,
+                           lambda:self.latest['/drone0/fmu/out/vehicle_control_mode'].flag_armed)
+        self.retry_service('set_offboard_mode', 176,
+                           lambda:self.latest['/drone0/fmu/out/vehicle_control_mode'].flag_control_offboard_enabled)
 
     def run_shadow(self):
         self.initialize()
@@ -239,6 +295,7 @@ class Mission:
         self.fast_pose_origin = self.fast_truth_origin = None
         self.truth_samples.clear()
         self.fast_truth_samples.clear()
+        self.synchronized_samples.clear()
         self.sample()
         self.arm_and_offboard()
         initial_z = self.latest['/drone0/self_localization/pose'].pose.position.z
@@ -272,6 +329,7 @@ class Mission:
             'fast_livo2_role': 'shadow state estimator',
             'stationary_warmup_seconds': self.warmup_seconds,
             'stationary_warmup_drift_m': warmup_drift,
+            'px4_preflight_checks_pass_before_arming': self.preflight_checks_pass_before_arming,
             'fast_livo2_airborne_error_m': airborne['error_m'],
             'fast_livo2_horizontal_error_m': horizontal['error_m'],
             'fast_livo2_airborne_movement_m': estimate_movement,
@@ -289,21 +347,47 @@ class Mission:
         if self.scenario == 'shadow':
             self.run_shadow()
             return
+        if self.scenario in ('sensor_fault', 'algorithm_fault'):
+            self.run_fault()
+            return
         self.initialize()
         self.arm_and_offboard()
         self.guard_enabled = True
         initial_z = self.latest['/drone0/self_localization/pose'].pose.position.z
-        self.action(Takeoff, 'TakeoffBehavior', Takeoff.Goal(takeoff_height=1.5, takeoff_speed=0.35),
+        self.action(Takeoff, 'TakeoffBehavior', Takeoff.Goal(takeoff_height=0.35, takeoff_speed=0.15),
                     'takeoff_success', 120)
-        self.spin_until(lambda:self.latest['/drone0/self_localization/pose'].pose.position.z > initial_z + 1.0, 30)
+        self.spin_until(
+            lambda: self.latest['/drone0/platform/info'].status.state == PlatformStatus.FLYING, 20)
+        settle_until = time.monotonic() + 2.0
+        self.spin_until(lambda: time.monotonic() >= settle_until, 4)
+        for target_z in (initial_z + 0.45, initial_z + 0.55,
+                         initial_z + 0.65, initial_z + 0.75):
+            current = self.latest['/drone0/self_localization/pose'].pose.position
+            climb = GoToWaypoint.Goal()
+            climb.target_pose.header.frame_id = 'earth'
+            climb.target_pose.point.x = current.x
+            climb.target_pose.point.y = current.y
+            climb.target_pose.point.z = target_z
+            climb.max_speed = 0.1
+            self.action(GoToWaypoint, 'GoToBehavior', climb, 'go_to_success', 120)
+            settle_until = time.monotonic() + 2.0
+            self.spin_until(lambda: time.monotonic() >= settle_until, 4)
+        self.spin_until(lambda:self.latest['/drone0/self_localization/pose'].pose.position.z > initial_z + 0.5, 30)
         self.spin_until(lambda:self.latest['/drone0/platform/info'].status.state == PlatformStatus.FLYING, 20)
         self.screenshot('airborne')
         current = self.latest['/drone0/self_localization/pose'].pose.position
-        target = GoToWaypoint.Goal()
-        target.target_pose.header.frame_id = 'earth'
-        target.target_pose.point.x, target.target_pose.point.y, target.target_pose.point.z = current.x + 1.0, current.y, current.z
-        target.max_speed = 0.35
-        self.action(GoToWaypoint, 'GoToBehavior', target, 'go_to_success', 120)
+        horizontal_origin = (current.x, current.y, current.z)
+        target = None
+        for step in range(1, 6):
+            target = GoToWaypoint.Goal()
+            target.target_pose.header.frame_id = 'earth'
+            target.target_pose.point.x = horizontal_origin[0] + 0.2 * step
+            target.target_pose.point.y = horizontal_origin[1]
+            target.target_pose.point.z = horizontal_origin[2]
+            target.max_speed = 0.15
+            self.action(GoToWaypoint, 'GoToBehavior', target, 'go_to_success', 120)
+            settle_until = time.monotonic() + 0.5
+            self.spin_until(lambda: time.monotonic() >= settle_until, 2)
         reached = self.latest['/drone0/self_localization/pose'].pose.position
         waypoint_error = math.dist((reached.x,reached.y,reached.z),
                                    (target.target_pose.point.x,target.target_pose.point.y,target.target_pose.point.z))
@@ -319,6 +403,7 @@ class Mission:
         result = {
             'success': True, 'authoritative_state_provider': 'FAST-LIVO2 AS2 plugin',
             'actual_downstream_consumer': 'AS2 motion controller and Takeoff/GoTo/Land behaviors',
+            'px4_preflight_checks_pass_before_arming': self.preflight_checks_pass_before_arming,
             'pose_messages': self.counts.get('/drone0/self_localization/pose', 0),
             'raw_fast_livo2_messages': self.counts.get('/drone0/fast_livo2/odometry', 0),
             'cloud_consumer': self.cloud_metrics,
@@ -332,18 +417,94 @@ class Mission:
         (self.output/'result.json').write_text(json.dumps(result, indent=2)+'\n')
         print(json.dumps(result, indent=2), flush=True)
 
-    def emergency(self, error):
-        report = {'error': str(error), 'hover': False, 'landed_and_disarmed': False}
+    def run_fault(self):
+        self.initialize()
+        self.arm_and_offboard()
+        self.guard_enabled = True
+        self.action(
+            Takeoff, 'TakeoffBehavior',
+            Takeoff.Goal(takeoff_height=0.5, takeoff_speed=0.15),
+            'takeoff_success', 120)
+        self.spin_until(
+            lambda: self.latest['/drone0/platform/info'].status.state == PlatformStatus.FLYING,
+            20)
+        settle_until = time.monotonic() + 2.0
+        self.spin_until(lambda: time.monotonic() >= settle_until, 4)
+        self.screenshot(self.scenario + '-airborne')
+
+        if self.scenario == 'sensor_fault':
+            watched = [
+                '/drone0/sensor_measurements/FrontCamera/rgb/image',
+                '/drone0/sensor_measurements/Lidar/points',
+            ]
+            stopped_component = 'AirSim sensor adapter container'
+        else:
+            watched = [
+                '/drone0/fast_livo2/odometry',
+                '/drone0/perception/fast_livo2/registered_points',
+            ]
+            stopped_component = 'FAST-LIVO2 algorithm container'
+        baseline_counts = {topic: self.counts.get(topic, 0) for topic in watched}
+        ready = {
+            'fault': self.scenario,
+            'watched_topics': watched,
+            'baseline_counts': baseline_counts,
+            'ready_wall_time': time.time(),
+        }
+        (self.output / 'fault-ready.json').write_text(json.dumps(ready, indent=2) + '\n')
+        detection_started = time.monotonic()
+        self.spin_until(lambda: all(self.stream_age(topic) >= 2.0 for topic in watched), 30)
+        detected_wall_time = time.time()
+        final_counts = {topic: self.counts.get(topic, 0) for topic in watched}
+        recovery = self.controlled_recovery()
+        self.sample()
+        self.screenshot(self.scenario + '-landed')
+        self.write_samples()
+        result = {
+            'success': recovery['landed_and_disarmed'],
+            'scenario': self.scenario,
+            'fault': self.scenario,
+            'stopped_component': stopped_component,
+            'watched_topics': watched,
+            'baseline_counts': baseline_counts,
+            'final_counts': final_counts,
+            'detection_seconds': time.monotonic() - detection_started,
+            'detected_wall_time': detected_wall_time,
+            'hover_requested': recovery['hover'],
+            'landed_and_disarmed': recovery['landed_and_disarmed'],
+            'cloud_consumer': self.cloud_metrics,
+        }
+        if recovery.get('hover_error'):
+            result['hover_error'] = recovery['hover_error']
+        if recovery.get('land_error'):
+            result['land_error'] = recovery['land_error']
+        if not result['success']:
+            raise RuntimeError('FAST-LIVO2 fault recovery failed: ' + json.dumps(result))
+        (self.output / 'result.json').write_text(json.dumps(result, indent=2) + '\n')
+        print(json.dumps(result, indent=2), flush=True)
+
+    def controlled_recovery(self):
+        report = {'hover': False, 'landed_and_disarmed': False}
         self.guard_enabled = False
+        mode = self.latest.get('/drone0/fmu/out/vehicle_control_mode')
+        if not mode or not mode.flag_armed:
+            report['landed_and_disarmed'] = True
+            return report
         try:
-            mode = self.latest.get('/drone0/fmu/out/vehicle_control_mode')
-            if mode and mode.flag_armed:
-                self.hover(); report['hover'] = True
-                self.px4_land()
-            report['landed_and_disarmed'] = not self.latest.get(
-                '/drone0/fmu/out/vehicle_control_mode', VehicleControlMode()).flag_armed
-        except Exception as stop_error:
-            report['stop_error'] = str(stop_error)
+            self.hover()
+            report['hover'] = True
+        except Exception as error:
+            report['hover_error'] = str(error)
+        try:
+            self.px4_land()
+        except Exception as error:
+            report['land_error'] = str(error)
+        report['landed_and_disarmed'] = not self.latest.get(
+            '/drone0/fmu/out/vehicle_control_mode', VehicleControlMode()).flag_armed
+        return report
+
+    def emergency(self, error):
+        report = {'error': str(error), **self.controlled_recovery()}
         self.write_samples()
         (self.output/'failure.json').write_text(json.dumps(report, indent=2)+'\n')
 

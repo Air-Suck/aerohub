@@ -1,0 +1,29 @@
+schema_version: 0.1
+scenario: fast-livo2-airsim-state-acceptance
+platform:
+  simulator: AirSim 1.8.1, visible window
+  flight_controller: PX4 SITL
+  candidate_role: shadow candidate followed by gated AS2 authority validation
+  sensors: real AirSim RPC IMU, RGB and instantaneous LiDAR scan
+gates:
+  shadow_airborne_error_max_m: 0.5
+  shadow_horizontal_error_max_m: 0.5
+  shadow_truth_movement_min_m: 0.5
+  shadow_estimate_movement_min_m: 0.3
+  registered_point_nonempty_samples_min: 1
+  authority_waypoint_error_max_m: 0.5
+  authority_hold_drift_max_m: 0.5
+  authority_final_truth_error_max_m: 1.0
+authority_rule: >-
+  Shadow gates must pass on the same compliant source and environment before
+  FAST-LIVO2 can become the AS2 state and TF authority. A historical run made
+  with a build-time upstream patch cannot authorize the migrated source.
+required_faults:
+  - RGB or LiDAR interruption with detected degradation and controlled landing
+  - FAST-LIVO2 process exit with state-loss detection and controlled landing
+required_evidence:
+  - source revision, Fork baseline and diff, clean gitlink, shared image IDs and overlay paths
+  - visible AirSim screenshot and process identity
+  - real sensor input, algorithm output, native AS2 plugin output and registered-point consumer
+  - machine-readable shadow and authority metrics
+  - fault timeline, controlled landing, disarm and owned-resource cleanup

@@ -1,7 +1,8 @@
 import math
 import struct
 import unittest
-from uav_as2_sensor_adapter.conversion import extrinsic, image_payload, lidar_payload, multiply
+from uav_as2_sensor_adapter.conversion import (
+    extrinsic, image_payload, imu_payload, lidar_payload, multiply)
 
 
 class ConversionTests(unittest.TestCase):
@@ -44,3 +45,23 @@ class ConversionTests(unittest.TestCase):
             'position': dict(x_val=0, y_val=0, z_val=0),
             'orientation': dict(x_val=0, y_val=0, z_val=0, w_val=1)}}
         self.assertEqual(struct.unpack('<fff', lidar_payload(response, 'SensorLocalFrame')), (1, -2, -3))
+
+    def test_imu_frd_to_flu(self):
+        response = {
+            'orientation': dict(x_val=0, y_val=0, z_val=0, w_val=2),
+            'angular_velocity': dict(x_val=1, y_val=2, z_val=3),
+            'linear_acceleration': dict(x_val=4, y_val=5, z_val=6),
+        }
+        orientation, angular, acceleration = imu_payload(response)
+        self.assertEqual(orientation, (0, 0, 0, 1))
+        self.assertEqual(angular, (1, -2, -3))
+        self.assertEqual(acceleration, (4, -5, -6))
+
+    def test_nonfinite_imu_rejected(self):
+        response = {
+            'orientation': dict(x_val=0, y_val=0, z_val=0, w_val=1),
+            'angular_velocity': dict(x_val=0, y_val=float('nan'), z_val=0),
+            'linear_acceleration': dict(x_val=0, y_val=0, z_val=0),
+        }
+        with self.assertRaises(ValueError):
+            imu_payload(response)

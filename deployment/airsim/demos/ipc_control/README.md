@@ -39,7 +39,7 @@ AirSim资源由现有本地映射提供；也可用 `--binary` 指定可执行�
 
 ## 必要修复与时序
 
-`deployment/platform/patches/as2-body-rates-bypass.patch` 修复ControllerHandler透传未复制推力的问题；BODY_RATES输出要求两种分量同时到达、同源时间戳、正确机体系且新鲜/有限。补丁适用于记录的AS2 f387e0d版本（项目AS2 PR补丁应用后），不改ABI。构建脚本检查基线/补丁后源码SHA256，遇到其他本地改动保留并拒绝覆盖。该修复仅通过显式overlay启用，未替换共享镜像。
+BODY_RATES 输出要求角速度与推力同时到达、使用同一源时间戳、位于正确机体系且保持新鲜、有限。该修复现已维护在锁定的 AS2 Fork `ca38fa8e537f9bfbe7451e733f8b3f0dda034f88`，不再由 AeroHub 构建时给旧 AS2 源码应用补丁。`build_overlay.sh` 校验 gitlink 后从 Fork 源码补编译隔离 overlay，不替换共享镜像。
 
 接口牛顿值按平台max_thrust=15归一化。测试从起飞后的PX4 `vehicle_attitude_setpoint` 读取hover比例供验证源使用；这是映射基准，不是实机牛顿推力标定。
 
@@ -63,4 +63,4 @@ AirSim资源由现有本地映射提供；也可用 `--binary` 指定可执行�
 python3 deployment/airsim/demos/ipc_control/recover_ground.py --output log/ipc/control-fresh-run
 ```
 
-后续真实IPC验证又补齐了两个同属配对协议的缺口：`as2-body-rates-source-stamp.patch` 保留控制器BODY_RATES透传输出的源时间戳，`pixhawk-body-rates-pairing.patch` 在平台最终发送处拒绝不完整/错序、超龄和非有限组合。`build_overlay.sh` 固定顺序检查并应用三个补丁，补编译控制器、Pixhawk平台和插件，运行实际平台类的隔离配对回归；不重建共享镜像。基础补丁清单允许已知后续补丁后的源码哈希，未知改动仍拒绝覆盖。最早的control验证证据对应当时版本，不能替代这些后续补丁的实际验收；新结果由IPC navigation validation记录。
+后续真实 IPC 验证补齐的源时间戳保留和平台最终配对拒绝逻辑，现分别来自 AS2 Fork `ca38fa8e537f9bfbe7451e733f8b3f0dda034f88` 与 Pixhawk Fork `4e5616408e0078abf38387d5b8c681f1387cfed6`。`build_overlay.sh` 拒绝其他提交，直接补编译两个 Fork 和 FollowReference 插件，并运行实际平台类的隔离配对回归；不重建共享镜像。历史 control/IPC 飞行证据对应补丁后等价源码，不能自动证明新的 Fork 来源与部署入口已经通过；迁移后须重跑构建、配对测试及受影响的 AirSim/PX4 验收。

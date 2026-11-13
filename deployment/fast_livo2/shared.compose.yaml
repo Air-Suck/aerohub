@@ -1,0 +1,41 @@
+name: aerohub-fast-livo2-shared
+
+x-fast-livo2-common: &fast-livo2-common
+  image: "${ONBOARD_COMPUTER_IMAGE:-onboard_computer:v0.1.0}"
+  init: true
+  network_mode: host
+  environment:
+    ROS_DOMAIN_ID: "${FAST_LIVO2_DOMAIN:-96}"
+  volumes:
+    - "${FAST_LIVO2_WORKSPACE:?set FAST_LIVO2_WORKSPACE to the prepared absolute path}:/workspace:ro"
+  stop_grace_period: 15s
+
+services:
+  algorithm:
+    <<: *fast-livo2-common
+    volumes:
+      - "${FAST_LIVO2_WORKSPACE:?set FAST_LIVO2_WORKSPACE to the prepared absolute path}:/workspace:ro"
+      - ./airsim.yaml:/config/airsim.yaml:ro
+      - ./camera_airsim.yaml:/config/camera.yaml:ro
+      - ./run_algorithm.sh:/opt/aerohub/run_fast_livo2.sh:ro
+      - ../../log/fast_livo2/algorithm-debug:/workspace/src/fast_livo/Log
+    entrypoint: [bash, -lc]
+    command: [exec /opt/aerohub/run_fast_livo2.sh]
+
+  estimator:
+    <<: *fast-livo2-common
+    profiles: [plugin-smoke]
+    volumes:
+      - "${FAST_LIVO2_WORKSPACE:?set FAST_LIVO2_WORKSPACE to the prepared absolute path}:/workspace:ro"
+      - ./plugin.params.yaml:/config/plugin.yaml:ro
+    entrypoint: [bash, -lc]
+    command:
+      - >-
+        source /opt/ros/humble/setup.bash &&
+        source /root/aerostack2_ws/install/setup.bash &&
+        source /workspace/install/setup.bash &&
+        exec ros2 launch uav_fast_livo2 external_state_estimator.launch.py
+        namespace:=${FAST_LIVO2_NAMESPACE:-drone0}
+        use_sim_time:=${FAST_LIVO2_USE_SIM_TIME:-true}
+        config_file:=/opt/onboard_computer/config.yaml
+        plugin_config_file:=/config/plugin.yaml

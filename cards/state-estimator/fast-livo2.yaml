@@ -1,0 +1,61 @@
+schema_version: 0.1
+id: state-estimator.fast-livo2
+name: FAST-LIVO2 state estimate
+version: ros2-a713004-aerohub-0.2.0
+type: state-estimator
+description: Visual-inertial-lidar pose and body twist exposed by the native AS2 State Estimator host
+component:
+  id: fast-livo2
+  manifest: deployment/fast_livo2/component.yaml
+  shared_process_group: fast-livo2
+  coupled_capabilities: [perception.fast-livo2-registered-points]
+usage:
+  mode: continuous-provider
+  selection_phase: deployment
+  invocation_interface: AS2 state_estimator plugin_name=fast_livo2
+  switching_constraints:
+    - Enable authority only after the same source and runtime pass the shadow gate.
+    - Switch only while motion is stopped and the previous state/TF provider is inactive.
+inputs:
+  - interface: AirSim ROS 2 IMU, RGB and LiDAR adapters
+    schema: sensor_msgs/msg/Imu, Image and PointCloud2
+    time: preserved AirSim sample time in the shared clock domain
+    frame: IMU and LiDAR FLU; image optical frame
+outputs:
+  - interface: /<namespace>/self_localization/pose
+    schema: geometry_msgs/msg/PoseStamped
+    frame: canonical ENU AS2 earth
+    time: FAST-LIVO2 measurement time
+  - interface: /<namespace>/self_localization/twist
+    schema: geometry_msgs/msg/TwistStamped
+    frame: AS2 base frame
+    time: same accepted FAST-LIVO2 measurement time
+hardware_requirements:
+  sensors: [imu, rgb-camera, 3d-lidar]
+  compute: NVIDIA GPU and fixed onboard-computer runtime
+preconditions:
+  - Camera intrinsics and IMU/LiDAR/camera extrinsics match the vehicle.
+  - Instantaneous scan mode is declared when per-point time is unavailable.
+resources:
+  reads: [drone0.imu, drone0.front-rgb, drone0.lidar, drone0.clock]
+  writes: [drone0.state, drone0.tf]
+  conflicts: [other state or TF authority for the same vehicle]
+lifecycle:
+  readiness: fresh valid odometry and initialized registered-point output
+  freshness: stale, future, duplicate, non-monotonic and invalid states are rejected
+  failure: state or sensor loss invokes controlled recovery and PX4 landing
+  recovery: restart outside active motion; restart creates a new local-map epoch
+type_specific:
+  modality: visual-inertial-lidar
+  tf: AS2 host owns canonical ENU state and TF publication
+  reset: no seamless reset or hot map-frame continuity guarantee
+validation:
+  stage: reproduced
+  gate: deployment/fast_livo2/validation.yaml
+  evidence:
+    - log/fast_livo2/shadow-formal-ca38fa8-20261113-01/result.json
+    - log/fast_livo2/authority-formal-ca38fa8-20261113-01/result.json
+    - log/fast_livo2/sensor-fault-formal-ca38fa8-20261113-02/result.json
+    - log/fast_livo2/algorithm-fault-formal-ca38fa8-20261113-01/result.json
+  limitations:
+    - Real dataset and physical-flight validation are outside this acceptance scope.

@@ -9,10 +9,10 @@ from rclpy.node import Node
 from rclpy.executors import ExternalShutdownException
 from rclpy.qos import qos_profile_sensor_data
 from geometry_msgs.msg import TransformStamped
-from sensor_msgs.msg import CameraInfo, Image, PointCloud2, PointField
+from sensor_msgs.msg import CameraInfo, Image, Imu, PointCloud2, PointField
 from tf2_ros.static_transform_broadcaster import StaticTransformBroadcaster
 
-from .conversion import extrinsic, image_payload, lidar_payload
+from .conversion import extrinsic, image_payload, imu_payload, lidar_payload
 from .rpc import Rpc
 from .worker import SensorWorker
 
@@ -36,6 +36,7 @@ class SensorNode(Node):
         self.declare_parameter('rpc_port', 41471)
         self.declare_parameter('camera_rate_hz', 5.0)
         self.declare_parameter('camera_enabled', True)
+        self.declare_parameter('imu_rate_hz', 100.0)
         self.declare_parameter('lidar_rate_hz', 10.0)
         self.declare_parameter('rpc_timeout', 3.0)
         self.declare_parameter('source_color_order', 'rgb')
@@ -86,10 +87,19 @@ class SensorNode(Node):
                 callback = partial(self.camera, name, frame, requests, pubs, captures)
                 self.timer('camera_rate_hz', callback, 'camera-' + name)
         for name, config in vehicle.get('Sensors', {}).items():
-            if config.get('SensorType') != 6 or not config.get('Enabled', True):
+            if not config.get('Enabled', True):
                 continue
             identifier(name)
             frame = ns + '/' + name
+            sensor_type = config.get('SensorType')
+            if sensor_type == 2:
+                transforms.append(self.transform(frame, config))
+                pub = self.create_publisher(
+                    Imu, self.prefix + '/' + name + '/data', qos_profile_sensor_data)
+                self.timer('imu_rate_hz', partial(self.imu, name, frame, pub), 'imu-' + name)
+                continue
+            if sensor_type != 6:
+                continue
             data_frame = config.get('DataFrame', 'VehicleInertialFrame')
             if data_frame not in ('VehicleInertialFrame', 'SensorLocalFrame'):
                 raise ValueError('unsupported LiDAR DataFrame')
@@ -196,6 +206,24 @@ class SensorNode(Node):
         msg.is_dense = False
         publisher.publish(msg)
         self.last_stamp[name] = timestamp
+
+    def imu(self, name, frame, publisher):
+        response = self.rpc('getImuData', name, self.vehicle)
+        timestamp = int(response['time_stamp'])
+        key = (name, 'imu')
+        if self.last_stamp.get(key) == timestamp:
+            return
+        msg = Imu()
+        self.header(msg, frame, timestamp)
+        orientation, angular, acceleration = imu_payload(response)
+        (msg.orientation.x, msg.orientation.y, msg.orientation.z,
+         msg.orientation.w) = orientation
+        (msg.angular_velocity.x, msg.angular_velocity.y,
+         msg.angular_velocity.z) = angular
+        (msg.linear_acceleration.x, msg.linear_acceleration.y,
+         msg.linear_acceleration.z) = acceleration
+        publisher.publish(msg)
+        self.last_stamp[key] = timestamp
 
 
 def main():

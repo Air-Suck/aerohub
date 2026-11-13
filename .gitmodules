@@ -3,7 +3,7 @@
 	url = https://github.com/Popc0rn7/aerostack2-aerohub.git
 [submodule "pixhawk"]
 	path = as2/as2_platform_pixhawk
-	url = https://github.com/aerostack2/as2_platform_pixhawk.git
+	url = https://github.com/Popc0rn7/as2_platform-aerohub.git
 [submodule "px4"]
 	path = px4
 	url = https://github.com/PX4/PX4-Autopilot.git
@@ -38,3 +38,16 @@
 [submodule "src/state_estimator/dpv_slam/upstream"]
 	path = src/state_estimator/dpv_slam/upstream
 	url = https://github.com/princeton-vl/DPVO.git
+[submodule "src/state_estimator/fast_livo2/ros2_upstream"]
+	path = src/state_estimator/fast_livo2/ros2_upstream
+	url = https://github.com/SuperLDG/FASTLIVO2_ROS2.git
+[submodule "src/state_estimator/fast_livo2/dependencies/livox_ros_driver2"]
+	path = src/state_estimator/fast_livo2/dependencies/livox_ros_driver2
+	url = https://github.com/Livox-SDK/livox_ros_driver2.git
+[submodule "src/state_estimator/fast_livo2/dependencies/rpg_vikit"]
+	path = src/state_estimator/fast_livo2/dependencies/rpg_vikit
+	url = https://github.com/SuperLDG/rpg_vikit.git
+	branch = ros2
+[submodule "src/state_estimator/fast_livo2/dependencies/sophus"]
+	path = src/state_estimator/fast_livo2/dependencies/sophus
+	url = https://github.com/strasdat/Sophus.git

@@ -19,7 +19,10 @@ class SensorNodeTests(unittest.TestCase):
             settings = Path(temporary) / 'settings.json'
             settings.write_text(json.dumps({'Vehicles': {'PX4': {
                 'Cameras': {'Front': {'CaptureSettings': [{'ImageType': 0}, {'ImageType': 2}]}},
-                'Sensors': {'Lidar': {'SensorType': 6, 'Enabled': True}}
+                'Sensors': {
+                    'imu': {'SensorType': 2, 'Enabled': True},
+                    'Lidar': {'SensorType': 6, 'Enabled': True},
+                }
             }}}))
             rclpy.init(args=['--ros-args', '-p', 'settings_file:=' + str(settings),
                             '-p', 'camera_enabled:=' + str(camera_enabled).lower()])
@@ -39,7 +42,7 @@ class SensorNodeTests(unittest.TestCase):
             self.assertTrue(all(not worker.is_alive() for worker in workers))
 
     def test_rgb_and_depth_share_one_camera_worker(self):
-        self.check_workers(True, {'camera-Front', 'lidar-Lidar'})
+        self.check_workers(True, {'camera-Front', 'imu-imu', 'lidar-Lidar'})
 
     def test_camera_disabled_keeps_independent_lidar_worker(self):
-        self.check_workers(False, {'lidar-Lidar'})
+        self.check_workers(False, {'imu-imu', 'lidar-Lidar'})

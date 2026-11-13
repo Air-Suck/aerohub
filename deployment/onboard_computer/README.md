@@ -9,7 +9,7 @@ AeroHub 正式维护的 PC 机载计算开发与仿真验证环境，承载 AS2�
 日常源码迭代按下节使用工作区补编译，基础镜像维护单独处理。Library 接入仍必须完成 RoboPi 验证。
 
 镜像：`onboard_computer:v0.1.0`，与[固定 flight_board 镜像](../flight_board/README.md#使用固定镜像)配套。
-GHCR 地址为 `ghcr.io/popc0rn7/aerohub/onboard-computer:v0.1.0`，
+GHCR 地址为 `ghcr.io/air-suck/onboard-computer:v0.1.0`，
 拉取、权限与实际摘要见[发布说明](../releases/README.md#从-ghcr-获取)。
 基础环境使用 `onboard_computer_dependencies:humble-px4-1.18`，其中固定 PX4 消息已编译。
 该依赖镜像基于 `osrf/ros:humble-desktop-full-jammy`，默认锁定其 digest：
@@ -46,20 +46,25 @@ main 中的原 `deployment/platform/Dockerfile` 从第三方 Humble Desktop 镜�
 组件安装依赖。DDS Agent、PX4、传感器桥、时钟桥全部由 flight_board 提供，
 不在 onboard_computer 中安装或启动。源码和编译工具保留在镜像中，便于开发。
 
-AS2 直接使用主仓库锁定的 AeroHub fork 子模块，不再在 Docker 构建时应用等价的 AS2 补丁。Pixhawk 使用官方子模块，并在构建副本应用 `as2-platform-px4-v1.18.patch`。
+AS2 与 Pixhawk 都直接使用主仓库锁定的 AeroHub Fork 子模块，Docker 和 OHOS 构建不再应用等价补丁。
 主仓库通过 submodule 指针锁定版本；未提交的子仓库改动也会进入本地构建，
 分享版本时须先提交到对应 fork。
 当前源码基线如下：
 
 | 源码 | Commit |
 | --- | --- |
-| Aerostack2 | f387e0d733a5102808508bcbec1b9eca2c29d1f0 |
-| as2_platform_pixhawk | fcba062219935acef69dfa009c8be376c707ee8a |
+| Aerostack2 | ca38fa8e537f9bfbe7451e733f8b3f0dda034f88 |
+| as2_platform_pixhawk | 4e5616408e0078abf38387d5b8c681f1387cfed6 |
 | px4_msgs | 86d8239e962f6939e05c3737784f60c02fa884db |
 
 PX4 接口基础提交仍固定在依赖镜像中，并覆盖三个存在布局差异的消息。
 适配范围仅为本插件使用的接口，不能推广到整个 px4_msgs。
 固件基线和原始定义见 [消息说明](px4_msgs/overrides/README.md)。
+
+固定发布标签中用于核心控制链的消息已经通过历史飞行验证，但其
+`VehicleStatus` 和 `FailsafeFlags` 不含当前固件新增的诊断字段。需要这些
+topic 的验收程序使用[外部诊断 overlay](px4_msgs/README.md#固定发布镜像的外部诊断-overlay)；
+不得为此替换共享镜像或仓库规定的 PX4。
 
 ## AS2 交互路径
 
@@ -89,7 +94,7 @@ AirSim 相机和 LiDAR 经独立传感器后端直接发布到同一架飞机的
 namespace、FMU 前缀、系统 ID 和 `/clock` 形成同一份交互约定，与 AS2 运行
 在 PC 还是开发板无关。原生或交叉编译直接使用 `as2/aerostack2` 和
 `as2/as2_platform_pixhawk` 的源码，并提供相同消息定义的目标架构 px4_msgs。
-构建入口会在副本中应用对应补丁，不应手工修改官方子模块；PC 镜像里的 x86 库不能直接给 OpenHarmony 使用。
+构建入口直接导出锁定 Fork，不应手工修改子模块 checkout；PC 镜像里的 x86 库不能直接给 OpenHarmony 使用。
 源码路径和两条构建链的使用边界见[项目简介](../../docs/项目简介.md#pr-目录适配)。子模块改动需先在子仓库提交并推送，再提交主仓库指针。
 
 ## 加载交付镜像
