@@ -324,3 +324,10 @@ full_smoke.py 需要同目录 run_as2.py（来自 onboard_computer/run.py，将�
 板端只有 loopback 获得 IP，eth0 无地址；不能直接假设跨机 UDP DDS 可用。
 后续需配置局域网或 HDC TCP；HDC 不能直接转发 DDS UDP。
 本轮没有解锁、起飞或发送运动指令。
+
+## EGO 单机隔离候选
+
+在EGO专用工作区构建后，使用 `tools/robopi/deploy_lib.sh --component as2 --include-ego
+--as2-root /data/aerohub/validation/ego-v2-pr1`；建议先用 `--prepare-only <bundle>`。
+该选项与SUPER互斥且拒绝默认共享AS2前缀，沿用逐文件清单、重定位和事务安装。
+运行和故障审计脚本留在[EGO Demo](../airsim/demos/ego_planner_v2/README.md)，不进入板端install。

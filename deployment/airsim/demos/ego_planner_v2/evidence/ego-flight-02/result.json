@@ -1,0 +1,156 @@
+{
+  "passed": true,
+  "mode": "ego-single-short",
+  "motion_requested": true,
+  "gates": {
+    "takeoff_height_m": 2.0,
+    "takeoff_speed_m_s": 0.4,
+    "hold_seconds": 5.0,
+    "hold_height_error_m": 0.3,
+    "hold_horizontal_drift_m": 0.5,
+    "hold_speed_m_s": 0.3,
+    "land_speed_m_s": 0.3,
+    "landing_height_error_m": 0.2,
+    "ground_height_source": "AirSim scene vehicle pose; PX4 estimated height drift reported separately",
+    "data_timeout_s": 1.0,
+    "max_flight_speed_m_s": 2.0,
+    "goal_distance_m": 1.0,
+    "goal_error_m": 0.25,
+    "goal_timeout_s": 60,
+    "reference_max_velocity": 0.2415,
+    "reference_max_acceleration": 0.3675,
+    "preflight_cloud_corridor_radius_m": 0.6
+  },
+  "actions": [
+    {
+      "result": "takeoff_success",
+      "success": true,
+      "status": 4
+    },
+    {
+      "result": "land_success",
+      "success": true,
+      "status": 4
+    }
+  ],
+  "commands": [
+    {
+      "service": "set_arming_state",
+      "value": true,
+      "ack": 0
+    },
+    {
+      "service": "set_offboard_mode",
+      "value": true,
+      "ack": 0
+    }
+  ],
+  "recovery": [],
+  "origin_enu": [
+    0.9512297511100769,
+    -0.10054813325405121,
+    0.010345458984375
+  ],
+  "truth_origin_ned": [
+    -0.09952422976493835,
+    0.955534815788269,
+    0.6044859886169434
+  ],
+  "topology": "PC simulation; separate mission client and AS2 compute containers; RoboPi not covered",
+  "navigation_fresh_after_offboard": true,
+  "hover": {
+    "samples": 275,
+    "max_height_error_m": 0.0569000244140625,
+    "max_horizontal_drift_m": 0.032333323915215144,
+    "max_speed_m_s": 0.05375961322324733
+  },
+  "goal_candidates": [
+    {
+      "direction": [
+        1.0,
+        0.0
+      ],
+      "cloud_clearance_m": 4.389990024883547
+    },
+    {
+      "direction": [
+        0.0,
+        1.0
+      ],
+      "cloud_clearance_m": 4.4380161543888175
+    },
+    {
+      "direction": [
+        -1.0,
+        0.0
+      ],
+      "cloud_clearance_m": 3.9799408949890025
+    },
+    {
+      "direction": [
+        0.0,
+        -1.0
+      ],
+      "cloud_clearance_m": 4.017439518336951
+    }
+  ],
+  "goal_enu": [
+    1.9508737325668335,
+    -0.0780402347445488,
+    2.0225143432617188
+  ],
+  "ego_start_position": [
+    0.9508737325668335,
+    -0.0780402347445488,
+    2.0225143432617188
+  ],
+  "goal_error_m": 0.0327527509729731,
+  "ego_state": {
+    "state": "SUCCEEDED",
+    "reason": "",
+    "counts": {
+      "segments": 7,
+      "trajectories": 7,
+      "goals": 1
+    },
+    "rejected": {},
+    "revision": 7,
+    "completed": [
+      "drone0"
+    ],
+    "stop_confirmed": true
+  },
+  "native_polynomial_peaks": [
+    0.24130261023148616,
+    0.3651988459409151
+  ],
+  "ego_reference_count": 345,
+  "ego_downstream_counts": {
+    "reference_trajectory": 345,
+    "actuator": 294,
+    "actuator_twist": 60,
+    "px4_setpoint": 347
+  },
+  "max_polynomial_reference_error": 2.4418859239486186e-06,
+  "landing_estimated_height_change_m": 0.05477142333984375,
+  "landing_height_error_m": 0.0060446858406066895,
+  "counts": {
+    "platform": 450,
+    "controller": 460,
+    "odom": 2438,
+    "clock": 2643,
+    "cloud": 441,
+    "mode": 95,
+    "drone1_mode": 89,
+    "ack": 2,
+    "actuator_twist": 1615,
+    "reference_pose": 74,
+    "reference_twist": 296,
+    "px4_setpoint": 1863,
+    "reference_trajectory": 345,
+    "actuator": 294
+  },
+  "final_phase": "landed",
+  "final_disarmed": true,
+  "drone1_disarmed": true
+}

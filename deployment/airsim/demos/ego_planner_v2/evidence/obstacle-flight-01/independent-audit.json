@@ -1,0 +1,21 @@
+{
+  "passed": true,
+  "collision_observations": 170,
+  "collision_timestamp_before_ego": 1794401024632979200,
+  "collision_timestamps_during_ego": [
+    1794401024632979200
+  ],
+  "new_collision_timestamp_events": 0,
+  "ego_map_obstacle_points_before_goal": {
+    "map": 535,
+    "inflated": 6815
+  },
+  "trajectory_duration_sim_s": 49.25205063819885,
+  "measured_path_length_m": 10.159921365761091,
+  "scene_pose_max_lateral_detour_m": 1.6864662119190452,
+  "actual_speed_max_m_s": 0.25836910001639946,
+  "reference_velocity_max_m_s": 0.2378854775765814,
+  "reference_acceleration_max_m_s2": 0.3516779740633782,
+  "sampled_tracking_error_max_m": 0.0884823601165785,
+  "scope": "Scene pose is observer-only. Cloud clearance is distance to observed points, not a complete surface-distance guarantee."
+}

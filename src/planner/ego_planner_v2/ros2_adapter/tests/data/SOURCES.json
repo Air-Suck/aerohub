@@ -1,0 +1,23 @@
+[
+  {
+    "file": "unsafe-baseline.jsonl",
+    "source": "log/ego_planner_v2/full-comparison-02/ros2-free.jsonl",
+    "source_sha256": "8882d87fecb8613d6312eaf0cddf154c9589f1bb3beaed126e534e43492da6c9",
+    "sha256": "650639b71bbaeb4bb4c139f7bace253700c17f4e99a43da93be0e16ea28b3383",
+    "transformation": "trajectory records only, unchanged values"
+  },
+  {
+    "file": "repaired-free.jsonl",
+    "source": "log/ego_planner_v2/constraints-02/ros2-free.jsonl",
+    "source_sha256": "cfcaee17e898437d905ede7fce504a242989e7b7047183843210ad2dbf8b052f",
+    "sha256": "f72deca24fe2afc034f887abdd785bf05d69cf256ff86797eadbebaa5b3c9c70",
+    "transformation": "trajectory records only, unchanged values"
+  },
+  {
+    "file": "equivalent-final-polynomials.json",
+    "source": "log/ego_planner_v2/as2-complete-03/polynomials.json",
+    "source_sha256": "ea982fc59aa3f8642d8e10efa0133934300bc6a9bc3ab27daf77a3a015482c3f",
+    "sha256": "ea982fc59aa3f8642d8e10efa0133934300bc6a9bc3ab27daf77a3a015482c3f",
+    "transformation": "unchanged JSON values"
+  }
+]

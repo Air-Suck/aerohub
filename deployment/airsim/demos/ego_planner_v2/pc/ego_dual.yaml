@@ -1,0 +1,12 @@
+task:
+  task_id: ego_airsim_dual_independent
+vehicles: [drone0, drone1]
+planner_ids: {drone0: 0, drone1: 1}
+deployment:
+  drone0: {namespace: drone0, px4_origin_in_fleet_ned: [0.0, 0.0, 0.0]}
+  drone1: {namespace: drone1, px4_origin_in_fleet_ned: [0.0, -4.0, 0.0]}
+limits: {velocity: 0.23, acceleration: 0.35, tolerance: 0.05}
+planner:
+  parameters:
+    valid_from_lead: 0.4
+    sample_dt: 0.1

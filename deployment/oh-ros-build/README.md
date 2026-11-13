@@ -188,3 +188,10 @@ Python 扩展还需核对目标 SOABI；不要在 PC 上直接执行 OHOS 产物
 `log/airsim/ohos-official-builder-verification.log`。本轮未构建镜像、未部署或启动应用。
 没有把已有工作区的成功扩大为“全新机器零准备即可运行”。实际构建与运行
 记录见 [交付总入口](../README.md#验证记录)。
+
+## EGO-Planner-v2 独立工作区
+
+`tools/robopi/build_lib.sh ego-planner-v2` 只同步EGO六个原生包、Adapter与必要公共组件。
+OHOS_WORK_ROOT须为单独的ego命名工作区，禁止与Swarm同名包共用build/install；all保持原有范围。
+目标依赖元数据需要重定位时只操作准备后的副本。构建、打包及已验收边界见
+[EGO Demo](../airsim/demos/ego_planner_v2/README.md#robopi-单机)。

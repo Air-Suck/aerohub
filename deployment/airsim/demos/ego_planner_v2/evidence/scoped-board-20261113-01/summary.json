@@ -1,0 +1,189 @@
+{
+  "scope": "updated per-vehicle EGO on RoboPi; AirSim/PX4 single-UAV regression",
+  "passed": true,
+  "board_load": {
+    "all_manifest_hashes": true,
+    "target_python_abi": true,
+    "new_adapter_modules": true,
+    "terminal_fix_sha": true,
+    "new_native_prefix_aarch64": true,
+    "follow_timed_path_typesupport": true
+  },
+  "board_cleanup": {
+    "ego-v2-20261112_manifest_unchanged": true,
+    "ego-v2-scoped-20261113_manifest_unchanged": true,
+    "no_candidate_processes": true,
+    "six_sessions_safely_stopped": true
+  },
+  "target_numeric_scope_tests": {
+    "passed": true,
+    "total": 15
+  },
+  "temporary_firewall_removed": true,
+  "formal_skill_updates": [
+    "skill/deploy-lib/references/robopi.md",
+    "skill/hdc-helper/SKILL.md",
+    "skill/uav-sim-e2e-validation/SKILL.md"
+  ],
+  "candidate": "/data/aerohub/validation/ego-v2-scoped-20261113",
+  "base_candidate": "/data/aerohub/validation/ego-v2-20261112",
+  "base_manifest_sha256": "1bf8e3b3d5789f9a88ba146b935b232aeb4e78e94b22900ad4699a76a43ce0cc",
+  "adapter_conversion_sha256": "bbba1855ecdc68597cf49438eb3b21e1ef1f43216198b0785afef5fdbdc860e7",
+  "native_binaries": "reused unchanged from verified API18 AArch64/Python3.12 candidate",
+  "ground": {
+    "passed": true,
+    "checks": [
+      49,
+      49
+    ],
+    "continuous_ready_s": 82.23355269432068
+  },
+  "short": {
+    "passed": true,
+    "checks": [
+      51,
+      51
+    ],
+    "metrics": {
+      "hover_samples": 281,
+      "hover_height_error_m": 0.04473876953125,
+      "hover_horizontal_drift_m": 0.04062939533791334,
+      "hover_speed_m_s": 0.046246547204290125,
+      "landing_height_error_m": 0.004011750221252441,
+      "inactive_peer_displacement_m": 0.0,
+      "max_clock_bound_s": 0.24084317684173584,
+      "native_trajectories": 9,
+      "native_navigation_trajectories": 8,
+      "stationary_native_outputs": 1,
+      "adapter_accepted_trajectories": 8,
+      "adapter_rejections": {
+        "odom_stamp": 1
+      },
+      "execution_revisions": 8,
+      "references": 391,
+      "goal_error_m": 0.033236743612970306,
+      "duration_wall_s": 9.63460636138916,
+      "actual_speed_peak_m_s": 0.24574307583503768,
+      "explicit_terminal_holds": 0,
+      "max_pva_error": [
+        9.207543727757883e-08,
+        1.25060382850151e-06,
+        3.900433634386337e-05
+      ],
+      "native_peak_velocity": 0.24102566648600163,
+      "reference_peak_velocity": 0.23918856000717592,
+      "native_peak_acceleration": 0.3553357627101296,
+      "reference_peak_acceleration": 0.3553303967761815,
+      "latest_pose_reference_tracking_difference_m": 0.0744917481843035
+    }
+  },
+  "faults": {
+    "cancel": {
+      "passed": true,
+      "checks": [
+        62,
+        62
+      ],
+      "metrics": {
+        "hover_samples": 275,
+        "hover_height_error_m": 0.04645538330078125,
+        "hover_horizontal_drift_m": 0.035398319546704866,
+        "hover_speed_m_s": 0.04683199442995973,
+        "landing_height_error_m": 0.007560133934020996,
+        "inactive_peer_displacement_m": 0.0,
+        "max_clock_bound_s": 0.29611921310424805,
+        "detection_wall_s": 0.23409128189086914,
+        "stop_confirmation_wall_s": 0.32755494117736816,
+        "prefault_peak_actual_speed_m_s": 0.1268823813285862,
+        "physical_stop_wall_s": 0.47453808784484863,
+        "residual_displacement_m": 0.09731390090190173,
+        "hold_sim_s": 5.634120225906372,
+        "post_stop_drift_m": 0.19244343568351138,
+        "native_reference_pva_error": 2.5032478330934335e-08
+      }
+    },
+    "planner_exit": {
+      "passed": true,
+      "checks": [
+        62,
+        62
+      ],
+      "metrics": {
+        "hover_samples": 270,
+        "hover_height_error_m": 0.0495452880859375,
+        "hover_horizontal_drift_m": 0.040426467174615045,
+        "hover_speed_m_s": 0.050468290777421355,
+        "landing_height_error_m": 0.005225002765655518,
+        "inactive_peer_displacement_m": 0.0,
+        "max_clock_bound_s": 0.2537575960159302,
+        "detection_wall_s": 1.113222599029541,
+        "stop_confirmation_wall_s": 1.113222599029541,
+        "prefault_peak_actual_speed_m_s": 0.12861102950518283,
+        "physical_stop_wall_s": 1.2541847229003906,
+        "residual_displacement_m": 0.2150526255387458,
+        "hold_sim_s": 5.541118144989014,
+        "post_stop_drift_m": 0.16080090538293176,
+        "native_reference_pva_error": 2.58141734248382e-08
+      }
+    },
+    "cloud": {
+      "passed": true,
+      "checks": [
+        65,
+        65
+      ],
+      "metrics": {
+        "hover_samples": 278,
+        "hover_height_error_m": 0.05185699462890625,
+        "hover_horizontal_drift_m": 0.03483727448741081,
+        "hover_speed_m_s": 0.05093319086777324,
+        "landing_height_error_m": 0.0067217350006103516,
+        "inactive_peer_displacement_m": 0.0,
+        "max_clock_bound_s": 0.2923281192779541,
+        "detection_wall_s": 0.8972926139831543,
+        "stop_confirmation_wall_s": 1.0606634616851807,
+        "prefault_peak_actual_speed_m_s": 0.1375022288628739,
+        "physical_stop_wall_s": 1.2202038764953613,
+        "residual_displacement_m": 0.2011517744356714,
+        "hold_sim_s": 6.642141580581665,
+        "post_stop_drift_m": 0.20334742160175706,
+        "native_reference_pva_error": 2.8903795307145833e-08
+      }
+    },
+    "odom": {
+      "passed": true,
+      "checks": [
+        65,
+        65
+      ],
+      "metrics": {
+        "hover_samples": 277,
+        "hover_height_error_m": 0.04494476318359375,
+        "hover_horizontal_drift_m": 0.020059401572028884,
+        "hover_speed_m_s": 0.047515817608252166,
+        "landing_height_error_m": 8.344650268554688e-06,
+        "inactive_peer_displacement_m": 0.0,
+        "max_clock_bound_s": 0.3146747350692749,
+        "detection_wall_s": 0.9025890827178955,
+        "stop_confirmation_wall_s": 1.063166856765747,
+        "prefault_peak_actual_speed_m_s": 0.11904119058365853,
+        "physical_stop_wall_s": 1.2234017848968506,
+        "residual_displacement_m": 0.16983815325853038,
+        "hold_sim_s": 5.832124471664429,
+        "post_stop_drift_m": 0.16795089034212363,
+        "native_reference_pva_error": 2.645541069008696e-08
+      }
+    }
+  },
+  "fault_audit_checks": 254,
+  "worst_stop_confirmation_s": 1.113222599029541,
+  "worst_residual_displacement_m": 0.2150526255387458,
+  "limitations": [
+    "Short flight did not trigger the explicit terminal-hold branch; target frozen-input numerical checks are separate evidence.",
+    "Best covering native polynomial PVA match is not a per-revision identity correlation.",
+    "No mixed-UAV runtime/flight acceptance yet; hybrid-next-plan.json is read-only preparation.",
+    "Temporary clock sync plus bounded run monitoring does not prove long-term drift reliability."
+  ],
+  "rollback": "Stop owned session after confirmed disarm; select preserved old candidate with no vehicle key. Original installation and evidence remain unchanged.",
+  "next": "Integrate each compute worker and scoped clients with shared deployment/swarm, then mixed DDS/ground gate before mixed flight."
+}

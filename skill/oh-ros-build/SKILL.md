@@ -31,3 +31,11 @@ description: 为 OpenHarmony 交叉编译 ROS 2 包时使用，涵盖构建条�
 符号版本：曾有默认 16.43 无版本符号、已有 16.50 提供所需版本的情况。用
 `SUPER_PNG_LIBRARY` 显式选择匹配目标库并在候选局部部署，保留共享 SDK/系统库；
 不要使用忽略未解析符号的链接选项。此经验只适用于该依赖快照，不能替代其他版本 ABI 核对。
+
+## 板端导出的目标依赖
+
+复用匹配本板的ROS/第三方依赖时先核对API、架构、Python SOABI、必要头文件和库，
+通过归档保留符号链接。导出的CMake/pkg-config元数据可能含构建机绝对路径，重定位只
+作用于准备后的隔离副本，不能修改板端系统或原始导出。ROSIDL选择主机Python生成代码时
+仍须核对目标Python/NumPy头文件；PC类型支持不能复制到OHOS。EGO实例的元数据处理入口
+为 `tools/robopi/relocate_ego_target_metadata.py`，它只接受已准备工作区的root/install。

@@ -1,0 +1,167 @@
+{
+  "kind": "historical-summary-records-not-raw-bags",
+  "files": [
+    {
+      "file": "evidence/fault-recovery-index.json",
+      "original": "log/ego_planner_v2/fault-recovery-index.json",
+      "sha256": "84b5176e758c1e7db402f0aef47f00a8846361a9afa534fbb62cff4d4ed38d5c",
+      "bytes": 5528
+    },
+    {
+      "file": "evidence/dual-crossing-09/independent-audit.json",
+      "original": "log/ego_planner_v2/dual-crossing-09/independent-audit.json",
+      "sha256": "518b1c78d4c2e0b4228e14364f90f2f3485285cfe300299bcdf289ef0a986280",
+      "bytes": 4213
+    },
+    {
+      "file": "evidence/scoped-board-20261113-01/summary.json",
+      "original": "log/ego_planner_v2/scoped-board-20261113-01/summary.json",
+      "sha256": "39e49918c7f8a1dba65581c7afe8299706947803caa8c81a1ce8a7994b0e1c43",
+      "bytes": 7277
+    },
+    {
+      "file": "evidence/scoped-board-20261113-01/load-check.json",
+      "original": "log/ego_planner_v2/scoped-board-20261113-01/load-check.json",
+      "sha256": "fe8dbd2ca0dec529cbd766b5c04a83ddbfc38bf19a2aee9e620c371112da7be7",
+      "bytes": 1079
+    },
+    {
+      "file": "evidence/scoped-board-20261113-01/scoped-ground-01/ground-audit.json",
+      "original": "log/ego_planner_v2/scoped-board-20261113-01/scoped-ground-01/ground-audit.json",
+      "sha256": "b34d29168f40e47d469e45943639b5841fe6b596c3899f238c6653a240c5d1ac",
+      "bytes": 3144
+    },
+    {
+      "file": "evidence/scoped-board-20261113-01/scoped-short-01/basic-audit.json",
+      "original": "log/ego_planner_v2/scoped-board-20261113-01/scoped-short-01/basic-audit.json",
+      "sha256": "76d7825ad4f8a247eb2fe0df58070519aa87c7a52438d0cb66d34c8dc83785c5",
+      "bytes": 1567
+    },
+    {
+      "file": "evidence/scoped-board-20261113-01/scoped-short-01/ego-audit.json",
+      "original": "log/ego_planner_v2/scoped-board-20261113-01/scoped-short-01/ego-audit.json",
+      "sha256": "a2232bba540bf5728e29c8ac0f04b0bde10e34279ccd9f41fbe176e45c3ac137",
+      "bytes": 3485
+    },
+    {
+      "file": "evidence/scoped-board-20261113-01/scoped-short-01/ego-common-audit.json",
+      "original": "log/ego_planner_v2/scoped-board-20261113-01/scoped-short-01/ego-common-audit.json",
+      "sha256": "6d2791f7125737c8ef0ba6dbdd706826bea9c87ae6b11a46581ec90099170c80",
+      "bytes": 1529
+    },
+    {
+      "file": "evidence/scoped-board-20261113-01/scoped-cancel-01/basic-audit.json",
+      "original": "log/ego_planner_v2/scoped-board-20261113-01/scoped-cancel-01/basic-audit.json",
+      "sha256": "b46abfb4c8adca1eab49da6607842a088361b11d1a330a45146525f48aeaa345",
+      "bytes": 1567
+    },
+    {
+      "file": "evidence/scoped-board-20261113-01/scoped-cancel-01/fault-audit.json",
+      "original": "log/ego_planner_v2/scoped-board-20261113-01/scoped-cancel-01/fault-audit.json",
+      "sha256": "b9838a2280ee5751bfcb2af70652fb32e81d3631796633eb3aadd824dc39f1f5",
+      "bytes": 3120
+    },
+    {
+      "file": "evidence/scoped-board-20261113-01/scoped-cancel-01/fault-common-audit.json",
+      "original": "log/ego_planner_v2/scoped-board-20261113-01/scoped-cancel-01/fault-common-audit.json",
+      "sha256": "ae70820b514dffeb94ed673e0c7873c761cfed806352b5e0b9e96a6a12df2b7a",
+      "bytes": 1532
+    },
+    {
+      "file": "evidence/scoped-board-20261113-01/scoped-planner_exit-01/basic-audit.json",
+      "original": "log/ego_planner_v2/scoped-board-20261113-01/scoped-planner_exit-01/basic-audit.json",
+      "sha256": "f93d27d13ad32571e4f69375faf63241a415130a2b6fdb18588ac14a4e3d0a36",
+      "bytes": 1610
+    },
+    {
+      "file": "evidence/scoped-board-20261113-01/scoped-planner_exit-01/fault-audit.json",
+      "original": "log/ego_planner_v2/scoped-board-20261113-01/scoped-planner_exit-01/fault-audit.json",
+      "sha256": "ad77f68853ff4897d3df280090bf6c618a20b2ded42bdbaf331f3d8a7a0359b7",
+      "bytes": 3124
+    },
+    {
+      "file": "evidence/scoped-board-20261113-01/scoped-planner_exit-01/fault-common-audit.json",
+      "original": "log/ego_planner_v2/scoped-board-20261113-01/scoped-planner_exit-01/fault-common-audit.json",
+      "sha256": "fce1b7b606392bf296c8648d50ece7c7f4992f276ce8149c9133913f2c9d80bd",
+      "bytes": 1573
+    },
+    {
+      "file": "evidence/scoped-board-20261113-01/scoped-cloud-01/basic-audit.json",
+      "original": "log/ego_planner_v2/scoped-board-20261113-01/scoped-cloud-01/basic-audit.json",
+      "sha256": "4daa32c5486534284039eb5c7ffa19aa77b54522350eff046138e116c9d38c2f",
+      "bytes": 1566
+    },
+    {
+      "file": "evidence/scoped-board-20261113-01/scoped-cloud-01/fault-audit.json",
+      "original": "log/ego_planner_v2/scoped-board-20261113-01/scoped-cloud-01/fault-audit.json",
+      "sha256": "098c2289cfa7aae503c9953f42f7a601c2befd6a5d21509446eff5f4a18ecf62",
+      "bytes": 3227
+    },
+    {
+      "file": "evidence/scoped-board-20261113-01/scoped-cloud-01/fault-common-audit.json",
+      "original": "log/ego_planner_v2/scoped-board-20261113-01/scoped-cloud-01/fault-common-audit.json",
+      "sha256": "4fa956fe2627a83a4ce16bda9496d4ffa4626d98fc4a1d63e721ea34e7d4bd55",
+      "bytes": 1531
+    },
+    {
+      "file": "evidence/scoped-board-20261113-01/scoped-odom-01/basic-audit.json",
+      "original": "log/ego_planner_v2/scoped-board-20261113-01/scoped-odom-01/basic-audit.json",
+      "sha256": "07fec131a18025d2d9698e53dc06a27ad13defff947807caf7e799148dde68c0",
+      "bytes": 1567
+    },
+    {
+      "file": "evidence/scoped-board-20261113-01/scoped-odom-01/fault-audit.json",
+      "original": "log/ego_planner_v2/scoped-board-20261113-01/scoped-odom-01/fault-audit.json",
+      "sha256": "4e7b2e47f8bc063ca7de90c33f3f82ea043735786ad8f0af0ace851037653f7a",
+      "bytes": 3228
+    },
+    {
+      "file": "evidence/scoped-board-20261113-01/scoped-odom-01/fault-common-audit.json",
+      "original": "log/ego_planner_v2/scoped-board-20261113-01/scoped-odom-01/fault-common-audit.json",
+      "sha256": "ef25004b43bd13dc65e34bb375457fea198f820fe9e888a6ca51ee992854a587",
+      "bytes": 1533
+    },
+    {
+      "file": "evidence/basic-flight-05/result.json",
+      "original": "log/ego_planner_v2/basic-flight-05/result.json",
+      "sha256": "db17254f2056d10babe46eace186134c28891d0aa31111d27c8342ac22ecb357",
+      "bytes": 1884
+    },
+    {
+      "file": "evidence/ego-flight-02/result.json",
+      "original": "log/ego_planner_v2/ego-flight-02/result.json",
+      "sha256": "2d248fc7892d0de5a91e4242deb570430736553423ca35a4ecda285db424a75c",
+      "bytes": 3442
+    },
+    {
+      "file": "evidence/obstacle-flight-01/result.json",
+      "original": "log/ego_planner_v2/obstacle-flight-01/result.json",
+      "sha256": "c5ab8d2d83a26e75a3d4327ef57d8f83141f67b4387e091423b3817de512c74c",
+      "bytes": 4127
+    },
+    {
+      "file": "evidence/obstacle-flight-01/independent-audit.json",
+      "original": "log/ego_planner_v2/obstacle-flight-01/independent-audit.json",
+      "sha256": "11a07d7e3bdf84bf59d8ddd8ef6fbac39ac8481ac429af4a4031b59fbf27a012",
+      "bytes": 801
+    },
+    {
+      "file": "evidence/dual-landing-fixed-03/result.json",
+      "original": "log/ego_planner_v2/dual-landing-fixed-03/result.json",
+      "sha256": "47bf2d3cd093b912ec58d0ee025291338dfbd9c4260a31704e8cc19a8e411f9d",
+      "bytes": 2716
+    },
+    {
+      "file": "evidence/dual-landing-fixed-03/independent-audit.json",
+      "original": "log/ego_planner_v2/dual-landing-fixed-03/independent-audit.json",
+      "sha256": "58914c83945a416136a1168cdaa02e655323e415a26ef60546900ef889dfbb84",
+      "bytes": 2254
+    },
+    {
+      "file": "evidence/dual-crossing-09/result.json",
+      "original": "log/ego_planner_v2/dual-crossing-09/result.json",
+      "sha256": "0615a6f36b3dc5c332065c3ec20601126bc68ed5b61936840530cad3de1a5efc",
+      "bytes": 4566
+    }
+  ]
+}

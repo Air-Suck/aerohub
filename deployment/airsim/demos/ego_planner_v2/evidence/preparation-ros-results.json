@@ -1,0 +1,82 @@
+[
+  {
+    "case": "cancel",
+    "passed": true,
+    "cleanup": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "original_time_pva_error": {
+      "drone0": 4.9191427403671995e-08,
+      "drone1": 8.818638592700268e-07
+    },
+    "sha256": "ae079a953ff41e7cb20e653818c07f4f831d7c2f068a88c12f7004e2a8dea08d"
+  },
+  {
+    "case": "complete",
+    "passed": true,
+    "cleanup": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "original_time_pva_error": {
+      "drone0": 1.6564587038414569e-06,
+      "drone1": 1.3398480266657575e-06
+    },
+    "sha256": "46af3025ef7485fd0afd6d4e77f0e7e6e2f4fb3b2de68c2fd7fed652d5a1366f"
+  },
+  {
+    "case": "legacy-cancel",
+    "passed": true,
+    "cleanup": [
+      0,
+      0,
+      0
+    ],
+    "original_time_pva_error": null,
+    "sha256": "f0bb41f571cce37d20f8d66d8314783081327bb565a0443b8415d8a2059daed5"
+  },
+  {
+    "case": "stale",
+    "passed": true,
+    "cleanup": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "original_time_pva_error": {
+      "drone0": 9.758573532026027e-07,
+      "drone1": 1.8098554141476875e-08
+    },
+    "sha256": "cf9ded935424e05ea8ce9877ba3d5a564bdb2a9732468dbc9877844c827142d7"
+  },
+  {
+    "case": "replay-late",
+    "passed": true,
+    "cleanup": [
+      0,
+      0
+    ],
+    "original_time_pva_error": {
+      "drone1": 1.37862964211255e-06
+    },
+    "sha256": "3f9c2e4c776850ce41898aaf52401f8660772472954024224d1ded43a688c3f8"
+  },
+  {
+    "case": "replay-normal",
+    "passed": true,
+    "cleanup": [
+      0,
+      0
+    ],
+    "original_time_pva_error": {
+      "drone1": 1.2674687174807353e-06
+    },
+    "sha256": "16d69d8661f6d8b9679de4bff3a9e45ea265e99fabb4d39ead815cf286623e6e"
+  }
+]
