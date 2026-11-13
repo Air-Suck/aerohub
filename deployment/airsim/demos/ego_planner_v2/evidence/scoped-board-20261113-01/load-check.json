@@ -1,0 +1,18 @@
+{
+  "passed": true,
+  "checks": {
+    "all_manifest_hashes": true,
+    "target_python_abi": true,
+    "new_adapter_modules": true,
+    "terminal_fix_sha": true,
+    "new_native_prefix_aarch64": true,
+    "follow_timed_path_typesupport": true
+  },
+  "python": "3.12.12 (main, Jan 15 2026, 16:53:49) [Clang 15.0.4 (llvm-project 7e44bed824d29a5240f775e22e13d753a66218dd)]",
+  "modules": {
+    "uav_ego_planner_adapter.node": "/data/aerohub/validation/ego-v2-scoped-20261113/install/uav_ego_planner_adapter/lib/python3.12/site-packages/uav_ego_planner_adapter/node.py",
+    "uav_ego_planner_adapter.conversion": "/data/aerohub/validation/ego-v2-scoped-20261113/install/uav_ego_planner_adapter/lib/python3.12/site-packages/uav_ego_planner_adapter/conversion.py",
+    "uav_ego_planner_adapter.scope": "/data/aerohub/validation/ego-v2-scoped-20261113/install/uav_ego_planner_adapter/lib/python3.12/site-packages/uav_ego_planner_adapter/scope.py"
+  },
+  "native": "/data/aerohub/validation/ego-v2-scoped-20261113/install/ego_planner/lib/ego_planner/ego_planner_node"
+}

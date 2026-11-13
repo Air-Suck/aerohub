@@ -1,0 +1,31 @@
+schema_version: '0.1'
+id: aerohub.planner.ego-planner-v2
+version: '0.1.0'
+license: GPL-3.0
+source:
+  upstream: https://github.com/ZJU-FAST-Lab/EGO-Planner-v2
+  commit: 9d85475ea7b9bf5c112cf7c3c3d0d3f9e96d9010
+  native: src/planner/ego_planner_v2/ros2_adapter/native
+  adapter: src/planner/ego_planner_v2/ros2_adapter/bridge
+capabilities: [planner.ego-planner-v2]
+cards: [cards/planner/ego-planner-v2.yaml]
+architectures: [linux-amd64-humble, ohos-api18-aarch64-humble-python312]
+dependencies: [as2_navigation_inputs, uav_planner_framework, uav_planner_interfaces, uav_follow_path_execution, as2_platform_pixhawk]
+deployment:
+  pc_build: deployment/airsim/demos/ego_planner_v2/run.py build
+  board_build: tools/robopi/build_lib.sh ego-planner-v2
+  board_package: tools/robopi/deploy_lib.sh --component as2 --include-ego --as2-root /data/aerohub/validation/ego-v2-pr1
+  board_lifecycle: deployment/airsim/demos/ego_planner_v2/robopi/run.py
+  instructions: deployment/airsim/demos/ego_planner_v2/README.md
+  roles: 'AirSim and PX4 SITL on PC; EGO/Adapter/AS2 on selected compute; task client on workstation'
+  isolation: 'EGO-only build/install; never overlay Swarm-Formation packages of the same name'
+lifecycle:
+  ready: 'fresh navigation/point cloud/TF/clock, unique authorities, native heartbeat, actions ready, adapter WAITING, disarmed'
+  stop: 'cancel then await stop_confirmed; task lands and confirms disarmed/idle before owned deployment cleanup'
+  rollback: 'stop owned sessions; select a preserved candidate config and start a new session; no hot state transfer'
+  conflicts: 'another EGO/Swarm install or another motion owner for the same vehicle'
+validation:
+  status: partial
+  evidence: deployment/airsim/demos/ego_planner_v2/VALIDATION.md
+  scope: 'historical PC single/dual and RoboPi single simulation; relocation checks separately recorded'
+  exclusions: [mixed-pc-robopi, both-compute-on-one-board, real-flight, localization-loss, network-loss, long-term-reliability]

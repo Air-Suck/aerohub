@@ -1,0 +1,111 @@
+{
+  "passed": true,
+  "stage": "dual",
+  "active": [
+    0,
+    1
+  ],
+  "recovery": [],
+  "preferred_direction": "west",
+  "collision_observation": "stationary checkpoints; no collision RPC while moving or landing",
+  "topology": "PC AirSim + fixed flight-board PX4; fixed onboard AS2/EGO; separate workstation mission client",
+  "gates": {
+    "takeoff_height_m": 2.0,
+    "hover_seconds": 5.0,
+    "hover_height_error_m": 0.3,
+    "hover_horizontal_drift_m": 0.5,
+    "hover_speed_m_s": 0.3,
+    "landing_height_error_m": 0.2,
+    "min_separation_m": 2.0,
+    "goal_distance_m": 1.0,
+    "goal_error_m": 0.25,
+    "goal_timeout_wall_s": 60,
+    "reference_max_velocity": 0.2415,
+    "reference_max_acceleration": 0.3675,
+    "max_pva_error": 0.0001,
+    "data_timeout_wall_s": 1.0,
+    "actual_ego_speed_envelope_m_s": 0.5,
+    "airborne_speed_envelope_m_s": 2.0,
+    "max_horizontal_excursion_m": 3.0,
+    "observed_route_clearance_m": 0.6,
+    "route_tube_radius_m": 0.5,
+    "minimum_simultaneous_motion_s": 0.5,
+    "scene_odom_alignment_error_m": 0.5,
+    "max_landing_physics_scene_z_gap_m": 0.3
+  },
+  "initial_scene_odom_relative_xy_error_m": 0.016971910673905823,
+  "initial_positions_world_enu": [
+    [
+      8.189669609069824,
+      6.971324443817139,
+      0.02170562744140625
+    ],
+    [
+      -3.084880530834198,
+      -0.11165931820869446,
+      -0.03693389892578125
+    ]
+  ],
+  "routes": {
+    "starts_world_enu": [
+      [
+        8.186936378479004,
+        6.984250545501709,
+        2.0070037841796875
+      ],
+      [
+        -3.0929765105247498,
+        -0.09811533242464066,
+        1.9700088500976562
+      ]
+    ],
+    "goals": [
+      {
+        "local": [
+          7.186936378479004,
+          6.984250545501709,
+          2.0070037841796875
+        ],
+        "world": [
+          7.186936378479004,
+          6.984250545501709,
+          2.0070037841796875
+        ],
+        "clearance": 1.3399262129336231
+      },
+      {
+        "local": [
+          -0.09297651052474976,
+          -0.09811533242464066,
+          1.9700088500976562
+        ],
+        "world": [
+          -4.09297651052475,
+          -0.09811533242464066,
+          1.9700088500976562
+        ],
+        "clearance": 3.813626396729356
+      }
+    ],
+    "minimum_route_separation_m": 12.483504478289287
+  },
+  "simultaneous_motion_sim_s": 5.210109996795654,
+  "ego_state": {
+    "state": "SUCCEEDED",
+    "reason": "",
+    "counts": {
+      "segments": 7,
+      "trajectories": 14,
+      "goals": 2
+    },
+    "rejected": {},
+    "revision": 7,
+    "completed": [
+      "drone0",
+      "drone1"
+    ],
+    "stop_confirmed": true
+  },
+  "minimum_odom_separation_m": 13.239986395086861,
+  "both_disarmed": true
+}

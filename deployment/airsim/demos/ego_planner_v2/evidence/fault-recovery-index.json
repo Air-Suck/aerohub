@@ -1,0 +1,186 @@
+{
+  "passed": true,
+  "rows": [
+    {
+      "run": "fault-single-cancel-01",
+      "fleet": "single",
+      "case": "cancel",
+      "passed": true,
+      "detection_wall_s": 0.0611320119969605,
+      "stop_confirmation_wall_s": 0.25300035999680404,
+      "physical_stop_wall_s": 0.5201158279996889,
+      "residual_displacement_m": [
+        0.0986753014951856
+      ],
+      "post_stop_drift_m": [
+        0.19114766139393383
+      ],
+      "minimum_odom_separation_m": 3.7799278818379434,
+      "both_disarmed": true,
+      "emergency_fallback": false,
+      "audit_passed": 31,
+      "audit_total": 31
+    },
+    {
+      "run": "fault-single-exit-01",
+      "fleet": "single",
+      "case": "planner_exit",
+      "passed": true,
+      "detection_wall_s": 0.9528338340023765,
+      "stop_confirmation_wall_s": 0.9528338340023765,
+      "physical_stop_wall_s": 1.140093469999556,
+      "residual_displacement_m": [
+        0.1560923990382748
+      ],
+      "post_stop_drift_m": [
+        0.16207009726793536
+      ],
+      "minimum_odom_separation_m": 3.8426761066887005,
+      "both_disarmed": true,
+      "emergency_fallback": false,
+      "audit_passed": 32,
+      "audit_total": 32
+    },
+    {
+      "run": "fault-single-cloud-01",
+      "fleet": "single",
+      "case": "cloud",
+      "passed": true,
+      "detection_wall_s": 0.81265556499784,
+      "stop_confirmation_wall_s": 0.81265556499784,
+      "physical_stop_wall_s": 1.1893346359975112,
+      "residual_displacement_m": [
+        0.1603263274021782
+      ],
+      "post_stop_drift_m": [
+        0.17332694517289993
+      ],
+      "minimum_odom_separation_m": 3.9405757534656605,
+      "both_disarmed": true,
+      "emergency_fallback": false,
+      "audit_passed": 35,
+      "audit_total": 35
+    },
+    {
+      "run": "fault-single-odom-01",
+      "fleet": "single",
+      "case": "odom",
+      "passed": true,
+      "detection_wall_s": 0.8871890190021077,
+      "stop_confirmation_wall_s": 1.1086991730007867,
+      "physical_stop_wall_s": 1.2950489579998248,
+      "residual_displacement_m": [
+        0.1990910864595652
+      ],
+      "post_stop_drift_m": [
+        0.19277498832407503
+      ],
+      "minimum_odom_separation_m": 4.027034558273926,
+      "both_disarmed": true,
+      "emergency_fallback": false,
+      "audit_passed": 35,
+      "audit_total": 35
+    },
+    {
+      "run": "fault-dual-cancel-01",
+      "fleet": "dual",
+      "case": "cancel",
+      "passed": true,
+      "detection_wall_s": 0.12733444100013003,
+      "stop_confirmation_wall_s": 0.12733444100013003,
+      "physical_stop_wall_s": 0.4630253269970126,
+      "residual_displacement_m": [
+        0.09145104108563513,
+        0.1044180866832208
+      ],
+      "post_stop_drift_m": [
+        0.19475846288641047,
+        0.21293024848539238
+      ],
+      "minimum_odom_separation_m": 4.07699320244409,
+      "both_disarmed": true,
+      "emergency_fallback": false,
+      "audit_passed": 46,
+      "audit_total": 46
+    },
+    {
+      "run": "fault-dual-exit-01",
+      "fleet": "dual",
+      "case": "planner_exit",
+      "passed": true,
+      "detection_wall_s": 0.9184942030005914,
+      "stop_confirmation_wall_s": 0.9184942030005914,
+      "physical_stop_wall_s": 1.2036218699977326,
+      "residual_displacement_m": [
+        0.1528852010433319,
+        0.17176316012164544
+      ],
+      "post_stop_drift_m": [
+        0.15451723178893,
+        0.16984057946874057
+      ],
+      "minimum_odom_separation_m": 4.163361139291907,
+      "both_disarmed": true,
+      "emergency_fallback": false,
+      "audit_passed": 47,
+      "audit_total": 47
+    },
+    {
+      "run": "fault-dual-cloud-01",
+      "fleet": "dual",
+      "case": "cloud",
+      "passed": true,
+      "detection_wall_s": 0.8903838500009442,
+      "stop_confirmation_wall_s": 0.8903838500009442,
+      "physical_stop_wall_s": 1.2833393389992125,
+      "residual_displacement_m": [
+        0.16928800478046532,
+        0.17166168945337038
+      ],
+      "post_stop_drift_m": [
+        0.17870842589430352,
+        0.17910351439346017
+      ],
+      "minimum_odom_separation_m": 4.272019609173479,
+      "both_disarmed": true,
+      "emergency_fallback": false,
+      "audit_passed": 50,
+      "audit_total": 50
+    },
+    {
+      "run": "fault-dual-odom-01",
+      "fleet": "dual",
+      "case": "odom",
+      "passed": true,
+      "detection_wall_s": 0.8332063470006688,
+      "stop_confirmation_wall_s": 1.0684715960014728,
+      "physical_stop_wall_s": 1.2379829210003663,
+      "residual_displacement_m": [
+        0.15062130964147874,
+        0.18521155999567399
+      ],
+      "post_stop_drift_m": [
+        0.14886965103749839,
+        0.1846731947722477
+      ],
+      "minimum_odom_separation_m": 4.343420531237374,
+      "both_disarmed": true,
+      "emergency_fallback": false,
+      "audit_passed": 50,
+      "audit_total": 50
+    }
+  ],
+  "coverage": "PC AirSim/PX4 fixed Survey List images; one run per combination",
+  "recovery": "adapter fleet stop -> AS2 hover -> workstation mission requests native AS2 Land -> disarm",
+  "not_covered": [
+    "AS2 authoritative localization outage",
+    "adapter exit",
+    "PX4 exit",
+    "total network loss",
+    "stop service unavailable",
+    "physical hardware"
+  ],
+  "source_install_verified": true,
+  "final_both_disarmed": true,
+  "final_behaviors_idle": true
+}

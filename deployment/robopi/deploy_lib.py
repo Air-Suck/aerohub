@@ -27,6 +27,7 @@ AS2_PACKAGES = {'uav_planner_interfaces', 'uav_follow_path_execution', 'as2_beha
                 'as2_motion_reference_handlers', 'as2_msgs', 'as2_platform_pixhawk', 'as2_state_estimator',
                 'mocap4r2_msgs', 'px4_msgs', 'rmw_fastrtps_shared_cpp', 'vision_msgs'}
 SUPER_PACKAGES = {'super_planner','rog_map','mars_quadrotor_msgs','uav_super_adapter','uav_planner_framework','as2_navigation_inputs'}
+EGO_PACKAGES = {'ego_planner','path_searching','plan_env','quadrotor_msgs','traj_opt','traj_utils','uav_ego_planner_adapter','uav_planner_framework','as2_navigation_inputs'}
 OLD = '/data/local/tmp/aerohub-as2'
 
 
@@ -61,7 +62,10 @@ def relocate_elf(path):
     path.write_bytes(data)
 
 
-def package(source, destination, component, as2_root=AS2, include_super=False):
+def package(source, destination, component, as2_root=AS2, include_super=False, include_ego=False):
+    if include_ego and (include_super or component != "as2" or as2_root == AS2):
+        raise ValueError("--include-ego requires an isolated --component as2 candidate, without --include-super")
+    extra = EGO_PACKAGES if include_ego else (SUPER_PACKAGES if include_super else set())
     if include_super and component != "as2":
         raise ValueError("--include-super requires --component as2")
     if as2_root != AS2 and component != "as2":
@@ -72,12 +76,12 @@ def package(source, destination, component, as2_root=AS2, include_super=False):
     groups = ['as2', *APPLICATIONS] if component == 'all' else [component]
     changed = []
     for group in groups:
-        required = (AS2_PACKAGES | (SUPER_PACKAGES if include_super else set())) if group == 'as2' else APPLICATIONS[group]
+        required = (AS2_PACKAGES | extra) if group == 'as2' else APPLICATIONS[group]
         selected = sorted(packages & required)
         if set(selected) != required:
             raise RuntimeError('Missing packages for '+group+': '+str(sorted(required-packages)))
         prefix = as2_root if group == 'as2' else '/data/aerohub/lib/'+group
-        mapping = {name: as2_root+'/install/'+name for name in AS2_PACKAGES | (SUPER_PACKAGES if include_super else set())}
+        mapping = {name: as2_root+'/install/'+name for name in AS2_PACKAGES | extra}
         if group != 'as2': mapping.update({name:prefix+'/install/'+name for name in required})
         for name in selected:
             namespace = source.parent/'src'/name/name
@@ -109,6 +113,9 @@ def package(source, destination, component, as2_root=AS2, include_super=False):
                     for old in (OLD+'/install/', '/work/ws/install/', AS2+'/install/',
                                 *('/data/aerohub/lib/'+app+'/install/' for app in APPLICATIONS)):
                         updated = re.sub(re.escape(old+dependency)+r"(?=[/\s\"'`;:]|$)", lambda _: final, updated)
+                if include_ego:
+                    for dependency, final in mapping.items():
+                        updated = re.sub(r'/data/aerohub/validation/[^/\s]+/install/'+re.escape(dependency)+r"(?=[/\s\"'`;:]|$)", lambda _: final, updated)
                 if updated.startswith('#!') and 'python' in updated.split('\n', 1)[0]:
                     updated = '#!/sys_prod/robot/out/bin/python3\n'+updated.split('\n', 1)[1]
                 if OLD+'/install/' in updated: raise RuntimeError('Unresolved old prefix: '+str(path))
@@ -129,10 +136,13 @@ def main():
     parser.add_argument('--component', choices=['as2', *APPLICATIONS, 'all'], default='all')
     parser.add_argument('--install', type=Path)
     parser.add_argument('--include-super', action='store_true', help='Include OHOS SUPER native/bridge and navigation in isolated AS2 candidate')
+    parser.add_argument('--include-ego', action='store_true', help='Include EGO native/Adapter/navigation in an isolated AS2 candidate')
     parser.add_argument('--as2-root', default=AS2)
     parser.add_argument('--activate-config', action='store_true', help='Switch .env ROBOPI_ROOT after deployment; omit while old runtime is in use')
     parser.add_argument('--prepare-only', type=Path, help='Create a local bundle without contacting the device')
     args = parser.parse_args()
+    if args.include_ego and (args.include_super or args.component != 'as2' or args.as2_root == AS2):
+        parser.error('--include-ego requires a separate --as2-root and --component as2; mutually exclusive with --include-super')
     if args.include_super and args.component != 'as2':parser.error('--include-super requires --component as2')
     if args.as2_root != AS2 and (args.component != 'as2' or args.activate_config):
         parser.error('Candidate root requires --component as2 without --activate-config')
@@ -143,7 +153,7 @@ def main():
     source = args.install or work/'ws/install'
     with tempfile.TemporaryDirectory(prefix='aerohub-deploy-') as temporary:
         stage = Path(temporary)
-        package(source, stage, args.component, args.as2_root, args.include_super)
+        package(source, stage, args.component, args.as2_root, args.include_super, args.include_ego)
         if (stage/'as2').exists():
             files = {'board_env.sh': ROOT/'deployment/robopi/board_env.sh',
                      'board_smoke.py': ROOT/'deployment/robopi/diagnostics/board_smoke.py',

@@ -40,3 +40,11 @@ AS2 直接启动估计器时，需要同时加载安装包中的 `config/state_e
 Swarm 在 OHOS 构建时使用标准 Eigen 头路径；点云转换头文件包会导出未使用的 PCL IO 库，当前实现单独声明头文件/消息依赖，只链接实际使用的 PCL common。首次板端规划还发现原有 `desired_start_time` 未初始化：Clang 优化后读取空旧轨迹并崩溃。初始化首轮不使用的占位值后，单节点首条 PolyTraj 检查通过。
 
 2026-11-05 的持久布局简单验收：AS2 五秒启动与消息序列化、CAT-ORA 一次服务/JSON 请求、Swarm 单节点静态输入到两段五阶轨迹均通过。记录见 `log/pr-history/deployment/robopi/validation/startup.json`、两个库的 `validation/robopi-smoke.json`。这些不代表完整回归、真实点云或飞行验收。
+
+## 已验收基线上的纯 Python 增量候选
+
+当消息、原生库和扩展 ABI 均未变化，且已有匹配本板的验证安装时，可复用该安装生成隔离候选；不必重建 SDK、展开镜像或重新复制系统 ROS。先逐文件核对原 manifest、确认源/目标候选无运行消费者，再在板内 staging 复制 install（保留符号链接和执行权限，不使用共享可写文件的硬链接），只传需要更新的 Python/launch 文件及源码哈希。
+
+新前缀仍须检查环境入口、逐包 setup、ament parent_prefix_path 和绝对符号链接。文本前缀可显式重定位；若 ELF 内仍含旧候选搜索路径，停止文本替换并走原生 RPATH 检查流程。重新生成目标 manifest，再逐文件复核原安装未变，完整成功后切换 staging。原安装保留策略服从本次用户约定，不能将示例清理规则用于删除用户要求保留的版本。
+
+目标解释器实际导入后记录模块 __file__ 和源码哈希、SOABI、ament 找到的原生二进制前缀/架构以及 Action 类型支持序列化结果。安装文件存在或 PC 导入成功均不能代替这些检查。新功能还有新增模块时一并核对，例如 scope.py；不要只替换 node.py 而留下隐含依赖缺项。原生二进制复用应记录基线 manifest 和未变哈希，准确区分“增量安装”与“重新交叉编译”。

@@ -1,0 +1,71 @@
+name: ego-migration-ground
+x-board: &board
+  image: ghcr.io/popc0rn7/aerohub/flight-board@sha256:1eff3190ca7870d0267ddb1531365dd7c68d85c6e52ade3d25b17b84b4758843
+  pull_policy: never
+  init: true
+  volumes:
+    - ./settings.snapshot.json:/config/settings.json:ro
+  stop_grace_period: 12s
+x-environment: &environment
+  ROS_DOMAIN_ID: '93'
+  ROS_LOCALHOST_ONLY: '0'
+  AIRSIM_HOST: "${EGO_AIRSIM_HOST:?resolve host.docker.internal to IPv4 first}"
+  AIRSIM_RPC_PORT: '41451'
+  FLIGHT_BOARD_CAMERAS: '0'
+services:
+  ego:
+    profiles: [ego-flight]
+    image: ghcr.io/popc0rn7/aerohub/onboard-computer@sha256:964048afd46a9d394aa771d801d48b57de8a2b2665979b1ba6f2b5e273f9adb9
+    pull_policy: never
+    init: true
+    environment:
+      ROS_DOMAIN_ID: '93'
+      ROS_LOCALHOST_ONLY: '0'
+    volumes:
+      - ../../../../../:/input:ro
+      - ${EGO_PC_WORK:?set EGO_PC_WORK to the external PC build directory}:/work:ro
+    entrypoint: [bash, /input/deployment/airsim/demos/ego_planner_v2/pc/start_ego_runtime.sh]
+    stop_signal: SIGINT
+    stop_grace_period: 15s
+  as2:
+    profiles: [as2-ground]
+    image: ghcr.io/popc0rn7/aerohub/onboard-computer@sha256:964048afd46a9d394aa771d801d48b57de8a2b2665979b1ba6f2b5e273f9adb9
+    pull_policy: never
+    init: true
+    environment:
+      ROS_DOMAIN_ID: '93'
+      ROS_LOCALHOST_ONLY: '0'
+    volumes:
+      - ../../../../../:/input:ro
+      - ${EGO_PC_WORK:?set EGO_PC_WORK to the external PC build directory}:/work:ro
+    entrypoint: [bash, /input/deployment/airsim/demos/ego_planner_v2/pc/start_as2_ground.sh]
+    stop_signal: SIGINT
+    stop_grace_period: 15s
+  drone0:
+    <<: *board
+    environment:
+      <<: *environment
+      VEHICLE_NAME: Drone0
+      VEHICLE_NAMESPACE: drone0
+      PX4_INSTANCE: '0'
+      PX4_SYSTEM_ID: '135'
+      XRCE_AGENT_PORT: '8888'
+    ports: ['14580:14580/udp']
+    command: [vehicle]
+  drone1:
+    <<: *board
+    environment:
+      <<: *environment
+      VEHICLE_NAME: Drone1
+      VEHICLE_NAMESPACE: drone1
+      PX4_INSTANCE: '1'
+      PX4_SYSTEM_ID: '136'
+      XRCE_AGENT_PORT: '8889'
+    ports: ['14581:14581/udp']
+    command: [vehicle]
+  clock:
+    <<: *board
+    environment:
+      <<: *environment
+      VEHICLE_NAME: Drone0
+    command: [clock]

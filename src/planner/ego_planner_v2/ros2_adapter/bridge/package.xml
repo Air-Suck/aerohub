@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>uav_ego_planner_adapter</name><version>0.1.0</version>
+  <description>EGO Planner native ROS 2 to AeroHub timed FollowPath integration.</description>
+  <maintainer email="maintainer@example.com">EGO migration maintainers</maintainer>
+  <license>GPL-3.0</license>
+  <buildtool_depend>ament_python</buildtool_depend>
+  <exec_depend>rclpy</exec_depend><exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-yaml</exec_depend><exec_depend>launch_ros</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend><exec_depend>ament_index_python</exec_depend>
+  <exec_depend>sensor_msgs_py</exec_depend><exec_depend>nav_msgs</exec_depend>
+  <exec_depend>quadrotor_msgs</exec_depend><exec_depend>traj_utils</exec_depend>
+  <exec_depend>uav_planner_interfaces</exec_depend><exec_depend>uav_planner_framework</exec_depend>
+  <exec_depend>std_srvs</exec_depend><exec_depend>std_msgs</exec_depend>
+  <exec_depend>as2_msgs</exec_depend>
+  <export><build_type>ament_python</build_type></export>
+</package>

@@ -1,0 +1,45 @@
+schema_version: '0.1'
+id: planner.ego-planner-v2
+name: EGO-Planner-v2 local planning
+version: '0.1.0'
+type: planner
+description: Rolling fifth-order trajectories from measured odometry and point clouds, executed through AS2 FollowTimedPath.
+component:
+  id: aerohub.planner.ego-planner-v2
+  manifest: src/planner/ego_planner_v2/component.yaml
+  shared_process_group: per-vehicle-ego-planner-and-adapter
+  coupled_capabilities: []
+usage:
+  mode: goal-topic-with-status-and-cancel-service
+  selection_phase: deployment
+  invocation_interface: quadrotor_msgs/msg/GoalSet
+  switching_constraints: [stop-before-switching-provider, new-session-after-terminal-state]
+inputs:
+  - topic: '/<namespace>/ego/goal'
+    frame: common ENU with configured vehicle origins
+  - topic: '/<namespace>/navigation/odom'
+    semantics: measured local pose and body-frame twist; original timestamps retained
+  - topic: '/<namespace>/navigation/points'
+    semantics: calibrated obstacle point cloud; not a mock map
+outputs:
+  - action: '/<namespace>/follow_timed_path'
+    semantics: original absolute epoch and sampled polynomial PVA; no endpoint-only GoTo replacement
+resources:
+  reads: [navigation-odometry, navigation-cloud, TF, clock, native-peer-trajectories]
+  writes: [vehicle-FollowTimedPath-session]
+  conflicts: [other-motion-owner-on-same-vehicle, Swarm-Formation-same-package-overlay]
+  enforcement: 'Adapter owns configured vehicle; execution server arbitrates native/timed FollowPath; no general Mission arbitration claimed'
+preconditions: [native-takeoff-completed, fresh-navigation-and-clock, compatible-installed-interfaces, ready-execution-server]
+lifecycle:
+  startup: launch ego_as2.launch.py with explicit vehicle and resolved_config
+  feedback: '/<namespace>/ego/status JSON with task state, revisions and stop_confirmed'
+  cancel_or_stop: '/<namespace>/ego/cancel Trigger; service response alone is not physical stop'
+  failure: 'stale planning input/heartbeat or rejected execution closes the task and requests stop'
+  recovery: 'workstation confirms stopped/hovering, invokes native Land, then waits for disarmed; closed task does not resume'
+type_specific:
+  terminal_hold: 'explicit final stationary segment, at most 100ms beyond original end; original end knot retained'
+  legacy_mode: 'empty vehicle selects centralized /ego API and fleet-wide stop semantics'
+validation:
+  stage: partial
+  evidence: [deployment/airsim/demos/ego_planner_v2/VALIDATION.md]
+  limitations: [not-a-general-Mission-or-Tool, mixed-deployment-not-in-this-PR, no-real-flight, no-localization-loss-or-network-loss-acceptance]

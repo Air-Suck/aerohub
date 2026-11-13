@@ -1,0 +1,80 @@
+{
+  "passed": true,
+  "mode": "basic",
+  "motion_requested": true,
+  "gates": {
+    "takeoff_height_m": 2.0,
+    "takeoff_speed_m_s": 0.4,
+    "hold_seconds": 5.0,
+    "hold_height_error_m": 0.3,
+    "hold_horizontal_drift_m": 0.5,
+    "hold_speed_m_s": 0.3,
+    "land_speed_m_s": 0.3,
+    "landing_height_error_m": 0.2,
+    "ground_height_source": "AirSim scene vehicle pose; PX4 estimated height drift reported separately",
+    "data_timeout_s": 1.0,
+    "max_flight_speed_m_s": 2.0
+  },
+  "actions": [
+    {
+      "result": "takeoff_success",
+      "success": true,
+      "status": 4
+    },
+    {
+      "result": "land_success",
+      "success": true,
+      "status": 4
+    }
+  ],
+  "commands": [
+    {
+      "service": "set_arming_state",
+      "value": true,
+      "ack": 0
+    },
+    {
+      "service": "set_offboard_mode",
+      "value": true,
+      "ack": 0
+    }
+  ],
+  "recovery": [],
+  "origin_enu": [
+    0.02846919745206833,
+    -0.08735218644142151,
+    0.0257110595703125
+  ],
+  "truth_origin_ned": [
+    -0.09143493324518204,
+    0.02582358382642269,
+    0.6118192076683044
+  ],
+  "topology": "PC simulation; separate mission client and AS2 compute containers; RoboPi not covered",
+  "navigation_fresh_after_offboard": true,
+  "hover": {
+    "samples": 279,
+    "max_height_error_m": 0.0444488525390625,
+    "max_horizontal_drift_m": 0.020747784179069237,
+    "max_speed_m_s": 0.03641514781285687
+  },
+  "landing_estimated_height_change_m": 0.027557373046875,
+  "landing_height_error_m": 0.005968153476715088,
+  "counts": {
+    "clock": 2265,
+    "controller": 401,
+    "drone1_mode": 79,
+    "mode": 84,
+    "odom": 2016,
+    "cloud": 362,
+    "platform": 363,
+    "ack": 2,
+    "reference_pose": 51,
+    "reference_twist": 273,
+    "actuator_twist": 1543,
+    "px4_setpoint": 1545
+  },
+  "final_phase": "landed",
+  "final_disarmed": true,
+  "drone1_disarmed": true
+}
