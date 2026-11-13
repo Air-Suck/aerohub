@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run one board launcher and one independent PC supervisor thread per other UAV."""
+"""Run one independent onboard-computer service per UAV, optionally replacing one with a board."""
 from __future__ import annotations
 
 import argparse
@@ -142,28 +142,39 @@ def build_services(
 ) -> list[ServiceThread]:
     services = []
     board = topology["board_vehicle"]
-    board_context = command_context(topology, scenario, board, output)
-    board_role = "center" if scenario["center_vehicle"] == board["name"] else scenario["board_role"]
-    services.append(
-        ServiceThread(
-            identity=f"board-launcher-{board['name']}",
-            placement="board",
-            command=format_command(config["nodes"]["board"]["launch_command"], board_context),
-            environment=_environment(os.environ, board_context, "board", board_role),
-            log_path=output / f"board-{board['name']}.log",
-            stop_event=stop_event,
+    if board is not None:
+        board_context = command_context(topology, scenario, board, output)
+        board_role = (
+            "center" if scenario["center_vehicle"] == board["name"] else scenario["board_role"]
         )
-    )
-    for vehicle in topology["pc_vehicles"]:
+        services.append(
+            ServiceThread(
+                identity=f"board-launcher-{board['name']}",
+                placement="physical_board",
+                command=format_command(
+                    config["nodes"]["board"]["launch_command"], board_context
+                ),
+                environment=_environment(
+                    os.environ, board_context, "physical_board", board_role
+                ),
+                log_path=output / f"board-{board['name']}.log",
+                stop_event=stop_event,
+            )
+        )
+    for vehicle in topology["onboard_computer_vehicles"]:
         context = command_context(topology, scenario, vehicle, output)
         role = "center" if scenario["center_vehicle"] == vehicle["name"] else "worker"
         services.append(
             ServiceThread(
-                identity=f"pc-{vehicle['name']}",
-                placement="pc",
-                command=format_command(config["nodes"]["pc"]["launch_command"], context),
-                environment=_environment(os.environ, context, "pc", role),
-                log_path=output / f"pc-{vehicle['name']}.log",
+                identity=f"onboard-{vehicle['name']}",
+                placement="onboard_computer_container",
+                command=format_command(
+                    config["nodes"]["onboard_computer"]["launch_command"], context
+                ),
+                environment=_environment(
+                    os.environ, context, "onboard_computer_container", role
+                ),
+                log_path=output / f"onboard-{vehicle['name']}.log",
                 stop_event=stop_event,
             )
         )
@@ -211,14 +222,15 @@ def run_scenario(
                 service.error = service.error or "startup timeout"
         if any(service.error for service in services):
             raise RuntimeError("one or more swarm services failed during startup")
-        pc_threads = [
+        onboard_threads = [
             service.thread_id for service in services
-            if service.identity.startswith("pc-")
+            if service.identity.startswith("onboard-")
         ]
-        if len(pc_threads) != topology["vehicle_count"] - 1:
-            raise RuntimeError("PC vehicle thread count does not match fleet size")
-        if len(set(pc_threads)) != len(pc_threads):
-            raise RuntimeError("PC vehicle nodes do not have independent supervisor threads")
+        expected = topology["invariants"]["onboard_computer_vehicle_count"]
+        if len(onboard_threads) != expected:
+            raise RuntimeError("onboard-computer thread count does not match deployment stage")
+        if len(set(onboard_threads)) != len(onboard_threads):
+            raise RuntimeError("onboard-computer nodes lack independent supervisor threads")
         deadline = time.monotonic() + duration
         while time.monotonic() < deadline:
             failures = [service for service in services if service.exited_before_stop or service.error]
@@ -251,16 +263,16 @@ def run_scenario(
         "topology": topology,
         "services": records,
         "assertions": {
-            "exactly_one_board_vehicle": topology["invariants"]["board_vehicle_count"] == 1,
-            "pc_vehicle_count": sum(
-                record["identity"].startswith("pc-") for record in records
+            "board_vehicle_count": topology["invariants"]["board_vehicle_count"],
+            "onboard_computer_vehicle_count": sum(
+                record["identity"].startswith("onboard-") for record in records
             ),
-            "pc_threads_are_independent": len(
+            "onboard_computer_threads_are_independent": len(
                 {
                     record["supervisor_thread_id"] for record in records
-                    if record["identity"].startswith("pc-")
+                    if record["identity"].startswith("onboard-")
                 }
-            ) == topology["vehicle_count"] - 1,
+            ) == topology["invariants"]["onboard_computer_vehicle_count"],
             "ground_station_on_pc": (
                 not config["ground_station"]["required"]
                 or any(record["placement"] == "pc-ground-station" for record in records)
