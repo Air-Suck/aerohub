@@ -270,16 +270,23 @@ def start(profile_path, directory, timeout, binary_override=None):
     save(directory, state)
     try:
         deadline = time.monotonic() + timeout
+        listener_ready_since = None
         while time.monotonic() < deadline:
             if child.poll() is not None:
                 raise RuntimeError('AirSim exited; see ' + state['log'])
             if host_alive(state) and all(listen_owned(child.pid, port) for port in ports):
-                state['overhead_tracker'] = start_overhead_tracker(
-                    profile, settings, runtime_settings, directory
-                )
-                state['phase'] = 'listening'
-                save(directory, state)
-                return state
+                if listener_ready_since is None:
+                    listener_ready_since = time.monotonic()
+                if (time.monotonic() - listener_ready_since
+                        >= profile['overhead_view']['startup_delay_s']):
+                    state['overhead_tracker'] = start_overhead_tracker(
+                        profile, settings, runtime_settings, directory
+                    )
+                    state['phase'] = 'listening'
+                    save(directory, state)
+                    return state
+            else:
+                listener_ready_since = None
             time.sleep(0.2)
         raise TimeoutError('AirSim listener readiness timed out; see ' + state['log'])
     except BaseException:

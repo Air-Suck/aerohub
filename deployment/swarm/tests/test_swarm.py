@@ -7,6 +7,7 @@ import unittest
 from unittest import mock
 
 from deployment.swarm.overhead_view import centroid, pose_position, update_camera
+from deployment.swarm.view import camera_options
 from deployment.swarm.orchestrator import run_matrix
 from deployment.swarm.topology import (
     ConfigError,
@@ -130,6 +131,14 @@ class SwarmTopologyTest(unittest.TestCase):
 
 
 class OverheadTrackerTest(unittest.TestCase):
+    def test_camera_startup_delay_is_explicit_and_non_negative(self):
+        self.assertEqual(3.0, camera_options()["startup_delay_s"])
+        self.assertEqual(
+            1.5, camera_options({"startup_delay_s": 1.5})["startup_delay_s"]
+        )
+        with self.assertRaisesRegex(ValueError, "startup_delay_s"):
+            camera_options({"startup_delay_s": -0.1})
+
     def test_centroid_uses_all_live_vehicle_poses(self):
         points = [(1.0, 3.0, -2.0), (5.0, -1.0, -4.0), (0.0, 4.0, 0.0)]
         self.assertEqual((2.0, 2.0, -2.0), centroid(points))

@@ -11,6 +11,7 @@ DEFAULT_CAMERA = {
     "altitude_m": 25.0,
     "fov_degrees": 90.0,
     "update_hz": 5.0,
+    "startup_delay_s": 3.0,
     "primary_view": False,
 }
 
@@ -25,6 +26,9 @@ def camera_options(value: dict[str, Any] | None = None) -> dict[str, Any]:
         result[key] = float(result[key])
         if result[key] <= 0:
             raise ValueError(f"airsim.camera.{key} must be positive")
+    result["startup_delay_s"] = float(result["startup_delay_s"])
+    if result["startup_delay_s"] < 0:
+        raise ValueError("airsim.camera.startup_delay_s must be non-negative")
     if not isinstance(result["primary_view"], bool):
         raise ValueError("airsim.camera.primary_view must be boolean")
     return result
