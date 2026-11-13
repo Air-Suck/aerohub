@@ -74,6 +74,30 @@ def save(directory, state):
     temporary.replace(directory / 'state.json')
 
 
+def load_tracker_state(process):
+    try:
+        data = json.loads(Path(process['state']).read_text())
+        return data if isinstance(data, dict) else {}
+    except (OSError, KeyError, json.JSONDecodeError):
+        return {}
+
+
+def tracker_state_healthy(process, state, now=None, minimum_updates=2):
+    now = time.time() if now is None else now
+    try:
+        latest = float(state['last_update_unix_s'])
+        update_hz = float(process['update_hz'])
+        return (
+            int(state['update_count']) >= minimum_updates
+            and int(state['consecutive_failures']) == 0
+            and now - latest <= max(2.0, 5.0 / update_hz)
+            and len(state['latest_centroid']) == 3
+            and len(state['latest_camera_position']) == 3
+        )
+    except (KeyError, TypeError, ValueError, ZeroDivisionError):
+        return False
+
+
 def terminate_process(process):
     if not auxiliary_alive(process):
         return
@@ -86,6 +110,7 @@ def terminate_process(process):
 
 
 def stop(state, directory):
+    state['overhead_tracker_state'] = load_tracker_state(state.get('overhead_tracker', {}))
     terminate_process(state.get('overhead_tracker', {}))
     if host_alive(state):
         os.killpg(state['pid'], signal.SIGTERM)
@@ -98,8 +123,9 @@ def stop(state, directory):
     save(directory, state)
 
 
-def start_overhead_tracker(profile, runtime_settings, directory):
+def start_overhead_tracker(profile, settings, runtime_settings, directory):
     options = camera_options(profile.get('overhead_view'))
+    state_path = directory / 'overhead-view-state.json'
     command = [
         sys.executable,
         str(REPOSITORY / 'deployment/swarm/overhead_view.py'),
@@ -107,7 +133,10 @@ def start_overhead_tracker(profile, runtime_settings, directory):
         '--camera-name', options['name'],
         '--altitude', str(options['altitude_m']),
         '--update-hz', str(options['update_hz']),
+        '--state-file', str(state_path),
     ]
+    if options['primary_view']:
+        command += ['--primary-vehicle-camera', next(iter(settings['Vehicles']))]
     log_path = directory / 'overhead-view.log'
     with log_path.open('w') as log:
         child = subprocess.Popen(
@@ -119,10 +148,22 @@ def start_overhead_tracker(profile, runtime_settings, directory):
         'binary': str(Path(sys.executable).resolve()),
         'command': command,
         'log': str(log_path),
+        'state': str(state_path),
+        'update_hz': options['update_hz'],
+        'primary_view': options['primary_view'],
     }
-    time.sleep(0.5)
-    if child.poll() is not None:
-        raise RuntimeError('overhead view tracker exited; see ' + str(log_path))
+    deadline = time.monotonic() + 5.0
+    while time.monotonic() < deadline:
+        if child.poll() is not None:
+            raise RuntimeError('overhead view tracker exited; see ' + str(log_path))
+        tracker_state = load_tracker_state(process)
+        if tracker_state_healthy(process, tracker_state):
+            process['initial_state'] = tracker_state
+            break
+        time.sleep(0.1)
+    else:
+        terminate_process(process)
+        raise RuntimeError('overhead view tracker did not produce fresh updates; see ' + str(log_path))
     return process
 
 
@@ -234,7 +275,7 @@ def start(profile_path, directory, timeout, binary_override=None):
                 raise RuntimeError('AirSim exited; see ' + state['log'])
             if host_alive(state) and all(listen_owned(child.pid, port) for port in ports):
                 state['overhead_tracker'] = start_overhead_tracker(
-                    profile, runtime_settings, directory
+                    profile, settings, runtime_settings, directory
                 )
                 state['phase'] = 'listening'
                 save(directory, state)
@@ -272,8 +313,18 @@ def main():
             state['overhead_tracker_alive'] = auxiliary_alive(
                 state.get('overhead_tracker', {})
             )
+            tracker_state = load_tracker_state(state.get('overhead_tracker', {}))
+            state['overhead_tracker_state'] = tracker_state
+            state['overhead_tracker_healthy'] = tracker_state_healthy(
+                state.get('overhead_tracker', {}), tracker_state
+            )
+            save(directory, state)
             print(json.dumps(state, indent=2))
-            return 0 if state['alive'] and state['overhead_tracker_alive'] else 1
+            return 0 if (
+                state['alive']
+                and state['overhead_tracker_alive']
+                and state['overhead_tracker_healthy']
+            ) else 1
         if args.action == 'stop':
             stop(state, directory)
             return 0

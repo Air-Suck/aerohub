@@ -120,6 +120,14 @@ class SwarmTopologyTest(unittest.TestCase):
             self.assertEqual("Manual", settings["ViewMode"])
             self.assertTrue(settings["SubWindows"][0]["Visible"])
 
+    def test_primary_overhead_view_uses_live_updatable_fpv_camera(self):
+        config = copy.deepcopy(self.config)
+        config["airsim"]["camera"]["primary_view"] = True
+        settings = render_airsim_settings(config)
+        self.assertEqual("Fpv", settings["ViewMode"])
+        self.assertEqual(-90.0, settings["Vehicles"]["Drone0"]["Cameras"]["0"]["Pitch"])
+        self.assertTrue(settings["SubWindows"][0]["External"])
+
 
 class OverheadTrackerTest(unittest.TestCase):
     def test_centroid_uses_all_live_vehicle_poses(self):
@@ -171,6 +179,49 @@ class OverheadTrackerTest(unittest.TestCase):
             pose["position"],
         )
 
+    def test_primary_and_evidence_camera_follow_two_live_centroids(self):
+        identity = {"w_val": 1, "x_val": 0, "y_val": 0, "z_val": 0}
+
+        class FakeRpc:
+            def __init__(self):
+                self.calls = []
+                self.poses = {}
+
+            def call(self, method, *args):
+                if method == "simGetVehiclePose":
+                    return self.poses[args[0]]
+                if method == "simSetCameraPose":
+                    self.calls.append(args)
+                    return True
+                raise AssertionError(method)
+
+        def pose(x, y, z):
+            return {
+                "position": {"x_val": x, "y_val": y, "z_val": z},
+                "orientation": identity,
+            }
+
+        rpc = FakeRpc()
+        camera = {"name": "swarm_overhead", "altitude_m": 20.0}
+        rpc.poses = {"Drone0": pose(0, 0, -2), "Drone1": pose(4, 0, -2)}
+        first = update_camera(rpc, ["Drone0", "Drone1"], camera, "Drone0")
+        rpc.poses = {"Drone0": pose(1, 2, -3), "Drone1": pose(9, 6, -3)}
+        second = update_camera(rpc, ["Drone0", "Drone1"], camera, "Drone0")
+
+        self.assertEqual((2.0, 0.0, -2.0), first)
+        self.assertEqual((5.0, 4.0, -3.0), second)
+        external = [call for call in rpc.calls if call[3] is True]
+        primary = [call for call in rpc.calls if call[3] is False]
+        self.assertEqual(2, len(external))
+        self.assertEqual(2, len(primary))
+        self.assertNotEqual(
+            external[0][1]["position"], external[1][1]["position"]
+        )
+        self.assertNotEqual(
+            primary[0][1]["position"], primary[1][1]["position"]
+        )
+        self.assertTrue(all(call[0] == "0" and call[2] == "Drone0" for call in primary))
+
 
 
 class ManagerTrackerDependencyTest(unittest.TestCase):
@@ -187,6 +238,22 @@ class ManagerTrackerDependencyTest(unittest.TestCase):
         with mock.patch.object(manager.importlib.util, "find_spec", return_value=None):
             with self.assertRaisesRegex(ImportError, "requirements.txt"):
                 manager.load_profile(ROOT / "simulator/airsim/scenarios/swarm_open_field/profile.json")
+
+    def test_tracker_health_requires_fresh_structured_updates(self):
+        manager = self.load_manager()
+        process = {"update_hz": 5.0}
+        state = {
+            "last_update_unix_s": 100.0,
+            "update_count": 2,
+            "consecutive_failures": 0,
+            "latest_centroid": [1, 2, 3],
+            "latest_camera_position": [1, 2, -22],
+        }
+        self.assertTrue(manager.tracker_state_healthy(process, state, now=100.5))
+        stale = dict(state, last_update_unix_s=90.0)
+        self.assertFalse(manager.tracker_state_healthy(process, stale, now=100.5))
+        one_update = dict(state, update_count=1)
+        self.assertFalse(manager.tracker_state_healthy(process, one_update, now=100.5))
 
 
 class SwarmOrchestratorTest(unittest.TestCase):

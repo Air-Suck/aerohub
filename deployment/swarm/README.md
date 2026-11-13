@@ -204,9 +204,11 @@ AirSim manager 会为单机和多机加入 `swarm_overhead` 外部相机：
 - 初始位置在全部无人机初始坐标质心正上方；
 - Pitch 为 -90 度；
 - AirSim 启动后通过 MessagePack RPC 持续跟踪实时质心；
-- `manager.py status` 只有场景和跟踪器都存活才返回成功。
+- swarm 场景设置 `primary_view: true`，主窗口使用首架 UAV 的 FPV 观察相机；跟踪器把世界坐标中的质心顶视位姿转换为相对该 UAV 的相机位姿，因此主画面随质心连续移动。外部相机同时更新，用于保存无 UI 遮挡的图像证据；
+- 跟踪器将更新次数、最新质心、相机位置、最大质心位移和 RPC 错误写入 `overhead-view-state.json`；
+- `manager.py status` 只有场景、跟踪进程和新鲜的结构化相机更新都正常时才返回成功，进程存活本身不足以通过。
 
-验收不能只检查 settings JSON，应保留真实窗口或 1024×1024 相机图片、跟踪器日志和最终 `state.json`。
+验收不能只检查 settings JSON，应保留真实主窗口、1024×1024 外部相机图片、`overhead-view-state.json`、跟踪器日志和最终 `state.json`。动态飞行验收还必须证明 `update_count` 持续增加且 `max_centroid_displacement_m` 大于场景预声明阈值。
 
 ## 9. 测试与证据
 
