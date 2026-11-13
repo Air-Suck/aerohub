@@ -1,0 +1,22 @@
+# Deployment specification for the demo; not a launchable swarm config.
+schema_version: 1
+status: configured_runtime_pending
+coordination:
+  mode: centralized
+  default_case: board_center
+  validation_cases:
+    board_center: {center_vehicle: drone0, center_host: robopi}
+    board_worker: {center_vehicle: drone1, center_host: pc}
+  center_services: [cat_ora_native, planner_proxy, planner_coordinator]
+  center_instance_count: 1
+compute_nodes:
+  drone0: {host: robopi, services: [state_adapter, as2, follow_timed_path]}
+  drone1: {host: pc, supervisor: independent_thread, isolation: independent_process_or_container, services: [state_adapter, as2, follow_timed_path]}
+  drone2: {host: pc, supervisor: independent_thread, isolation: independent_process_or_container, services: [state_adapter, as2, follow_timed_path]}
+  drone3: {host: pc, supervisor: independent_thread, isolation: independent_process_or_container, services: [state_adapter, as2, follow_timed_path]}
+workstation:
+  host: pc
+  services: [mission_client, process_supervisor, ground_observer]
+  sequence: sequence.yaml
+simulator: {host: pc, scene: town05}
+flight_board: {host: pc, implementation: px4_sitl, instances: 4}

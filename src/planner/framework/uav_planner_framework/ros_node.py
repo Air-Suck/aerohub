@@ -31,6 +31,7 @@ from uav_planner_interfaces.srv import ControlPlanner
 
 from .behavior import BehaviorLifecycle, BehaviorStatus, TransitionError
 from .completion import FleetCompletion
+from .goal_assignment import match_goal_slots
 from .registry import ConfigError, PlannerRegistry
 from .ros_conversions import fill_setpoint_message, seconds_to_time, segment_from_msg
 from .trajectory import OutputGateway, Setpoint, Vector3
@@ -70,12 +71,15 @@ class PlannerFrameworkNode(Node):
         self.positions: dict[str, Vector3] = {}
         self.pose_stamps = {}
         self.pose_subscriptions = []
+        self.goal_assignment = None
         self.completion: FleetCompletion | None = None
         self.active_started_at: float | None = None
         self.active_elapsed = 0.0
         self.planner_process: subprocess.Popen | None = None
         self.output_process: subprocess.Popen | None = None
         self.process_logs = []
+        self.assignment_publisher = self.create_publisher(String, "planner/goal_assignment",
+            QoSProfile(depth=1,reliability=ReliabilityPolicy.RELIABLE,durability=DurabilityPolicy.TRANSIENT_LOCAL))
         self.execution_publisher = self.create_publisher(String, "planner/execution_state", 10)
         self.status_publisher = self.create_publisher(BehaviorResult, "planner/status", 10)
         self.setpoint_publisher = self.create_publisher(FleetSetpoint, "planner/setpoints", 10)
@@ -178,6 +182,7 @@ class PlannerFrameworkNode(Node):
         self.active_elapsed = 0.0
         self.positions = {}
         self.pose_stamps = {}
+        self.goal_assignment = None
         targets = {
             vehicle: Vector3(
                 float(target["x"]), float(target["y"]), float(target["z"])
@@ -213,11 +218,39 @@ class PlannerFrameworkNode(Node):
         if message.task_id != snapshot.task_id:
             return
         try:
-            if self.gateway.accept(segment_from_msg(message), self._now()):
+            segment = segment_from_msg(message)
+            binding = None
+            if self.resolved['planner']['id'] == 'cat_ora':
+                if not segment.is_final:
+                    raise ConfigError('CAT-ORA assignment requires a final batch plan')
+                slots = self.resolved['targets']
+                ids = [item.vehicle_id for item in segment.vehicle_trajectories]
+                if len(ids)!=len(set(ids)) or any(not item.points for item in segment.vehicle_trajectories):
+                    raise ConfigError('duplicate vehicle or empty trajectory in assignment')
+                slot_ids = match_goal_slots(
+                    {item.vehicle_id:(item.points[-1].position.x,item.points[-1].position.y,item.points[-1].position.z)
+                     for item in segment.vehicle_trajectories},
+                    {key:(value['x'],value['y'],value['z']) for key,value in slots.items()},
+                    self.resolved['planner']['parameters'].get('goal_assignment','fixed'))
+                binding = {v:{'slot_id':slot,'target':dict(slots[slot])} for v,slot in slot_ids.items()}
+                if self.goal_assignment and binding != self.goal_assignment['bindings']:
+                    raise ConfigError('goal assignment cannot change during an active batch task')
+            if self.gateway.accept(segment, self._now()):
+                if binding is not None:
+                    self.completion.targets = {v:Vector3(**item['target']) for v,item in binding.items()}
+                    self.completion.reset()
+                    audit = {'interface_version':1,'task_id':message.task_id,
+                             'frame':'LOCAL_NED','generated_at':segment.generated_at,'valid_from':segment.valid_from,
+                             'policy':self.resolved['planner']['parameters'].get('goal_assignment','fixed'),
+                             'bindings':binding}
+                    path=Path(self.get_parameter('resolved_dir').value)/(message.task_id+'.assignment.json')
+                    path.write_text(json.dumps(audit,indent=2)+'\n')
+                    self.goal_assignment=audit
+                    self.assignment_publisher.publish(String(data=json.dumps(audit)))
                 self.trajectory_wait_started_at = None
                 if self.execution is not None:
                     self.execution.submit(message)
-        except ConfigError as exc:
+        except (ConfigError, OSError) as exc:
             self._fail("INVALID_TRAJECTORY_SET", str(exc))
 
     def _on_failure(self, message: PlannerFailure) -> None:
@@ -275,7 +308,10 @@ class PlannerFrameworkNode(Node):
         if self._active_time(now) >= task_timeout:
             self._fail("TASK_TIMEOUT")
             return
-        if self.completion.update(self.positions, now) and (
+        assignment_ready = (self.resolved['planner']['id'] != 'cat_ora' or
+                            self.resolved['planner']['parameters'].get('goal_assignment','fixed') != 'optimize' or
+                            self.goal_assignment is not None)
+        if assignment_ready and self.completion.update(self.positions, now) and (
             self.execution is None or self.execution.complete
         ):
             self._freeze_active_time(now)

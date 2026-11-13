@@ -1,0 +1,99 @@
+schema_version: 1
+status: configured_flight_unverified
+frame: airsim_world_ned
+height_m: 3.0
+takeoff:
+  behavior: TakeoffBehavior
+  height_m: 3.0
+  speed_m_s: 0.6
+stages:
+- name: horizontal_line
+  hold_duration_s: 4.0
+  targets:
+    drone0:
+      x: -50
+      y: -9
+      z: -3.0
+    drone1:
+      x: -50
+      y: -3
+      z: -3.0
+    drone2:
+      x: -50
+      y: 3
+      z: -3.0
+    drone3:
+      x: -50
+      y: 9
+      z: -3.0
+  entry: native_takeoff_at_spawn
+- name: diamond
+  hold_duration_s: 4.0
+  targets:
+    drone0:
+      x: -50
+      y: -8
+      z: -3.0
+    drone1:
+      x: -58
+      y: 0
+      z: -3.0
+    drone2:
+      x: -42
+      y: 0
+      z: -3.0
+    drone3:
+      x: -50
+      y: 8
+      z: -3.0
+  task_config: task.yaml
+- name: vertical_line
+  hold_duration_s: 4.0
+  targets:
+    drone0:
+      x: -53
+      y: 0
+      z: -3.0
+    drone1:
+      x: -59
+      y: 0
+      z: -3.0
+    drone2:
+      x: -41
+      y: 0
+      z: -3.0
+    drone3:
+      x: -47
+      y: 0
+      z: -3.0
+  task_config: tasks/vertical_line.yaml
+- name: square
+  hold_duration_s: 4.0
+  targets:
+    drone0:
+      x: -56
+      y: 6
+      z: -3.0
+    drone1:
+      x: -56
+      y: -6
+      z: -3.0
+    drone2:
+      x: -44
+      y: 6
+      z: -3.0
+    drone3:
+      x: -44
+      y: -6
+      z: -3.0
+  task_config: tasks/square.yaml
+execution:
+  backend: follow_path
+  action: FollowTimedPath
+  transition: all_vehicles_succeeded_and_held
+  on_failure: cancel_all_confirm_hover_then_land
+  minimum_separation_m: 2.0
+  goal_assignment: optimize
+landing:
+  behavior: LandBehavior
+  require_all_disarmed: true

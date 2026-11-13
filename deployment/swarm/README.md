@@ -205,6 +205,16 @@ AirSim manager 会为单机和多机加入 `swarm_overhead` 外部相机：
 
 验收不能只检查 settings JSON，应保留真实窗口或 1024×1024 相机图片、跟踪器日志和最终 `state.json`。
 
+### 斜视展示模式
+
+用户明确要求斜视展示时，可在场景 profile 的 `overhead_view` 或拓扑配置的
+`airsim.camera` 中显式设置 `mode: oblique`。`distance_m` 是水平距离，
+`depression_degrees` 是相对水平线向下的角度，`yaw_degrees` 是相机朝向。
+相机相对质心的高度由 `distance_m * tan(depression_degrees)` 决定，
+初始设置和 RPC 跟踪共用同一套几何计算。Town05 CAT-ORA 选择距离 24 米、
+下倾 15°、朝向 +X、视场角 60°；常规默认仍为 `top_down`。
+外部观测相机持续跟踪，Manual 主视口仅设置初始位置和姿态。
+
 ## 9. 测试与证据
 
 不依赖 Docker、RoboPi 或 AirSim 的回归：

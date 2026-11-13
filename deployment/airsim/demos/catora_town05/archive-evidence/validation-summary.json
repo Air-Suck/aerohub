@@ -1,0 +1,48 @@
+{
+  "scope": "Town05 board_center normal demo, one RoboPi and three independent PC compute nodes",
+  "passed": true,
+  "stages": [
+    {
+      "name": "horizontal_line",
+      "held_sim_seconds": 4.02008581161499,
+      "max_state_error_m": 0.0874379683456186,
+      "max_truth_error_m": 0.09330633518492444
+    },
+    {
+      "name": "diamond",
+      "held_sim_seconds": 4.005085468292236,
+      "max_state_error_m": 0.5060293874301091,
+      "max_truth_error_m": 0.5367935324223467
+    },
+    {
+      "name": "vertical_line",
+      "held_sim_seconds": 4.02008581161499,
+      "max_state_error_m": 0.4689264677082106,
+      "max_truth_error_m": 0.4770220867370083
+    },
+    {
+      "name": "square",
+      "held_sim_seconds": 4.017085790634155,
+      "max_state_error_m": 0.5682992579554285,
+      "max_truth_error_m": 0.6096546552097475
+    }
+  ],
+  "minimum_observed_truth_separation_m": 5.459459052878222,
+  "landed_and_disarmed": true,
+  "assignment_audit_matches_board": true,
+  "cleanup": {
+    "initial_processes": 21,
+    "remaining": {}
+  },
+  "not_covered": [
+    "board_worker central topology",
+    "full fault matrix",
+    "long-duration or hardware flight reliability"
+  ],
+  "tests": {
+    "framework_ros": 37,
+    "demo_ros": 8,
+    "source_patch_replay": 2,
+    "native_continuous_plan_probe": 3
+  }
+}

@@ -106,6 +106,10 @@ def start_overhead_tracker(profile, runtime_settings, directory):
         '--settings', str(runtime_settings),
         '--camera-name', options['name'],
         '--altitude', str(options['altitude_m']),
+        '--mode', options['mode'],
+        '--distance', str(options['distance_m']),
+        '--depression', str(options['depression_degrees']),
+        '--yaw', str(options['yaw_degrees']),
         '--update-hz', str(options['update_hz']),
     ]
     log_path = directory / 'overhead-view.log'

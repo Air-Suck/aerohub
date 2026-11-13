@@ -2,6 +2,7 @@ type: object
 additionalProperties: false
 required: [trajectory_dt, max_velocity, max_acceleration, trajectory_timeout, valid_from_lead]
 properties:
+  goal_assignment: {type: string, enum: [fixed, optimize]}
   trajectory_dt: {type: number, exclusiveMinimum: 0}
   max_velocity: {type: number, exclusiveMinimum: 0}
   max_acceleration: {type: number, exclusiveMinimum: 0}

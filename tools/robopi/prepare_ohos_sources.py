@@ -8,6 +8,7 @@ import subprocess
 import tempfile
 import tarfile
 import io
+from offboard_source_patches import apply_source_patch
 
 root = Path(__file__).resolve().parents[2]
 work_root = Path(os.environ.get('OHOS_WORK_ROOT', 'log/airsim/ohos-as2')).expanduser()
@@ -33,6 +34,17 @@ def export_locked(relative, destination):
 as2_commit = export_locked('as2/aerostack2', as2_copy)
 pixhawk_copy = Path(temporary.name)/'pixhawk'
 pixhawk_commit = export_locked('as2/as2_platform_pixhawk', pixhawk_copy)
+# The local submodule checkout is intentionally not exported: record and replay
+# the reviewed Offboard fix on the locked commits until fork gitlinks are updated.
+patches = {}
+for tree, filename in (
+    (as2_copy, 'as2-core-offboard-nonblocking.patch'),
+    (pixhawk_copy, 'pixhawk-offboard-nonblocking.patch'),
+):
+    patch = root / 'deployment/platform/patches' / filename
+    patches[filename] = {'state': apply_source_patch(tree, patch),
+                         'sha256': hashlib.sha256(patch.read_bytes()).hexdigest()}
+
 paths = {name: as2_copy / name for name in
          ['as2_core', 'as2_msgs', 'as2_motion_reference_handlers',
           'as2_state_estimator', 'as2_motion_controller']}
@@ -49,7 +61,7 @@ if not (workspace / 'as2_motion_controller/thirdparties/pid_controller/CMakeList
     raise SystemExit('Missing offline PID source; initialize a complete workspace with prepare.sh first')
 for source in (root / 'deployment/onboard_computer/px4_msgs/overrides').glob('*.msg'):
     shutil.copyfile(source, workspace / 'px4_msgs/msg' / source.name)
-record = {'locked_sources': {'as2/aerostack2': as2_commit, 'as2/as2_platform_pixhawk': pixhawk_commit}, 'firmware_commit': '61907962c9220437ec01a98fa26bfbf5cbb254b5', 'source_hashes': {}}
+record = {'locked_sources': {'as2/aerostack2': as2_commit, 'as2/as2_platform_pixhawk': pixhawk_commit}, 'firmware_commit': '61907962c9220437ec01a98fa26bfbf5cbb254b5', 'source_hashes': {}, 'offboard_patches': patches}
 for name in [*paths, 'px4_msgs', 'vision_msgs', 'mocap4r2_msgs', 'rmw_fastrtps_shared_cpp']:
     record['source_hashes'][name] = {
         str(p.relative_to(workspace / name)): hashlib.sha256(p.read_bytes()).hexdigest()

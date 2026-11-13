@@ -21,6 +21,7 @@ def generate_launch_description():
         DeclareLaunchArgument("use_sim_time", default_value="true"),
         DeclareLaunchArgument("log_level", default_value="info"),
         DeclareLaunchArgument("follow_path_plugin_name", default_value="follow_path_plugin_position"),
+        DeclareLaunchArgument("timed_position_tolerance", default_value="0.25"),
         DeclareLaunchArgument("timed_continuity_tolerance", default_value="0.15"),
         DeclareLaunchArgument("timed_acceleration_continuity_tolerance", default_value="1.4"),
     ]
@@ -34,6 +35,7 @@ def generate_launch_description():
             "vehicle_id": LaunchConfiguration("namespace"),
             "use_sim_time": LaunchConfiguration("use_sim_time"),
             "run_frequency": 50.0,
+            "timed_position_tolerance": LaunchConfiguration("timed_position_tolerance"),
             "timed_continuity_tolerance": LaunchConfiguration("timed_continuity_tolerance"),
             "timed_acceleration_continuity_tolerance": LaunchConfiguration(
                 "timed_acceleration_continuity_tolerance"),

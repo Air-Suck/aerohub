@@ -3,3 +3,4 @@ max_velocity: 1.2
 max_acceleration: 0.6
 trajectory_timeout: 5.0
 valid_from_lead: 3.0
+goal_assignment: fixed

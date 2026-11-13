@@ -1,0 +1,22 @@
+{
+  "binary_resource": "airsim_town05",
+  "project": "CarlaUE4",
+  "settings": "settings.json",
+  "args": [
+    "-RenderOffscreen",
+    "-vulkan",
+    "-nosound",
+    "-NoMouseCapture",
+    "-ini:Input:[/Script/Engine.InputSettings]:bCaptureMouseOnLaunch=False,DefaultViewportMouseCaptureMode=NoCapture,bDefaultViewportMouseLock=False,DefaultViewportMouseLockMode=DoNotLock",
+    "-unattended"
+  ],
+  "overhead_view": {
+    "name": "swarm_observer",
+    "mode": "oblique",
+    "distance_m": 5.176380902050415,
+    "depression_degrees": 75.0,
+    "yaw_degrees": 0.0,
+    "fov_degrees": 60.0,
+    "update_hz": 1.0
+  }
+}

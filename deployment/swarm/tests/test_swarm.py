@@ -1,6 +1,7 @@
 import copy
 import importlib.util
 import json
+import math
 from pathlib import Path
 import tempfile
 import unittest
@@ -15,7 +16,7 @@ from deployment.swarm.topology import (
     resolve_topology,
     validate_config,
 )
-from deployment.swarm.view import vehicle_centroid
+from deployment.swarm.view import camera_options, camera_pose, camera_quaternion, vehicle_centroid, apply_overhead_view
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -88,6 +89,17 @@ class OverheadTrackerTest(unittest.TestCase):
         points = [(1.0, 3.0, -2.0), (5.0, -1.0, -4.0), (0.0, 4.0, 0.0)]
         self.assertEqual((2.0, 2.0, -2.0), centroid(points))
 
+    def test_spawn_relative_poses_are_converted_to_world_before_camera_tracking(self):
+        rpc = mock.Mock()
+        rpc.call.side_effect = [
+            {"position": {"x_val": 1, "y_val": 0, "z_val": -3}},
+            {"position": {"x_val": 1, "y_val": 0, "z_val": -3}}, True]
+        center = update_camera(rpc, ["Drone0", "Drone1"],
+            {"name": "observer", "mode": "oblique", "distance_m": 24., "depression_degrees": 15.},
+            {"Drone0": (-50., -9., 0.), "Drone1": (-50., 9., 0.)})
+        self.assertEqual((-49., 0., -3.), center)
+        self.assertEqual(-73., rpc.call.call_args.args[2]["position"]["x_val"])
+
     def test_pose_position_validates_rpc_result(self):
         self.assertEqual(
             (1.0, 2.0, -3.0),
@@ -133,6 +145,48 @@ class OverheadTrackerTest(unittest.TestCase):
             pose["position"],
         )
 
+
+
+class ObliqueCameraTest(unittest.TestCase):
+    def test_optical_axis_points_at_center_for_multiple_bearings(self):
+        center = (-50., 2., -3.)
+        for yaw in (0., 90., -135.):
+            pose = camera_pose(center, {"mode": "oblique", "distance_m": 24.,
+                                        "depression_degrees": 15., "yaw_degrees": yaw})
+            q = camera_quaternion(pose)
+            w, x, y, z = (q[k] for k in ("w_val", "x_val", "y_val", "z_val"))
+            forward = (1 - 2*(y*y + z*z), 2*(x*y + w*z), 2*(x*z - w*y))
+            delta = tuple(center[i] - pose[axis] for i, axis in enumerate(("X", "Y", "Z")))
+            distance = math.sqrt(sum(v*v for v in delta))
+            for actual, expected in zip(forward, delta):
+                self.assertAlmostEqual(actual, expected/distance)
+            self.assertAlmostEqual(pose["Z"], -3 - 24*math.tan(math.radians(15)))
+
+    def test_initial_and_live_camera_share_geometry(self):
+        options = {"name": "observer", "mode": "oblique", "distance_m": 24.,
+                   "depression_degrees": 15., "fov_degrees": 60.}
+        settings = {"Vehicles": {"Drone0": {"X": -50, "Y": -9},
+                                 "Drone1": {"X": -50, "Y": 9}}}
+        generated = apply_overhead_view(settings, options)
+        rpc = mock.Mock()
+        rpc.call.side_effect = [
+            {"position": {"x_val": -50, "y_val": -9, "z_val": 0}},
+            {"position": {"x_val": -50, "y_val": 9, "z_val": 0}}, True]
+        update_camera(rpc, ["Drone0", "Drone1"], options)
+        _, pose, _, external = rpc.call.call_args.args[1:]
+        initial = generated["ExternalCameras"]["observer"]
+        for axis, key in zip(("X", "Y", "Z"), ("x_val", "y_val", "z_val")):
+            self.assertEqual(initial[axis], pose["position"][key])
+        self.assertEqual(-15., generated["CameraDirector"]["Pitch"])
+        self.assertEqual(60., initial["CaptureSettings"][0]["FOV_Degrees"])
+        self.assertTrue(external)
+
+    def test_invalid_camera_geometry_is_rejected(self):
+        for options in ({"depression_degrees": 91}, {"distance_m": 0},
+                        {"yaw_degrees": float("nan")}, {"fov_degrees": 180},
+                        {"mode": "unknown"}):
+            with self.assertRaises(ValueError):
+                camera_options(options)
 
 
 class ManagerTrackerDependencyTest(unittest.TestCase):

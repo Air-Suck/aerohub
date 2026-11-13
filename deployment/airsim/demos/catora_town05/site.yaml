@@ -1,0 +1,15 @@
+scene: town05
+status: visually_surveyed_flight_unverified
+center_ned:
+- -50.0
+- 0.0
+- 0.0
+flight_height_m: 3.0
+horizontal_envelope_ned:
+  x:
+  - -59.0
+  - -41.0
+  y:
+  - -9.0
+  - 9.0
+minimum_separation_m: 2.0

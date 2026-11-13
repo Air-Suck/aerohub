@@ -1,0 +1,92 @@
+........
+----------------------------------------------------------------------
+Ran 8 tests in 0.015s
+
+OK
+{
+  "scope": "real_algorithm_fixed_inputs_only",
+  "passed": true,
+  "stages": [
+    {
+      "name": "diamond",
+      "passed": true,
+      "endpoint_errors_m": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "vehicle_to_slot": {
+        "drone0": "drone0",
+        "drone1": "drone1",
+        "drone2": "drone2",
+        "drone3": "drone3"
+      },
+      "start_errors_m": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "minimum_sampled_separation_m": 5.618038705334676,
+      "maximum_sampled_speed_m_s": 0.8000000238419883,
+      "maximum_sampled_acceleration_m_s2": 0.5000000149067522,
+      "all_points_finite_and_in_envelope": true,
+      "sample_count": 247
+    },
+    {
+      "name": "vertical_line",
+      "passed": true,
+      "endpoint_errors_m": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "vehicle_to_slot": {
+        "drone0": "drone0",
+        "drone1": "drone1",
+        "drone2": "drone2",
+        "drone3": "drone3"
+      },
+      "start_errors_m": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "minimum_sampled_separation_m": 5.618015316389222,
+      "maximum_sampled_speed_m_s": 0.800000023841905,
+      "maximum_sampled_acceleration_m_s2": 0.5000000149073759,
+      "all_points_finite_and_in_envelope": true,
+      "sample_count": 247
+    },
+    {
+      "name": "square",
+      "passed": true,
+      "endpoint_errors_m": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "vehicle_to_slot": {
+        "drone0": "drone0",
+        "drone1": "drone1",
+        "drone2": "drone2",
+        "drone3": "drone3"
+      },
+      "start_errors_m": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "minimum_sampled_separation_m": 5.366688760197881,
+      "maximum_sampled_speed_m_s": 0.8000000238419123,
+      "maximum_sampled_acceleration_m_s2": 0.5000000149042635,
+      "all_points_finite_and_in_envelope": true,
+      "sample_count": 201
+    }
+  ]
+}

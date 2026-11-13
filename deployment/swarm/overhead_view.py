@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Keep an AirSim external camera above the live fleet centroid."""
+"""Keep an AirSim external camera aimed at the live fleet centroid."""
 from __future__ import annotations
 
 import argparse
@@ -11,9 +11,9 @@ import time
 from typing import Any
 
 try:
-    from .view import camera_options, downward_quaternion
+    from .view import camera_options, camera_pose, camera_quaternion
 except ImportError:
-    from view import camera_options, downward_quaternion
+    from view import camera_options, camera_pose, camera_quaternion
 
 
 stopping = False
@@ -42,18 +42,18 @@ def centroid(points: list[tuple[float, float, float]]) -> tuple[float, float, fl
 
 
 def update_camera(
-    rpc: Any, vehicles: list[str], camera: dict[str, Any]
+    rpc: Any, vehicles: list[str], camera: dict[str, Any], origins=None
 ) -> tuple[float, float, float]:
-    center = centroid(
-        [pose_position(rpc.call("simGetVehiclePose", vehicle), vehicle) for vehicle in vehicles]
-    )
+    points = []
+    for vehicle in vehicles:
+        local = pose_position(rpc.call("simGetVehiclePose", vehicle), vehicle)
+        origin = (origins or {}).get(vehicle, (0., 0., 0.))
+        points.append(tuple(a + b for a, b in zip(local, origin)))
+    center = centroid(points)
+    geometry = camera_pose(center, camera)
     pose = {
-        "position": {
-            "x_val": center[0],
-            "y_val": center[1],
-            "z_val": center[2] - camera["altitude_m"],
-        },
-        "orientation": downward_quaternion(),
+        "position": {"x_val": geometry["X"], "y_val": geometry["Y"], "z_val": geometry["Z"]},
+        "orientation": camera_quaternion(geometry),
     }
     rpc.call("simSetCameraPose", camera["name"], pose, "", True)
     return center
@@ -67,6 +67,10 @@ def run(args: argparse.Namespace) -> int:
     camera = camera_options(
         {
             "name": args.camera_name,
+            "mode": args.mode,
+            "distance_m": args.distance,
+            "depression_degrees": args.depression,
+            "yaw_degrees": args.yaw,
             "altitude_m": args.altitude,
             "update_hz": args.update_hz,
         }
@@ -74,7 +78,7 @@ def run(args: argparse.Namespace) -> int:
     root = Path(__file__).resolve().parents[2]
     sys.path.insert(0, str(root / "simulator/airsim/sensors"))
     try:
-        from uav_as2_sensor_adapter.rpc import Rpc
+        from uav_as2_sensor_adapter.rpc import PersistentRpc as Rpc
     except ImportError as exc:
         raise RuntimeError("overhead tracking requires the Python msgpack package") from exc
     rpc = Rpc(args.host, int(settings.get("ApiServerPort", 41451)), args.rpc_timeout)
@@ -84,8 +88,12 @@ def run(args: argparse.Namespace) -> int:
     while not stopping:
         started = time.monotonic()
         try:
-            center = update_camera(rpc, vehicles, camera)
+            origins = {name: tuple(float(settings["Vehicles"][name].get(axis, 0.))
+                                    for axis in ("X", "Y", "Z")) for name in vehicles}
+            center = update_camera(rpc, vehicles, camera, origins)
             updates += 1
+            if updates == 1 or updates % 10 == 0:
+                print(json.dumps({"updates": updates, "centroid_world_ned": center}), flush=True)
             consecutive_failures = 0
             if args.once:
                 print(json.dumps({"vehicles": vehicles, "centroid": center}))
@@ -111,6 +119,10 @@ def main() -> int:
     parser.add_argument("--settings", type=Path, required=True)
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--camera-name", default="swarm_overhead")
+    parser.add_argument("--mode", choices=("top_down", "oblique"), default="top_down")
+    parser.add_argument("--distance", type=float, default=24.0)
+    parser.add_argument("--depression", type=float, default=15.0)
+    parser.add_argument("--yaw", type=float, default=0.0)
     parser.add_argument("--altitude", type=float, default=25.0)
     parser.add_argument("--update-hz", type=float, default=5.0)
     parser.add_argument("--rpc-timeout", type=float, default=2.0)

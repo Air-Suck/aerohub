@@ -73,6 +73,15 @@ def main():
         for command in commands:
             if command[1:4] == ['launch', 'as2_behaviors_motion', 'motion_behaviors_launch.py']:
                 command[2:4] = ['uav_follow_path_execution', 'motion_behaviors.launch.py']
+                launch_file = os.environ.get('AS2_FOLLOW_PATH_LAUNCH_FILE')
+                if launch_file:
+                    command[2:4] = [launch_file]
+                position = os.environ.get('AS2_TIMED_POSITION_TOLERANCE')
+                if position:
+                    value = float(position)
+                    if not 0.0 < value <= 0.25:
+                        raise ValueError('AS2_TIMED_POSITION_TOLERANCE must be in (0, 0.25]')
+                    command.append(f'timed_position_tolerance:={value}')
                 tolerance = os.environ.get('AS2_TIMED_CONTINUITY_TOLERANCE')
                 if tolerance:
                     value = float(tolerance)

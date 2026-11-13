@@ -1,0 +1,42 @@
+diff --git a/as2_core/include/as2_core/aerial_platform.hpp b/as2_core/include/as2_core/aerial_platform.hpp
+index f512af2a..8f26a680 100644
+--- a/as2_core/include/as2_core/aerial_platform.hpp
++++ b/as2_core/include/as2_core/aerial_platform.hpp
+@@ -43,6 +43,7 @@
+ #include <memory>
+ #include <string>
+ #include <vector>
++#include <utility>
+ 
+ #include "as2_core/names/services.hpp"
+ #include "as2_core/names/topics.hpp"
+@@ -418,6 +419,29 @@ private:
+ 
+   // ROS Services & srv callbacks
+ 
++protected:
++  /** Replace the arming handler without changing the public service contract. */
++  template<typename CallbackT>
++  void setArmingServiceCallback(CallbackT && callback)
++  {
++    set_arming_state_srv_.reset();
++    set_arming_state_srv_ = this->create_service<std_srvs::srv::SetBool>(
++      as2_names::services::platform::set_arming_state,
++      std::forward<CallbackT>(callback));
++  }
++
++  /** Replace the Offboard handler, including ROS deferred-response callbacks.
++   * No threads or new base-class state are introduced by this extension seam.
++   */
++  template<typename CallbackT>
++  void setOffboardServiceCallback(CallbackT && callback)
++  {
++    set_offboard_mode_srv_.reset();
++    set_offboard_mode_srv_ = this->create_service<std_srvs::srv::SetBool>(
++      as2_names::services::platform::set_offboard_mode,
++      std::forward<CallbackT>(callback));
++  }
++
+ private:
+   rclcpp::Service<as2_msgs::srv::SetControlMode>::SharedPtr set_platform_mode_srv_;
+   rclcpp::Service<std_srvs::srv::SetBool>::SharedPtr set_arming_state_srv_;

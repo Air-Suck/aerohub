@@ -1,0 +1,109 @@
+........
+----------------------------------------------------------------------
+Ran 8 tests in 0.015s
+
+OK
+Arguments (pass arguments as '<name>:=<value>'):
+
+    'namespace':
+        no description given
+
+    'config_file':
+        no description given
+        (default: '')
+
+    'use_sim_time':
+        no description given
+        (default: 'true')
+
+    'log_level':
+        no description given
+        (default: 'info')
+
+    'follow_path_plugin_name':
+        no description given
+        (default: 'follow_path_plugin_position')
+
+    'timed_position_tolerance':
+        no description given
+        (default: '0.25')
+
+    'timed_continuity_tolerance':
+        no description given
+        (default: '0.15')
+
+    'timed_acceleration_continuity_tolerance':
+        no description given
+        (default: '1.4')
+
+    'takeoff_plugin_name':
+        Plugin name. If empty, it must be declared in config file. Valid choices are: ['takeoff_plugin_speed', 'takeoff_plugin_position', 'takeoff_plugin_platform', 'takeoff_plugin_trajectory', '']
+        (default: '')
+
+    'takeoff_config_file':
+        Path to behavior configuration file
+        (default: '/root/aerostack2_ws/install/share/as2_behaviors_motion/takeoff_behavior/config/config_default.yaml')
+
+    'takeoff_height':
+        Default takeoff height
+        (default: '1.0')
+
+    'takeoff_speed':
+        Default takeoff speed
+        (default: '0.5')
+
+    'takeoff_threshold':
+        Default takeoff threshold
+        (default: '0.2')
+
+    'tf_timeout_threshold':
+        Default tf timeout (50ms)
+        (default: '0.05')
+
+    'land_plugin_name':
+        Plugin name. If empty, it must be declared in config file. Valid choices are: ['land_plugin_speed', 'land_plugin_platform', 'land_plugin_position', 'land_plugin_trajectory', '']
+        (default: '')
+
+    'land_config_file':
+        Path to behavior configuration file
+        (default: '/root/aerostack2_ws/install/share/as2_behaviors_motion/land_behavior/config/config_default.yaml')
+
+    'land_speed':
+        Default land speed (m/s).
+        (default: '0.5')
+
+    'land_speed_condition_percentage':
+        Fraction of |land_speed| used as |vz| threshold for the finish condition.
+        (default: '0.2')
+
+    'land_condition_height':
+        Minimum descended height (m) from activation for the finish condition.
+        (default: '0.2')
+
+    'land_height':
+        Target z (m, earth frame) for the descent reference.
+        (default: '-10.0')
+
+    'land_position_condition_time':
+        Time (s) the finish conditions must hold continuously to finish land.
+        (default: '1.0')
+
+    'go_to_plugin_name':
+        Plugin name. If empty, it must be declared in config file. Valid choices are: ['go_to_plugin_position', 'go_to_plugin_trajectory', '']
+        (default: '')
+
+    'go_to_config_file':
+        Path to behavior configuration file
+        (default: '/root/aerostack2_ws/install/share/as2_behaviors_motion/go_to_behavior/config/config_default.yaml')
+
+    'go_to_speed':
+        Default go_to speed
+        (default: '0.5')
+
+    'go_to_threshold':
+        Default go_to threshold
+        (default: '0.2')
+
+    'go_to_threshold_z':
+        Vertical distance to the goal, 0 uses the default threshold
+        (default: '0.0')

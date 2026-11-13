@@ -1,0 +1,128 @@
+{
+  "diamond": {
+    "interface_version": 1,
+    "task_id": "7f53aba8-1a08-4fc1-9b1a-9a5e90f22616",
+    "frame": "LOCAL_NED",
+    "generated_at": 1794539718.0108938,
+    "valid_from": 1794539721.0108938,
+    "policy": "optimize",
+    "bindings": {
+      "drone0": {
+        "slot_id": "drone0",
+        "target": {
+          "x": -50,
+          "y": -8,
+          "z": -3.0
+        }
+      },
+      "drone1": {
+        "slot_id": "drone2",
+        "target": {
+          "x": -42,
+          "y": 0,
+          "z": -3.0
+        }
+      },
+      "drone2": {
+        "slot_id": "drone1",
+        "target": {
+          "x": -58,
+          "y": 0,
+          "z": -3.0
+        }
+      },
+      "drone3": {
+        "slot_id": "drone3",
+        "target": {
+          "x": -50,
+          "y": 8,
+          "z": -3.0
+        }
+      }
+    }
+  },
+  "vertical_line": {
+    "interface_version": 1,
+    "task_id": "3674d522-5e57-4015-85c2-567efafff7e5",
+    "frame": "LOCAL_NED",
+    "generated_at": 1794539745.0024695,
+    "valid_from": 1794539748.0024695,
+    "policy": "optimize",
+    "bindings": {
+      "drone0": {
+        "slot_id": "drone3",
+        "target": {
+          "x": -47,
+          "y": 0,
+          "z": -3.0
+        }
+      },
+      "drone1": {
+        "slot_id": "drone2",
+        "target": {
+          "x": -41,
+          "y": 0,
+          "z": -3.0
+        }
+      },
+      "drone2": {
+        "slot_id": "drone1",
+        "target": {
+          "x": -59,
+          "y": 0,
+          "z": -3.0
+        }
+      },
+      "drone3": {
+        "slot_id": "drone0",
+        "target": {
+          "x": -53,
+          "y": 0,
+          "z": -3.0
+        }
+      }
+    }
+  },
+  "square": {
+    "interface_version": 1,
+    "task_id": "a93ac8d3-5a55-47fc-ad2b-fccde291fe32",
+    "frame": "LOCAL_NED",
+    "generated_at": 1794539772.015046,
+    "valid_from": 1794539775.015046,
+    "policy": "optimize",
+    "bindings": {
+      "drone0": {
+        "slot_id": "drone3",
+        "target": {
+          "x": -44,
+          "y": -6,
+          "z": -3.0
+        }
+      },
+      "drone1": {
+        "slot_id": "drone2",
+        "target": {
+          "x": -44,
+          "y": 6,
+          "z": -3.0
+        }
+      },
+      "drone2": {
+        "slot_id": "drone1",
+        "target": {
+          "x": -56,
+          "y": -6,
+          "z": -3.0
+        }
+      },
+      "drone3": {
+        "slot_id": "drone0",
+        "target": {
+          "x": -56,
+          "y": 6,
+          "z": -3.0
+        }
+      }
+    }
+  }
+}

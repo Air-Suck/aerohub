@@ -1,0 +1,13 @@
+vehicles:
+  drone0:
+    fmu_prefix: /drone0
+    target_system_id: 41
+  drone1:
+    fmu_prefix: /drone1
+    target_system_id: 42
+  drone2:
+    fmu_prefix: /drone2
+    target_system_id: 43
+  drone3:
+    fmu_prefix: /drone3
+    target_system_id: 44

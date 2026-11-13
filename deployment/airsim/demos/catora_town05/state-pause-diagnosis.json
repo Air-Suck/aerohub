@@ -1,0 +1,92 @@
+{
+  "status": "fixed_ground_and_takeoff_verified",
+  "root_cause": "blocking Offboard prestream loop in single-threaded AS2 Pixhawk platform executor",
+  "safety_threshold_s": 0.5,
+  "cases": [
+    {
+      "name": "baseline",
+      "evidence": "log/airsim/catora-town05-state-baseline-20261112-01",
+      "target": null,
+      "freshness_passed": true,
+      "all_armed_feedback_false": true,
+      "violation_vehicles": [],
+      "clock_max_gap_s": 0.023384734988212585,
+      "per_vehicle_local_pose_max_gap_s": {
+        "drone0": 0.07009392499458045,
+        "drone1": 0.06900052000128198,
+        "drone2": 0.06413917600002605,
+        "drone3": 0.0711838899878785
+      },
+      "cleanup": {
+        "initial_processes": 22,
+        "remaining": {}
+      }
+    },
+    {
+      "name": "robopi_offboard",
+      "evidence": "log/airsim/catora-town05-state-offboard-20261112-01",
+      "target": "drone0",
+      "freshness_passed": false,
+      "all_armed_feedback_false": true,
+      "violation_vehicles": [
+        "drone0"
+      ],
+      "clock_max_gap_s": 0.023605038004461676,
+      "per_vehicle_local_pose_max_gap_s": {
+        "drone0": 1.2046960620064056,
+        "drone1": 0.07063972599280532,
+        "drone2": 0.06966231699334458,
+        "drone3": 0.07360396899457555
+      },
+      "cleanup": {
+        "initial_processes": 22,
+        "remaining": {}
+      },
+      "offboard_response_s": 1.2029694560042117,
+      "raw_px4_odometry_max_gap_s": 0.01432121399557218,
+      "as2_odometry_max_gap_s": 1.204107372002909
+    },
+    {
+      "name": "pc_offboard",
+      "evidence": "log/airsim/catora-town05-state-pc-offboard-20261113-01",
+      "target": "drone1",
+      "freshness_passed": false,
+      "all_armed_feedback_false": true,
+      "violation_vehicles": [
+        "drone1"
+      ],
+      "clock_max_gap_s": 0.023274443999980576,
+      "per_vehicle_local_pose_max_gap_s": {
+        "drone0": 0.06743643499794416,
+        "drone1": 1.2003501909930492,
+        "drone2": 0.07009937400289346,
+        "drone3": 0.06638741301139817
+      },
+      "cleanup": {
+        "initial_processes": 22,
+        "remaining": {}
+      },
+      "offboard_response_s": 1.2033480550016975,
+      "raw_px4_odometry_max_gap_s": 0.01395615299406927,
+      "as2_odometry_max_gap_s": 1.200169691001065
+    }
+  ],
+  "evidence_checks": {
+    "static_baseline_passed": true,
+    "robopi_only_target_failed": true,
+    "pc_only_target_failed": true,
+    "all_tests_disarmed": true,
+    "raw_odometry_and_clock_continued": true
+  },
+  "diagnosis_status_at_creation": "diagnosed_not_fixed",
+  "fix": {
+    "implementation": "deferred SetBool response with single-executor 10ms timer",
+    "minimum_prestream_samples": 120,
+    "minimum_prestream_ms": 1200,
+    "pose_freshness_limit_s": 0.5,
+    "pc_ground_evidence": "log/airsim/catora-town05-pc-offboard-fix-20261113-01",
+    "robopi_ground_evidence": "log/airsim/catora-town05-robopi-offboard-fix-20261113-01",
+    "takeoff_evidence": "log/airsim/catora-town05-flight-20261113-02",
+    "demo_status": "incomplete: fixed-target assignment rejection before diamond execution"
+  }
+}

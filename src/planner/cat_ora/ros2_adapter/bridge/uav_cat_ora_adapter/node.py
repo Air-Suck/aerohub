@@ -10,6 +10,8 @@ from pathlib import Path
 import rclpy
 import yaml
 from .state import checked_pose
+from uav_planner_framework.goal_assignment import match_goal_slots
+from uav_planner_framework.registry import ConfigError
 from geometry_msgs.msg import PoseStamped
 from rclpy.node import Node
 from rclpy.qos import (
@@ -153,7 +155,22 @@ class CatOraAdapter(Node):
                 return
             raise RuntimeError(response.get("error", "unknown CAT-ORA error"))
         trajectories = response["trajectories_enu"]
-        if not trajectories_reach_requested_goals(trajectories, request["goals_enu"]):
+        policy = parameters.get("goal_assignment", "fixed")
+        if policy == "optimize":
+            try:
+                if len(trajectories) != len(self.vehicles) or any(not points for points in trajectories):
+                    raise ConfigError("invalid trajectory count or empty trajectory")
+                match_goal_slots(
+                    {v:tuple(points[-1]) for v,points in zip(self.vehicles,trajectories)},
+                    {v:tuple(goal) for v,goal in zip(self.vehicles,request["goals_enu"])}, policy)
+            except ConfigError as error:
+                failure=PlannerFailure();failure.task_id=self.config["task"]["task_id"]
+                failure.reason="INVALID_GOAL_ASSIGNMENT";failure.detail=str(error)
+                self.failure_publisher.publish(failure);self.published=True
+                return
+        elif policy != "fixed":
+            raise RuntimeError("unknown goal assignment policy")
+        if policy == "fixed" and not trajectories_reach_requested_goals(trajectories, request["goals_enu"]):
             errors = [
                 math.dist(points[-1], goal) if points else math.inf
                 for points, goal in zip(trajectories, request["goals_enu"])

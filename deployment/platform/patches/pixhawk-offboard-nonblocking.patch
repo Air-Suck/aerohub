@@ -1,0 +1,189 @@
+diff --git a/include/as2_platform_pixhawk/pixhawk_platform.hpp b/include/as2_platform_pixhawk/pixhawk_platform.hpp
+index 1fb0249..fd74e4e 100644
+--- a/include/as2_platform_pixhawk/pixhawk_platform.hpp
++++ b/include/as2_platform_pixhawk/pixhawk_platform.hpp
+@@ -91,7 +91,7 @@ public:
+   /**
+    * @brief Destroy the Pixhawk Platform object.
+    */
+-  ~PixhawkPlatform() {}
++  ~PixhawkPlatform();
+ 
+ public:
+   /**
+@@ -173,6 +173,24 @@ public:
+   bool getFlagSimulationMode();
+ 
+ private:
++  using OffboardService = rclcpp::Service<std_srvs::srv::SetBool>;
++  OffboardService::SharedPtr pending_offboard_service_;
++  std::shared_ptr<rmw_request_id_t> pending_offboard_request_;
++  rclcpp::TimerBase::SharedPtr offboard_prestream_timer_;
++  std::chrono::steady_clock::time_point offboard_prestream_started_;
++  std::chrono::steady_clock::time_point offboard_last_publication_;
++  unsigned int offboard_prestream_samples_ = 0;
++  bool offboard_prestream_ready_ = false;
++  bool offboard_started_armed_ = false;
++  bool offboard_inhibited_ = false;  // An emergency requires a fresh platform instance.
++
++  void requestOffboard(
++    OffboardService::SharedPtr service,
++    std::shared_ptr<rmw_request_id_t> header,
++    std::shared_ptr<std_srvs::srv::SetBool::Request> request);
++  void tickOffboardPrestream();
++  void finishOffboardRequest(bool success, const std::string & reason);
++
+   bool has_mode_settled_ = false;
+ 
+   std::unique_ptr<as2::sensors::Imu> imu_sensor_ptr_;
+diff --git a/src/pixhawk_platform.cpp b/src/pixhawk_platform.cpp
+index 3961845..a329e15 100644
+--- a/src/pixhawk_platform.cpp
++++ b/src/pixhawk_platform.cpp
+@@ -147,6 +147,95 @@ PixhawkPlatform::PixhawkPlatform(const rclcpp::NodeOptions & options)
+ 
+   px4_manual_control_switches_pub_ = this->create_publisher<px4_msgs::msg::ManualControlSwitches>(
+     fmu_prefix + "/fmu/in/manual_control_switches", rclcpp::SensorDataQoS());
++
++  offboard_prestream_timer_ = this->create_wall_timer(
++    std::chrono::milliseconds(10), [this]() {tickOffboardPrestream();});
++  offboard_prestream_timer_->cancel();
++  this->setOffboardServiceCallback(
++    [this](OffboardService::SharedPtr service,
++    std::shared_ptr<rmw_request_id_t> header,
++    std::shared_ptr<std_srvs::srv::SetBool::Request> request) {
++      requestOffboard(service, header, request);
++    });
++  this->setArmingServiceCallback(
++    [this](std::shared_ptr<std_srvs::srv::SetBool::Request> request,
++    std::shared_ptr<std_srvs::srv::SetBool::Response> response) {
++      // Also cancel when the base reports "already disarmed" and therefore
++      // does not invoke ownSetArmingState().
++      if (!request->data) {finishOffboardRequest(false, "Disarm requested");}
++      response->success = this->setArmingState(request->data);
++    });
++}
++
++PixhawkPlatform::~PixhawkPlatform()
++{
++  finishOffboardRequest(false, "platform shutdown");
++}
++
++void PixhawkPlatform::finishOffboardRequest(bool success, const std::string & reason)
++{
++  if (offboard_prestream_timer_) {offboard_prestream_timer_->cancel();}
++  offboard_prestream_ready_ = false;
++  auto service = std::move(pending_offboard_service_);
++  auto header = std::move(pending_offboard_request_);
++  if (!header) {return;}
++  if (!rclcpp::ok(this->get_node_base_interface()->get_context())) {return;}
++  std_srvs::srv::SetBool::Response response;
++  response.success = success;
++  response.message = reason;
++  try {
++    service->send_response(*header, response);
++  } catch (const std::exception & error) {
++    RCLCPP_WARN(this->get_logger(), "Offboard response unavailable: %s", error.what());
++  }
++}
++
++void PixhawkPlatform::requestOffboard(
++  OffboardService::SharedPtr service,
++  std::shared_ptr<rmw_request_id_t> header,
++  std::shared_ptr<std_srvs::srv::SetBool::Request> request)
++{
++  // All callbacks remain in the default mutually-exclusive group. The timer
++  // yields between publications, so odometry/info/alerts remain schedulable.
++  if (!request->data || getOffboardMode() || pending_offboard_request_ || offboard_inhibited_) {
++    std_srvs::srv::SetBool::Response response;
++    response.success = false;
++    response.message = !request->data ? "Manual mode is not allowed" :
++      "Offboard is active, pending, or inhibited by an emergency";
++    service->send_response(*header, response);
++    return;
++  }
++  pending_offboard_service_ = service;
++  pending_offboard_request_ = header;
++  offboard_started_armed_ = getArmingState();
++  offboard_prestream_started_ = std::chrono::steady_clock::now();
++  offboard_last_publication_ = offboard_prestream_started_;
++  offboard_prestream_samples_ = 0;
++  px4_offboard_control_mode_ = px4_msgs::msg::OffboardControlMode();
++  px4_offboard_control_mode_.body_rate = true;
++  resetRatesSetpoint();
++  offboard_prestream_timer_->reset();
++}
++
++void PixhawkPlatform::tickOffboardPrestream()
++{
++  if (!pending_offboard_request_) {return;}
++  const auto now = std::chrono::steady_clock::now();
++  if ((offboard_started_armed_ && !getArmingState()) ||
++    now - offboard_prestream_started_ > std::chrono::seconds(3) ||
++    now - offboard_last_publication_ > std::chrono::milliseconds(500))
++  {
++    finishOffboardRequest(false, "Offboard prestream interrupted or timed out");
++    return;
++  }
++  PX4publishRatesSetpoint();
++  offboard_last_publication_ = now;
++  ++offboard_prestream_samples_;
++  if (offboard_prestream_samples_ < 120 ||
++    now - offboard_prestream_started_ < std::chrono::milliseconds(1200)) {return;}
++  offboard_prestream_ready_ = true;
++  const bool success = this->setOffboardControl(true);
++  finishOffboardRequest(success, success ? "Offboard request sent" : "Offboard request rejected");
+ }
+ 
+ void PixhawkPlatform::configureSensors()
+@@ -161,6 +250,7 @@ void PixhawkPlatform::configureSensors()
+ 
+ bool PixhawkPlatform::ownSetArmingState(bool state)
+ {
++  if (!state) {finishOffboardRequest(false, "Disarm requested");}
+   if (state) {
+     this->PX4arm();
+   } else {
+@@ -183,17 +273,9 @@ bool PixhawkPlatform::ownSetOffboardControl(bool offboard)
+     return false;
+   }
+ 
+-  px4_offboard_control_mode_ = px4_msgs::msg::OffboardControlMode();  // RESET CONTROL MODE
+-  px4_offboard_control_mode_.body_rate = true;
+-  resetRatesSetpoint();
+-
+-  RCLCPP_DEBUG(this->get_logger(), "Switching to OFFBOARD mode");
+-  // Following PX4 offboard guidelines
+-  rclcpp::Rate r(100);
+-  // PX4 requires an OffboardControlMode stream for more than one second.
+-  for (int i = 0; i < 120; i++) {
+-    PX4publishRatesSetpoint();
+-    r.sleep();
++  if (!offboard_prestream_ready_) {
++    RCLCPP_WARN(this->get_logger(), "Offboard requires the asynchronous prestream service");
++    return false;
+   }
+   PX4publishOffboardControlMode();
+   return true;
+@@ -447,13 +529,20 @@ bool PixhawkPlatform::ownSendCommand()
+ 
+ void PixhawkPlatform::ownKillSwitch()
+ {
++  offboard_inhibited_ = true;
++  finishOffboardRequest(false, "Kill switch requested");
+   RCLCPP_ERROR(this->get_logger(), "KILL SWITCH TRIGGERED");
+   px4_msgs::msg::ManualControlSwitches kill_switch_msg;
+   kill_switch_msg.kill_switch = true;
+   px4_manual_control_switches_pub_->publish(kill_switch_msg);
+ }
+ 
+-void PixhawkPlatform::ownStopPlatform() {RCLCPP_WARN(this->get_logger(), "NOT IMPLEMENTED");}
++void PixhawkPlatform::ownStopPlatform()
++{
++  offboard_inhibited_ = true;
++  finishOffboardRequest(false, "Platform stop requested");
++  RCLCPP_WARN(this->get_logger(), "NOT IMPLEMENTED");
++}
+ 
+ void PixhawkPlatform::resetTrajectorySetpoint()
+ {
