@@ -1,13 +1,15 @@
 """AirSim backend for the platform's ROS sensor contract."""
 import json
+from array import array
 import math
 import re
+import time
 from functools import partial
 
 import rclpy
 from rclpy.node import Node
 from rclpy.executors import ExternalShutdownException
-from rclpy.qos import qos_profile_sensor_data
+from rclpy.qos import qos_profile_sensor_data, QoSProfile, ReliabilityPolicy
 from geometry_msgs.msg import TransformStamped
 from sensor_msgs.msg import CameraInfo, Image, PointCloud2, PointField
 from tf2_ros.static_transform_broadcaster import StaticTransformBroadcaster
@@ -36,9 +38,14 @@ class SensorNode(Node):
         self.declare_parameter('rpc_port', 41471)
         self.declare_parameter('camera_rate_hz', 5.0)
         self.declare_parameter('camera_enabled', True)
+        self.declare_parameter('camera_reliable', False)
+        camera_qos = QoSProfile(depth=1,reliability=ReliabilityPolicy.RELIABLE) if self.get_parameter('camera_reliable').value else qos_profile_sensor_data
         self.declare_parameter('lidar_rate_hz', 10.0)
         self.declare_parameter('rpc_timeout', 3.0)
         self.declare_parameter('source_color_order', 'rgb')
+        self.declare_parameter('timing_file', '')
+        timing_path = self.get_parameter('timing_file').value
+        self.timing = open(timing_path, 'w', buffering=1) if timing_path else None
         self.color_order = self.get_parameter('source_color_order').value
         if self.color_order not in ('rgb', 'bgr'):
             raise ValueError('source_color_order must be rgb or bgr')
@@ -79,8 +86,8 @@ class SensorNode(Node):
                 requests.append(dict(camera_name=name, image_type=kind,
                                      pixels_as_float=kind in (1, 2), compress=False))
                 topic = self.prefix + '/' + name + '/' + IMAGE_NAMES[kind]
-                pubs.append((self.create_publisher(Image, topic + '/image', qos_profile_sensor_data),
-                             self.create_publisher(CameraInfo, topic + '/camera_info', qos_profile_sensor_data)))
+                pubs.append((self.create_publisher(Image, topic + '/image', camera_qos),
+                             self.create_publisher(CameraInfo, topic + '/camera_info', camera_qos)))
                 captures.append(capture)
             if requests:
                 callback = partial(self.camera, name, frame, requests, pubs, captures)
@@ -101,6 +108,8 @@ class SensorNode(Node):
             raise ValueError('no supported cameras or LiDAR configured')
         for worker in self.workers:
             worker.start()
+        if self.timing:
+            self.timing.write(json.dumps(dict(kind='inventory',workers=[w.name for w in self.workers]))+'\n')
 
     def timer(self, parameter, callback, name):
         rate = float(self.get_parameter(parameter).value)
@@ -118,6 +127,8 @@ class SensorNode(Node):
             worker.stop()
         for worker in self.workers:
             worker.join()
+        if self.timing:
+            self.timing.close()
         return super().destroy_node()
 
     def guarded(self, callback):
@@ -152,7 +163,11 @@ class SensorNode(Node):
         msg.header.stamp.sec, msg.header.stamp.nanosec = divmod(timestamp, 1_000_000_000)
 
     def camera(self, name, frame, requests, publishers, captures):
+        started = time.monotonic()
+        sim_started = self.get_clock().now().nanoseconds
         responses = self.rpc('simGetImages', requests, self.vehicle, False)
+        acquired = time.monotonic()
+        sim_acquired = self.get_clock().now().nanoseconds
         if len(responses) != len(requests):
             raise ValueError('incomplete image response')
         for request, response, (pub, info_pub), capture in zip(requests, responses, publishers, captures):
@@ -161,10 +176,13 @@ class SensorNode(Node):
             if self.last_stamp.get(key) == timestamp:
                 continue
             encoding, step, data = image_payload(response, request['image_type'], self.color_order)
+            converted = time.monotonic()
             msg = Image()
             self.header(msg, frame, timestamp)
             msg.width, msg.height = response['width'], response['height']
-            msg.encoding, msg.step, msg.data = encoding, step, data
+            # Generated ROS setters validate bytes element by element. A typed
+            # uint8 array keeps the identical payload without that Python loop.
+            msg.encoding, msg.step, msg.data = encoding, step, array('B', data)
             fov = float(capture.get('FOV_Degrees', 90))
             if not math.isfinite(fov) or not 0 < fov < 180:
                 raise ValueError('invalid camera FOV')
@@ -180,6 +198,11 @@ class SensorNode(Node):
             pub.publish(msg)
             info_pub.publish(info)
             self.last_stamp[key] = timestamp
+            if self.timing:
+                self.timing.write(json.dumps(dict(kind='camera',camera=name,image_type=request['image_type'],
+                    stamp_ns=timestamp,wall=started,sim_start_ns=sim_started,sim_acquired_ns=sim_acquired,
+                    rpc_wall_s=acquired-started,conversion_wall_s=converted-acquired,
+                    publish_wall_s=time.monotonic()-converted,bytes=len(data)))+'\n')
 
     def lidar(self, name, frame, data_frame, publisher):
         response = self.rpc('getLidarData', name, self.vehicle)

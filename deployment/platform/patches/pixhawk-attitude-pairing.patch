@@ -1,0 +1,20 @@
+--- a/src/pixhawk_platform.cpp
++++ b/src/pixhawk_platform.cpp
+@@ -355,6 +355,17 @@
+         px4_trajectory_setpoint_.velocity[2] = speed_ned.z();
+       } break;
+     case as2_msgs::msg::ControlMode::ATTITUDE: {
++        const double max_age = this->getParameter<double>("attitude.max_age", 0.1);
++        const double age = (this->now() - rclcpp::Time(command_pose_msg_.header.stamp,
++          this->get_clock()->get_clock_type())).seconds();
++        const auto & q = command_pose_msg_.pose.orientation;
++        const double n = q.x*q.x+q.y*q.y+q.z*q.z+q.w*q.w;
++        if (command_pose_msg_.header.stamp != command_thrust_msg_.header.stamp ||
++            command_pose_msg_.header.frame_id != odom_frame_id_ ||
++            command_thrust_msg_.header.frame_id != base_link_frame_id_ ||
++            !std::isfinite(n) || std::abs(n-1.0)>1e-3 ||
++            !std::isfinite(max_age) || max_age<=0 || age<0 || age>max_age ||
++            !std::isfinite(command_thrust_msg_.thrust) || command_thrust_msg_.thrust<=0) {return false;}
+         this->resetAttitudeSetpoint();
+         if (platform_control_mode.yaw_mode == as2_msgs::msg::ControlMode::YAW_SPEED) {
+           RCLCPP_WARN_ONCE(this->get_logger(), "Yaw Speed control not supported on ATTITUDE mode");

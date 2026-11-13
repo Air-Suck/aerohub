@@ -1,0 +1,30 @@
+--- a/src/controller_handler.cpp
++++ b/src/controller_handler.cpp
+@@ -789,8 +789,27 @@
+       RCLCPP_INFO_THROTTLE(node_ptr_->get_logger(), clock, 2000, "Waiting for motion reference");
+       return;
+     }
++    // External body rates and collective thrust form one control sample.
++    if (control_mode_out_.control_mode == as2_msgs::msg::ControlMode::BODY_RATES) {
++      const double max_age = node_ptr_->getParameter<double>("body_rates.max_age", 0.1);
++      const double age = (node_ptr_->now() -
++        rclcpp::Time(ref_twist_.header.stamp, node_ptr_->get_clock()->get_clock_type())).seconds();
++      if (!ref_twist_acquired_ || !ref_thrust_acquired_ ||
++          ref_twist_.header.stamp != ref_thrust_.header.stamp ||
++          ref_twist_.header.frame_id != base_frame_id_ ||
++          ref_thrust_.header.frame_id != base_frame_id_ ||
++          !std::isfinite(max_age) || max_age <= 0.0 || age < 0.0 || age > max_age ||
++          !std::isfinite(ref_twist_.twist.angular.x) ||
++          !std::isfinite(ref_twist_.twist.angular.y) ||
++          !std::isfinite(ref_twist_.twist.angular.z) ||
++          !std::isfinite(ref_thrust_.thrust) || ref_thrust_.thrust <= 0.0f)
++      {
++        return;
++      }
++    }
+     command_pose_ = ref_pose_;
+     command_twist_ = ref_twist_;
++    command_thrust_ = ref_thrust_;
+   } else {
+     rclcpp::Time current_time = node_ptr_->now();
+     double dt = (current_time - last_time_).nanoseconds() / 1.0e9;

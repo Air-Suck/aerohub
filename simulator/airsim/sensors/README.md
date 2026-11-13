@@ -30,6 +30,17 @@ ROS 定时器只投递采集请求，不执行阻塞 RPC，因此某一路读取
 AirSim 内部相机模型，传感器安装 TF 仍会发布。flight_board 对应开关为
 `FLIGHT_BOARD_CAMERAS=0`，默认值为 `1`。多线程是唯一的正式采集方式。
 
+专用任务应只启用实际消费的数据源，并核对所有容器的采集进程；关闭相机开关
+不会关闭LiDAR或停止第二个节点。DiffPhys不消费点云，其场景禁用LiDAR，
+通过`FLIGHT_BOARD_SENSORS=0`关闭flight_board额外ROS桥，仅算力侧采集一个深度相机。
+PX4内部IMU/GPS等仿真输入保持启用。
+
+大图可显式设置`camera_reliable:=true`，使Image/CameraInfo使用RELIABLE、KEEP_LAST=1；
+默认仍为sensor-data QoS。订阅者同步选择可靠QoS，仍按采集时间拒绝陈旧图像。
+`timing_file:=/可写目录/sensor-timing.jsonl`可选记录实际采集线程清单、原始stamp、
+RPC/转换/发布墙钟耗时；默认不创建计时文件。用采集stamp连接发布和接收记录，
+区分源图更新不连续与DDS漏收；收到的帧延迟很低不能证明没有连续漏帧。
+
 每个车辆启动一个节点，用 `vehicle_name` 映射 AirSim 车辆，
 `vehicle_namespace` 指定统一 ROS 名称。读取频率可通过 `camera_rate_hz`
 （默认 5）和 `lidar_rate_hz`（默认 10）调整，RPC 超时默认 3 秒。

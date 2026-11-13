@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<package format="3">
+ <name>ipc_native_core</name><version>0.1.0</version>
+ <description>IPC native algorithm and external ACRO session adapter.</description>
+ <maintainer email="maintainers@example.com">Aerohub maintainers</maintainer>
+ <license>LicenseRef-Upstream-Unspecified</license>
+ <buildtool_depend>ament_cmake</buildtool_depend>
+ <depend>rclcpp</depend><depend>as2_msgs</depend><depend>nav_msgs</depend><depend>sensor_msgs</depend><depend>std_msgs</depend><depend>uav_follow_reference_acro</depend>
+ <export><build_type>ament_cmake</build_type></export>
+</package>

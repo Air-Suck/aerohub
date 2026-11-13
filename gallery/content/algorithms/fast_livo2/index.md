@@ -1,6 +1,12 @@
 ---
 title: FAST-LIVO2
 summary: 融合激光雷达、IMU 与图像的实时定位建图系统。FAST-LIVO2 在运动中估计自身位姿，并输出三维配准点云，为机器人定位和环境重建提供基础能力。
+keywords:
+- 激光惯性视觉融合
+- 直接法
+- 顺序滤波更新
+- 统一体素地图
+- 定位建图
 category: state_estimator
 source: https://github.com/hku-mars/FAST-LIVO2
 revision: 0d2c0346107b75b59934975adec9a6eeeb913c64
@@ -9,14 +15,64 @@ demo:
   alt: FAST-LIVO2 作者视频中的三维重建与飞行平台封面，点击观看官方视频
   caption: 作者公开的定位与建图演示；不代表本项目已完成真实数据或飞行验收。
   source: https://github.com/hku-mars/FAST-LIVO2#11-related-video
-  video: https://www.youtube.com/watch?v=6dF2DzgbtlY
+  video: https://www.bilibili.com/video/BV1Ezxge7EEi/
 integration: integrated
 validation: unverified
+showcase:
+  headline: 融合几何与图像，让定位和建图共享信息
+  highlights:
+  - title: 顺序融合，多源互补
+    text: IMU 传播后依次用激光几何和图像光度约束更新状态，补充不同观测中的有效信息。
+  - title: 一个内核，两类输出
+    text: 统一体素地图支撑位姿估计与三维配准点云；状态与环境输出共享同一算法实例。
+  sourceNote: 平台图片来自作者关联的 LIV_handhold 硬件项目；不表示本项目采用相同机体或已完成硬件验证。
+  methodSources:
+  - label: 上游系统总览图
+    url: https://github.com/hku-mars/FAST-LIVO2/blob/0d2c0346107b75b59934975adec9a6eeeb913c64/pics/Framework.png
+videos:
+- label: YouTube
+  url: https://www.youtube.com/watch?v=6dF2DzgbtlY
+media:
+- title: 手持采集平台
+  image: content/algorithms/fast_livo2/assets/handheld.webp
+  alt: 手持采集平台的传感器与结构展示
+  caption: 激光、相机、IMU 与同步模块集成在同一平台，硬件时间同步支撑多源测量对齐。
+  source: https://github.com/xuankuzcr/LIV_handhold/blob/4567a0543a2d8e7f098e69b2f3e3d7aa41933c90/pics/cover.jpg
+- title: 机载传感器平台
+  image: content/algorithms/fast_livo2/assets/onboard.webp
+  alt: 机载传感器平台的传感器与结构展示
+  caption: 关联硬件项目公开机载安装与结构设计，展示联合定位建图的空中部署形态。
+  source: https://github.com/xuankuzcr/LIV_handhold/blob/4567a0543a2d8e7f098e69b2f3e3d7aa41933c90/pics/uav.jpg
 ---
+
+## 算法核心
+
+<div class="method-cards" aria-label="FAST-LIVO2 上游方法示意">
+<figure class="method-card">
+<div class="method-card-image">
+
+![FAST-LIVO2 上游系统总览，含 IMU 传播、激光更新、视觉更新与共享体素地图](./assets/upstream-framework.webp)
+
+</div>
+<figcaption><h3>顺序更新，共享地图</h3><p>几何与光度测量在同一状态估计中顺序更新；地图保存两类观测信息。完整原图见来源。</p></figcaption>
+</figure>
+</div>
+
+<div class="diagram-scroll" style="--diagram-min-width: 1120px" tabindex="0" role="region" aria-label="FAST-LIVO2 算法核心图，可横向滚动">
+
+![FAST-LIVO2：IMU 传播、激光几何更新与视觉光度更新，共享体素地图，输出自身状态与配准点云；红色表示整体输入输出](./assets/algorithm-unified.svg)
+
+</div>
+
+算法方法依据[作者论文](https://arxiv.org/abs/2408.14035)：地图中的激光平面先验辅助图像对齐，参考图像块随新图像对齐更新。本图展示完整 LIVO 模式。图中反馈表示跨时刻的地图复用，不代表两个独立定位器。内部统一地图与本项目对外发布的配准点云应分别理解。
 
 ## 在 Aerohub 中如何接入
 
-![FAST-LIVO2 在 Tool、Behavior、Function 三层中的接入、调用与依赖](./assets/layers.svg)
+<div class="diagram-scroll" style="--diagram-min-width: 1120px" tabindex="0" role="region" aria-label="FAST-LIVO2 三层架构图，可横向滚动">
+
+![FAST-LIVO2 在 Tool、Behavior、Function 三层中的能力与数据依赖](./assets/layers-capabilities-unified.svg)
+
+</div>
 
 - **Tool**：本接入未注册任务 Tool，状态和点云可由上层直接读取。
 - **Behavior**：无直接运动 Action 调用，不将定位输出包装成飞行动作。
@@ -24,7 +80,11 @@ validation: unverified
 
 联合算法只保留一个实例。配准点云不自动等于占据图或 ESDF，AS2 接入也不代表 PX4 已融合外部定位。
 
-[Bilibili 备用观看入口](https://www.bilibili.com/video/BV1Ezxge7EEi)
+## 案例
+
+<!-- 暂留空，等待可公开核查的案例材料。 -->
+
+## 补充信息
 
 <details>
 <summary>接入细节与验证记录</summary>
@@ -42,7 +102,7 @@ Demo 画面来自[作者公开素材](https://i.ytimg.com/vi/6dF2DzgbtlY/maxresd
 | Behavior | 无直接运动 Action 调用 | 状态发布不具有运动 Behavior 生命周期 |
 | Function：State Estimator | FAST-LIVO2 输出桥与 AS2 插件 | 适配自身位姿、速度及 TF，保留统一状态接口 |
 | Function：Perception | 共享桥的配准点云输出 | 保留三维点云，不自动产生占据图或 ESDF |
-| Function：传感器输入 | 外部 ROS 1 驱动或回放 | 输入桥、传感器模型和标定按部署核查；不假定 AirSim 已适配 |
+| Function：传感器输入 | ROS 1 驱动、回放或专用 AirSim RPC 输入桥 | AirSim 已有 shadow 接入记录，精度门限未通过；传感器模型和标定仍按部署核查 |
 
 ### Function：一个算法进程，两类能力
 
@@ -65,12 +125,20 @@ FAST-LIVO2 保持官方 ROS 1 Noetic 算法进程，通过只读输出桥连接 
 
 ### 已验证范围与接入缺口
 
-主文档记载 Docker 编译、两套 AS2 宿主插件契约，以及合成 IMU/激光/图像端到端冒烟通过。真实数据集、PX4 融合和飞行验收仍未完成。合成输入只验证算法与接口链，不能推导出真实定位精度。
+组件 README 记载 Docker 编译、两套 AS2 宿主插件契约及合成三传感器端到端冒烟通过。后续有屏 AirSim + PX4 SITL shadow 测试已记录真实仿真 IMU、RGB 和 LiDAR 进入算法，ROS 2 状态与配准点云有下游消费；但 LIO 与完整 LIVO 的空中／水平误差超过预声明的 `0.5 m` 门限，并出现航向跳变。因此定位精度未通过，authority 状态源测试受安全门约束未执行。
 
-AirSim 桥现有 XYZ-only 点云与 FAST-LIVO2 预处理所需的逐点时间等字段尚有语义缺口；ROS 2 原始传感器到 ROS 1 算法的输入桥、时钟与标定也需另行接入。现有只读输出桥不覆盖该输入方向。
+AirSim 输入桥现已存在：`ros1_proxy/airsim_input_bridge.py` 将 RPC 测量发布为 ROS 1 输入。AirSim 1.8.1 缺少逐点时间，桥使用 `time=0`，配合构建补丁 `preprocess/instantaneous_scan=true` 按瞬时扫描处理；不能把补齐字段理解为恢复了真实旋转扫描时间。输出桥仍只负责算法结果方向，不是通用双向传感器桥。
 
-本次仅同步网页，没有接入传感器或运行算法。尚未整理公开运行证据，页面验证记录保留“未登记验证证据”。
+上述结果来自当前组件 README 的历史记录，其引用证据目录为 `log/main-gpu-e2e-20261109/`；本工作区没有该证据包，本次未重新运行或独立复核。真实数据集、权威仿真飞行和真机验收仍未通过，元数据保留 `unverified`。
 
-内容来源：[项目简介](https://github.com/Air-Suck/aerohub/blob/ca3581e6c8a1fddce4c521736e2959af81780333/docs/项目简介.md)，同步版本 `ca3581e`。源码目录用于定位实现，不由网页构建直接加载。
+### 本次核查与来源
+
+本次仅更新 Gallery，读取了状态估计与环境接口 README、`plugin/src/plugin.cpp` 的 `receive()`、`ros1_proxy/output_bridge.py` 的状态／点云订阅以及 AirSim 输入桥。锁定上游 gitlink 为 `0d2c0346107b75b59934975adec9a6eeeb913c64`，本工作区上游子模块未检出；算法核心图按公开方法绘制，并链接作者论文供对照；本次在线获取源码超时，论文页面也未成功取得，锁定版本的方法细节仍待逐函数核查。
+
+- [状态估计组件说明](https://github.com/Air-Suck/aerohub/blob/main/src/state_estimator/fast_livo2/README.md)
+- [环境输出接口说明](https://github.com/Air-Suck/aerohub/blob/main/src/perception/fast_livo2/README.md)
+- [作者论文：FAST-LIVO2](https://arxiv.org/abs/2408.14035)
+
+以上仓库链接用于定位文档；本页同步的是 2026-11-12 本地工作区内容，不将可变的 main 链接当成公开验收证据。单机接口示例不证明多机共享地图、全局对齐或协同定位已实现；多机部署需要每机独立实例、namespace 与状态发布权配置。
 
 </details>

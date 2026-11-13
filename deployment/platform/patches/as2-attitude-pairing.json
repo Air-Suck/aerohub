@@ -1,0 +1,6 @@
+{
+  "baseline_sha256": "d149b7368662a83c2941123227fb70b85ee27a4f51b70362842640aea8422ad4",
+  "patched_sha256": "8d868bf1b6d521f47529c8fd48278f7599505b93ed361a6a0741620b88be1180",
+  "patch_sha256": "4f45f5792499eaf6f254417ec503acffeead01fe3aa509cbe1a730858b9182aa",
+  "scope": "paired fresh ATTITUDE quaternion/thrust and source timestamp; after existing body-rates patches"
+}

@@ -1,0 +1,10 @@
+{
+  "as2_reference_commit": "80f0f27a72efd053d029d3e6a76c3d5d473db6d2",
+  "runtime_image": "sha256:1242967324756673026eb117fadbc55ec1629af1a6a1a89db64ebb5527cc6a87",
+  "package": "as2_platform_pixhawk",
+  "path": "src/pixhawk_platform.cpp",
+  "baseline_sha256": "a0ba2a96f5f715cc8ca038f1bf27820b2575e4ded20f73be1404e025cc4615a4",
+  "patched_sha256": "5b0c0507b65aa65f000215ebb1ffe27ff8c14ae15982121a2e68c15a2ae73a7f",
+  "patch_sha256": "5a32bb9e7ee878072b996757f982406957763dfb89972de2b494d85bbca50ae2",
+  "scope": "Publish complete fresh BODY_RATES twist/thrust pairs; image source hash is authoritative; no ABI change"
+}

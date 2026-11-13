@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1290" height="790" viewBox="0 0 1290 790" role="img" aria-labelledby="title desc">
+<title id="title">DiffPhys / Tool · Behavior · Function</title><desc id="desc">单机当前接入职责与公共执行依赖。</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10z" fill="#716b60"/></marker></defs>
+<rect width="1290" height="790" rx="12" fill="#fcfaf7"/>
+<g font-family="Arial, Noto Sans CJK SC, sans-serif" fill="#242522">
+<text x="32" y="38" font-size="22" fill="#242522" font-weight="600">DiffPhys / Tool · Behavior · Function</text>
+<rect x="25" y="65" width="1240" height="170" rx="8" fill="none" stroke="#d8d3cc"/><text x="45" y="95" font-size="17" fill="#62605c" font-weight="600">TOOL</text><rect x="25" y="260" width="1240" height="170" rx="8" fill="none" stroke="#d8d3cc"/><text x="45" y="290" font-size="17" fill="#62605c" font-weight="600">BEHAVIOR</text><rect x="25" y="460" width="1240" height="200" rx="8" fill="none" stroke="#d8d3cc"/><text x="45" y="490" font-size="17" fill="#62605c" font-weight="600">FUNCTION</text><rect x="210" y="100" width="430" height="110" rx="8" fill="#e4eee6" stroke="#8fa693"/>
+<text x="228" y="134" font-size="23" fill="#242522" font-weight="600">导航目标与执行协调</text>
+<text x="228" y="166" font-size="18" fill="#62605c">Demo：到达判定 / 取消 / 停车</text>
+<text x="228" y="193" font-size="18" fill="#62605c">Navigation Tool 实现基础</text><rect x="760" y="100" width="370" height="110" rx="8" fill="#e4eee6" stroke="#8fa693"/>
+<text x="778" y="134" font-size="23" fill="#242522" font-weight="600">策略观测与动作解码</text>
+<text x="778" y="166" font-size="18" fill="#62605c">状态配对 / 会话世代 / h</text>
+<text x="778" y="193" font-size="18" fill="#62605c">15 Hz 策略 / 过期结果拒绝</text><rect x="210" y="300" width="430" height="105" rx="8" fill="#e8edf1" stroke="#9aaab7"/>
+<text x="228" y="334" font-size="23" fill="#242522" font-weight="600">姿态参考执行</text>
+<text x="228" y="366" font-size="18" fill="#62605c">FollowReference / ATTITUDE</text><rect x="760" y="300" width="370" height="105" rx="8" fill="#e8edf1" stroke="#9aaab7"/>
+<text x="778" y="334" font-size="23" fill="#242522" font-weight="600">起飞 / 停车 / 降落</text>
+<text x="778" y="366" font-size="18" fill="#62605c">原生 Takeoff / GoTo / Land</text><rect x="210" y="510" width="280" height="110" rx="8" fill="#e4eee6" stroke="#8fa693"/>
+<text x="228" y="544" font-size="23" fill="#242522" font-weight="600">Inference / 视觉策略</text>
+<text x="228" y="576" font-size="18" fill="#62605c">CUDA / CNN + GRU</text>
+<text x="228" y="603" font-size="18" fill="#62605c">返回 action 与 h_next</text><rect x="560" y="510" width="280" height="110" rx="8" fill="#e8edf1" stroke="#9aaab7"/>
+<text x="578" y="544" font-size="23" fill="#242522" font-weight="600">传感器与自身状态</text>
+<text x="578" y="576" font-size="18" fill="#62605c">深度相机 / 姿态 / 速度</text>
+<text x="578" y="603" font-size="18" fill="#62605c">外部复用 / 不提供地图</text><rect x="910" y="510" width="280" height="110" rx="8" fill="#e8edf1" stroke="#9aaab7"/>
+<text x="928" y="544" font-size="23" fill="#242522" font-weight="600">控制与平台接口</text>
+<text x="928" y="576" font-size="18" fill="#62605c">AS2 / PX4 姿态推力</text>
+<text x="928" y="603" font-size="18" fill="#62605c">非真机推力标定</text><path d="M640 150 H760" fill="none" stroke="#716b60" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arrow)"/><path d="M425 210 V300" fill="none" stroke="#716b60" stroke-width="2" marker-end="url(#arrow)"/><path d="M640 190 H690 V280 H945 V300" fill="none" stroke="#716b60" stroke-width="2" marker-end="url(#arrow)"/><path d="M760 175 H720 V250 H600 V300" fill="none" stroke="#716b60" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arrow)"/><path d="M790 210 V240 H150 V565 H210" fill="none" stroke="#716b60" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arrow)"/><path d="M350 510 V455 H130 V80 H945 V100" fill="none" stroke="#716b60" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arrow)"/><path d="M700 510 V445 H1205 V155 H1130" fill="none" stroke="#716b60" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arrow)"/><path d="M490 405 V440 H1050 V510" fill="none" stroke="#716b60" stroke-width="2" marker-end="url(#arrow)"/><path d="M1130 350 H1230 V565 H1190" fill="none" stroke="#716b60" stroke-width="2" marker-end="url(#arrow)"/><text x="32" y="700" font-size="17" fill="#62605c">绿色：本项目策略接入；蓝灰：公共扩展 / 原生复用。实线：执行调用 / 参考；虚线：数据。</text><text x="32" y="730" font-size="17" fill="#62605c">当前单机；任务、Adapter、模型为独立进程，分层不表示进程拆分。通用 Tool / Mission / Agent 未实现。</text><text x="32" y="760" font-size="17" fill="#62605c">三层图外平台：AirSim 传感器与动力学、PX4 SITL；RoboPi 四方部署与多机闭环尚未验收。</text>
+</g></svg>

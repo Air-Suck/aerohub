@@ -26,5 +26,7 @@ RUN cd /tmp/px4-1.18-msgs && sha256sum -c SHA256SUMS \
 RUN source /opt/ros/humble/setup.bash \
     && MAKEFLAGS=-j2 colcon build --merge-install --packages-select px4_msgs \
        --cmake-args -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF \
+    && source install/setup.bash \
+    && python3 -c 'from px4_msgs.msg import VehicleStatus; assert VehicleStatus.MESSAGE_VERSION == 4' \
     && printf '%s\n' "$PX4_MSGS_COMMIT" > install/px4_msgs-source-commit \
     && rm -rf build log src /tmp/px4-1.18-msgs
