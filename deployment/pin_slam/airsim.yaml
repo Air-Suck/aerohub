@@ -13,24 +13,24 @@ process:
   max_z_m: 10.0
   vox_down_m: 0.12
 sampler:
-  surface_sample_range_m: 0.15
+  surface_sample_range_m: 0.18
   surface_sample_n: 3
   free_sample_begin_ratio: 0.3
   free_sample_end_dist_m: 0.8
   free_front_sample_n: 2
   free_behind_sample_n: 1
 neuralpoints:
-  voxel_size_m: 0.3
+  voxel_size_m: 0.45
   feature_dim: 8
-  query_nn_k: 8
-  search_alpha: 0.5
+  query_nn_k: 5
+  search_alpha: 0.4
   weighted_first: False
   local_map_travel_dist_ratio: 5.0
 decoder:
   freeze_after_frame: 40
 loss:
   main_loss_type: "bce"
-  sigma_sigmoid_m: 0.08
+  sigma_sigmoid_m: 0.12
   loss_weight_on: True
   dist_weight_scale: 0.8
   ekional_loss_on: True
@@ -42,9 +42,9 @@ continual:
 tracker:
   # Preserve enough AirSim geometry for stable motion tracking while bounding
   # registration work to the live platform's output-gap requirement.
-  source_vox_down_m: 0.3
-  iter_n: 30
-  valid_nn_k: 8
+  source_vox_down_m: 0.45
+  iter_n: 20
+  valid_nn_k: 5
   GM_grad: 0.1
   GM_dist: 0.25
 pgo:
