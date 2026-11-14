@@ -55,9 +55,9 @@ validation:
   scope: visible AirSim 1.8.1, image-embedded PX4 SITL, real LiDAR mapping, AS2 motion, queries, faults and cleanup
   evidence:
     - log/workspaces/rog_map
-    - log/airsim/rog-map/normal-05
-    - log/airsim/rog-map/sensor-fault-02
-    - log/airsim/rog-map/algorithm-fault-01
+    - log/airsim/rog-map/final-normal-01
+    - log/airsim/rog-map/final-sensor-fault-01
+    - log/airsim/rog-map/final-algorithm-fault-01
     - skill/temp/rog_map/README.md
   limitations:
     - AirSim point clouds contain instantaneous XYZ without intensity, ring or per-point time.
