@@ -1,5 +1,51 @@
 # 运行镜像版本
 
+## v0.1.1：算力侧消息与源码来源更新
+
+2026-11-11 已发布 `ghcr.io/popc0rn7/aerohub/onboard-computer:v0.1.1`，
+配套 `flight-board:v0.1.0` 保持原内容。新算力镜像编译 PX4 固定消息定义
+（VehicleStatus v4）及 AS2/Pixhawk 消费者，源码直接来自 AeroHub fork。
+详见 [v0.1.1.json](v0.1.1.json)。各功能已有运行默认值不随本次构建迁移自动改变；
+显式设置 `ONBOARD_COMPUTER_IMAGE` 选择新镜像。
+
+```bash
+docker pull ghcr.io/popc0rn7/aerohub/onboard-computer@sha256:ba618faf22ece6a76ffb8a0fb625b741894ef9f8f1c086a552737156a769086d
+# 为使用本地镜像标签的脚本准备同一内容
+docker tag ghcr.io/popc0rn7/aerohub/onboard-computer@sha256:ba618faf22ece6a76ffb8a0fb625b741894ef9f8f1c086a552737156a769086d onboard_computer:v0.1.1
+ONBOARD_COMPUTER_IMAGE=onboard_computer:v0.1.1 bash deployment/onboard_computer/smoke.sh
+```
+
+远端 digest 是单平台运行 manifest 的摘要，不是原本地 OCI index ID。
+此次构建的两个 fork 均干净，但镜像标签中的主仓库 revision 为 `5450d3b`、
+`io.aerohub.source.dirty=true`；不能只凭这个 revision 声称精确复建已发布镜像。
+本轮分支整理提供后续构建规则，不改写历史发布来源。七节点离线启动已通过；
+不将其等同于所有算法、真机或全场景验收通过。
+
+### v0.1.1 的 Skopeo 发布方式
+
+本机 Skopeo 1.4.1 复制构建证明时出现
+`unsupported MIME type for compression: application/vnd.in-toto+json`。
+归档同时含 linux/amd64 运行镜像和 unknown/unknown attestation；本次明确选择
+amd64，仅发布运行镜像，不使用 `--all`。这会省略 attestation，不修改运行层。
+原始 tar 保留完整本地导出内容；不要为上传重建镜像。
+
+```bash
+docker save -o /tmp/aerohub-onboard-v0.1.1.tar onboard_computer:v0.1.1
+skopeo --command-timeout 2h --override-os linux --override-arch amd64 copy \
+  --preserve-digests --retry-times 10 \
+  --dest-authfile "$HOME/.docker/config.json" \
+  --digestfile /tmp/aerohub-onboard-v0.1.1-remote.digest \
+  oci-archive:/tmp/aerohub-onboard-v0.1.1.tar \
+  docker://ghcr.io/popc0rn7/aerohub/onboard-computer:v0.1.1
+cat /tmp/aerohub-onboard-v0.1.1-remote.digest
+skopeo inspect --raw --authfile "$HOME/.docker/config.json" \
+  docker://ghcr.io/popc0rn7/aerohub/onboard-computer:v0.1.1 | sha256sum
+```
+
+发布已完成，上述命令仅记录过程；不要重复覆盖固定 tag。后续内容变化使用新 tag。
+
+## v0.1.0：历史双镜像发布
+
 `v0.1.0` 包含两份 Linux amd64 PC 镜像：
 
 | 镜像 | 职责 | 固定本地镜像 ID 前缀 |

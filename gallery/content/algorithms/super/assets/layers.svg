@@ -1,81 +1,47 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1100" viewBox="0 0 1080 1100" role="img" aria-labelledby="title description">
-  <title id="title">SUPER：Tool、Behavior、Function 三层接入关系</title>
-  <desc id="description">SUPER 单机接入。Tool 层的原生规划、ROS 2 bridge 与 FollowPath Client 调用扩展 FollowPath。Function 层复用现有定位和运动控制，同时接入导航输入及 SUPER 自带 ROG-Map；ROG-Map 与规划在同一 SUPER 进程中。平台里程计不由导航输入自动升级成融合定位。图示不证明通用 Tool 或四方目标部署已经实现。</desc>
+<?xml version="1.0" ?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="650" viewBox="0 0 1100 650" role="img" aria-labelledby="title desc">
+  <title id="title">SUPER 在 Aerohub 中的三层能力关系</title>
+  <desc id="desc">局部导航与滚动规划调用时间化路径跟随，读取基础能力数据并经运动控制连接平台。</desc>
   <defs>
-    <marker id="execution" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8" fill="#175da5"/></marker>
-    <marker id="data" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8" fill="#b86b20"/></marker>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10z" fill="#716b60"/>
+    </marker>
   </defs>
-  <g font-family="system-ui, sans-serif" fill="#202d3a">
-    <rect width="1080" height="1100" fill="#f8fafc"/>
-    <text x="30" y="42" font-size="28" font-weight="700">SUPER · 三层接入关系</text>
-    <text x="30" y="75" font-size="18" fill="#53657a">单机 drone0 配置示意 · 算法实现、执行调用与基础能力依赖</text>
-    <rect x="100" y="112" width="950" height="268" rx="10" fill="white" stroke="#dbe2e9"/>
-    <text x="124" y="150" font-size="24" font-weight="700">TOOL / 工具层</text>
-    <text x="124" y="179" font-size="17" fill="#53657a">Navigation Tool 实现基础：现有规划与适配链；通用 Tool 尚未实现</text>
-    <g text-anchor="middle">
-      <rect x="130" y="202" width="250" height="90" rx="8" fill="#d9f3ed" stroke="#168b78"/>
-      <text x="255" y="237" font-size="21" font-weight="700">SUPER</text>
-      <text x="255" y="269" font-size="16">原生 committed polynomial</text>
-      <rect x="440" y="202" width="250" height="90" rx="8" fill="#d9f3ed" stroke="#168b78"/>
-      <text x="565" y="237" font-size="20" font-weight="600">ROS 2 bridge</text>
-      <text x="565" y="269" font-size="16">原生曲线 → 时间化轨迹</text>
-      <rect x="750" y="202" width="250" height="90" rx="8" fill="#eef3f8" stroke="#175da5"/>
-      <text x="875" y="237" font-size="20" font-weight="600">FollowPath Client</text>
-      <text x="875" y="269" font-size="16">校验 / 更新 / 结果</text>
-    </g>
-    <g fill="none" stroke="#175da5" stroke-width="2" marker-end="url(#execution)">
-      <path d="M380 247 H434"/><path d="M690 247 H744"/>
-    </g>
-    <text x="124" y="353" font-size="17" fill="#b86b20">导航位姿与地图供规划使用；平台里程计供 Adapter 监测</text>
-    <rect x="100" y="436" width="950" height="245" rx="10" fill="white" stroke="#dbe2e9"/>
-    <text x="124" y="476" font-size="24" font-weight="700">BEHAVIOR / 基础行为执行层</text>
-    <rect x="330" y="500" width="520" height="100" rx="8" fill="#eef3f8" stroke="#175da5"/>
-    <text x="590" y="534" text-anchor="middle" font-size="23" font-weight="700">ExtendedFollowPath</text>
-    <text x="590" y="565" text-anchor="middle" font-size="18">FollowTimedPath · drone0</text>
-    <text x="124" y="532" font-size="16" fill="#b86b20">当前状态</text>
-    <text x="124" y="635" font-size="17">复用公共 FollowPath 扩展：原生入口与 FollowTimedPath 互斥</text>
-    <text x="124" y="663" font-size="17" fill="#53657a">起飞、停止与降落由外部 Demo 编排；不是规划核心职责</text>
-    <rect x="100" y="753" width="950" height="257" rx="10" fill="white" stroke="#dbe2e9"/>
-    <text x="124" y="790" font-size="24" font-weight="700">FUNCTION / 基础能力层</text>
-    <g text-anchor="middle">
-      <rect x="130" y="815" width="260" height="113" rx="8" fill="#eef3f8" stroke="#175da5"/>
-      <text x="260" y="848" font-size="20" font-weight="600">State Estimator</text>
-      <text x="260" y="879" font-size="17">位姿 / 速度 / TF</text>
-      <text x="260" y="907" font-size="16" fill="#53657a">复用现有定位源 / TF</text>
-      <rect x="440" y="815" width="260" height="113" rx="8" fill="#eef3f8" stroke="#175da5"/>
-      <text x="570" y="848" font-size="20" font-weight="600">Motion Controller</text>
-      <text x="570" y="879" font-size="17">参考 + 自身状态 → 控制</text>
-      <text x="570" y="907" font-size="16" fill="#53657a">复用 AS2 运动控制</text>
-      <rect x="750" y="815" width="260" height="113" rx="8" fill="#d9f3ed" stroke="#168b78"/>
-      <text x="880" y="848" font-size="19" fill="#53657a">Navigation / ROG-Map</text>
-      <text x="880" y="879" font-size="17" fill="#53657a">坐标对齐 / 占据地图</text>
-      <text x="880" y="907" font-size="16" fill="#53657a">同一 SUPER 进程维护地图</text>
-    </g>
-    <g fill="none" stroke="#b86b20" stroke-width="2">
-      <path d="M1010 900 H1065 V188 H255 V196" marker-end="url(#data)"/>
-    </g>
-    <!-- Dedicated side lanes keep connectors clear of headings and annotations. -->
-    <g fill="none" stroke="#175da5" stroke-width="2" marker-end="url(#execution)">
-      <path d="M1000 247 H1025 V522 H856"/>
-      <path d="M850 577 H1000 V738 H570 V809"/>
-    </g>
-    <text x="124" y="410" font-size="18" fill="#175da5">单机滚动更新 · 保留原生曲线与执行时间 · Feedback / Result</text>
-    <text x="620" y="723" font-size="18" fill="#175da5">逐机 Motion Reference</text>
-    <g fill="none" stroke="#b86b20" stroke-width="2" marker-end="url(#data)">
-      <path d="M390 872 H434"/>
-      <path d="M130 872 H60 V322 H565 V298"/>
-      <path d="M60 550 H324"/>
-    </g>
-    <g fill="#b86b20"><circle cx="60" cy="550" r="4"/></g>
-    <text x="40" y="732" font-size="17" fill="#b86b20" transform="rotate(-90 40 732)">自身状态共享数据</text>
-    <text x="124" y="962" font-size="17">导航输入读取同源平台里程计及点云；ROG-Map 与规划同进程</text>
-    <text x="124" y="991" font-size="17" fill="#53657a">平台边界：经 AS2 平台适配连接 PX4，位于本图三层范围之外</text>
-    <rect x="30" y="1034" width="16" height="16" fill="#d9f3ed" stroke="#168b78"/>
-    <text x="55" y="1048" font-size="17">算法与专属接入</text>
-    <rect x="255" y="1034" width="16" height="16" fill="#eef3f8" stroke="#175da5"/>
-    <text x="280" y="1048" font-size="17">复用公共能力</text>
-    <text x="490" y="1048" font-size="17" fill="#175da5">蓝：结果 / 执行调用</text>
-    <text x="740" y="1048" font-size="17" fill="#b86b20">橙：状态数据</text>
-    <text x="30" y="1081" font-size="16" fill="#53657a">层级表示职责归属；调用或依赖某层不等于 SUPER 实现了该层能力。此图不表示飞行结果。</text>
+  <rect width="1100" height="650" rx="12" fill="#fcfaf7"/>
+  <g font-family="Arial, Noto Sans CJK SC, sans-serif" fill="#242522">
+    <text x="30" y="37" font-size="22" fill="#242522" text-anchor="start" font-weight="600">SUPER / Aerohub 能力关系</text>
+    <rect x="25" y="65" width="1050" height="140" rx="8" fill="none" stroke="#d8d3cc"/>
+    <text x="45" y="95" font-size="17" fill="#62605c" text-anchor="start" font-weight="600">TOOL</text>
+    <rect x="25" y="225" width="1050" height="140" rx="8" fill="none" stroke="#d8d3cc"/>
+    <text x="45" y="255" font-size="17" fill="#62605c" text-anchor="start" font-weight="600">BEHAVIOR</text>
+    <rect x="25" y="385" width="1050" height="140" rx="8" fill="none" stroke="#d8d3cc"/>
+    <text x="45" y="415" font-size="17" fill="#62605c" text-anchor="start" font-weight="600">FUNCTION</text>
+    <rect x="240" y="81" width="660" height="105" rx="8" fill="#e4eee6" stroke="#8fa693"/>
+    <text x="258" y="115" font-size="23" fill="#242522" text-anchor="start" font-weight="600">局部导航与滚动规划</text>
+    <text x="258" y="147" font-size="18" fill="#62605c" text-anchor="start">Navigation Tool 的实现基础；通用 Tool 尚未实现</text>
+    <rect x="240" y="241" width="660" height="105" rx="8" fill="#e8edf1" stroke="#9aaab7"/>
+    <text x="258" y="275" font-size="23" fill="#242522" text-anchor="start" font-weight="600">时间化路径跟随</text>
+    <text x="258" y="307" font-size="18" fill="#62605c" text-anchor="start">扩展 FollowPath / FollowTimedPath · 保留轨迹时间语义</text>
+    <rect x="200" y="413" width="265" height="94" rx="8" fill="#e8edf1" stroke="#9aaab7"/>
+    <text x="218" y="447" font-size="23" fill="#242522" text-anchor="start" font-weight="600">自身状态</text>
+    <text x="218" y="479" font-size="18" fill="#62605c" text-anchor="start">位置 / 速度</text>
+    <rect x="490" y="413" width="265" height="94" rx="8" fill="#e4eee6" stroke="#8fa693"/>
+    <text x="508" y="447" font-size="23" fill="#242522" text-anchor="start" font-weight="600">环境表示 / ROG-Map</text>
+    <text x="508" y="479" font-size="18" fill="#62605c" text-anchor="start">局部占据地图</text>
+    <rect x="780" y="413" width="265" height="94" rx="8" fill="#e8edf1" stroke="#9aaab7"/>
+    <text x="798" y="447" font-size="23" fill="#242522" text-anchor="start" font-weight="600">运动控制</text>
+    <text x="798" y="479" font-size="18" fill="#62605c" text-anchor="start">参考 + 状态 → 控制</text>
+    <path d="M570 186 V241" fill="none" stroke="#716b60" stroke-width="2" marker-end="url(#arrow)"/>
+    <text x="590" y="219" font-size="17" fill="#62605c" text-anchor="start">完整时间化轨迹</text>
+    <path d="M900 294 H1055 V398 H913 V413" fill="none" stroke="#716b60" stroke-width="2" marker-end="url(#arrow)"/>
+    <text x="940" y="366" font-size="16" fill="#62605c" text-anchor="start">运动参考</text>
+    <path d="M200 460 H180 V134 H240" fill="none" stroke="#716b60" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arrow)"/>
+    <path d="M180 295 H240" fill="none" stroke="#716b60" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arrow)"/>
+    <text x="150" y="372" font-size="16" fill="#62605c" text-anchor="end">观测 / 状态</text>
+    <path d="M622 413 V369 H930 V134 H900" fill="none" stroke="#716b60" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arrow)"/>
+    <path d="M332 507 V536 H913 V507" fill="none" stroke="#716b60" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arrow)"/>
+    <text x="30" y="563" font-size="17" fill="#62605c" text-anchor="start">绿色：算法能力    蓝灰：公共复用    浅灰：外部输入或未涉及    实线：执行    虚线：数据交互</text>
+    <text x="30" y="595" font-size="17" fill="#62605c" text-anchor="start">平台边界：经 AS2 平台连接 PX4。起飞 / 降落由任务编排另行调用基础 Behavior。</text>
+    <text x="30" y="625" font-size="17" fill="#62605c" text-anchor="start">单机能力示意；职责分层不代表进程拆分，也不表示飞行验收结果。</text>
   </g>
 </svg>

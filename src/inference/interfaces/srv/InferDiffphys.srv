@@ -1,0 +1,24 @@
+# Frozen official swarm.pth profile: odometry enabled, 36x48 DepthPlanar.
+# State is [local_v(3), local_target_v(3), level_R_row2(3), margin_m].
+# level_R is the horizontal heading rotation in the observation context.
+# Preserve the official eval feature (level_R, not the full body rotation).
+# State/depth must describe synchronized actual measurements, never a future reference.
+string request_id
+std_msgs/Header state_header
+sensor_msgs/Image depth
+float32[10] state
+# Empty resets the policy; otherwise exactly 192 finite values, owned by caller.
+float32[] hidden_state
+---
+bool success
+string error_code
+string message
+string request_id
+std_msgs/Header state_header
+std_msgs/Header depth_header
+string model_version
+string device
+# Raw interleaved local action: [set_x, est_x, set_y, est_y, set_z, est_z].
+# Not a trajectory or flight instruction. No gravity, control bias, yaw or thrust added.
+float32[6] action
+float32[] hidden_state

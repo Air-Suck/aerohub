@@ -50,6 +50,22 @@ ROS 参数测试须包含 `Parameter.to_parameter_msg()` / `from_parameter_msg()
 类型及长度/有限性校验，不用 Python list/tuple 白名单误拒绝线上请求。运行期
 目标变更须同时更新节点缓存，并限定执行已停止/静默状态。
 
+固定长度ROS浮点数组在生成的Python类型中可能暴露NumPy标量；转JSON前逐值转换为原生float，并校验长度和有限性。用真实生成消息经过Adapter的服务调用验证，纯Python列表样例不能检出该差异。DiffPhys首次DDS调用曾因此在json.dumps处异常退出，修复后同一真实链路通过。
+
+高分辨率Image出现延迟时分别测量RPC、字段赋值、DDS接收和模型耗时。
+Humble生成的uint8数组setter可能逐元素校验bytes；可传入相同内容的
+`array.array('B', payload)`走类型匹配路径，并验证序列化字节一致。
+本项目镜像中1.23MB图像赋值曾测得bytes约50ms、typed array约0.8ms；
+这是字段赋值证据，不代表整个相机或闭环已达到实时要求。
+
+大图漏帧诊断用原采集stamp逐帧连接源发布和消费者接收记录。单看已收到帧的低年龄
+会漏掉连续丢失的图像；只从接收端测得的时间间隔不能称作源采集停顿。
+Humble DiffPhys 1.23MB深度图曾在BEST_EFFORT下出现源端约15Hz但消费者连续漏帧；
+显式RELIABLE、KEEP_LAST=1后地面60秒927帧全部匹配。此为该部署的传输证据，
+不是所有传感器改可靠QoS的依据；仍核查重传长尾和采集时间的新鲜度。
+推理延迟分开记录请求发出、服务接收、HTTP开始/结束、服务响应就绪与客户端完成，
+避免把GPU耗时、DDS延迟、客户端轮询和策略输出拒绝混为同一类故障。
+
 固定共享镜像的 rclpy 可能没有便利客户端模块。先检查实际导入，必要时直接使用
 标准 `rcl_interfaces/srv/SetParametersAtomically`，等待响应成功后再运动；不能因
 便利 API 缺失就替换共享镜像。类型支持加载和无运动构造通过仍不等于跨机连通。

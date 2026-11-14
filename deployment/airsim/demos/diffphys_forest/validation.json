@@ -1,0 +1,80 @@
+{
+  "date": "2026-11-11",
+  "scope": "Current-camera 8m/s target-speed normal forest task; single-run evidence",
+  "normal_task": "passed",
+  "overall_reproduction": "incomplete",
+  "evidence": "log/diffphys/forest-long-40-takeoff4-repeat",
+  "configuration": {
+    "profile": "high_speed",
+    "camera": "640x480 HFOV91 Pitch20 DepthPlanar [0.5,0,-0.1]",
+    "clock_speed": 1,
+    "policy_hz": 15
+  },
+  "result": {
+    "success": true,
+    "nominal_policy_speed_m_s": 8.0,
+    "takeoff_height_m": 4.0,
+    "policy_start_position_m": [
+      -0.00599738908931613,
+      -0.019683798775076866,
+      3.9435882568359375
+    ],
+    "goal_lookahead_m": 10.0,
+    "command_tilt_limit_rad": 0.5,
+    "tilt_limit_rad": 0.6,
+    "goal_entry_sim_s": 43.78593420982361,
+    "observed_path_m": 250.5417230745761,
+    "observed_speed_median_m_s": 6.359147707611986,
+    "observed_speed_peak_m_s": 8.916961517385445,
+    "goal_distance_m": 0.0462382815735485,
+    "tilt_max_rad": 0.5482175781429897,
+    "stop_wall_s": 7.735739961000036,
+    "stop_speed_mps": 0.07478249625196795,
+    "low_speed_dwell_sim_s": 2.010042905807495,
+    "execution_stop_wall_s": 0.31594652100011444,
+    "landed_and_disarmed": true
+  },
+  "analysis": {
+    "success": true,
+    "criteria": {
+      "long_case_original_bounds": true,
+      "real_GPU_policy": true,
+      "camera_dimensions": true,
+      "no_close_body_returns_at_start": true,
+      "horizon_obstacle_input": true,
+      "goal_1_5m_or_expected_fault": true,
+      "tilt_within_task_limit": true,
+      "bounded_stop": true,
+      "no_new_flight_collision": true,
+      "landed_disarmed": true,
+      "task_success": true,
+      "owned_resources_cleaned": true,
+      "execution_stop_acknowledged": true
+    },
+    "policy_calls": 501,
+    "observed_latency_sim_s": {
+      "median": 0.018000364303588867,
+      "maximum": 0.030000686645507812
+    },
+    "input_wait_counts": {
+      "inputs unavailable": 1,
+      "no paired pose": 2
+    },
+    "policy_profile": "high_speed",
+    "stop_contract_version": 2,
+    "scope": "Diagnostic task gates only; not full reproduction acceptance. Camera/hover mapping and model preprocessing require separate equivalence validation."
+  },
+  "cleanup": {
+    "confirmed_disarmed": true,
+    "owned_resources_stopped": true
+  },
+  "limitations": [
+    "Single normal pass; repeat reliability not established",
+    "Not constant 8m/s or upstream performance equivalence",
+    "Camera-loss stop failed original10wall gate in forest-long-20-speed7-camera-loss",
+    "10m/s collision in forest-long-41-speed10",
+    "SGM depth and control dynamics remain unverified; see KNOWN_ISSUES.md",
+    "No RoboPi/four-part or physical-device validation",
+    "No new flight after branch cleanup"
+  ]
+}

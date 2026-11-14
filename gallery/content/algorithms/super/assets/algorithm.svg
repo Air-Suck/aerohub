@@ -1,0 +1,56 @@
+<?xml version="1.0" ?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1540" height="483" viewBox="0 0 1540 483" role="img" aria-labelledby="title desc">
+  <title id="title">SUPER 算法核心</title>
+  <desc id="desc">红色输入：目标航点、LiDAR 点云及自身位姿速度。目标供路径搜索，点云与状态供局部地图；内部生成探索与安全备份轨迹，红色输出为已提交的时间化多项式轨迹。</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10z" fill="#716b60"/>
+    </marker>
+  </defs>
+  <rect width="1540" height="483" rx="12" fill="#fcfaf7"/>
+  <g font-family="Arial, Noto Sans CJK SC, sans-serif" fill="#242522">
+    <text x="32" y="38" font-size="22" fill="#242522" text-anchor="start" font-weight="600">SUPER / 探索与安全备份</text>
+    <text x="32" y="453" font-size="19" fill="#242522" text-anchor="start">关键设计：持续推进时保留安全备份；备份是有衔接关系的退路，并非任意并列候选。</text>
+    <g transform="translate(230 0)">
+      <rect x="30" y="143" width="190" height="140" rx="8" fill="#e4eee6" stroke="#8fa693"/>
+      <text x="48" y="177" font-size="23" fill="#242522" text-anchor="start" font-weight="600">局部环境</text>
+      <text x="48" y="209" font-size="18" fill="#62605c" text-anchor="start">点云 + 自身状态</text>
+      <text x="48" y="236" font-size="18" fill="#62605c" text-anchor="start">ROG-Map 占据图</text>
+      <rect x="260" y="143" width="220" height="140" rx="8" fill="#e4eee6" stroke="#8fa693"/>
+      <text x="278" y="177" font-size="23" fill="#242522" text-anchor="start" font-weight="600">路径与安全走廊</text>
+      <text x="278" y="209" font-size="18" fill="#62605c" text-anchor="start">目标引导路径搜索</text>
+      <text x="278" y="236" font-size="18" fill="#62605c" text-anchor="start">构造轨迹优化约束</text>
+      <rect x="525" y="78" width="245" height="110" rx="8" fill="#e4eee6" stroke="#8fa693"/>
+      <text x="543" y="112" font-size="23" fill="#242522" text-anchor="start" font-weight="600">探索轨迹</text>
+      <text x="543" y="144" font-size="18" fill="#62605c" text-anchor="start">朝目标推进 / 轨迹优化</text>
+      <rect x="525" y="249" width="245" height="110" rx="8" fill="#e4eee6" stroke="#8fa693"/>
+      <text x="543" y="283" font-size="23" fill="#242522" text-anchor="start" font-weight="600">安全备份轨迹</text>
+      <text x="543" y="315" font-size="18" fill="#62605c" text-anchor="start">从探索轨迹衔接至停稳</text>
+      <rect x="825" y="143" width="245" height="140" rx="8" fill="#e4eee6" stroke="#8fa693"/>
+      <text x="843" y="177" font-size="23" fill="#242522" text-anchor="start" font-weight="600">提交轨迹</text>
+      <text x="843" y="209" font-size="18" fill="#62605c" text-anchor="start">衔接探索与备份段</text>
+      <text x="843" y="236" font-size="18" fill="#62605c" text-anchor="start">新观测触发滚动重规划</text>
+      <path d="M220 213 H260" fill="none" stroke="#716b60" stroke-width="2" marker-end="url(#arrow)"/>
+      <path d="M480 213 H500 V133 H525" fill="none" stroke="#716b60" stroke-width="2" marker-end="url(#arrow)"/>
+      <path d="M647 188 V249" fill="none" stroke="#716b60" stroke-width="2" marker-end="url(#arrow)"/>
+      <path d="M770 133 H800 V185 H825" fill="none" stroke="#716b60" stroke-width="2" marker-end="url(#arrow)"/>
+      <path d="M770 304 H800 V245 H825" fill="none" stroke="#716b60" stroke-width="2" marker-end="url(#arrow)"/>
+      <path d="M945 283 V403 H370 V283" fill="none" stroke="#716b60" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arrow)"/>
+      <text x="530" y="395" font-size="17" fill="#62605c" text-anchor="start">滚动重规划 / 保留可衔接的执行参考</text>
+    </g>
+    <rect x="30" y="143" width="185" height="150" rx="8" fill="#f5e3e1" stroke="#b96c67"/>
+    <text x="46" y="177" font-size="23" fill="#943f3d" font-weight="600">输入</text>
+    <text x="46" y="209" font-size="18" fill="#62605c">目标航点</text>
+    <text x="46" y="236" font-size="18" fill="#62605c">LiDAR 点云</text>
+    <text x="46" y="263" font-size="18" fill="#62605c">自身位姿 / 速度</text>
+    <rect x="1340" y="143" width="170" height="150" rx="8" fill="#f5e3e1" stroke="#b96c67"/>
+    <text x="1356" y="177" font-size="23" fill="#943f3d" font-weight="600">输出 / 轨迹</text>
+    <text x="1356" y="209" font-size="18" fill="#62605c">已提交多项式</text>
+    <text x="1356" y="236" font-size="18" fill="#62605c">保留时间与分段</text>
+    <path d="M215 209 H235 V66 H600 V143" fill="none" stroke="#716b60" stroke-width="2" marker-end="url(#arrow)"/>
+    <text x="390" y="59" font-size="16" fill="#62605c">目标</text>
+    <path d="M215 260 H260" fill="none" stroke="#716b60" stroke-width="2" marker-end="url(#arrow)"/>
+    <path d="M1300 213 H1340" fill="none" stroke="#716b60" stroke-width="2" marker-end="url(#arrow)"/>
+    <text x="1510" y="38" font-size="16" fill="#943f3d" text-anchor="end">红色：算法输入 / 输出</text>
+  </g>
+</svg>

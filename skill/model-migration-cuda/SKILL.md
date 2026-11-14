@@ -7,6 +7,17 @@ description: 将 CUDA 推理模型接入 Aerohub Inference，收束每模型独�
 
 本 Skill 是模型准备流程的唯一维护入口。[可复现构建](../uav-reproducible-build/SKILL.md)与[组件部署](../uav-component-deployment/SKILL.md)遇到模型迁移时读取本文件，完成后继续各自主流程。单独调用时仅处理用户指定模型；ROS 接口、平台输入和部署启停按实际任务另用对应 Skill，不自动扩展范围。
 
+## 准备条件与使用边界
+
+使用者先按 [Inference 前置条件](../../src/inference/README.md#开始前准备什么)和
+模型 README 准备对应运行环境。调用已有 ROS 服务无需模型开发工具；准备 CUDA
+worker 时使用模型独立 uv 环境，驱动/GPU 属于宿主条件，Torch/CUDA 运行库按锁文件
+安装。是否需要额外系统 SDK 或编译器以该模型实际构建为准，不能从 CUDA 名称推导。
+
+开发者执行本 Skill 完成模型接入；需转换为 Houmo HMM 时转到
+[Houmo Skill](../model-migration-houmo/SKILL.md)，不将 CUDA venv 复制到板端。
+ROS adapter 的构建、部署环境与模型环境分别准备。
+
 ## 1. 核对基线与归属
 
 读取项目约定、现有模型入口和真实导入链，记录算法提交、本地修改、Python/框架版本、权重来源和校验和、预处理与输出语义。保留原环境与固定输入输出作为迁移对照。
@@ -14,6 +25,8 @@ description: 将 CUDA 推理模型接入 Aerohub Inference，收束每模型独�
 算法调用 Inference 不改变源码分类。例如 YOPO 的 upstream 在 `src/planner/yopo/upstream/`，模型模块在 `src/inference/models/yopo/`；引用算法实现，不复制网络或把整个 Planner 搬入 Inference。明确模型返回的是候选状态、轨迹还是控制量。
 
 完成条件：源码与模型文件可追溯，需保留的本地修改已明确，未知硬件/输入条件已标记。
+
+训练仓库将部署代码和权重放在release时，先检查完整发布包的目录、checkpoint与相应评估入口；按文件哈希锁定选定profile，只提取实际推理依赖。保留原模型和预处理代码作对照，不因归档中存在历史实验权重就选为默认。评估脚本可能在导入时重置或解锁仿真器；数值对照提取无副作用的模型调用段，运行部署入口前另行核查其控制路径。
 
 ## 2. 收束独立环境
 
@@ -45,6 +58,8 @@ description: 将 CUDA 推理模型接入 Aerohub Inference，收束每模型独�
 - 在 `src/inference/manifest.json` 登记稳定模型 ID、仓库相对模型目录及描述。manifest 只声明支持集合，不复制各模型版本/依赖/权重清单。用户配置统一用 YAML，优先在已有用户配置中维护 `inference.models` 模型 ID 列表，通过 `--config` 指定。先核对现有入口，无法确定统一配置路径时明确询问；不把模型选择混入 ROS 参数或有严格 schema 的资源路径配置。可提交片段为 `config/inference.example.yaml`，默认独立本地 YAML 路径为 `config/inference.local.yaml`，不覆盖已有用户文件。
 - 复用 `deployment/inference/setup_models.py` 按配置调用模型 setup。先用 `--list` 核对支持集合、`--dry-run` 检查选择；未知/重复模型在执行前拒绝，空列表不操作。实际准备只作用于所选模型，失败停止，不卸载未选模型或启动服务。
 - 对照迁移前固定输入，比较所有候选、评分和元数据，而非只比较最佳候选；阈值在运行前按模型要求确定。
+- 循环模型对照连续序列中的全部输出和h_next，并覆盖显式复位及分支独立性。请求携带h、响应返回h_next时，worker预热不应改变调用方的初始状态；调用方单独决定超时/过期结果是否接纳。跨CPU/GPU对照出现小幅差异时先核查TF32等精度设置，保留原门槛与失败事实；同一新环境中的源码对照不代表旧框架版本也已验证。
+- 将模型外的持续状态也纳入序列对照，例如上一帧期望航向；每帧用测量姿态重新初始化会掩盖差异。不同checkpoint的姿态特征可能分别使用水平基或实际机体姿态，不能只检查向量维度。初始化、接纳响应、会话复位和迟到拒绝应同时约束网络h与这类解码状态。
 - 对照实际部署入口的预处理与模型调用链：深度填洞、uint8量化、归一化及primitive解码等都属于模型契约。与简化HTTP示例一致不代表与原ROS入口一致；纯forward与封装inference入口也需区分，避免漏做或重复处理。
 - 分别记录依赖同步、CPU 加载/预热、CUDA 加载/预热及服务链路结果。CUDA 探测在实际运行权限下进行：受限沙箱内不可用不能直接推断宿主驱动故障。
 - CUDA 预热不等于 GPU 的 ROS 往返、真实传感器或 AirSim 验收。进一步服务验证使用[端到端验证 Skill](../uav-sim-e2e-validation/SKILL.md)，保留未覆盖项。
@@ -57,3 +72,19 @@ description: 将 CUDA 推理模型接入 Aerohub Inference，收束每模型独�
 ## 原生可变速度模型的版本与对照
 
 当上游已有速度缩放配置时，先核对它是否同时缩放状态归一化、候选速度/加速度和轨迹时长；仅给执行端降限不能代替该模型配置。对每个部署配置独立运行全候选/评分对照，并将速度配置与预处理版本纳入响应 model_version。YOPO 的锁定参考入口已完成6 m/s CPU及2 m/s CPU/CUDA对照；这一结论不扩展到其他配置或其他模型。
+
+
+## 多后端模型的职责边界
+
+同一模型支持 CUDA/HMM 时，共用模型 CPU 前后处理和请求响应组装；adapter 只负责
+源码/参数准备与后端构造。公共 `TorchBackend` 的命名 NumPy 输入输出、设备传输、
+同步计时和关闭契约见[后端说明](../../src/inference/runtime/aerohub_inference/backends/README.md)。
+框架依赖保留在模型独立环境，公共 HTTP runtime 与板端 HMM 不因共用服务而安装 Torch。
+
+重构前在实际运行权限下保存固定输入和全部输出，重构后对照所有候选、评分、身份和
+配置。GPU 在沙箱内探测失败时继续检查实际宿主权限；YOPO 本轮在真实 RTX 4090 上
+完成 6/2 m/s 旧新输出一致与双容器 ROS 10/10 回归。共用处理修改后同时复验板端
+HMM；无需为此扩展到未经授权的仿真或飞行任务。
+
+计时区分输入传输、前向与同步、输出传输；保留既有聚合字段时注明重叠关系。
+worker 正常退出调用后端 close；关闭幂等，关闭后拒绝继续执行。

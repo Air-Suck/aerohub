@@ -1,0 +1,2 @@
+# Additional export-only dependency beyond the fixed Houmo image.
+ruamel.yaml==0.17.21

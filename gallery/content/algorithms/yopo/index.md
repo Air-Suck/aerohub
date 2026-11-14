@@ -1,6 +1,7 @@
 ---
 title: YOPO
 summary: 以深度图、自身状态和目标为输入，一次网络推理预测多条候选运动原语及评分，选择并重建轨迹，实现未知环境中的滚动避障导航。
+keywords: [深度视觉导航, 学习型规划, 运动原语, 候选代价预测, 滚动避障]
 category: planner
 source: https://github.com/TJU-Aerial-Robotics/YOPO
 revision: 'Aerohub 9dffa3e; upstream bd8a7f91953cfef9f1aa9a48d7ff0ab7bceee132'
@@ -9,22 +10,99 @@ demo:
   alt: YOPO 作者森林实飞演示中的机载视角，点击观看官方视频
   caption: 作者公开的森林实飞素材，非 Aerohub 仿真录像；点击观看官方实飞演示。
   source: https://github.com/TJU-Aerial-Robotics/YOPO/blob/bd8a7f91953cfef9f1aa9a48d7ff0ab7bceee132/docs/realworld_1.gif
-  video: https://www.youtube.com/watch?v=LHvtbKmTwvE
+  video: https://www.bilibili.com/video/BV1jBpve5EkP/
+showcase:
+  methodSources:
+    - label: 运动原语与候选预测示意
+      url: https://github.com/TJU-Aerial-Robotics/YOPO/blob/bd8a7f91953cfef9f1aa9a48d7ff0ab7bceee132/README.md#introduction
+  headline: 一次推理，多条候选；边飞边选下一段路径
+  highlights:
+    - title: 同时预测运动与代价
+      text: 深度图、运动状态和相对目标共同输入网络，一次得到多个候选终端状态与评分。
+    - title: 选优重建，滚动避障
+      text: 选择低代价候选，重建可执行轨迹；随新观测重复规划，不把网络输出直接当作控制量。
+videos:
+  - label: YouTube · 森林实飞
+    url: https://www.youtube.com/watch?v=LHvtbKmTwvE
+  - label: Bilibili · 方法与演示
+    url: https://www.bilibili.com/video/BV15M4m1d7j5/
+  - label: YouTube · 方法与演示
+    url: https://www.youtube.com/watch?v=m7u1MYIuIn4
+media:
+  - title: 森林实飞
+    image: content/algorithms/yopo/assets/forest-flight-poster.webp
+    animation: content/algorithms/yopo/assets/forest-flight.webp
+    alt: YOPO 机载视角在密集树木间穿行
+    caption: 在密集树木间连续穿行，以机载视角观察未知障碍不断进入视野的导航场景。
+    source: https://github.com/TJU-Aerial-Robotics/YOPO/blob/bd8a7f91953cfef9f1aa9a48d7ff0ab7bceee132/docs/realworld_2.gif
+  - title: 深度视觉平台
+    image: content/algorithms/yopo/assets/platform-poster.webp
+    animation: content/algorithms/yopo/assets/platform.webp
+    alt: YOPO 飞行平台旋转展示，顶部为双目深度相机
+    caption: 双目深度相机提供环境输入，机体与传感器配置展示视觉导航的硬件组成。
+    source: https://github.com/TJU-Aerial-Robotics/YOPO/blob/bd8a7f91953cfef9f1aa9a48d7ff0ab7bceee132/docs/platform.gif
+  - title: 随机场景导航
+    image: content/algorithms/yopo/assets/random-scenes-poster.webp
+    animation: content/algorithms/yopo/assets/random-scenes.webp
+    alt: 随机森林与三维 Perlin 场景的点云及导航画面
+    caption: 随机森林与三维 Perlin 场景并列展示，观察不同障碍结构下的导航行为。
+    source: https://github.com/TJU-Aerial-Robotics/YOPO/blob/bd8a7f91953cfef9f1aa9a48d7ff0ab7bceee132/docs/new_env.gif
+  - title: 交互目标导航
+    image: content/algorithms/yopo/assets/goal-navigation-poster.webp
+    animation: content/algorithms/yopo/assets/goal-navigation.webp
+    alt: RViz 选取目标后无人机在模拟森林中导航
+    caption: 在 RViz 点选目标，观察机载画面、候选轨迹与飞行响应如何衔接。
+    source: https://github.com/TJU-Aerial-Robotics/YOPO/blob/bd8a7f91953cfef9f1aa9a48d7ff0ab7bceee132/docs/click_in_rviz.gif
 integration: integrated
 validation: unverified
 ---
 
-## 在 Aerohub 中如何接入
+## 算法核心
 
-![YOPO 三层接入：Planner 调用 Inference 获取候选并重建轨迹，通过 FollowTimedPath 执行；复用深度、定位和控制](./assets/layers.svg)
+<div class="method-cards" aria-label="YOPO 上游方法示意">
+<figure class="method-card">
+<div class="method-card-image">
 
-- **Tool**：ROS 2 Planner 固定观测与未来参考，选择最小预测 cost 候选，重建五次 PVA/yaw 轨迹并协调单机滚动更新。这是 Navigation Tool 的实现基础，通用 Tool / Mission / Agent 尚未实现。
-- **Behavior**：复用公共扩展 FollowPath 的 `FollowTimedPath`，没有新增 YopoBehavior。任务脚本分别调用原生 Takeoff / Land。
-- **Function**：YOPO 网络适配部署于公共 Inference 中，独立 uv / CUDA worker 返回全部 15 个候选终端相对 PVA、评分和时长。深度、定位、TF 与 AS2 运动控制为外部依赖；没有新增地图或定位算法。
+![上游运动原语示意：蓝色轨迹向前覆盖多个候选方向](./assets/primitive_trajectories.webp)
 
-当前为单机 `drone0`。工作站下达目标，算力侧完成推理、规划和执行；不经工作站转发高频控制。本图是职责与调用示意，不是轨迹回放。
+</div>
+<figcaption><h3>运动原语：覆盖多个方向</h3><p>预设运动原语作为候选锚点，覆盖前方搜索空间，为不同绕障方向保留选择。</p></figcaption>
+</figure>
+<figure class="method-card">
+<div class="method-card-image">
 
-[论文演示](https://www.youtube.com/watch?v=m7u1MYIuIn4) · [Bilibili 实飞演示](https://www.bilibili.com/video/BV1jBpve5EkP)
+![上游网络预测示意：多条候选轨迹按预测代价呈现不同颜色](./assets/predicted_trajectories.webp)
+
+</div>
+<figcaption><h3>候选预测：选优后重建</h3><p>网络预测候选终端状态与代价；后续选取低代价候选并重建轨迹，彩色候选不会全部执行。</p></figcaption>
+</figure>
+</div>
+
+<div class="diagram-scroll" tabindex="0" role="region" aria-label="YOPO 算法核心图，可横向滚动">
+
+![YOPO：输入深度图、自身状态与相对目标，经网络预测、选优与重建输出局部轨迹；红色标明输入输出，按从左到右阅读](./assets/algorithm-io.svg)
+
+</div>
+
+## 在 Aerohub 中如何结合
+
+<div class="diagram-scroll" tabindex="0" role="region" aria-label="YOPO 三层架构图，可横向滚动">
+
+![YOPO 在 Tool、Behavior、Function 三层中的能力及调用关系](./assets/layers.svg)
+
+</div>
+
+- **Tool**：选择候选、重建轨迹并协调滚动更新；是 Navigation Tool 的实现基础。
+- **Behavior**：复用时间化路径跟随；起飞与降落另行调用原生基础 Behavior。
+- **Function**：YOPO 网络通过 Inference 提供候选预测；复用深度、自身状态和运动控制，不新增对外地图。
+
+单机 `drone0` 的规划、推理与执行由算力侧提供，工作站下达任务目标。通用 Tool / Mission / Agent 尚未实现。
+
+## 案例
+
+<!-- 按展示约定保留案例位置，内容暂留空。 -->
+
+## 补充信息
 
 <details>
 <summary>实现、部署与验证范围</summary>

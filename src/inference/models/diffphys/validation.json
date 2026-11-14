@@ -1,0 +1,67 @@
+{
+  "date": "2026-11-10",
+  "stage": "official-checkpoint-CPU-CUDA-and-synthetic-GPU-ROS-chain",
+  "profile": "official-swarm-odom",
+  "upstream_revision": "271936190b5c2a5e760230e718fa6b167718a5bf",
+  "weights_sha256": "72e0ec5ad1c7a2163ce10506c4210bc9439fab8e6b0cb83114002bedd5582628",
+  "archive_sha256": "d894c0aded7de7f2d3d5f1c8bc8d0e32c23ccc24b130d1c115b5b9025a9adef5",
+  "environment": {
+    "python": "3.8.20",
+    "torch": "2.4.1+cu118",
+    "gpu": "NVIDIA GeForce RTX 4090",
+    "driver": "580.178.04",
+    "tf32": false,
+    "images": {
+      "ground": "sha256:592f97da6b871a438fdb97f86b422ab9f80657e80efa7b98d258894738c8a0c0",
+      "onboard": "sha256:a99a9c1df2caabffa370091e48cc8190b6f0578513b913cf971a544e960471bc"
+    }
+  },
+  "numeric_baseline": {
+    "reference": "official release model.py and side-effect-free eval.py AST block, same new PyTorch runtime",
+    "steps_each_device": 40,
+    "atol": 1e-05,
+    "rtol": 0.0001,
+    "cpu_max_action_abs_error": 0.0,
+    "cpu_max_hidden_abs_error": 0.0,
+    "cuda_max_action_abs_error": 1.9073486328125e-06,
+    "cuda_max_hidden_abs_error": 2.3245811462402344e-06,
+    "invalid_inputs_rejected_per_device": 6,
+    "explicit_reset_and_branch_independence": "passed"
+  },
+  "ros_gpu_chain": {
+    "calls": 20,
+    "acceptance_ms": 100,
+    "all_passed": true,
+    "p50_ms": 11.574290983844548,
+    "max_ms": 22.842931968625635,
+    "reset_units_endian_padding_cases": 3,
+    "invalid_inputs_rejected": 7,
+    "topology": "workstation container -> onboard Adapter container -> host CUDA worker; synthetic observations"
+  },
+  "cleanup": {
+    "worker_returncode": 0,
+    "adapter_removed": true
+  },
+  "evidence": [
+    "log/diffphys/assets/download.json",
+    "log/diffphys/setup.txt",
+    "log/diffphys/baseline-cpu.json",
+    "log/diffphys/baseline-cuda.json",
+    "log/diffphys/ros-build.txt",
+    "log/diffphys/model-chain/2306814",
+    "log/diffphys/setup-outside.txt",
+    "log/diffphys/selection-tests.txt"
+  ],
+  "reproduce": [
+    "bash src/inference/models/diffphys/setup.sh --check-cuda",
+    "src/inference/models/diffphys/.venv/bin/python src/inference/models/diffphys/test_baseline.py --device cpu",
+    "src/inference/models/diffphys/.venv/bin/python src/inference/models/diffphys/test_baseline.py --device cuda",
+    "python3 deployment/inference/tests/diffphys_cross_container.py"
+  ],
+  "limitations": [
+    "Official PyTorch2.1.2 runtime not compared",
+    "No physical multi-device transport"
+  ],
+  "scope_note": "This snapshot covers swarm numerical and synthetic ROS evidence only. Later high_speed real-camera/PX4 normal forest evidence is recorded separately, not inferred from these tests.",
+  "flight_validation": "deployment/airsim/demos/diffphys_forest/validation.json"
+}
