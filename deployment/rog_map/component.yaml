@@ -1,0 +1,65 @@
+schema_version: 0.1
+id: rog-map
+version: super-148116ee-aerohub-0.1.0
+description: Independent rolling probabilistic, inflated-occupancy and ESDF mapping capability
+source:
+  repository: https://github.com/Popc0rn7/SUPER-sim.git
+  commit: 148116eee43112b2bee242b2480d147a2c1f4e3d
+  reference_commit: 3bfa4033361bbdc7cd814c94aff826e6e1679018
+  active_path: src/planner/super/ros2_adapter/native/rog_map
+  upstream_modified: true
+  modification_scope: existing ROS 2 SUPER import plus independent AeroHub Adapter
+  license: LGPL-3.0-or-later source files; bundled dependency notices preserved
+capabilities:
+  - perception.rog-map
+cards:
+  - cards/perception/rog-map.yaml
+shared_process_group: rog-map
+environment:
+  required_shared_images: [flight_board:v0.1.0, onboard_computer:v0.1.0]
+  algorithm_workspace: deployment/rog_map/prepare_workspace.sh
+  prohibited_runtime: algorithm-specific Docker images and repository px4 source
+runtime:
+  roles:
+    simulator: visible AirSim host process
+    flight_board: image-embedded PX4 SITL, sensor bridge and AirSim clock
+    compute: navigation input transform, ROG-Map core and ROS 2 Adapter
+    workstation: query consumer, scoring and evidence collection
+  namespace: drone0
+  clock: AirSim /clock
+  input:
+    points: /drone0/navigation/points, registered FLOAT32 XYZ at measurement time
+    sensor_pose: drone0/odom to drone0/Lidar TF at the point-cloud stamp
+  outputs:
+    occupancy: /drone0/map/occupied
+    inflated_occupancy: /drone0/map/inflated_occupied
+    esdf_slice: /drone0/map/esdf_slice
+    status: /drone0/map/status
+  queries:
+    voxel: /drone0/map/query_voxel
+    line: /drone0/map/check_line
+requirements:
+  sensors: calibrated 3D LiDAR with measurement time and TF
+  platform: visible AirSim plus image-embedded PX4 SITL
+  compute: x86-64 CPU; no CUDA path in the locked implementation
+lifecycle:
+  startup: clock and TF, navigation input transform, then ROG-Map; wait for ready status
+  readiness: fresh accepted cloud, valid map epoch and query service response ready=true
+  stop: stop consumers before stopping the foreground map runtime
+  failure: stale input makes readiness false; backward time invalidates the epoch
+  recovery: restart while motion consumers are stopped; restart begins an empty map epoch
+authority:
+  state_and_tf: read-only consumer; publishes no state or TF
+validation:
+  stage: reproduced
+  scope: visible AirSim 1.8.1, image-embedded PX4 SITL, real LiDAR mapping, AS2 motion, queries, faults and cleanup
+  evidence:
+    - log/workspaces/rog_map
+    - log/airsim/rog-map/normal-05
+    - log/airsim/rog-map/sensor-fault-02
+    - log/airsim/rog-map/algorithm-fault-01
+    - skill/temp/rog_map/README.md
+  limitations:
+    - AirSim point clouds contain instantaneous XYZ without intensity, ring or per-point time.
+    - Point snapshot topics are not a serialized persistent map or generic interchange format.
+    - Physical-flight validation is outside this acceptance scope.

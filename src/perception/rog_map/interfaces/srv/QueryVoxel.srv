@@ -1,0 +1,16 @@
+geometry_msgs/Point point
+---
+uint8 UNDEFINED=0
+uint8 UNKNOWN=1
+uint8 OUT_OF_MAP=2
+uint8 OCCUPIED=3
+uint8 KNOWN_FREE=4
+uint8 FRONTIER=5
+bool ready
+uint8 occupancy
+uint8 inflated_occupancy
+bool has_esdf
+float64 esdf_distance
+builtin_interfaces/Time map_stamp
+string frame_id
+string message

@@ -396,3 +396,39 @@ capability_types:
       coordinate_frame: vehicle_fixed_odom
       axes: ENU
       timestamp: event_time
+
+  - id: perception/map/occupied-voxels/3d
+    name: Occupied 3D voxel centers
+    description: Rolling snapshot of centers classified occupied by a probabilistic 3D voxel map.
+    transport:
+      protocol: ros2_topic
+      schema: sensor_msgs/msg/PointCloud2
+      qos:
+        reliability: reliable
+        durability: volatile
+        history: keep_last
+        depth: 1
+    semantics:
+      unit_system: SI
+      units: {x: m, y: m, z: m}
+      coordinate_frame: fixed_navigation_frame
+      axes: ENU
+      timestamp: latest_measurement_included
+
+  - id: perception/map/inflated-occupied-voxels/3d
+    name: Inflated occupied 3D voxel centers
+    description: Rolling snapshot of occupied voxel centers after the provider's declared robot-clearance inflation.
+    transport:
+      protocol: ros2_topic
+      schema: sensor_msgs/msg/PointCloud2
+      qos:
+        reliability: reliable
+        durability: volatile
+        history: keep_last
+        depth: 1
+    semantics:
+      unit_system: SI
+      units: {x: m, y: m, z: m}
+      coordinate_frame: fixed_navigation_frame
+      axes: ENU
+      timestamp: latest_measurement_included
