@@ -80,7 +80,9 @@ class PinSlamEngine:
         self.lcd_npmc = NeuralPointMapContextManager(self.config)
         self.loop_reg_failed_count = 0
 
-    def process(self, cloud_message, map_max_points: int) -> FrameResult:
+    def process(
+        self, cloud_message, map_max_points: int, publish_map: bool = True
+    ) -> FrameResult:
         from utils.tools import freeze_decoders
 
         frame_id = self.dataset.processed_frame
@@ -130,7 +132,7 @@ class PinSlamEngine:
             self.mapper.mapping(iterations)
 
         points = None
-        if tracking_ok and self.neural_points.count() > 0:
+        if publish_map and tracking_ok and self.neural_points.count() > 0:
             count = self.neural_points.count()
             stride = max(1, int(np.ceil(count / max(1, map_max_points))))
             points = self.neural_points.neural_points[::stride].detach().cpu().numpy().astype(np.float32)

@@ -7,4 +7,7 @@
     sensor_frame: pin_slam_lidar
     config_path: /config/airsim.yaml
     output_root: /results/run
-    map_max_points: 500000
+    # This limits only the RViz snapshot; the native neural map remains intact.
+    map_max_points: 2000
+    map_publish_every_n_frames: 10
+    input_queue_depth: 5

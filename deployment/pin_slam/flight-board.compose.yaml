@@ -1,7 +1,9 @@
 services:
   drone0:
     environment:
-      FLIGHT_BOARD_LIDAR_RATE_HZ: "3.0"
+      FLIGHT_BOARD_LIDAR_RATE_HZ: "3.5"
+      PX4_PARAM_COM_ARM_WO_GPS: "1"
+      PX4_PARAM_CBRK_SUPPLY_CHK: "894281"
     volumes:
       - ${PIN_SLAM_AIRSIM_SETTINGS:-../pin_slam/airsim-settings.json}:/config/settings.json:ro
       - ../flight_board/supervisor.py:/opt/flight_board/supervisor.py:ro

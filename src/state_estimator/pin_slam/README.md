@@ -15,7 +15,7 @@ licensed. Project-owned code is split into:
 | `ros2_adapter/` | Run the upstream algorithm from ROS 2 Humble, preserve LiDAR sample time, derive finite-difference twist, and publish standard ROS messages |
 | `plugin/` | Validate normalized odometry and submit pose/twist/TF to the native AS2 State Estimator host |
 | `../../perception/pin_slam/` | Document the neural-point map interface without copying the algorithm |
-| `../../../deployment/pin_slam/` | Reproducible GPU image, configuration, launch, and component manifest |
+| `../../../deployment/pin_slam/` | Fixed shared-image workspace preparation, configuration, launch, and component manifest |
 
 ## Runtime interfaces
 
@@ -55,7 +55,7 @@ supported.
 
 ## Build and validation
 
-Build commands and exact image inputs are documented in
+Workspace preparation commands and the exact shared-image input are documented in
 `deployment/pin_slam/README.md`. Passing a build, import test, or synthetic
 message test is not AirSim localization acceptance. AirSim validation must use
 the real platform LiDAR topic, prove downstream consumption, compare shadow
