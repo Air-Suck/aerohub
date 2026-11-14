@@ -79,7 +79,7 @@ Demo 封面来自[作者 README 原图](https://raw.githubusercontent.com/hku-ma
 | 控制转换与输入门 / Function | earth 状态 / fixed yaw / 成功解 → body FLU 角速度和推力 | `native/src/node.cpp`；解算失败、旧会话或陈旧解拒绝 |
 | 执行会话 / Behavior | FollowReference Goal → ControlSession；ControlFrame → Motion Reference | `src/behavior/follow_reference/` 的 external_acro 插件 |
 
-`native/` 位于 `src/planner/ipc/ros2_adapter/`。主要接口为 `/drone0/navigation/odom`、`navigation/points`、`external_acro/session` 与 `external_acro/control`；`ipc/path` 仅供观察，不是外部时间化轨迹执行接口。点云已注册到 earth；里程计速度为 body FLU，算法用姿态转换。推力字段通过接管前测得的悬停油门与 AS2 max_thrust 映射，不代表真机力标定。
+`native/` 位于 `src/tool/navigation/planner/ipc/ros2_adapter/`。主要接口为 `/drone0/navigation/odom`、`navigation/points`、`external_acro/session` 与 `external_acro/control`；`ipc/path` 仅供观察，不是外部时间化轨迹执行接口。点云已注册到 earth；里程计速度为 body FLU，算法用姿态转换。推力字段通过接管前测得的悬停油门与 AS2 max_thrust 映射，不代表真机力标定。
 
 ### 三层职责与进程证据
 
@@ -119,8 +119,8 @@ FollowReference 连续跟随不自动判到点；任务协调判定位置、速�
 
 ### 文档入口
 
-- [native 实现说明](https://github.com/Air-Suck/aerohub/blob/main/src/planner/ipc/ros2_adapter/native/README.md)
-- [组件验证与失败历史](https://github.com/Air-Suck/aerohub/blob/main/src/planner/ipc/validation.md)
+- [native 实现说明](https://github.com/Air-Suck/aerohub/blob/main/src/tool/navigation/planner/ipc/ros2_adapter/native/README.md)
+- [组件验证与失败历史](https://github.com/Air-Suck/aerohub/blob/main/src/tool/navigation/planner/ipc/validation.md)
 - [自由 XYZ Demo 与验收摘要](https://github.com/Air-Suck/aerohub/blob/main/deployment/airsim/demos/ipc_navigation/README.md)
 - [固定摘要文件](https://github.com/Air-Suck/aerohub/blob/main/deployment/airsim/demos/ipc_navigation/validation-free-xyz-20261110.json)
 - [官方锁定版本 README](https://github.com/hku-mars/IPC/blob/0f959ca7995e71a1fcc4942bd4a86869ab6ee975/README.md)

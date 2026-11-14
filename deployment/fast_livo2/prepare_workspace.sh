@@ -6,10 +6,10 @@ workspace=${FAST_LIVO2_WORKSPACE:-$root/log/workspaces/fast_livo2}
 image=${ONBOARD_COMPUTER_IMAGE:-onboard_computer:v0.1.0}
 
 declare -A locked_sources=(
-  [src/state_estimator/fast_livo2/ros2_upstream]=a713004f0ba0624c8fb80d85c7047fe62523c6fb
-  [src/state_estimator/fast_livo2/dependencies/livox_ros_driver2]=b6ff7d1c8b210a96b74e919823771e1e32249758
-  [src/state_estimator/fast_livo2/dependencies/rpg_vikit]=4afd27502eeb204dff9963fbbeb16ac92a369b95
-  [src/state_estimator/fast_livo2/dependencies/sophus]=de0f8d3d92bf776271e16de56d1803940ebccab9
+  [src/basic_function/state_estimator/fast_livo2/ros2_upstream]=a713004f0ba0624c8fb80d85c7047fe62523c6fb
+  [src/basic_function/state_estimator/fast_livo2/dependencies/livox_ros_driver2]=b6ff7d1c8b210a96b74e919823771e1e32249758
+  [src/basic_function/state_estimator/fast_livo2/dependencies/rpg_vikit]=4afd27502eeb204dff9963fbbeb16ac92a369b95
+  [src/basic_function/state_estimator/fast_livo2/dependencies/sophus]=de0f8d3d92bf776271e16de56d1803940ebccab9
 )
 
 docker image inspect "$image" >/dev/null
@@ -46,8 +46,8 @@ normalize_msg() {
 }
 for message in CustomMsg.msg CustomPoint.msg; do
   if ! diff -u \
-    <(normalize_msg "$root/src/state_estimator/fast_livo2/dependencies/livox_ros_driver2/msg/$message") \
-    <(normalize_msg "$root/src/state_estimator/fast_livo2/ros2_adapter/livox_ros_driver2/msg/$message"); then
+    <(normalize_msg "$root/src/basic_function/state_estimator/fast_livo2/dependencies/livox_ros_driver2/msg/$message") \
+    <(normalize_msg "$root/src/basic_function/state_estimator/fast_livo2/ros2_adapter/livox_ros_driver2/msg/$message"); then
     printf 'Lightweight Livox interface differs from locked dependency: %s\n' "$message" >&2
     exit 2
   fi
@@ -88,15 +88,15 @@ for package in fast_livo vikit_common vikit_ros livox_ros_driver2 \
 done
 # Copy rather than symlink fast_livo: its upstream CMake resolves vikit from
 # ../../install relative to the source tree.
-cp -a /repo/src/state_estimator/fast_livo2/ros2_upstream /workspace/src/fast_livo
-cp -a /repo/src/state_estimator/fast_livo2/dependencies/rpg_vikit/vikit_common /workspace/src/vikit_common
-cp -a /repo/src/state_estimator/fast_livo2/dependencies/rpg_vikit/vikit_ros /workspace/src/vikit_ros
-cp -a /repo/src/state_estimator/fast_livo2/ros2_adapter/livox_ros_driver2 /workspace/src/livox_ros_driver2
-cp -a /repo/src/state_estimator/fast_livo2/ros2_adapter/uav_fast_livo2_ros2 /workspace/src/uav_fast_livo2_ros2
-cp -a /repo/src/state_estimator/fast_livo2/plugin /workspace/src/uav_fast_livo2
+cp -a /repo/src/basic_function/state_estimator/fast_livo2/ros2_upstream /workspace/src/fast_livo
+cp -a /repo/src/basic_function/state_estimator/fast_livo2/dependencies/rpg_vikit/vikit_common /workspace/src/vikit_common
+cp -a /repo/src/basic_function/state_estimator/fast_livo2/dependencies/rpg_vikit/vikit_ros /workspace/src/vikit_ros
+cp -a /repo/src/basic_function/state_estimator/fast_livo2/ros2_adapter/livox_ros_driver2 /workspace/src/livox_ros_driver2
+cp -a /repo/src/basic_function/state_estimator/fast_livo2/ros2_adapter/uav_fast_livo2_ros2 /workspace/src/uav_fast_livo2_ros2
+cp -a /repo/src/basic_function/state_estimator/fast_livo2/plugin /workspace/src/uav_fast_livo2
 mkdir -p /workspace/src/fast_livo/Log
 
-cmake -S /repo/src/state_estimator/fast_livo2/dependencies/sophus \
+cmake -S /repo/src/basic_function/state_estimator/fast_livo2/dependencies/sophus \
   -B /workspace/sophus-build \
   -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_INSTALL_PREFIX=/workspace/prefix \

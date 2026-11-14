@@ -5,7 +5,7 @@ description: PIN-SLAM LiDAR pose estimation and implicit neural-point mapping
 source:
   repository: https://github.com/PRBonn/PIN_SLAM.git
   commit: e2b7fbf328e5fac1d638e217d70a69cbe9f30a52
-  submodule_path: src/state_estimator/pin_slam/upstream
+  submodule_path: src/basic_function/state_estimator/pin_slam/upstream
   upstream_modified: false
   license: MIT
 capabilities:

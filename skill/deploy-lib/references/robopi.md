@@ -17,9 +17,9 @@
 
 ## CAT-ORA 的简单验证
 
-原生包是 `mrs_formation_reshaping`，源码在 `src/planner/cat_ora/ros2_adapter/native/`。最小验证启动 `cat_ora_node`，调用 `/mrs_formation_reshaping/get_reshaping_trajectories`；如果部署包含 `ros2_proxy.py`，再检查其本地 JSON 接口。AS2 仅做所需模块加载、最小启动检查，不启动四机任务。
+原生包是 `mrs_formation_reshaping`，源码在 `src/tool/navigation/planner/cat_ora/ros2_adapter/native/`。最小验证启动 `cat_ora_node`，调用 `/mrs_formation_reshaping/get_reshaping_trajectories`；如果部署包含 `ros2_proxy.py`，再检查其本地 JSON 接口。AS2 仅做所需模块加载、最小启动检查，不启动四机任务。
 
-`src/planner/cat_ora/ros2_adapter/native/tests/verify_board.py` 可参考其环境与启动方式，但它执行多组数值回归；简单部署验证不必全部运行。已有板端服务证据见 `log/pr-history/src/planner/cat_ora/validation/robopi-service.json`，只代表记录中的版本与范围。
+`src/tool/navigation/planner/cat_ora/ros2_adapter/native/tests/verify_board.py` 可参考其环境与启动方式，但它执行多组数值回归；简单部署验证不必全部运行。已有板端服务证据见 `log/pr-history/src/tool/navigation/planner/cat_ora/validation/robopi-service.json`，只代表记录中的版本与范围。
 
 `deployment/airsim/demos/catora_open_field/run.py` 和 `run_robopi.py` 会编排场景并发送飞行指令，不是本 skill 的简单验证入口。算法不同则选择自己的最小服务或消息样例，不照搬 CAT-ORA 的包集合和接口。
 

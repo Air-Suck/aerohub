@@ -1,0 +1,62 @@
+schema_version: 0.1
+id: ipc_native_core
+version: 0f959ca7995e71a1fcc4942bd4a86869ab6ee975
+kind: ros2-native-planner
+source: src/tool/navigation/planner/ipc/ros2_adapter/native
+upstream: src/tool/navigation/planner/ipc/upstream
+license: 上游根目录无统一许可证；保留各几何源文件原始许可，未重新授权
+capabilities:
+  - id: ipc-native
+    card: cards/planner/ipc.yaml
+platform:
+  validated_architecture: Linux x86_64 PC
+  compute_image: uav/apps-super-forest:repo-native-20261109
+  flight_board_image: flight_board:v0.1.0
+  compute_role: IPC、navigation输入适配、FollowReference插件、AS2控制/平台
+  task_role: 独立ROS任务进程；当前与compute共置PC容器，独立生命周期
+  simulator_role: 宿主AirSimNH，GPU Vulkan，LiDAR
+  cpu_budget: null
+  cpu_budget_note: 未标定通用硬件预算；逐轮报告真实阶段耗时与频率
+build:
+  entrypoints:
+    - deployment/airsim/demos/ipc_control/build_overlay.sh
+    - deployment/airsim/demos/ipc_navigation/build_core.sh
+    - deployment/airsim/demos/ipc_navigation/build_node.sh
+  dependency_revisions:
+    osqp: f9fc23d3436e4b17dd2cb95f70cfa1f37d122c24
+    qdldl: 7d16b70a10a152682204d745d814b6eb63dc5cd2
+    osqp_eigen: 0f3f8c7271931333b70f77a4db7039d764834ffe
+  image_policy: 固定镜像，外部overlay补编译，显式加载，不原位重建基础镜像
+runtime:
+  entrypoint: deployment/airsim/demos/ipc_navigation/run.py
+  task_config: deployment/airsim/demos/ipc_navigation/super-3mps-balanced-task.json
+  criteria_config: deployment/airsim/demos/ipc_navigation/super-3mps-balanced-criteria.json
+  namespace: /drone0
+  ros_domain_id: 182
+  px4_instance: 72
+  px4_system_id: 73
+  agent_udp_port: 8963
+  clock: flight_board仿真时钟，ROS use_sim_time=true；缓存另查墙钟年龄
+  mounts: [repository_read_only, control_overlay_read_only, native_workspace_read_only, evidence_read_write]
+  output_directory: log/ipc/<fresh-run>
+  calibration: 接管前PX4悬停油门；AS2 max_thrust=15的名义映射，非真机推力标定
+  readiness: 实际输入新鲜、ipc/ready、DDS订阅/发布发现、固件uORB解锁前检查
+  health: ipc/health区分求解有效与过期；进程存活不等于可执行
+  stop: 任务取消、Hover物理停止、原生Land、确认解除武装后回收本轮资源
+  failure: 保留证据；未确认解除武装则保留场景/飞控，禁止按通用进程名清场
+  update_or_rollback: 必须先落地停止本轮能力；从记录的源码/依赖重建或恢复匹配overlay后重新启动，无热切换或自动回滚服务
+ownership:
+  state_and_tf: AS2 raw_odometry + Pixhawk提供权威状态/TF；native仅消费
+  motion_reference: external_acro插件在导航阶段独占；起降由任务协调交接
+  conflicts: 其他运动发布者、同namespace状态源、重复native/Behavior宿主、端口/domain冲突
+  global_arbitration: 未实现；样例进程协调不能替代通用运行时仲裁
+validation:
+  index: src/tool/navigation/planner/ipc/validation.md
+  demo: deployment/airsim/demos/ipc_navigation/README.md
+  scope: 单机自由XYZ静态森林PC仿真；SUPER同起终点约238m、名义巡航3m/s两次全新启动完整通过，见validation-free-xyz-20261110.json
+  excluded: [RoboPi, real_aircraft, multi_vehicle, dynamic_obstacles, wind_disturbances, hard_10ms_deadline, firmware_100Hz_consumption]
+external_dependencies:
+  cmake_packages: [Eigen3, PCL, fmt, OsqpEigen]
+  pcl_components: [common, filters]
+  ros_packages: [rclcpp, as2_msgs, nav_msgs, sensor_msgs, std_msgs, uav_follow_reference_acro, as2_navigation_inputs, as2_motion_controller, as2_platform_pixhawk, as2_state_estimator]
+  integration_note: ROS接口依赖见package.xml；固定镜像提供Eigen/PCL/fmt和AS2，求解器由外部工作区固定版本构建，无通用rosdep自动安装承诺

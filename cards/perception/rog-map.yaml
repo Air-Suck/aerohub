@@ -27,13 +27,13 @@ interfaces:
     interaction: request_response
     protocol: ros2_service
     schema: uav_rog_map_interfaces/srv/QueryVoxel
-    parameter_schema: src/perception/rog_map/interfaces/srv/QueryVoxel.srv
+    parameter_schema: src/basic_function/perception/rog_map/interfaces/srv/QueryVoxel.srv
   - id: check_line
     role: functional_operation
     interaction: request_response
     protocol: ros2_service
     schema: uav_rog_map_interfaces/srv/CheckLine
-    parameter_schema: src/perception/rog_map/interfaces/srv/CheckLine.srv
+    parameter_schema: src/basic_function/perception/rog_map/interfaces/srv/CheckLine.srv
 
 lifecycle:
   management: system_managed

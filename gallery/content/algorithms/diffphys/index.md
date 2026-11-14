@@ -91,10 +91,10 @@ videos:
 
 | 职责 / 层 | 输入 → 输出 | 来源文件与符号 | 调用与进程 | 实现和验收边界 |
 | --- | --- | --- | --- | --- |
-| 训练 / 上游离线 | 场景、动力学 → 策略权重 | `src/planner/diffphys/upstream/main_cuda.py`，`loss.backward` | 上游训练进程 | 本次未训练 |
+| 训练 / 上游离线 | 场景、动力学 → 策略权重 | `src/tool/navigation/planner/diffphys/upstream/main_cuda.py`，`loss.backward` | 上游训练进程 | 本次未训练 |
 | 导航协调 / Tool | 目标 → Action、到达与交接 | `deployment/airsim/demos/diffphys_forest/mission.py`，`ActionClient` | Demo 任务进程 | 单机；通用 Tool 未实现 |
-| 策略适配 / Tool | 深度、状态、会话 → 请求、ControlFrame | `src/planner/diffphys/ros2_adapter/uav_diffphys_planner/node.py`，`Planner`；`core.py`，`observation` / `decode` | 独立 ROS Adapter | 15 Hz；过期或旧世代结果不推进 h |
-| 模型推理 / Function | 36×48 深度、10 维状态、h → action、h_next | `src/inference/models/diffphys/adapter.py`，`Predictor` | 独立无状态 worker | `Model(10, 6)`；high_speed 模型源码来自官方发布包，非仅 gitlink |
+| 策略适配 / Tool | 深度、状态、会话 → 请求、ControlFrame | `src/tool/navigation/planner/diffphys/ros2_adapter/uav_diffphys_planner/node.py`，`Planner`；`core.py`，`observation` / `decode` | 独立 ROS Adapter | 15 Hz；过期或旧世代结果不推进 h |
+| 模型推理 / Function | 36×48 深度、10 维状态、h → action、h_next | `src/basic_function/inference/models/diffphys/adapter.py`，`Predictor` | 独立无状态 worker | `Model(10, 6)`；high_speed 模型源码来自官方发布包，非仅 gitlink |
 | 基础执行 / Behavior | ATTITUDE 会话、ControlFrame → 运动参考 | `src/behavior/follow_reference/README.md` 及森林任务入口 | 公共 FollowReference 执行节点 | 取消后交原生 GoTo；无轨迹伪装 |
 | 输入与控制 / Function | 仿真深度、姿态与速度 → 观测；参考 → PX4 | `deployment/airsim/demos/diffphys_forest/README.md`、相机与平台桥 | AS2 / 平台及传感器进程 | 非 DiffPhys 自带定位、感知建图 |
 
@@ -102,14 +102,14 @@ videos:
 
 当前单 DepthPlanar：640×480、HFOV 91°、Pitch 20°；82% 中心裁剪、nearest 48×36、逆深度归一化与 pool3。每个任务只保留一个真实未结束请求，状态与深度配对偏差 ≤50 ms、新鲜度 ≤200 ms；过期或旧会话响应不更新 GRU。求解有效期 200 ms，控制流断连保护 100 ms。姿态解码保留实际姿态第三行及持续期望航向，推力使用起飞后 PX4 悬停设定值映射，未做真机力标定。
 
-上游训练仓库锁定 `271936190b5c2a5e760230e718fa6b167718a5bf`；部署使用官方 v1.0 发布包中的 `base.pth` 与高速模型源码，源文件和权重校验由 `src/inference/models/diffphys/artifacts.json` 管理。swarm 与 high_speed 是不同 profile。AS2 构建复用固定镜像源码并应用仓库补丁生成 overlay，不读取本地 AS2 子模块；不能用 AS2 gitlink 代替本次部署输入。
+上游训练仓库锁定 `271936190b5c2a5e760230e718fa6b167718a5bf`；部署使用官方 v1.0 发布包中的 `base.pth` 与高速模型源码，源文件和权重校验由 `src/basic_function/inference/models/diffphys/artifacts.json` 管理。swarm 与 high_speed 是不同 profile。AS2 构建复用固定镜像源码并应用仓库补丁生成 overlay，不读取本地 AS2 子模块；不能用 AS2 gitlink 代替本次部署输入。
 
 ### 阅读与核查入口
 
-- [组件说明](https://github.com/Air-Suck/aerohub/blob/main/src/planner/diffphys/README.md)
+- [组件说明](https://github.com/Air-Suck/aerohub/blob/main/src/tool/navigation/planner/diffphys/README.md)
 - [森林 Demo 与运行边界](https://github.com/Air-Suck/aerohub/blob/main/deployment/airsim/demos/diffphys_forest/README.md)
 - [已知问题与失败记录](https://github.com/Air-Suck/aerohub/blob/main/deployment/airsim/demos/diffphys_forest/KNOWN_ISSUES.md)
-- [模型接口、profile 与准备说明](https://github.com/Air-Suck/aerohub/blob/main/src/inference/models/diffphys/README.md)
+- [模型接口、profile 与准备说明](https://github.com/Air-Suck/aerohub/blob/main/src/basic_function/inference/models/diffphys/README.md)
 
 本页技术事实以当前仓库对应源码和说明为准；仓库网页链接仅为阅读入口，不作为公开运行证据。素材出处、作者归属与复用条件见本条目的 `assets/SOURCES.md`。
 

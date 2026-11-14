@@ -2,9 +2,9 @@ schema_version: '0.1'
 id: aerohub.planner.gcopter
 version: '0.1.0'
 source:
-  upstream: src/planner/gcopter/upstream
+  upstream: src/tool/navigation/planner/gcopter/upstream
   revision: e0444f6d47b84f972ced91746b05feb36ce1fd4f
-  integration: src/planner/gcopter/ros2_adapter
+  integration: src/tool/navigation/planner/gcopter/ros2_adapter
   license: MIT-core; LGPL-3.0-or-later-private-ROG-Map; bundled-notices-preserved
   metadata_discrepancy: upstream-package.xml-says-BSD-root-and-core-say-MIT
 provides: [planner.gcopter]
@@ -40,6 +40,6 @@ resources:
   conflicts: [other-motion-behaviors, duplicate-gcopter-adapter]
 validation:
   status: accepted
-  evidence: src/planner/gcopter/VALIDATION.md
+  evidence: src/tool/navigation/planner/gcopter/VALIDATION.md
   verified_slice: single-UAV-live-LiDAR-local-forest-about-3m_s-AirSim-PX4
   limitations: [no-SUPER-exploration-or-backup-optimizer, no-global-exploration-completeness, full-fault-matrix-pending, no-RoboPi, no-real-hardware]

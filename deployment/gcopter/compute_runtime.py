@@ -73,7 +73,7 @@ class Runtime(Node):
             if self.local:
                 executable = 'gcopter_local_function'
                 self.target = [-37.57, 231.76, 6.] if os.environ.get('GCOPTER_CASE') == 'forest' else [p.x, p.y+20., p.z+2.]
-                extra = ['-p', 'map_config:=/workspace/src/planner/gcopter/ros2_adapter/native/config/local_map.yaml']
+                extra = ['-p', 'map_config:=/workspace/src/tool/navigation/planner/gcopter/ros2_adapter/native/config/local_map.yaml']
             self.start('gcopter', ['ros2', 'run', 'uav_gcopter_core', executable, '--ros-args',
                 '-r', '__ns:=/drone0', '-p', 'use_sim_time:=true', '-p', 'goal:='+str(self.target),
                 '-p', 'map_low:='+str(low), '-p', 'map_high:='+str(high)]+extra)
@@ -86,7 +86,7 @@ class Runtime(Node):
     def run(self):
         self.start('as2', ['python3', '/workspace/deployment/airsim/as2/run.py'])
         self.start('navigation', ['ros2', 'run', 'as2_navigation_inputs', 'navigation_inputs_node', '--ros-args',
-            '-r', '__ns:=/drone0', '--params-file', '/workspace/src/perception/navigation_inputs/config/drone0.yaml'])
+            '-r', '__ns:=/drone0', '--params-file', '/workspace/src/basic_function/perception/navigation_inputs/config/drone0.yaml'])
         try:
             while not self.stopping:
                 rclpy.spin_once(self, timeout_sec=.1)

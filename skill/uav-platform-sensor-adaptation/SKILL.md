@@ -75,7 +75,7 @@ Agile Autonomy的Flightmare桥将配置水平角转换成渲染器垂直角，�
 
 源码审查、预处理测试、合成数据、实际平台采样、算法运行和运动闭环分开报告。真值只用于明确标注的评分或测试输入，不能偷偷替代待验收算法。GPU 是算法运行条件时必须执行真实 GPU 测试；GPU 暂时缺失只能使复现保持未完成，条件恢复后补测。当前开发主机已有 GPU，不得用关闭相机、NullRHI、CPU mock 或合成算法输出冒充实际平台验收。
 
-交付数据来源与契约、桥接/预处理代码、参数与标定配置、启动入口、版本、复验命令、证据及未覆盖项。平台专用桥放 `simulator/airsim/`；算法专用适配按 `src/state_estimator/`、`src/perception/` 现有归属组织，联合算法不复制两份；跨组件编排放 `deployment/`。过程记录放 `skill/temp/<任务>/`，原始证据放 `log/`。能力卡片位于 `cards/`，按本次实际变动维护输入依赖与验证状态；不把个人机器信息写入正式 Skill。
+交付数据来源与契约、桥接/预处理代码、参数与标定配置、启动入口、版本、复验命令、证据及未覆盖项。平台专用桥放 `simulator/airsim/`；算法专用适配按 `src/basic_function/state_estimator/`、`src/basic_function/perception/` 现有归属组织，联合算法不复制两份；跨组件编排放 `deployment/`。过程记录放 `skill/temp/<任务>/`，原始证据放 `log/`。能力卡片位于 `cards/`，按本次实际变动维护输入依赖与验证状态；不把个人机器信息写入正式 Skill。
 
 ## 低频图像与高频定位
 

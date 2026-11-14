@@ -37,7 +37,7 @@ def main():
     build = ["docker", "run", "--rm", "--network", "none", "--user", "{}:{}".format(os.getuid(), os.getgid()),
              "-e", "HOME=/tmp", "-v", str(ROOT) + ":/repo", "-w", "/repo/log/diffphys/ground_ws",
              "--entrypoint", "bash", GROUND, "-lc",
-             "source /opt/ros/humble/setup.bash && colcon build --base-paths /repo/src/inference/interfaces "
+             "source /opt/ros/humble/setup.bash && colcon build --base-paths /repo/src/basic_function/inference/interfaces "
              "--packages-select uav_inference_interfaces --event-handlers console_direct+"]
     (report / "ground-build.txt").write_text(run(build))
     env = dict(os.environ, DIFFPHYS_DEVICE="cuda", INFERENCE_PORT=str(port))

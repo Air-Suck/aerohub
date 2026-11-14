@@ -4,7 +4,7 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 workspace="${PIN_SLAM_WORKSPACE:-${repo_root}/log/workspaces/pin_slam}"
 image="${ONBOARD_COMPUTER_IMAGE:-onboard_computer:v0.1.0}"
-upstream_rel="src/state_estimator/pin_slam/upstream"
+upstream_rel="src/basic_function/state_estimator/pin_slam/upstream"
 upstream="${repo_root}/${upstream_rel}"
 expected_upstream="e2b7fbf328e5fac1d638e217d70a69cbe9f30a52"
 wheelhouse="${workspace}/wheelhouse"
@@ -125,8 +125,8 @@ source /opt/ros/humble/setup.bash
 source /root/aerostack2_ws/install/setup.bash
 set -u
 colcon --log-base /workspace/ros/log build \
-  --base-paths /repo/src/state_estimator/pin_slam/ros2_adapter \
-               /repo/src/state_estimator/pin_slam/plugin \
+  --base-paths /repo/src/basic_function/state_estimator/pin_slam/ros2_adapter \
+               /repo/src/basic_function/state_estimator/pin_slam/plugin \
   --build-base /workspace/ros/build \
   --install-base /workspace/ros/install \
   --merge-install \

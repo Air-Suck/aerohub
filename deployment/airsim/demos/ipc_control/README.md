@@ -51,7 +51,7 @@ BODY_RATES 输出要求角速度与推力同时到达、使用同一源时间戳
 
 ## 证据与失败保留
 
-测试准备不足与重复运行的具体复盘，由 IPC 自己维护在 [validation 文档](../../../../src/planner/ipc/validation.md)。
+测试准备不足与重复运行的具体复盘，由 IPC 自己维护在 [validation 文档](../../../../src/tool/navigation/planner/ipc/validation.md)。
 
 版本化摘要见 `validation-20261110.json`。原始证据在 `log/ipc/airsim-control-13/`：result/analysis、输入与各级指令、真值、PX4 uORB、模式、源码与image清单、各进程日志以及清理结果。全部算力子进程均正常退出，无强制kill；本次容器、场景和中继已回收，原有SUPER资源保持运行。
 

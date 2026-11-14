@@ -43,7 +43,7 @@ TRUTH = ROOT / "deployment/dpv_slam/airsim_truth_bridge.py"
 FRESHNESS = ROOT / "deployment/state_estimator/canonical_freshness.py"
 GATE = ROOT / "deployment/dpv_slam/gate_result.py"
 GATE_CONFIG = ROOT / "deployment/dpv_slam/validation.yaml"
-ESTIMATOR_CONFIG = ROOT / "src/state_estimator/dpv_slam/plugin/config/estimator.yaml"
+ESTIMATOR_CONFIG = ROOT / "src/basic_function/state_estimator/dpv_slam/plugin/config/estimator.yaml"
 
 
 def execute(command, **kwargs):
@@ -119,7 +119,7 @@ def validate_inputs():
 
 def source_manifest(output, scenario):
     paths = [ROOT / "deployment/dpv_slam", ROOT / "deployment/flight_board",
-             ROOT / "deployment/airsim/as2", ROOT / "src/state_estimator/dpv_slam",
+             ROOT / "deployment/airsim/as2", ROOT / "src/basic_function/state_estimator/dpv_slam",
              ROOT / "simulator/airsim/sensors"]
     files = []
     for path in paths:
@@ -143,7 +143,7 @@ def source_manifest(output, scenario):
         "commit": subprocess.check_output(
             ["git", "-C", ROOT, "rev-parse", "HEAD"], text=True).strip(),
         "dpvo_commit": subprocess.check_output(
-            ["git", "-C", ROOT / "src/state_estimator/dpv_slam/upstream",
+            ["git", "-C", ROOT / "src/basic_function/state_estimator/dpv_slam/upstream",
              "rev-parse", "HEAD"], text=True).strip(),
         "dirty": bool(subprocess.check_output(
             ["git", "-C", ROOT, "status", "--porcelain"])),
@@ -311,7 +311,7 @@ def main():
                      truth_command)
 
         algorithm_command = (
-            "export PYTHONPATH=/dpv/python:/workspace/aerohub/src/state_estimator/dpv_slam/upstream:${PYTHONPATH:-} && "
+            "export PYTHONPATH=/dpv/python:/workspace/aerohub/src/basic_function/state_estimator/dpv_slam/upstream:${PYTHONPATH:-} && "
             "export LD_LIBRARY_PATH=$(find /dpv/python/nvidia -type d -name lib -print | paste -sd:):/dpv/cuda/lib:/dpv/cuda/lib64:${LD_LIBRARY_PATH:-} && "
             "source /opt/ros/humble/setup.bash && source /dpv/ros/install/setup.bash && "
             "exec ros2 run uav_dpv_slam_ros2 dpv_slam_node --ros-args "

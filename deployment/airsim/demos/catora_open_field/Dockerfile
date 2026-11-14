@@ -1,10 +1,10 @@
 ARG BASE_IMAGE=onboard_computer:v0.1.0
 FROM ${BASE_IMAGE}
 SHELL ["/bin/bash", "-c"]
-COPY src/planner/cat_ora/ros2_adapter/native /opt/catora_app_ws/src/cat_ora
-COPY src/planner/cat_ora/ros2_adapter/bridge /opt/catora_app_ws/src/cat_ora_adapter
-COPY src/planner/interfaces /opt/catora_app_ws/src/interfaces
-COPY src/planner/framework /opt/catora_app_ws/src/framework
+COPY src/tool/navigation/planner/cat_ora/ros2_adapter/native /opt/catora_app_ws/src/cat_ora
+COPY src/tool/navigation/planner/cat_ora/ros2_adapter/bridge /opt/catora_app_ws/src/cat_ora_adapter
+COPY src/tool/navigation/interfaces /opt/catora_app_ws/src/interfaces
+COPY src/tool/navigation/framework /opt/catora_app_ws/src/framework
 COPY src/behavior/follow_path /opt/catora_app_ws/src/follow_path
 COPY deployment/airsim/as2/ /opt/onboard_computer/
 COPY src/behavior/legacy_setpoint /opt/catora_app_ws/src/legacy_setpoint

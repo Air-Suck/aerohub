@@ -16,7 +16,7 @@ usage:
   switching_constraints: [stop-worker-before-model-replacement, explicit-per-task-hidden-state-reset]
 inputs:
 - service: <namespace>/inference/diffphys/infer
-  schema: src/inference/interfaces/srv/InferDiffphys.srv
+  schema: src/basic_function/inference/interfaces/srv/InferDiffphys.srv
   depth: Positive finite 36x48 DepthPlanar; 32FC1 meters or 16UC1 millimeters.
   state: Ten profile-specific features; swarm uses level attitude row, high_speed uses actual body attitude row.
   hidden_state: Empty resets; otherwise192 finite values owned by caller per vehicle/task.
@@ -40,12 +40,12 @@ lifecycle:
   cancel_or_stop: No service cancellation; timeout does not cancel computation; caller discards obsolete h_next.
   recovery: Restart worker, wait ready, and explicitly initialize caller hidden state.
 type_specific:
-  algorithm_owner: src/planner/diffphys/upstream
-  worker_module: src/inference/models/diffphys
+  algorithm_owner: src/tool/navigation/planner/diffphys/upstream
+  worker_module: src/basic_function/inference/models/diffphys
   profiles: [official-swarm-odom, official-high-speed-odom]
   high_speed_camera: Planner samples horizontal91deg 640x480 Pitch20deg source using official82pct crop and nearest36x48; worker normalizes and pools. Ideal AirSim DepthPlanar differs from SGM.
 validation:
-  evidence: src/inference/models/diffphys/validation.json
+  evidence: src/basic_function/inference/models/diffphys/validation.json
   flight_evidence: deployment/airsim/demos/diffphys_forest/validation.json
   latency_evidence: log/diffphys/latency-30-ground-60s/latency-analysis.json
   latency_scope: Ground60sim-seconds real camera and CUDA901-calls; no internal image loss observed. Not airborne endurance or navigation acceptance.

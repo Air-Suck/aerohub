@@ -13,7 +13,7 @@ services:
     volumes:
       - ../../log/fast_livo2:/results
       - ../../log/fast_livo2/datasets:/datasets:ro
-      - ../../src/state_estimator/fast_livo2/tests:/tests:ro
+      - ../../src/basic_function/state_estimator/fast_livo2/tests:/tests:ro
     command:
       - bash
       - -lc
@@ -29,7 +29,7 @@ services:
       ROS_DOMAIN_ID: ${FAST_LIVO_DOMAIN:-182}
     volumes:
       - ../../log/fast_livo2:/results
-      - ../../src/state_estimator/fast_livo2/tests:/tests:ro
+      - ../../src/basic_function/state_estimator/fast_livo2/tests:/tests:ro
     command:
       - bash
       - -lc

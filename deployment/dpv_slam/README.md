@@ -9,7 +9,7 @@ canonical pose, twist and TF when authority mode is explicitly selected.
 ## Prepare and build
 
 DPVO is the official, unmodified Git submodule at
-`src/state_estimator/dpv_slam/upstream/`. The ROS 2 adapter, AS2 plugin and
+`src/basic_function/state_estimator/dpv_slam/upstream/`. The ROS 2 adapter, AS2 plugin and
 sparse-point interface are maintained in AeroHub; no upstream Fork or
 build-time patch is used.
 

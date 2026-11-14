@@ -7,7 +7,7 @@ description: Consumes local odometry, registered obstacle points, and a FollowRe
 
 implementation:
   component_id: ipc_native_core
-  manifest: src/planner/ipc/ros2_adapter/native/component.yaml
+  manifest: src/tool/navigation/planner/ipc/ros2_adapter/native/component.yaml
   shared_runtime: ipc-native-node
   coupled_capabilities: []
 

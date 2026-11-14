@@ -18,11 +18,11 @@ libraries:
     description: 多机目标分配与轨迹规划；当前接入要求保持任务指定的逐机目标归属
     kind: planner
     status: registered
-    manifest: src/planner/framework/registry/cat_ora/4bc41f593eebde65dd74108a97e80430a145dfa0/manifest.yaml
+    manifest: src/tool/navigation/framework/registry/cat_ora/4bc41f593eebde65dd74108a97e80430a145dfa0/manifest.yaml
     implementation:
-      adapter: src/planner/cat_ora/ros2_adapter/bridge
-      proxy: src/planner/cat_ora/ros2_adapter/native/scripts/ros2_proxy.py
-      native: src/planner/cat_ora/ros2_adapter/native
+      adapter: src/tool/navigation/planner/cat_ora/ros2_adapter/bridge
+      proxy: src/tool/navigation/planner/cat_ora/ros2_adapter/native/scripts/ros2_proxy.py
+      native: src/tool/navigation/planner/cat_ora/ros2_adapter/native
     bindings:
       airsim_px4:
         validation: scenario_pass
@@ -42,11 +42,11 @@ libraries:
     description: 编队滚动轨迹规划；默认七机，当前真实混合部署验收为三机
     kind: planner
     status: registered
-    manifest: src/planner/framework/registry/swarm_formation/967a4bdfae949e994691f8ffc87dbb0147cbebb7/manifest.yaml
+    manifest: src/tool/navigation/framework/registry/swarm_formation/967a4bdfae949e994691f8ffc87dbb0147cbebb7/manifest.yaml
     implementation:
-      adapter: src/planner/swarm_formation/ros2_adapter/bridge
-      proxy: src/planner/swarm_formation/ros2_adapter/native/plan_manage/scripts/ros2_proxy.py
-      native: src/planner/swarm_formation/ros2_adapter/native
+      adapter: src/tool/navigation/planner/swarm_formation/ros2_adapter/bridge
+      proxy: src/tool/navigation/planner/swarm_formation/ros2_adapter/native/plan_manage/scripts/ros2_proxy.py
+      native: src/tool/navigation/planner/swarm_formation/ros2_adapter/native
     bindings:
       airsim_px4:
         validation: scenario_pass
@@ -54,7 +54,7 @@ libraries:
         application: deployment/airsim/demos/swarm_open_field/README.md
         evidence: log/pr-history/deployment/airsim/demos/swarm_open_field/hybrid-validation.json
         point_cloud_validation: real_sensor_map_pass
-        point_cloud_evidence: log/pr-history/src/planner/swarm_formation/validation/real-point-cloud.json
+        point_cloud_evidence: log/pr-history/src/tool/navigation/planner/swarm_formation/validation/real-point-cloud.json
     docs: deployment/airsim/libraries.md
     history:
       ref: main

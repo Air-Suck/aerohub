@@ -1,11 +1,11 @@
 FROM uav/swarm-formation:noetic-px4
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # Rebuild actual checked-out algorithm; retain dependency packages from base.
-COPY src/planner/swarm_formation/upstream/src/ /workspace/src/src/
+COPY src/tool/navigation/planner/swarm_formation/upstream/src/ /workspace/src/src/
 COPY deployment/swarm_formation_ros1/upstream-integration.patch /tmp/upstream-integration.patch
 RUN cd /workspace/src && patch --batch --forward -p1 < /tmp/upstream-integration.patch \
     && source /opt/ros/noetic/setup.bash && cd /workspace && catkin_make -j2
-COPY src/planner/swarm_formation/ros1_proxy/ros1_proxy.py /usr/local/bin/swarm_formation_ros1_proxy.py
+COPY src/tool/navigation/planner/swarm_formation/ros1_proxy/ros1_proxy.py /usr/local/bin/swarm_formation_ros1_proxy.py
 COPY deployment/swarm_formation_ros1/four_planner.launch /opt/uav/four_planner.launch
 COPY deployment/swarm_formation_ros1/configure_waypoints.py /opt/uav/configure_waypoints.py
 RUN python3 /opt/uav/configure_waypoints.py /workspace/src/src/planner/plan_manage/launch/run_in_sim.launch \

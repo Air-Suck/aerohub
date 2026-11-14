@@ -11,7 +11,7 @@ services:
       - "${DPV_SLAM_WORKSPACE:?set DPV_SLAM_WORKSPACE to the prepared absolute path}:/workspace/dpv:ro"
       - "${PX4_MSGS_OVERLAY_WORKSPACE:?set PX4_MSGS_OVERLAY_WORKSPACE to the prepared absolute path}:/px4-overlay:ro"
       - "${AS2_EXECUTION_WORKSPACE:?set AS2_EXECUTION_WORKSPACE to the prepared absolute path}:/as2-overlay:ro"
-      - ../../src/state_estimator/dpv_slam/plugin/config/estimator.yaml:/config/dpv-slam-estimator.yaml:ro
+      - ../../src/basic_function/state_estimator/dpv_slam/plugin/config/estimator.yaml:/config/dpv-slam-estimator.yaml:ro
       - ../airsim/as2/run.py:/opt/onboard_computer/run.py:ro
     entrypoint: ["/bin/bash", "-lc"]
     command:

@@ -110,10 +110,10 @@ FAST-LIVO2 保持官方 ROS 1 Noetic 算法进程，通过只读输出桥连接 
 
 | 模块 | 输入 → 输出 | 实现与消费者 |
 | --- | --- | --- |
-| 联合算法 | IMU、图像、所选激光消息 → 状态与配准点云 | `src/state_estimator/fast_livo2/upstream/`，保留一份算法源码 |
-| 输出桥 | ROS 1 状态/点云 → ROS 2 数据 | `src/state_estimator/fast_livo2/ros1_proxy/` 与 `plugin/`；保留测量时间和点云原生字段 |
-| AS2 State Estimator 插件 | 算法里程计、安装外参与世界对齐 → 自身位姿、速度、TF | `src/state_estimator/fast_livo2/plugin/`；统一输出供控制、Behavior 与上层消费者读取 |
-| Perception 接口 | 配准点云 → namespaced 环境点云 | `src/perception/fast_livo2/` 描述接口，与状态接入共享算法和依赖；不是第二个独立算法进程 |
+| 联合算法 | IMU、图像、所选激光消息 → 状态与配准点云 | `src/basic_function/state_estimator/fast_livo2/upstream/`，保留一份算法源码 |
+| 输出桥 | ROS 1 状态/点云 → ROS 2 数据 | `src/basic_function/state_estimator/fast_livo2/ros1_proxy/` 与 `plugin/`；保留测量时间和点云原生字段 |
+| AS2 State Estimator 插件 | 算法里程计、安装外参与世界对齐 → 自身位姿、速度、TF | `src/basic_function/state_estimator/fast_livo2/plugin/`；统一输出供控制、Behavior 与上层消费者读取 |
+| Perception 接口 | 配准点云 → namespaced 环境点云 | `src/basic_function/perception/fast_livo2/` 描述接口，与状态接入共享算法和依赖；不是第二个独立算法进程 |
 
 ### 状态、点云接口与共享部署
 
@@ -121,7 +121,7 @@ FAST-LIVO2 保持官方 ROS 1 Noetic 算法进程，通过只读输出桥连接 
 
 同一架飞机的主状态与 TF 应有明确发布权；示例不自动替换多机现有定位源。AS2 消费 FAST-LIVO2 状态，不代表 PX4 已融合外部定位。配准点云也不等于占据图、ESDF 或可直接消费的完整导航地图。
 
-状态与环境接口共用算法、ROS 1 master 及输出桥；仅停止某一路消费者不等于停止算法，重置算法时需处理两路消费者的局部世界变化。核查依据为 `src/state_estimator/fast_livo2/README.md`、`plugin/src/plugin.cpp`、`plugin/scripts/bridge.py` 以及 `src/perception/fast_livo2/README.md`。图中没有把它们拆成两个可独立启停的估计器。
+状态与环境接口共用算法、ROS 1 master 及输出桥；仅停止某一路消费者不等于停止算法，重置算法时需处理两路消费者的局部世界变化。核查依据为 `src/basic_function/state_estimator/fast_livo2/README.md`、`plugin/src/plugin.cpp`、`plugin/scripts/bridge.py` 以及 `src/basic_function/perception/fast_livo2/README.md`。图中没有把它们拆成两个可独立启停的估计器。
 
 ### 已验证范围与接入缺口
 
@@ -135,8 +135,8 @@ AirSim 输入桥现已存在：`ros1_proxy/airsim_input_bridge.py` 将 RPC 测�
 
 本次仅更新 Gallery，读取了状态估计与环境接口 README、`plugin/src/plugin.cpp` 的 `receive()`、`ros1_proxy/output_bridge.py` 的状态／点云订阅以及 AirSim 输入桥。锁定上游 gitlink 为 `0d2c0346107b75b59934975adec9a6eeeb913c64`，本工作区上游子模块未检出；算法核心图按公开方法绘制，并链接作者论文供对照；本次在线获取源码超时，论文页面也未成功取得，锁定版本的方法细节仍待逐函数核查。
 
-- [状态估计组件说明](https://github.com/Air-Suck/aerohub/blob/main/src/state_estimator/fast_livo2/README.md)
-- [环境输出接口说明](https://github.com/Air-Suck/aerohub/blob/main/src/perception/fast_livo2/README.md)
+- [状态估计组件说明](https://github.com/Air-Suck/aerohub/blob/main/src/basic_function/state_estimator/fast_livo2/README.md)
+- [环境输出接口说明](https://github.com/Air-Suck/aerohub/blob/main/src/basic_function/perception/fast_livo2/README.md)
 - [作者论文：FAST-LIVO2](https://arxiv.org/abs/2408.14035)
 
 以上仓库链接用于定位文档；本页同步的是 2026-11-12 本地工作区内容，不将可变的 main 链接当成公开验收证据。单机接口示例不证明多机共享地图、全局对齐或协同定位已实现；多机部署需要每机独立实例、namespace 与状态发布权配置。

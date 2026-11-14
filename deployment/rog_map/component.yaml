@@ -6,7 +6,7 @@ source:
   repository: https://github.com/Popc0rn7/SUPER-sim.git
   commit: 148116eee43112b2bee242b2480d147a2c1f4e3d
   reference_commit: 3bfa4033361bbdc7cd814c94aff826e6e1679018
-  active_path: src/planner/super/ros2_adapter/native/rog_map
+  active_path: src/tool/navigation/planner/super/ros2_adapter/native/rog_map
   upstream_modified: true
   modification_scope: existing ROS 2 SUPER import plus independent AeroHub Adapter
   license: LGPL-3.0-or-later source files; bundled dependency notices preserved

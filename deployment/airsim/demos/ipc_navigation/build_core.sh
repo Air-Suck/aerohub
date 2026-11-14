@@ -22,7 +22,7 @@ docker run --rm --network none --entrypoint bash \
     cmake -S /deps/osqp-eigen -B /deps/build-eigen -DCMAKE_PREFIX_PATH=/deps/install -DCMAKE_INSTALL_PREFIX=/deps/install -DBUILD_TESTING=OFF
     cmake --build /deps/build-eigen -j2
     cmake --install /deps/build-eigen
-    cmake -S /repo/src/planner/ipc/ros2_adapter/native -B /deps/build-core -DCMAKE_PREFIX_PATH=/deps/install
+    cmake -S /repo/src/tool/navigation/planner/ipc/ros2_adapter/native -B /deps/build-core -DCMAKE_PREFIX_PATH=/deps/install
     cmake --build /deps/build-core -j2
     cd /deps/build-core
     ctest --output-on-failure

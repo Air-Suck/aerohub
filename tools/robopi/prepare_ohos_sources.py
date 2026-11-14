@@ -39,7 +39,7 @@ paths = {name: as2_copy / name for name in
 for name in ['as2_behavior', 'as2_behaviors_motion']:
     paths[name] = as2_copy / 'as2_behaviors' / name
 paths['as2_platform_pixhawk'] = pixhawk_copy
-paths['uav_planner_interfaces'] = root / 'src/planner/interfaces'
+paths['uav_planner_interfaces'] = root / 'src/tool/navigation/interfaces'
 paths['uav_follow_path_execution'] = root / 'src/behavior/follow_path'
 # px4_msgs base sources were prepared with the isolated workspace; preserve them.
 for name, source in paths.items():

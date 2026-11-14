@@ -111,12 +111,12 @@ validation: unverified
 
 | 模块 / 层 | 输入 → 输出 | 实现与职责 |
 | --- | --- | --- |
-| YOPO Planner / Tool | 深度、定位、目标、候选 → 时间化轨迹 | `src/planner/yopo/ros2_adapter/`；选优、ENU 变换、五次重建、20 ms yaw 计划与确认后的时间线 |
-| Inference / Function | 视轴深度、对齐系速度/加速度/相对目标 → 全部候选及 cost | `src/inference/models/yopo/`；ROS Adapter → 内部 FastAPI → 独立模型 worker，不维护任务目标、不生成控制量 |
+| YOPO Planner / Tool | 深度、定位、目标、候选 → 时间化轨迹 | `src/tool/navigation/planner/yopo/ros2_adapter/`；选优、ENU 变换、五次重建、20 ms yaw 计划与确认后的时间线 |
+| Inference / Function | 视轴深度、对齐系速度/加速度/相对目标 → 全部候选及 cost | `src/basic_function/inference/models/yopo/`；ROS Adapter → 内部 FastAPI → 独立模型 worker，不维护任务目标、不生成控制量 |
 | FollowTimedPath / Behavior | 时间化 PVA/yaw → Motion Reference | `src/behavior/follow_path/` 公共扩展；首段 Action，后续 modify，保留连续性校验、反馈与停止 |
 | 状态、相机与控制 / Function | 定位/TF/深度 → 规划输入；运动参考 → 平台控制 | 复用 AS2 和平台输入；相机几何须独立核验，网络隐式处理环境不等于输出地图 |
 
-算法源码仍归 `src/planner/yopo/upstream/`，锁定官方 YOPO-Simple 提交 `bd8a7f91953cfef9f1aa9a48d7ff0ab7bceee132`，不是 YOPO-MINCO 分支。模型环境为 Python 3.8、PyTorch 2.4.1 + cu118；权重为 `epoch50.pth`，SHA256 `09ec31094ed83e09702efc1facf18076564ebbe1afc164960c41036e16ba229f`。模型和 Planner 不共享 Python 环境，Planner 不导入 PyTorch。
+算法源码仍归 `src/tool/navigation/planner/yopo/upstream/`，锁定官方 YOPO-Simple 提交 `bd8a7f91953cfef9f1aa9a48d7ff0ab7bceee132`，不是 YOPO-MINCO 分支。模型环境为 Python 3.8、PyTorch 2.4.1 + cu118；权重为 `epoch50.pth`，SHA256 `09ec31094ed83e09702efc1facf18076564ebbe1afc164960c41036e16ba229f`。模型和 Planner 不共享 Python 环境，Planner 不导入 PyTorch。
 
 ### 时间、坐标与执行
 
@@ -152,8 +152,8 @@ validation: unverified
 
 ### 来源与素材
 
-- [Planner 说明](https://github.com/Air-Suck/aerohub/blob/9dffa3e/src/planner/yopo/README.md)
-- [模型准备与数值基线](https://github.com/Air-Suck/aerohub/blob/9dffa3e/src/inference/models/yopo/README.md)
+- [Planner 说明](https://github.com/Air-Suck/aerohub/blob/9dffa3e/src/tool/navigation/planner/yopo/README.md)
+- [模型准备与数值基线](https://github.com/Air-Suck/aerohub/blob/9dffa3e/src/basic_function/inference/models/yopo/README.md)
 - [Demo 与四角色运行入口](https://github.com/Air-Suck/aerohub/blob/9dffa3e/deployment/airsim/demos/yopo_single/README.md)
 - [分阶段验收与长距离单轮记录](https://github.com/Air-Suck/aerohub/blob/9dffa3e/deployment/airsim/demos/yopo_single/validation.md)
 

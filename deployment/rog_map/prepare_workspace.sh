@@ -43,10 +43,10 @@ trap restore_ownership EXIT
 mkdir -p /workspace/src
 rm -rf /workspace/src/rog_map /workspace/src/uav_rog_map \
   /workspace/src/uav_rog_map_interfaces /workspace/src/as2_navigation_inputs
-cp -a /repo/src/planner/super/ros2_adapter/native/rog_map /workspace/src/rog_map
-cp -a /repo/src/perception/rog_map/interfaces /workspace/src/uav_rog_map_interfaces
-cp -a /repo/src/perception/rog_map/ros2_adapter /workspace/src/uav_rog_map
-cp -a /repo/src/perception/navigation_inputs /workspace/src/as2_navigation_inputs
+cp -a /repo/src/tool/navigation/planner/super/ros2_adapter/native/rog_map /workspace/src/rog_map
+cp -a /repo/src/basic_function/perception/rog_map/interfaces /workspace/src/uav_rog_map_interfaces
+cp -a /repo/src/basic_function/perception/rog_map/ros2_adapter /workspace/src/uav_rog_map
+cp -a /repo/src/basic_function/perception/navigation_inputs /workspace/src/as2_navigation_inputs
 
 source /opt/ros/humble/setup.bash
 source /root/aerostack2_ws/install/setup.bash
@@ -88,7 +88,7 @@ done
   git -C "$root" status --short
   printf 'repository_status_end\n'
   printf 'shared_image=%s\n' "$(docker image inspect "$image" --format '{{.Id}}')"
-  printf 'active_rog_map=src/planner/super/ros2_adapter/native/rog_map\n'
+  printf 'active_rog_map=src/tool/navigation/planner/super/ros2_adapter/native/rog_map\n'
   printf 'reference_super=3bfa4033361bbdc7cd814c94aff826e6e1679018\n'
   printf 'imported_source=148116eee43112b2bee242b2480d147a2c1f4e3d\n'
   printf 'official_ros1_head=df59c21304579a13fb3875100f8ce9523ba379a0\n'

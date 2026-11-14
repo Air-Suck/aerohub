@@ -3,9 +3,9 @@ ARG NATIVE_BASE_IMAGE=osrf/ros:humble-desktop-full-jammy
 ARG BASE_IMAGE=onboard_computer:v0.1.0
 FROM ${NATIVE_BASE_IMAGE} AS native
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-COPY src/planner/super/ros2_adapter/native/mars_uav_sim/mars_quadrotor_msgs /opt/super_ws/src/mars_quadrotor_msgs
-COPY src/planner/super/ros2_adapter/native/rog_map /opt/super_ws/src/rog_map
-COPY src/planner/super/ros2_adapter/native/super_planner /opt/super_ws/src/super_planner
+COPY src/tool/navigation/planner/super/ros2_adapter/native/mars_uav_sim/mars_quadrotor_msgs /opt/super_ws/src/mars_quadrotor_msgs
+COPY src/tool/navigation/planner/super/ros2_adapter/native/rog_map /opt/super_ws/src/rog_map
+COPY src/tool/navigation/planner/super/ros2_adapter/native/super_planner /opt/super_ws/src/super_planner
 WORKDIR /opt/super_ws
 RUN source /opt/ros/humble/setup.bash && MAKEFLAGS=-j2 colcon build \
     --parallel-workers 1 --cmake-args -DCMAKE_BUILD_TYPE=Release \
@@ -19,15 +19,15 @@ FROM ${BASE_IMAGE}
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 COPY --from=native /opt/super_ws/install /opt/super_ws/install
 COPY --from=native /opt/super_deps /opt/super_deps
-COPY src/planner/interfaces /opt/super_app_ws/src/interfaces
-COPY src/planner/framework /opt/super_app_ws/src/framework
+COPY src/tool/navigation/interfaces /opt/super_app_ws/src/interfaces
+COPY src/tool/navigation/framework /opt/super_app_ws/src/framework
 COPY src/behavior/follow_path /opt/super_app_ws/src/follow_path
-COPY src/planner/super/ros2_adapter/bridge /opt/super_app_ws/src/super_adapter
+COPY src/tool/navigation/planner/super/ros2_adapter/bridge /opt/super_app_ws/src/super_adapter
 WORKDIR /opt/super_app_ws
 RUN source /root/aerostack2_ws/install/setup.bash && source /opt/super_ws/install/setup.bash && \
     colcon build --merge-install --parallel-workers 2 --cmake-args -DCMAKE_BUILD_TYPE=Release
 COPY deployment/airsim/as2 /opt/onboard_computer
-COPY src/perception/navigation_inputs/config/drone0.yaml /opt/super_app/navigation.yaml
+COPY src/basic_function/perception/navigation_inputs/config/drone0.yaml /opt/super_app/navigation.yaml
 COPY deployment/airsim/demos/super_forest /opt/super_app
 COPY simulator/airsim/sensors/uav_as2_sensor_adapter/rpc.py /opt/super_app/airsim_rpc.py
 COPY --from=flight_board:v0.1.0 /usr/lib/python3/dist-packages/msgpack /usr/lib/python3/dist-packages/msgpack

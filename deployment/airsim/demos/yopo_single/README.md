@@ -1,6 +1,6 @@
 # YOPO 单机 AirSim + PX4 Demo
 
-实现基线为 `plan_from_reference=True`，到达门槛为实际位置距目标<5 m；不是原 Demo 默认 measured 分支，也不提供精确到点。接口与时间线见 [Planner](../../../../src/planner/yopo/README.md)，模型准备见 [YOPO Inference](../../../../src/inference/models/yopo/README.md)。
+实现基线为 `plan_from_reference=True`，到达门槛为实际位置距目标<5 m；不是原 Demo 默认 measured 分支，也不提供精确到点。接口与时间线见 [Planner](../../../../src/tool/navigation/planner/yopo/README.md)，模型准备见 [YOPO Inference](../../../../src/basic_function/inference/models/yopo/README.md)。
 
 四方职责：AirSim 提供场景/传感器，flight_board 提供 PX4 SITL/Agent/时钟，独立sensor容器提供相机桥；onboard 镜像中外部 overlay 提供 Planner、Inference ROS Adapter、AS2/FollowTimedPath；工作站镜像只运行任务客户端和仿真碰撞评分。首期共置于 NVIDIA 主机，独立模型 venv 的 GPU worker 在同主机，内部 HTTP 只监听本机。不是 RoboPi 真机验收。
 
@@ -9,7 +9,7 @@
 前置：已配置 `config/resources.local.yaml` 中 AirSimNH 场景、可用 Vulkan/NVIDIA 渲染与 CUDA、Docker、uv。复用 `onboard_computer:v0.1.0`、`flight_board:v0.1.0`、`osrf/ros:humble-desktop-full-jammy`，不重建共享镜像。AS2 checkout 与 gitlink 不一致，以下构建明确使用**镜像自身** AS2 头文件/库；本轮没有切换用户子模块。镜像 ID、头文件哈希与源码清单见验收记录。
 
 ```bash
-bash src/inference/models/yopo/setup.sh --check-cuda
+bash src/basic_function/inference/models/yopo/setup.sh --check-cuda
 python3 deployment/airsim/demos/yopo_single/run.py prepare-workstation
 ```
 
@@ -86,8 +86,8 @@ python3 deployment/airsim/demos/yopo_single/run.py mission --output <本轮输�
 模型数值基线见模型README；纯曲线/执行采样数学及ROS请求契约可分别运行：
 
 ```bash
-PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src/planner/yopo/ros2_adapter src/inference/models/yopo/.venv/bin/python -m unittest discover -s src/planner/yopo/ros2_adapter/tests -v
-PYTHONPATH=src/inference/ros2_adapter python3 -m unittest discover -s deployment/inference/tests -p test_contract.py -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src/tool/navigation/planner/yopo/ros2_adapter src/basic_function/inference/models/yopo/.venv/bin/python -m unittest discover -s src/tool/navigation/planner/yopo/ros2_adapter/tests -v
+PYTHONPATH=src/basic_function/inference/ros2_adapter python3 -m unittest discover -s deployment/inference/tests -p test_contract.py -v
 ```
 
 在已加载匹配AS2和本项目overlay的固定ROS镜像中，运行`python3 deployment/airsim/demos/yopo_single/test_ros_planner.py`验证真实ROS传输与测试替身生命周期；使用独立网络/domain，该测试不执行SITL飞行。`guid_probe.py`仅作只读DDS身份诊断，不参与正常部署。

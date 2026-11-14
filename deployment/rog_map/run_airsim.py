@@ -125,9 +125,9 @@ def validate_inputs():
 def source_manifest(output, scenario):
     paths = [
         ROOT / "deployment/rog_map",
-        ROOT / "src/perception/rog_map",
-        ROOT / "src/perception/navigation_inputs",
-        ROOT / "src/planner/super/ros2_adapter/native/rog_map",
+        ROOT / "src/basic_function/perception/rog_map",
+        ROOT / "src/basic_function/perception/navigation_inputs",
+        ROOT / "src/tool/navigation/planner/super/ros2_adapter/native/rog_map",
         ROOT / "simulator/airsim/sensors",
         ROOT / "deployment/airsim/as2/run.py",
         BASE_SETTINGS,

@@ -22,7 +22,7 @@ description: 分析无人机开源工作的能力、输入输出和进程边界�
 
 ## Inference 依赖与算法归属
 
-算法调用推理服务不改变源码归属：YOPO 的上游仍在 `src/planner/yopo/upstream/`，`src/inference/models/yopo/` 只提供网络适配和独立环境。公共 Inference Function 对外 ROS、内部 FastAPI；不要为依赖关系迁移或复制 Planner。核查输出是张量、候选终端状态、完整轨迹还是控制量，候选状态与评分不自动具备轨迹重建和 Behavior 执行能力。
+算法调用推理服务不改变源码归属：YOPO 的上游仍在 `src/tool/navigation/planner/yopo/upstream/`，`src/basic_function/inference/models/yopo/` 只提供网络适配和独立环境。公共 Inference Function 对外 ROS、内部 FastAPI；不要为依赖关系迁移或复制 Planner。核查输出是张量、候选终端状态、完整轨迹还是控制量，候选状态与评分不自动具备轨迹重建和 Behavior 执行能力。
 
 联合定位建图组件按主要源码职责选择唯一归属，其他能力目录只放接口说明或适配层。分别建立 State Estimator 与 Perception 能力卡片，但用同一组件 ID、共享进程组和耦合启停约束关联；“可分别选择能力”不等于算法可以分别启动、重置或升级。地图可视化锚点、配准点云和完整隐式模型也要分别命名，不能把便于传输的点集提升为占据图、ESDF 或完整地图。
 
