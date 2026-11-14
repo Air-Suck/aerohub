@@ -23,7 +23,7 @@ neuralpoints:
   voxel_size_m: 0.45
   feature_dim: 8
   query_nn_k: 5
-  search_alpha: 0.4
+  search_alpha: 0.5
   weighted_first: False
   local_map_travel_dist_ratio: 5.0
 decoder:
