@@ -1,7 +1,10 @@
 """Configure the optional UE observation plugin and send explicit timer events."""
 import json
 from pathlib import Path
-from urllib.request import Request, urlopen
+from urllib.request import Request, ProxyHandler, build_opener
+
+# The HUD is a local service; machine-wide HTTP proxies must not intercept it.
+urlopen = build_opener(ProxyHandler({})).open
 
 
 def write_display_config(profile, run_dir, attach=False):

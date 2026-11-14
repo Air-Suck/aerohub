@@ -123,7 +123,10 @@ def _start_projectairsim(profile: dict, run_dir: Path, timeout: float, attach: b
         binary = Path(profile["binary"])
         if not binary.is_file() or not os.access(binary, os.X_OK):
             raise ValueError(f"ProjectAirSim host is not executable: {binary}")
-        _ports_free(list(profile["ports"].values()))
+        ports = list(profile["ports"].values())
+        if profile.get("display", {}).get("enabled", False):
+            ports.append(profile["display"]["port"])
+        _ports_free(ports)
         command = [str(binary), *profile["args"],
                    f"-topicsport={profile['ports']['topics']}",
                    f"-servicesport={profile['ports']['services']}"]
@@ -204,6 +207,16 @@ def _start_projectairsim(profile: dict, run_dir: Path, timeout: float, attach: b
             if process.poll() is not None:
                 raise RuntimeError(f"simulator adapter exited; see {adapter_log}")
         if profile.get("display", {}).get("enabled", False):
+            from simulator.manager.display import request_display
+            deadline = time.monotonic() + timeout
+            while True:
+                try:
+                    request_display(profile, "status")
+                    break
+                except (OSError, ValueError):
+                    if time.monotonic() >= deadline:
+                        raise RuntimeError("HUD HTTP interface not ready; inspect projectairsim.log")
+                    time.sleep(.2)
             settings = profile["display"]
             command = [profile["client_python"],
                        str(Path(__file__).parents[1] / "projectairsim/display_telemetry.py"),

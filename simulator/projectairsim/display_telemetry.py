@@ -4,7 +4,8 @@ import argparse
 import json
 import math
 import time
-from urllib.request import Request, urlopen
+from urllib.error import URLError
+from urllib.request import Request, ProxyHandler, build_opener
 
 from projectairsim import ProjectAirSimClient
 
@@ -22,6 +23,8 @@ def main():
         scene = json.load(stream)
     client = ProjectAirSimClient(args.address, args.topic_port, args.service_port)
     client.connect_services()
+    open_local = build_opener(ProxyHandler({})).open
+    failures = 0
     try:
         while True:
             state = client.request({'method': f"/Sim/{scene['id']}/robots/{args.vehicle}/GetGroundTruthKinematics",
@@ -31,8 +34,18 @@ def main():
             payload = json.dumps({'vehicle': args.vehicle, 'speed_mps': speed}).encode()
             request = Request(f'http://127.0.0.1:{args.display_port}/aerohub/telemetry',
                               data=payload, headers={'Content-Type': 'application/json'})
-            with urlopen(request, timeout=2) as response:
-                response.read()
+            try:
+                with open_local(request, timeout=2) as response:
+                    response.read()
+                if failures:
+                    print('HUD telemetry connection restored', flush=True)
+                failures = 0
+            except (URLError, TimeoutError, OSError) as exc:
+                failures += 1
+                if failures == 1 or failures % 20 == 0:
+                    print(f'HUD telemetry unavailable; retrying: {exc}', flush=True)
+                time.sleep(.5)
+                continue
             time.sleep(.05)
     finally:
         client.disconnect()

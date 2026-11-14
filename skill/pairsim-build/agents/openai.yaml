@@ -1,0 +1,4 @@
+interface:
+  display_name: "ProjectAirSim 场景打包"
+  short_description: "构建并验证 ProjectAirSim 场景与 HUD 的独立运行包"
+  default_prompt: "使用 $pairsim-build，将已确认的 ProjectAirSim 场景与所需 HUD 打成独立运行包，完成实际启动验证并提供校验和。"

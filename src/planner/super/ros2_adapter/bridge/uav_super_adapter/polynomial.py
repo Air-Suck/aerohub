@@ -55,6 +55,14 @@ class Polynomial:
         count = math.ceil((self.end-start)/step)
         if count > 10000:
             raise ValueError('excessive trajectory')
-        # Preserve every original piece boundary, including entry into backup.
-        return sorted(set([start, self.end]+[start+i*step for i in range(1,count)] +
-                          [self.start+t for t in self.ends if start < self.start+t < self.end]))
+        # ROS durations have nanosecond resolution. A grid sample and a source
+        # knot can differ as floats yet serialize to the same duration. Keep
+        # the original knot (including backup entry) in preference to the grid.
+        by_stamp = {round((i*step)*1e9): start+i*step for i in range(1,count)}
+        for offset in self.ends:
+            absolute = self.start+offset
+            if start < absolute < self.end:
+                by_stamp[round((absolute-start)*1e9)] = absolute
+        by_stamp[0] = start
+        by_stamp[round((self.end-start)*1e9)] = self.end
+        return [by_stamp[stamp] for stamp in sorted(by_stamp)]

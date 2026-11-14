@@ -14,7 +14,7 @@ from processing import YopoProcessing, preprocess_depth
 class Predictor(YopoPredictor):
     def __init__(self):
         repo = Path(__file__).resolve().parents[4]
-        source = repo / "src/planner/yopo/upstream/YOPO"
+        source = Path(os.environ.get("YOPO_SOURCE", str(repo / "src/planner/yopo/upstream/YOPO")))
         if not (source / "policy/yopo_network.py").is_file():
             raise RuntimeError("Initialize src/planner/yopo/upstream submodule first")
         sys.path.insert(0, str(source))

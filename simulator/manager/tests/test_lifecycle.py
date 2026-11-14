@@ -54,11 +54,12 @@ class EditorSessionTest(unittest.TestCase):
             "simulator.manager.manager.subprocess.run"
         ) as load, patch("simulator.manager.manager.subprocess.Popen") as launch, patch(
             "simulator.manager.manager._ticks", return_value="1"
-        ):
+        ), patch("simulator.manager.display.request_display", return_value={}) as display:
             profile["editor_project"] = str(Path(directory) / "Blocks.uproject")
             load.return_value.returncode = 0
             launch.return_value.pid = 456
             state = _start_projectairsim(profile, Path(directory), 1, attach=True)
+            display.assert_called_once_with(profile, "status")
             self.assertFalse(state["owns_host"])
             self.assertEqual(state["auxiliaries"][0]["role"], "display-telemetry")
             self.assertIn("--display-port", launch.call_args.args[0])

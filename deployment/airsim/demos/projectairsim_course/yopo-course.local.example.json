@@ -1,0 +1,5 @@
+{
+  "worker_python": "/path/to/yopo/.venv/bin/python",
+  "source": "/path/to/locked/upstream/YOPO",
+  "weights": "/path/to/epoch50.pth"
+}

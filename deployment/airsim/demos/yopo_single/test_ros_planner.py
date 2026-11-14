@@ -10,6 +10,7 @@ from rclpy.action import ActionServer, CancelResponse
 from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.executors import MultiThreadedExecutor
 from rclpy.parameter import Parameter
+from rclpy.qos import QoSProfile, DurabilityPolicy
 from geometry_msgs.msg import PoseStamped, TwistStamped, TransformStamped
 from tf2_ros.static_transform_broadcaster import StaticTransformBroadcaster
 from tf2_ros import TransformBroadcaster
@@ -50,7 +51,12 @@ class Fixture(Node):
         self.pose_pub = self.create_publisher(PoseStamped, 'self_localization/pose', 1)
         self.twist_pub = self.create_publisher(TwistStamped, 'self_localization/twist', 1)
         self.image_pub = self.create_publisher(Image, 'yopo/depth', 1)
-        self.info_pub = self.create_publisher(CameraInfo, 'yopo/camera_info', 1)
+        self.info_pub = self.create_publisher(CameraInfo, 'yopo/camera_info', QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL))
+        # Native ProjectAirSim publishes calibration once, before the planner starts.
+        info = CameraInfo(); info.header.frame_id = 'drone0/yopo_front_optical'
+        info.width, info.height = 320, 185
+        info.k = [160., 0., 159.5, 0., 160., 92., 0., 0., 1.]
+        self.info_pub.publish(info)
         self.mode_pub = self.create_publisher(ControllerInfo, 'controller/info', 1)
         self.goal_pub = self.create_publisher(PoseStamped, 'yopo/goal', 1)
         self.create_timer(.02, self.publish)
@@ -79,10 +85,6 @@ class Fixture(Node):
         image.encoding, image.step = '32FC1', 1280
         image.data = np.full((185, 320), 20., dtype='<f4').tobytes()
         self.image_pub.publish(image)
-        info = CameraInfo(); info.header = image.header
-        info.width, info.height = image.width, image.height
-        info.k = [160., 0., 159.5, 0., 160., 92., 0., 0., 1.]
-        self.info_pub.publish(info)
 
     def infer(self, request, response):
         self.calls += 1; self.concurrent += 1

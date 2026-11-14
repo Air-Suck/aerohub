@@ -4,6 +4,24 @@ from uav_super_adapter.polynomial import Polynomial
 
 
 class CommittedPolynomialTest(unittest.TestCase):
+    def test_piece_boundary_and_grid_share_one_ros_nanosecond(self):
+        # Captured from the first ProjectAirSim course flight: the third knot
+        # and the 20 ms grid differ as floats but serialize to the same stamp.
+        durations = [.05200000000002092, .09899999999998954,
+                     .09899999999998954, 1.8554522320722184,
+                     .667564704204928, .667564704204928]
+        curve = Polynomial(347.01, durations, [[0.] * 48] * 3, 7)
+        start = 347.14000000000004
+        times = curve.times(start)
+        stamps = [round((t-start)*1e9) for t in times]
+        self.assertTrue(all(b > a for a, b in zip(stamps, stamps[1:])))
+        self.assertEqual(times[0], start)
+        self.assertEqual(times[-1], curve.end)
+        for boundary in curve.ends:
+            absolute = curve.start + boundary
+            if start < absolute < curve.end:
+                self.assertIn(absolute, times)
+
     def test_absolute_epoch_pva_and_piece_boundary(self):
         # p=t^3, then p=(1+t)^3; the second committed piece is retained.
         x=[0,0,0,0,1,0,0,0]+[0,0,0,0,1,3,3,1]

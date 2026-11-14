@@ -13,7 +13,7 @@ import torch.nn.functional as F
 from schemas import InferRequest
 
 
-MODEL_DIR = Path(__file__).resolve().parent
+MODEL_DIR = Path(os.environ.get("DIFFPHYS_MODEL_DIR", str(Path(__file__).resolve().parent)))
 PROFILES = {
     "swarm": {
         "metadata": "official-swarm-odom",

@@ -1,0 +1,91 @@
+--- a/core_sim/src/sensors/magnetometer.cpp
++++ b/core_sim/src/sensors/magnetometer.cpp
+@@ -75,6 +75,10 @@
+   RandomVectorGaussianR noise_vec_;
+   Vector3 bias_vec_;
+   Vector3 magnetic_field_true_;
++  // Optional, explicit scene field in world NED, Gauss. Leave the legacy
++  // reference source unchanged when this setting is absent.
++  bool has_world_field_ = false;
++  Vector3 world_field_gauss_ = Vector3::Zero();
+ 
+   Topic magnetometer_topic_;
+   std::vector<std::reference_wrapper<Topic>> topics_;
+@@ -181,7 +185,9 @@
+   TimeSec dt = sim_dt_nanos / 1.0e9;
+   // TimeSec dt = (current_time - last_update_time_) / 1.0e9;
+ 
+-  switch (magnetometer_settings_.ref_source) {
++  if (has_world_field_) {
++    magnetic_field_true_ = world_field_gauss_;
++  } else switch (magnetometer_settings_.ref_source) {
+     case MagnetometerParams::ReferenceSource::kReferenceSourceConstant:
+       // Constant magnetic field for Seattle
+       // TODO: This can also be configurable?
+@@ -267,6 +273,16 @@
+ void Magnetometer::Loader::LoadMagnetometerSettings(
+     const nlohmann::json& json) {
+   // Load Magnetometer settings
++  impl_.has_world_field_ = JsonUtils::HasKey(json, "magnetic-field-ned-gauss");
++  if (impl_.has_world_field_) {
++    impl_.world_field_gauss_ =
++        JsonUtils::GetVector3(json, "magnetic-field-ned-gauss");
++    if (!impl_.world_field_gauss_.allFinite() ||
++        impl_.world_field_gauss_.norm() <= 0.0f) {
++      throw Error("magnetic-field-ned-gauss must be finite and nonzero");
++    }
++  }
++
+   impl_.magnetometer_settings_.scale_factor =
+       JsonUtils::GetNumber<float>(json, Constant::Config::scale_factor,
+                            impl_.magnetometer_settings_.scale_factor);
+--- a/core_sim/test/gtest_magnetometer.cpp
++++ b/core_sim/test/gtest_magnetometer.cpp
+@@ -32,6 +32,12 @@
+   static void LoadMagnetometer(Magnetometer& magnetometer,
+                                ConfigJson config_json) {
+     magnetometer.Load(config_json);
++  }
++
++  static void InitializeMagnetometer(Magnetometer& sensor,
++                                    const Kinematics& kinematics,
++                                    const Environment& environment) {
++    sensor.Initialize(kinematics, environment);
+   }
+ 
+   static nlohmann::json GetBasicMagnetometerConfig() {
+@@ -156,3 +162,34 @@
+   projectairsim::Robot::LoadMagnetometer(magnetometer, magnetometer_json);
+   EXPECT_EQ(magnetometer.IsLoaded(), true);
+ }
++
++TEST(Magnetometer, ConfiguredWorldFieldRotatesIntoBodyFrame) {
++  auto config = projectairsim::Robot::GetBasicMagnetometerConfig();
++  config["magnetic-field-ned-gauss"] = "0.18 0.05 0.49";
++  config["noise-sigma"] = "0 0 0";
++  config["noise-bias"] = "0 0 0";
++  auto sensor = projectairsim::Robot::MakeMagnetometer("Magnetometer1", true, "ParentLink");
++  projectairsim::Robot::LoadMagnetometer(sensor, config);
++  projectairsim::Kinematics kinematics;
++  projectairsim::Environment environment;
++  projectairsim::Robot::InitializeMagnetometer(sensor, kinematics, environment);
++  sensor.Update(1000000, 1000000);
++  auto field = sensor.getOutput().getData()["magnetic_field_body"];
++  EXPECT_NEAR(field["x"].get<float>(), 0.18f, 1e-6f);
++  EXPECT_NEAR(field["y"].get<float>(), 0.05f, 1e-6f);
++  EXPECT_NEAR(field["z"].get<float>(), 0.49f, 1e-6f);
++  kinematics.pose.orientation = projectairsim::Quaternion(
++      Eigen::AngleAxisf(1.57079632679f, projectairsim::Vector3::UnitZ()));
++  sensor.Update(2000000, 1000000);
++  field = sensor.getOutput().getData()["magnetic_field_body"];
++  EXPECT_NEAR(field["x"].get<float>(), 0.05f, 1e-6f);
++  EXPECT_NEAR(field["y"].get<float>(), -0.18f, 1e-6f);
++  EXPECT_NEAR(field["z"].get<float>(), 0.49f, 1e-6f);
++}
++
++TEST(Magnetometer, RejectsZeroConfiguredWorldField) {
++  auto config = projectairsim::Robot::GetBasicMagnetometerConfig();
++  config["magnetic-field-ned-gauss"] = "0 0 0";
++  auto sensor = projectairsim::Robot::MakeMagnetometer("Magnetometer1", true, "ParentLink");
++  EXPECT_ANY_THROW(projectairsim::Robot::LoadMagnetometer(sensor, config));
++}

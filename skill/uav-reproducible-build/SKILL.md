@@ -78,3 +78,9 @@ ProjectAirSim ROS bridge 使用 `simulator/projectairsim/build_bridge.sh`：只�
 PROJECTAIRSIM_CPP_CLIENT_DIR 指向只读上游。固定 ROS 工具镜像中构建、测试，
 保留独立 install overlay；不为补丁重建共享镜像。切换已缓存源码路径时用新
 workspace，避免 CMake source-dir 不一致。脚本实际构建及 colcon41汇总测试已通过。
+
+磁力计等 core_sim 静态库源码迭代时，可复用上述构建树定向编译 core_sim_gtests，
+先以真实传感器代码路径的回归验证，再确认 POST_BUILD 已更新插件 SimLibs 的
+Release libcore_sim.a，最后重链接 UE 插件/游戏并打包。旧 Game 二进制不会因为
+静态库已更新而自动包含新逻辑。2026-11-13 显式 NED 世界磁场扩展在8项磁力计
+测试与新打包程序/原版PX4地面实测通过；未执行空中地图和避障，不据此扩大验收。

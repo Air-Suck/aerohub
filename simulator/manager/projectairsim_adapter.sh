@@ -16,6 +16,11 @@ if [[ -n ${PROJECTAIRSIM_ROS_IMAGE:-} ]]; then
       -v "$simulator_root:/simulator:ro"
       -e PROJECTAIRSIM_SENSOR_RUNTIME=/sim-runtime)
   fi
+  dds_mounts=()
+  if [[ -n ${PROJECTAIRSIM_DDS_PROFILE:-} ]]; then
+    dds_mounts=(-v "$PROJECTAIRSIM_DDS_PROFILE:/dds-profile.xml:ro"
+      -e FASTRTPS_DEFAULT_PROFILES_FILE=/dds-profile.xml)
+  fi
   exec docker run --rm --init --network host --ipc host \
     --label aerohub.component=projectairsim-adapter \
     -e "ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-0}" \
@@ -25,7 +30,7 @@ if [[ -n ${PROJECTAIRSIM_ROS_IMAGE:-} ]]; then
     -e "PROJECTAIRSIM_ROS_ARGS=${PROJECTAIRSIM_ROS_ARGS:-[]}" \
     -e "PROJECTAIRSIM_SENSOR_TOPIC_ROOT=${PROJECTAIRSIM_SENSOR_TOPIC_ROOT:-/ProjectAirsim}" \
     -e PROJECTAIRSIM_ROS_SETUP=/overlay/setup.bash \
-    "${mounts[@]}" \
+    "${mounts[@]}" "${dds_mounts[@]}" \
     -v "$overlay:/overlay:ro" -v "$bridge_script:/adapter.sh:ro" \
     --entrypoint bash "$PROJECTAIRSIM_ROS_IMAGE" /adapter.sh
 fi

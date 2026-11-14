@@ -100,7 +100,7 @@ UE 5.2.1 standalone editor game, separate ports 9989/9990 and display 8992:
 - Compact top status panel and lower-right speed dial visually checked at
   1280x720 in both idle and running display states; the camera inset was off.
 - These initial checks preceded the moving-flight check documented below.
-  Packaged Blocks runtime acceptance remains outstanding.
+  Packaged Blocks runtime acceptance was outstanding at that point; see the 2026-11-13 package check below.
 
 Local evidence: `log/projectairsim/display-validation/` (`hud-gauge.png`,
 `hud-gauge-running.png`, `control.json`, `lifecycle.json`, `final-status.json`,
@@ -115,3 +115,22 @@ window remains outstanding. Earlier actor-difference spikes and a failed
 connection attempt are retained in that evidence directory. Manager automatic
 telemetry ownership has unit coverage; the successful flight used a manually
 started reader. The old camera and actor-speed validation above is historical.
+
+
+## Packaged course runtime check (2026-11-13)
+
+The Linux Development package now includes the reviewed two-stage Blocks course v7
+and this HUD, including both Nimbus Mono fonts. The separate runtime map is
+`/Game/BlocksPlannerCourse`; reviewed editor maps remain preserved.
+The static scale-reference drone and stale original-building reflection captures
+are editor-only in the runtime copy.
+
+Actual packaged Vulkan rendering at 1280×720, 24 obstacle objects, one unarmed
+SimpleFlight robot at the green start, real ground-truth speed forwarding,
+and HUD start/finish/reset plus invalid-transition HTTP 400 were checked.
+No flight, PX4, ROS/AS2 or planner run was performed for this package check.
+The launcher supplies `-noraytracing` to avoid a UE 5.2 Vulkan extension/device
+creation failure observed with NVIDIA 580.178.04; accepted SunSky/SSGI lighting remains.
+
+Build, launch and interface instructions: [course package](../course/PACKAGE_README.md).
+Artifacts and validation evidence: `log/projectairsim/package-course-v7/`.
