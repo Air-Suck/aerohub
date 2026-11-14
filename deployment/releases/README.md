@@ -1,5 +1,31 @@
 # 运行镜像版本
 
+## flight_board v0.1.1：仿真后端兼容
+
+2026-11-12 本地构建并导出 `flight_board:v0.1.1`（Linux amd64），基于固定
+`flight_board:v0.1.0`，仅替换 supervisor，支持 Simulator Manager 的 runtime
+配置。旧 AirSim settings、`AIRSIM_HOST` 和 vehicle/clock 入口保留。PX4、DDS
+Agent、ROS 消息和传感器程序未升级。该版本与下节的算力侧 `onboard_computer:v0.1.1`
+分别维护，不改写 2026-11-11 的历史发布记录。
+
+新增部署显式选择 `FLIGHT_BOARD_IMAGE=flight_board:v0.1.1`，具体方式见
+[飞控镜像说明](../flight_board/README.md#使用固定镜像)。已有入口默认值未统一修改；
+硬编码旧镜像的脚本需要单独调整。
+
+本地 image/index ID 为
+`sha256:0e9c1dabad5ac883e71caae36dfb7cb393d679b87f725dc7b8b1a5e7f5dfa2ed`，
+amd64 运行 manifest 摘要为
+`sha256:2553e2f3e774a77da5898ccf504bd5e3ba8bb0fb18f05257f25d667ebd0cbe7f`。
+GHCR 目标为 `ghcr.io/popc0rn7/aerohub/flight-board:v0.1.1`；远端发布状态和
+实际 registry digest 本轮未核验，不将本地构建记录视为远端发布成功。
+
+离线归档可使用下方 Skopeo 方式上传，将源文件及目标替换为 flight_board 的
+`v0.1.1`。本机 Skopeo 1.4.1 选择 `--override-os linux --override-arch amd64`，
+不加 `--all`，仅上传运行镜像；上传后将 digestfile 与远端 raw manifest 摘要比对。
+
+本次镜像内容及启动命令检查通过，覆盖 supervisor 哈希、旧 AirSim 命令构造、
+ProjectAirSim runtime 与端口映射、时钟及传感器归属；未针对新 tag 重跑完整飞行回归。
+
 ## v0.1.1：算力侧消息与源码来源更新
 
 2026-11-11 已发布 `ghcr.io/popc0rn7/aerohub/onboard-computer:v0.1.1`，

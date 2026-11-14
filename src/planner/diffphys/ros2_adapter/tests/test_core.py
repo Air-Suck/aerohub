@@ -22,8 +22,13 @@ class OfficialDecoding(unittest.TestCase):
         np.testing.assert_array_equal(raw[0],limited[0]);self.assertEqual(raw[1],limited[1])
         with self.assertRaises(ValueError):
             decode([0,0,0,0,-20,0],np.eye(3),np.eye(3),np.array([10.,0,0]),0.,.5,max_command_tilt_rad=.5)
+        # Validate the final command after the existing cone limiter. A large
+        # horizontal request can become safe without changing vertical force.
+        q,force=decode([15,0,0,0,2,0],np.eye(3),np.eye(3),np.array([10.,0,0]),0.,.5,max_command_tilt_rad=.5)
+        self.assertLess(force/15,.85)
+        self.assertAlmostEqual(force*Rotation.from_quat(q).as_matrix()[2,2],(9.80665+2)/9.8*.5*15)
         with self.assertRaises(ValueError):
-            decode([15,0,0,0,2,0],np.eye(3),np.eye(3),np.array([10.,0,0]),0.,.5,max_command_tilt_rad=.5)
+            decode([0,0,0,0,10,0],np.eye(3),np.eye(3),np.array([10.,0,0]),0.,.5,max_command_tilt_rad=.5)
     def test_height_lookahead_preserves_speed_heading_and_near_goal(self):
         rotation=Rotation.from_euler('xyz',[.1,-.2,1.1]).as_matrix()
         position=np.array([2.,3.,2.]);goal=np.array([-37.,232.,6.])
@@ -48,7 +53,7 @@ class OfficialDecoding(unittest.TestCase):
 
     def test_nonidentity_against_official_ast(self):
         root=Path(__file__).resolve().parents[4]
-        tree=ast.parse((root/'inference/models/diffphys/artifacts/swarm/eval.py').read_text())
+        tree=ast.parse(((root/'inference/models/diffphys')/'artifacts/swarm/eval.py').read_text())
         main=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='main')
         loop=next(n for n in main.body if isinstance(n,ast.While))
         selected=[];active=False
@@ -77,7 +82,7 @@ class OfficialDecoding(unittest.TestCase):
 
     def test_high_speed_against_official_ast(self):
         root=Path(__file__).resolve().parents[4]
-        tree=ast.parse((root/'inference/models/diffphys/artifacts/high_speed/PlannerBase.py').read_text())
+        tree=ast.parse(((root/'inference/models/diffphys')/'artifacts/high_speed/PlannerBase.py').read_text())
         callback=next(n for n in ast.walk(tree) if isinstance(n,ast.FunctionDef) and n.name=='callback_depth')
         selected=[];active=False
         for n in callback.body:

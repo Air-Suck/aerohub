@@ -1,0 +1,26 @@
+{
+  "camera_info": {
+    "topic": "/drone0/sensor_measurements/DownCamera/rgb/camera_info",
+    "type": "sensor_msgs/msg/CameraInfo",
+    "calibration": true,
+    "projection_from_k": true,
+    "frame": "drone0/DownCamera_optical"
+  },
+  "depth_info": {
+    "topic": "/drone0/sensor_measurements/DownCamera/depth_perspective/camera_info",
+    "type": "sensor_msgs/msg/CameraInfo",
+    "calibration": true,
+    "projection_from_k": true,
+    "frame": "drone0/DownCamera_optical"
+  },
+  "raw_rgb_info": {
+    "topic": "/ProjectAirsim/SceneBasicDrone/robots/Drone1/sensors/DownCamera/scene_camera/camera_info",
+    "type": "sensor_msgs/msg/CameraInfo",
+    "calibration": true
+  },
+  "raw_depth_info": {
+    "topic": "/ProjectAirsim/SceneBasicDrone/robots/Drone1/sensors/DownCamera/depth_camera/camera_info",
+    "type": "sensor_msgs/msg/CameraInfo",
+    "calibration": true
+  }
+}

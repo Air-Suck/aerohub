@@ -1,0 +1,427 @@
+"""Isolated PC forest8 mission through SUPER committed plans and AS2 Behavior."""
+import collections
+import json
+import math
+import os
+from pathlib import Path
+import signal
+import subprocess
+import time
+from urllib.request import Request, ProxyHandler, build_opener
+
+import rclpy
+from rclpy.node import Node
+from rclpy.action import ActionClient
+from rclpy.parameter import Parameter
+from rcl_interfaces.srv import SetParametersAtomically
+from rclpy.qos import qos_profile_sensor_data
+from as2_msgs.action import Takeoff,Land
+from as2_msgs.msg import ControllerInfo,ControlMode,PlatformInfo,PlatformStatus,TrajectorySetpoints
+from as2_msgs.srv import SetControlMode
+from geometry_msgs.msg import PoseStamped
+from nav_msgs.msg import Odometry
+from sensor_msgs.msg import PointCloud2
+from rosgraph_msgs.msg import Clock
+from px4_msgs.msg import VehicleCommand,VehicleCommandAck
+from std_msgs.msg import String
+from std_srvs.srv import SetBool
+import yaml
+
+
+
+class Mission(Node):
+    def display_event(self, event):
+        port = os.environ.get('SUPER_HUD_PORT')
+        if not port or (event == 'finish' and not getattr(self, 'display_timer_running', False)):
+            return
+        try:
+            request = Request(f'http://127.0.0.1:{int(port)}/aerohub/mission/{event}', data=b'')
+            with build_opener(ProxyHandler({})).open(request, timeout=2) as response:
+                response.read()
+            self.display_timer_running = event == 'start'
+        except (OSError, ValueError) as exc:
+            self.result.setdefault('display_errors', []).append(f'{event}: {exc}')
+            self.get_logger().warning(f'HUD {event} failed: {exc}')
+
+    def __init__(self):
+        super().__init__('super_forest_migration',parameter_overrides=[Parameter('use_sim_time',value=True)])
+        self.root=Path(os.environ.get('SUPER_APP_ROOT','/opt/super_app'));self.out=Path(os.environ.get('SUPER_EVIDENCE_ROOT','/evidence'))
+        self.task=json.loads((self.root/'task.json').read_text())
+        self.case=os.environ.get('SUPER_CASE','forest8')
+        if self.case.startswith('short'):
+            self.task['waypoints_enu_m']=[[0.,4.,2.]]
+            self.task['leg_timeout_s']=60
+        self.collision_coverage='unverified: native collision topic not bridged'
+        self.runtime={};self.four_part=os.environ.get('SUPER_EXECUTION_LOCATION')=='four-part'
+        self.phase='initializing';self.odom=None;self.platform=None;self.controller=None
+        self.state={};self.acks={};self.counts=collections.Counter();self.flags=collections.Counter()
+        self.last_clock=None;self.input_ages={};self.received={};self._mission_clients=[];self.children=[];self.origin=None
+        self.max_speed=0.;self.bound_violations=0;self.collision_stamp=None
+        self.mode_lost_at=None
+        self.last_collision=0.;self.started=None;self.result={'execution_backend':'follow_path','case':self.case,'motion_requested':False,'execution_location':os.environ.get('SUPER_EXECUTION_LOCATION','pc')}
+        self.samples=(self.out/'flight.jsonl').open('w')
+        self.create_subscription(Odometry,'/drone0/sensor_measurements/odom',self.on_odom,qos_profile_sensor_data)
+        self.create_subscription(PlatformInfo,'/drone0/platform/info',lambda m:setattr(self,'platform',m),qos_profile_sensor_data)
+        self.create_subscription(ControllerInfo,'/drone0/controller/info',lambda m:self.on_controller(m),qos_profile_sensor_data)
+        self.create_subscription(String,'/drone0/super_adapter/state',lambda m:setattr(self,'state',json.loads(m.data)),10)
+        self.create_subscription(VehicleCommandAck,f'/drone0/fmu/out/vehicle_command_ack_v{VehicleCommandAck.MESSAGE_VERSION}',
+            lambda m:self.acks.__setitem__(m.command,m.result),qos_profile_sensor_data)
+        self.create_subscription(Clock,'/clock',self.on_clock,qos_profile_sensor_data)
+        self.create_subscription(TrajectorySetpoints,'/drone0/motion_reference/trajectory',self.on_reference,qos_profile_sensor_data)
+        from mars_quadrotor_msgs.msg import PositionCommand,PolynomialTrajectory
+        self.create_subscription(PositionCommand,'/planning/pos_cmd',self.on_command,qos_profile_sensor_data)
+        self.create_subscription(PolynomialTrajectory,'/planning_cmd/poly_traj',self.on_plan,qos_profile_sensor_data)
+        for key,topic in [('cloud','/drone0/navigation/points'),('map','/rog_map/occ'),('inflated','/rog_map/inf_occ')]:
+            self.create_subscription(PointCloud2,topic,lambda m,k=key:self.on_cloud(k,m),qos_profile_sensor_data)
+        self.create_subscription(String,'/drone0/super_runtime/state',self.on_runtime,10)
+        self.goal_pub=self.create_publisher(PoseStamped,'/goal_pose',1)
+        self.create_timer(.1,self.record)
+
+    def on_runtime(self,msg):
+        self.runtime=json.loads(msg.data);self.touch('runtime')
+
+    def on_clock(self,msg):
+        stamp=msg.clock.sec+msg.clock.nanosec/1e9
+        if self.last_clock is not None and stamp<self.last_clock:
+            raise RuntimeError('simulation clock moved backwards')
+        self.last_clock=stamp;self.touch('clock')
+
+    def input_age(self,key,msg):
+        if self.last_clock is None:return
+        age=self.now_seconds()-(msg.header.stamp.sec+msg.header.stamp.nanosec/1e9)
+        stats=self.input_ages.setdefault(key,{'count':0,'min':age,'max':age})
+        stats['count']+=1;stats['min']=min(stats['min'],age);stats['max']=max(stats['max'],age)
+
+    def touch(self,key):
+        self.counts[key]+=1;self.received[key]=time.monotonic()
+
+    def now_seconds(self):return self.get_clock().now().nanoseconds/1e9
+
+    def on_odom(self,msg):
+        if msg.header.frame_id!='drone0/odom':raise RuntimeError('unexpected odometry frame')
+        self.odom=msg;self.touch('odom');self.input_age('odom',msg)
+        v=msg.twist.twist.linear
+        speed=math.sqrt(v.x*v.x+v.y*v.y+v.z*v.z)
+        if self.phase=='route':self.max_speed=max(self.max_speed,speed)
+
+    def on_controller(self,msg):self.controller=msg;self.touch('controller')
+
+    def on_cloud(self,key,msg):
+        if msg.width*msg.height:
+            self.touch(key);self.input_age(key,msg)
+
+    def on_reference(self,msg):
+        if self.phase not in ('route','fault'):return
+        self.touch('reference')
+        if msg.header.frame_id!='drone0/odom' or len(msg.setpoints)!=1:raise RuntimeError('invalid Behavior reference')
+        p=msg.setpoints[0]
+        vectors=[p.position,p.twist,p.acceleration]
+        if not all(math.isfinite(v) for vector in vectors for v in (vector.x,vector.y,vector.z)):
+            raise RuntimeError('nonfinite Behavior PVA')
+        self.samples.write(json.dumps({'kind':'reference','stamp':msg.header.stamp.sec+msg.header.stamp.nanosec/1e9,
+            'p':[p.position.x,p.position.y,p.position.z], 'v':[p.twist.x,p.twist.y,p.twist.z],
+            'a':[p.acceleration.x,p.acceleration.y,p.acceleration.z]})+'\n')
+
+    def on_plan(self,msg):
+        if not msg.type & msg.POSITION_TRAJ:return
+        self.samples.write(json.dumps({'kind':'plan','generated':msg.header.stamp.sec+msg.header.stamp.nanosec/1e9,
+            'start':msg.start_wt_pos,'durations':list(msg.time_pos),'order':msg.order_pos,
+            'axes':[list(msg.coef_pos_x),list(msg.coef_pos_y),list(msg.coef_pos_z)]})+'\n')
+
+    def on_command(self,msg):
+        if self.phase=='route':
+            self.flags[str(msg.trajectory_flag)]+=1
+            self.samples.write(json.dumps({'kind':'source_command','flag':msg.trajectory_flag,
+                'stamp':msg.header.stamp.sec+msg.header.stamp.nanosec/1e9})+'\n')
+
+    def position(self):
+        p=self.odom.pose.pose.position
+        return [p.x,p.y,p.z]
+
+    def local(self):return [a-b for a,b in zip(self.position(),self.origin)]
+
+    def record(self):
+        if not self.odom:return
+        self.samples.write(json.dumps({'phase':self.phase,'sim_time':self.now_seconds(),
+            'position':self.position(),'adapter':self.state})+'\n');self.samples.flush()
+
+    def healthy(self):
+        for name,child,_ in self.children:
+            if self.phase=='fault' and self.case=='short-input-loss' and name=='super':continue
+            if self.phase in ('stopping','landing') and name!='as2':continue
+            if child.poll() is not None:raise RuntimeError(name+' exited: '+str(child.returncode))
+        if self.phase in ('route','fault'):
+            if self.four_part and (not self.runtime.get('ready') or self.runtime.get('error') or time.monotonic()-self.received.get('runtime',0)>1.5):
+                raise RuntimeError('Compute capability readiness lost')
+            if self.phase=='route' and self.state.get('error'):raise RuntimeError(self.state['error'])
+            if time.monotonic()-self.received.get('controller',0)>1.5:
+                raise RuntimeError('controller feedback timeout')
+            if any(time.monotonic()-self.received.get(k,0)>.5 for k in ('clock','odom')):
+                raise RuntimeError('state/clock timeout')
+            if (self.phase=='route' and self.controller.input_control_mode.control_mode!=ControlMode.TRAJECTORY and not self.state.get('complete')
+                and not (self.state.get('settling') and self.controller.input_control_mode.control_mode==ControlMode.POSITION)):
+                if self.mode_lost_at is None:self.mode_lost_at=time.monotonic()
+                if time.monotonic()-self.mode_lost_at>.3:raise RuntimeError('Behavior trajectory mode lost')
+            else:self.mode_lost_at=None
+            p=self.local()
+            if any(v<a or v>b for v,a,b in zip(p,self.task['bounds_enu_min_m'],self.task['bounds_enu_max_m'])):
+                self.bound_violations+=1  # Original task policy is observe.
+
+    def wait(self,predicate,timeout=15):
+        deadline=time.monotonic()+timeout
+        while not predicate():
+            self.healthy()
+            if time.monotonic()>deadline:raise TimeoutError('timeout during '+self.phase)
+            rclpy.spin_once(self,timeout_sec=.02)
+
+    def start(self,name,command):
+        if self.four_part:raise RuntimeError('Workstation mission cannot start compute processes')
+        stream=(self.out/(name+'.log')).open('w')
+        child=subprocess.Popen(command,stdout=stream,stderr=subprocess.STDOUT,start_new_session=True)
+        self.children.append((name,child,stream))
+
+    def service(self,kind,name,request):
+        client=self.create_client(kind,name);self._mission_clients.append(client)
+        self.wait(client.service_is_ready)
+        future=client.call_async(request);self.wait(future.done)
+        if not future.result().success:raise RuntimeError(name+' rejected request: '+str(future.result()))
+
+    def platform_service(self,name,command,value):
+        self.acks.pop(command,None)
+        self.service(SetBool,name,SetBool.Request(data=value))
+        self.wait(lambda:command in self.acks)
+        if self.acks[command]!=VehicleCommandAck.VEHICLE_CMD_RESULT_ACCEPTED:
+            raise RuntimeError('PX4 rejected command '+str(command)+': '+str(self.acks[command]))
+
+    def emergency_land(self):
+        if self.four_part:raise RuntimeError('Four-part mode requires board-side recovery; workstation cannot command PX4 directly')
+        # Recovery only: never count this fallback as native Behavior acceptance.
+        pub=self.create_publisher(VehicleCommand,'/drone0/fmu/in/vehicle_command',qos_profile_sensor_data)
+        self.wait(lambda:pub.get_subscription_count()>0,15)
+        command=VehicleCommand(timestamp=time.time_ns()//1000,command=VehicleCommand.VEHICLE_CMD_NAV_LAND,
+            target_system=61,target_component=1,source_system=255,source_component=1,from_external=True,
+            param4=float('nan'),param5=float('nan'),param6=float('nan'),param7=float('nan'))
+        self.acks.pop(command.command,None);pub.publish(command)
+        self.wait(lambda:command.command in self.acks,15)
+        if self.acks[command.command]!=VehicleCommandAck.VEHICLE_CMD_RESULT_ACCEPTED:
+            raise RuntimeError('PX4 emergency land rejected')
+        self.result['emergency_fallback']='PX4 NAV_LAND'
+        self.wait(lambda:self.platform is not None and not self.platform.armed,90)
+        self.result['landed_and_disarmed']=True
+
+    def action(self,kind,name,goal,field):
+        client=ActionClient(self,kind,name);self._mission_clients.append(client)
+        self.wait(client.server_is_ready)
+        future=client.send_goal_async(goal);self.wait(future.done)
+        handle=future.result()
+        if not handle.accepted:raise RuntimeError(name+' rejected goal')
+        result=handle.get_result_async()
+        try:self.wait(result.done,90)
+        except BaseException:handle.cancel_goal_async();raise
+        if not getattr(result.result().result,field):raise RuntimeError(name+' failed')
+
+    def prepare(self):
+        if self.four_part:
+            self.wait(lambda:self.runtime.get('ready') and self.odom is not None and self.platform is not None
+                and self.controller is not None and all(self.counts[k]>=3 for k in ('cloud','map','inflated')),90)
+            if self.platform.armed:raise RuntimeError('Workstation requires a disarmed platform before task start')
+            self.origin=list(self.runtime['origin'])
+            target=[a+b for a,b in zip(self.origin,self.task['waypoints_enu_m'][-1])]
+            parameters=self.create_client(SetParametersAtomically,'/drone0/super_timed_path_adapter/set_parameters_atomically')
+            self._mission_clients.append(parameters)
+            self.wait(parameters.service_is_ready,30)
+            request=SetParametersAtomically.Request(parameters=[Parameter('goal',value=list(map(float,target))).to_parameter_msg()])
+            future=parameters.call_async(request)
+            self.wait(future.done)
+            if not future.result().result.successful:raise RuntimeError('Compute goal configuration rejected: '+future.result().result.reason)
+            if not self.rpc.call('ping'):raise RuntimeError('Workstation simulator RPC unavailable')
+            collision=self.rpc.call('simGetCollisionInfo','PX4')
+            if not all(key in collision for key in ('has_collided','time_stamp')):raise RuntimeError('Simulator collision schema mismatch')
+            self.result['simulator_collision_preflight']=True
+            from uav_planner_interfaces.action import FollowTimedPath
+            clients=[ActionClient(self,kind,name) for kind,name in ((Takeoff,'/drone0/TakeoffBehavior'),
+                (Land,'/drone0/LandBehavior'),(FollowTimedPath,'/drone0/follow_timed_path'))]
+            self._mission_clients.extend(clients)
+            self.wait(lambda:all(client.server_is_ready() for client in clients),30)
+            enabler=self.create_client(SetBool,'/drone0/super_adapter/enable');self._mission_clients.append(enabler)
+            self.wait(enabler.service_is_ready,30)
+            (self.out/'origin-measured.json').write_text(json.dumps({'task_to_odom_translation_m':self.origin,'target':target},indent=2)+'\n')
+            (self.out/'compute-ready.json').write_text(json.dumps(self.runtime,indent=2)+'\n')
+            self.result.update(mission_location='workstation',algorithm_location='robopi',task_protocol='ROS parameters + enable service + goal topic + Behavior Actions')
+            return target
+        # SUPER initializes paths on the 0.2 m map voxel centers. The half-cell
+        # diagonal can exceed FollowTimedPath's generic 0.15 m start tolerance.
+        os.environ.update(AS2_EXECUTION_BACKEND='follow_path',AS2_FLEET_FILE=str(self.out/'fleet.yaml'),
+            AS2_TIMED_CONTINUITY_TOLERANCE='0.25')
+        if os.environ.get('SUPER_EXECUTION_LOCATION', 'pc') == 'pc':
+            self.start('as2',['python3','/opt/onboard_computer/run.py'])
+        self.start('navigation',['ros2','run','as2_navigation_inputs','navigation_inputs_node','--ros-args',
+            '-r','__ns:=/drone0','--params-file',str(self.root/'navigation.yaml')])
+        self.wait(lambda:self.odom is not None and self.platform is not None and self.controller is not None and self.counts['cloud']>=3,90)
+        settled=self.now_seconds();self.wait(lambda:self.now_seconds()-settled>=10,30)
+        self.origin=self.position()
+        target=[a+b for a,b in zip(self.origin,self.task['waypoints_enu_m'][-1])]
+        config=yaml.safe_load((self.root/'planner.yaml').read_text())
+        historical=json.loads((self.root/'reference_origin.json').read_text())['task_to_odom_translation_m']
+        config['rog_map']['fix_map_origin']=[a+b-c for a,b,c in zip(config['rog_map']['fix_map_origin'],self.origin,historical)]
+        config['rog_map']['virtual_ground_height']=self.task['virtual_ground_height_m']+self.origin[2]
+        config['rog_map']['virtual_ceil_height']=self.task['virtual_ceil_height_m']+self.origin[2]
+        (self.out/'planner.yaml').write_text(yaml.safe_dump(config))
+        (self.out/'origin-measured.json').write_text(json.dumps({'task_to_odom_translation_m':self.origin,'target':target},indent=2)+'\n')
+        self.start('super',['ros2','run','super_planner','fsm_node','--ros-args','-p','use_sim_time:=true','-p','config_name:='+str(self.out/'planner.yaml')])
+        self.start('adapter',['ros2','run','uav_super_adapter','super_timed_path_adapter','--ros-args',
+            '-r','__ns:=/drone0','-p','use_sim_time:=true','-p','goal:='+str(target),
+            '-p','max_speed:='+str(float(self.task['speed_m_s'])),
+            '-p','goal_tolerance:='+str(float(self.task['goal_tolerance_m']))])
+        self.wait(lambda:self.counts['map']>=3 and self.counts['inflated']>=3,60)
+        return target
+
+    def run(self):
+        try:
+            if self.four_part and self.case=='short-input-loss':raise RuntimeError('Four-part input-loss injection requires a board-side test interface; not implemented')
+            self.phase='preparing';target=self.prepare()
+            if self.case=='ground':
+                from uav_planner_interfaces.action import FollowTimedPath
+                clients=[ActionClient(self,kind,name) for kind,name in (
+                    (Takeoff,'/drone0/TakeoffBehavior'),(Land,'/drone0/LandBehavior'),
+                    (FollowTimedPath,'/drone0/follow_timed_path'))]
+                self._mission_clients.extend(clients)
+                self.wait(lambda:all(c.server_is_ready() for c in clients),30)
+                if self.platform.armed:raise RuntimeError('Ground check found armed platform')
+                if any(time.monotonic()-self.received.get(k,0)>.5 for k in ('clock','odom','cloud')):
+                    raise RuntimeError('Ground input freshness failed')
+                authorities={topic:[{'name':p.node_name,'namespace':p.node_namespace} for p in self.get_publishers_info_by_topic(topic)]
+                    for topic in ('/clock','/drone0/sensor_measurements/odom','/tf','/tf_static')}
+                if any(len(authorities[t])!=1 for t in ('/clock','/drone0/sensor_measurements/odom')):
+                    raise RuntimeError('Ground input authority is not unique')
+                self.result['publishers']=authorities
+                self.result.update(ground_ready=True,landed_and_disarmed=True)
+                return
+            self.result['motion_requested']=True
+            self.phase='arming'
+            self.platform_service('/drone0/set_arming_state',400,True)
+            self.wait(lambda:self.platform.armed)
+            self.platform_service('/drone0/set_offboard_mode',176,True)
+            self.wait(lambda:self.platform.offboard)
+            self.phase='takeoff'
+            self.action(Takeoff,'/drone0/TakeoffBehavior',Takeoff.Goal(takeoff_height=2.,takeoff_speed=.5),'takeoff_success')
+            self.wait(lambda:self.platform.status.state==PlatformStatus.FLYING)
+            self.phase='holding';hold=self.now_seconds();self.wait(lambda:self.now_seconds()-hold>=6,20)
+
+            self.service(SetBool,'/drone0/super_adapter/enable',SetBool.Request(data=True))
+            self.wait(lambda:self.goal_pub.get_subscription_count()>0)
+            goal=PoseStamped();goal.header.frame_id='drone0/odom';goal.header.stamp=self.get_clock().now().to_msg()
+            goal.pose.position.x,goal.pose.position.y,goal.pose.position.z=target
+            goal.pose.orientation=self.odom.pose.pose.orientation
+            self.goal_pub.publish(goal)
+            def executing():
+                if self.state.get('error'):raise RuntimeError(self.state['error'])
+                return self.state.get('revision',0)>0 and self.controller.input_control_mode.control_mode==ControlMode.TRAJECTORY
+            self.wait(executing,15)
+            self.phase='route';self.started=self.now_seconds();stable=None
+            self.display_event('start')
+            if self.case in ('short-cancel','short-input-loss','short-takeover'):
+                self.wait(lambda:self.now_seconds()-self.started>=.5,10)
+                self.phase='fault'
+                self.result['fault_injected']=self.case
+                if self.case=='short-cancel':
+                    self.service(SetBool,'/drone0/super_adapter/enable',SetBool.Request(data=False))
+                elif self.case=='short-input-loss':
+                    child=next(p for name,p,_ in self.children if name=='super')
+                    os.killpg(child.pid,signal.SIGTERM)
+                else:
+                    request=SetControlMode.Request();request.control_mode.control_mode=ControlMode.HOVER
+                    request.control_mode.yaw_mode=ControlMode.YAW_ANGLE
+                    self.service(SetControlMode,'/drone0/controller/set_control_mode',request)
+                self.wait(lambda:not self.state.get('enabled') and self.state.get('stop_confirmed'),15)
+                if self.case=='short-input-loss' and 'stream expired' not in self.state.get('error',''):
+                    raise RuntimeError('Input loss did not trigger stream expiry protection')
+                drain=self.now_seconds();self.wait(lambda:self.now_seconds()-drain>=.3,10)
+                references=self.counts['reference']
+                revision=self.state.get('revision');start=self.now_seconds()
+                def remained_stopped():
+                    if self.state.get('enabled') or self.state.get('revision')!=revision:
+                        raise RuntimeError('Execution resumed after fault stop')
+                    if self.counts['reference']!=references:
+                        raise RuntimeError('Trajectory references continued after confirmed stop')
+                    if self.case=='short-takeover' and self.controller.input_control_mode.control_mode==ControlMode.TRAJECTORY:
+                        raise RuntimeError('Trajectory control reclaimed after external takeover')
+                    return self.now_seconds()-start>=2
+                self.wait(remained_stopped,15)
+                self.result['fault_validated']=True
+                return
+            def arrived():
+                nonlocal stable
+                v=self.odom.twist.twist.linear
+                speed=math.sqrt(v.x*v.x+v.y*v.y+v.z*v.z)
+                if math.dist(self.position(),target)<=self.task['goal_tolerance_m'] and speed<.3:
+                    if stable is None:stable=self.now_seconds()
+                else:stable=None
+                return stable is not None and self.now_seconds()-stable>=2 and self.state.get('complete',False)
+            self.wait(arrived,self.task['leg_timeout_s'])
+            self.display_event('finish')
+            self.result.update(arrived=True,execution_completed=bool(self.state.get('complete')),arrival_error_m=math.dist(self.position(),target),
+                route_sim_seconds=self.now_seconds()-self.started,final_task_enu_m=self.local())
+        except BaseException as exc:
+            self.result.update(error=str(exc),failed_phase=self.phase)
+            self.get_logger().error(str(exc))
+        finally:
+            self.display_event('finish')
+            self.phase='stopping'
+            if self.platform is not None and self.platform.armed:
+                try:
+                    self.service(SetBool,'/drone0/super_adapter/enable',SetBool.Request(data=False))
+                    if self.state.get('task_id'):
+                        self.wait(lambda:self.state.get('stop_confirmed'),10)
+                        self.result['behavior_stop_confirmed']=True
+                    else:self.result['behavior_stop_not_needed']=True
+                except BaseException as exc:
+                    self.result['stop_error']=str(exc)
+                    request=SetControlMode.Request();request.control_mode.control_mode=ControlMode.HOVER
+                    request.control_mode.yaw_mode=ControlMode.YAW_ANGLE
+                    try:self.service(SetControlMode,'/drone0/controller/set_control_mode',request)
+                    except BaseException as failure:self.result['hover_error']=str(failure)
+                try:
+                    self.phase='landing'
+                    if self.platform.status.state in (PlatformStatus.TAKING_OFF,PlatformStatus.FLYING,PlatformStatus.LANDING):
+                        self.action(Land,'/drone0/LandBehavior',Land.Goal(land_speed=.5),'land_success')
+                    else:
+                        self.platform_service('/drone0/set_arming_state',400,False)
+                    self.wait(lambda:not self.platform.armed,20)
+                    self.result['landed_and_disarmed']=True
+                except BaseException as exc:
+                    self.result['recovery_error']=str(exc)
+                    try:self.emergency_land()
+                    except BaseException as failure:self.result['emergency_recovery_error']=str(failure)
+            self.result['collision_coverage']=self.collision_coverage
+            self.result.update(success=bool(self.result.get('ground_ready') or ((self.result.get('arrived') or self.result.get('fault_validated')) and self.result.get('behavior_stop_confirmed') and
+                 self.result.get('landed_and_disarmed') and not self.result.get('error') and not self.result.get('recovery_error'))),
+                 max_speed_m_s=self.max_speed,bounds_observation_count=self.bound_violations,
+                 source_flags=dict(self.flags),counts=dict(self.counts),input_ages_s=self.input_ages,adapter=self.state,
+                 mission_owned_children=[name for name,_,_ in self.children])
+            (self.out/'result.json').write_text(json.dumps(self.result,indent=2)+'\n')
+            print(json.dumps(self.result,indent=2),flush=True)
+
+    def close(self):
+        for _,child,_ in self.children:
+            if child.poll() is None:
+                try:os.killpg(child.pid,signal.SIGTERM)
+                except ProcessLookupError:pass
+        for _,child,stream in self.children:
+            try:child.wait(timeout=10)
+            except subprocess.TimeoutExpired:
+                os.killpg(child.pid,signal.SIGKILL);child.wait(timeout=5)
+            stream.close()
+        self.samples.close();self.destroy_node()
+
+
+def main():
+    rclpy.init();node=Mission()
+    def interrupted(*_):raise RuntimeError('Mission interrupted; recovering')
+    signal.signal(signal.SIGTERM,interrupted)
+    signal.signal(signal.SIGINT,interrupted)
+    try:node.run()
+    finally:node.close();rclpy.try_shutdown()
+    if not node.result.get('success'):raise SystemExit(1)
+
+if __name__=='__main__':main()

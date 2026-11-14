@@ -1,4 +1,5 @@
 """Construct YOPO's Torch backend; CPU model semantics live in the shared pipeline."""
+import hashlib
 import math
 import os
 import sys
@@ -11,12 +12,21 @@ from predictor import YopoPredictor
 from processing import YopoProcessing, preprocess_depth
 
 
+def verify_source(source):
+    """Require the verified algorithm files before importing the model."""
+    for line in (Path(__file__).resolve().parent / "source.sha256").read_text().splitlines():
+        expected, relative = line.split(maxsplit=1)
+        if hashlib.sha256((source / relative).read_bytes()).hexdigest() != expected:
+            raise RuntimeError("YOPO source differs from the verified baseline: " + relative)
+
+
 class Predictor(YopoPredictor):
     def __init__(self):
         repo = Path(__file__).resolve().parents[4]
         source = repo / "src/planner/yopo/upstream/YOPO"
         if not (source / "policy/yopo_network.py").is_file():
             raise RuntimeError("Initialize src/planner/yopo/upstream submodule first")
+        verify_source(source)
         sys.path.insert(0, str(source))
         from config.config import cfg
         from policy.yopo_network import YopoNetwork

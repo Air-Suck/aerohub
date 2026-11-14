@@ -1,4 +1,4 @@
-"""External path mapping, following LeUAV's user/workspace resource convention."""
+"""Resolve machine-local simulator resources shared by both backends."""
 import os
 from pathlib import Path
 
@@ -6,11 +6,13 @@ from pathlib import Path
 def resolve_resource(name):
     import yaml
 
-    root = Path(__file__).resolve().parents[3]
+    root = Path(__file__).resolve().parents[2]
     config_home = Path(os.environ.get('XDG_CONFIG_HOME') or Path.home() / '.config')
     resources = {}
     for config in (config_home / 'aerohub/resources.yaml',
-                   root / 'simulator/airsim/config/resources.local.yaml'):
+                   root / 'simulator/airsim/config/resources.local.yaml',
+                   root / 'config/resources.yaml',
+                   root / 'config/resources.local.yaml'):
         if not config.exists():
             continue
         try:
@@ -30,8 +32,9 @@ def resolve_resource(name):
                     or not entry['path'].strip()):
                 raise ValueError(f'{config}: each resource requires a nonempty path')
             path = Path(entry['path']).expanduser()
-            resources[key] = (config.parent / path).resolve()
+            # Preserve venv interpreter symlinks so Python finds pyvenv.cfg.
+            resources[key] = (config.parent / path).absolute()
     if name not in resources:
         raise ValueError(f'Resource {name!r} is not configured; set resources.{name}.path '
-                         'in simulator/airsim/config/resources.local.yaml or ~/.config/aerohub/resources.yaml')
+                         'in config/resources.yaml or config/resources.local.yaml')
     return resources[name]

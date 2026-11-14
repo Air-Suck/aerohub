@@ -1,0 +1,179 @@
+# v7: second-stage pillars lean LEFT/RIGHT across the corridor.
+version: 7
+review_status: approved
+base_config: blocks_course.yaml
+base_map: /Game/BlocksCourseSparse
+target_map: /Game/BlocksCourseTwoStage
+layout: sparse_straight
+seed: 0
+placement: explicit_no_random_sampling
+pillar_size_m:
+- 1.0
+- 1.0
+- 6.0
+pillar_centers_st_m:
+- - 10.0
+  - -3.0
+- - 10.0
+  - 1.0
+- - 18.0
+  - -1.0
+- - 18.0
+  - 3.0
+- - 26.0
+  - -3.0
+- - 26.0
+  - 1.0
+- - 34.0
+  - -1.0
+- - 34.0
+  - 3.0
+- - 42.0
+  - -3.0
+- - 42.0
+  - 1.0
+- - 50.0
+  - -1.0
+- - 50.0
+  - 3.0
+- - 70.0
+  - -3.0
+- - 70.0
+  - 1.0
+- - 78.0
+  - -1.0
+- - 78.0
+  - 3.0
+- - 86.0
+  - -3.0
+- - 86.0
+  - 1.0
+- - 94.0
+  - -1.0
+- - 94.0
+  - 3.0
+- - 102.0
+  - -3.0
+- - 102.0
+  - 1.0
+- - 110.0
+  - -1.0
+- - 110.0
+  - 3.0
+drone_reference:
+  enabled: true
+  station_m: 0.0
+  lateral_m: 0.0
+  scale: 1.0
+  orientation: face_finish
+  placement: rest_on_floor_using_actual_mesh_bounds
+  mode: static_visual_reference_no_flight
+  asset_candidate: /Drone/Quadrotor1
+  asset_status: verified_px4_sitl_five_visual_links
+  detail_camera: required_in_addition_to_three_fixed_views
+review_cameras:
+  DroneDetail:
+    location_m:
+    - 148.5
+    - -3.0
+    - 3.3
+    target_m:
+    - 152.0
+    - 0.0
+    - 1.3
+    fov_deg: 65.0
+  TotalOverview:
+    location_m:
+    - 211.5
+    - 0
+    - 175
+    target_m:
+    - 211.5
+    - 0
+    - 1.1
+    rotation_deg:
+    - -90
+    - -90
+    - 0
+    fov_deg: 50
+  Stage2Overview:
+    location_m:
+    - 241.5
+    - 0
+    - 110
+    target_m:
+    - 241.5
+    - 0
+    - 1.1
+    rotation_deg:
+    - -90
+    - -90
+    - 0
+    fov_deg: 50
+  Stage2Entrance:
+    location_m:
+    - 209
+    - -2
+    - 4.5
+    target_m:
+    - 242
+    - 0
+    - 3
+    fov_deg: 70
+  JoinSide:
+    location_m:
+    - 222
+    - -40
+    - 20
+    target_m:
+    - 222
+    - 0
+    - 3
+    fov_deg: 65
+pillar_shape: cylinder
+assets:
+  cylinder: /Engine/BasicShapes/Cylinder
+lighting:
+  type: natural_sky
+  sun_actor_label: SunSky
+  sky_intensity: 12.0
+  sun_intensity: 2.75
+length_m: 120.0
+split_station_m: 60.0
+section_lengths_m:
+- 60.0
+- 60.0
+pillar_tilts_deg:
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 15
+- 15
+- -15
+- -15
+- 15
+- 15
+- -15
+- -15
+- 15
+- 15
+- -15
+- -15
+tilt_semantics: 6m axis; base fixed on floor; each row leans together laterally, alternating
+  rows +/-15deg to avoid crossing pillars.
+capture_cameras:
+- TotalOverview
+- Stage2Overview
+- Stage2Entrance
+- JoinSide
+- DroneDetail
+pillar_tilt_direction: lateral

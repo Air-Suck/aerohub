@@ -12,7 +12,7 @@ from deployment.swarm.topology import load_config
 from hybrid_plan import BOARD_RPC_RELAY_PORT,NATIVE_PARAMETERS,PREFIX,RPC_PORT,build_plan,write_plan
 
 def execute(cmd,**kw):return subprocess.run(list(map(str,cmd)),check=True,**kw)
-def manager(action,out,profile):return [sys.executable,ROOT/'simulator/airsim/manager/manager.py',action,'--profile',profile,'--run-dir',out/'scene']
+def manager(action,out,profile):return [sys.executable,ROOT/'simulator/manager/manager.py',action,'--profile',profile,'--run-dir',out/'scene']
 
 def plan_from_files(config,scenario):
     return build_plan(config,scenario,yaml.safe_load((APP/'task.yaml').read_text()),

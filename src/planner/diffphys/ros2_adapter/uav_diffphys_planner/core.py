@@ -39,9 +39,6 @@ def decode(action, level, rotation, relative_goal, local_vertical_velocity, hove
     if norm<1e-6: raise ValueError('zero collective acceleration')
     up=acceleration/norm
     if up[2]<.5: raise ValueError('policy requested excessive tilt/inverted thrust')
-    raw_throttle=(norm+local_vertical_velocity*abs(local_vertical_velocity)*vertical_correction)/9.8*hover
-    if not np.isfinite(raw_throttle) or not 0<raw_throttle<=.85:
-        raise ValueError('policy thrust outside deployment limits')
     if not np.isfinite(max_command_tilt_rad) or not 0<=max_command_tilt_rad<np.pi/2:
         raise ValueError('invalid command tilt limit')
     if max_command_tilt_rad:

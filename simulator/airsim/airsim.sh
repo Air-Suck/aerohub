@@ -15,4 +15,4 @@ options=(--profile "${AIRSIM_PROFILE:-$root/simulator/airsim/config/nh.json}"
 if [[ -n ${AIRSIM_BINARY:-} ]]; then
   options+=(--binary "$AIRSIM_BINARY")
 fi
-exec python3 "$root/simulator/airsim/manager/manager.py" "$action" "${options[@]}" "$@"
+exec python3 "$root/simulator/manager/manager.py" "$action" "${options[@]}" "$@"

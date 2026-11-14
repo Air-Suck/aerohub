@@ -1,0 +1,46 @@
+--- a/src/projectairsim_ros2_cpp_node.cpp
++++ b/src/projectairsim_ros2_cpp_node.cpp
+@@ -323,17 +323,8 @@
+           is_image_topic ? std::optional<TopicHandler>{} : CreateHandler(topic);
+       if (!image_handler && !handler) continue;
+
+-      const auto status = client_->Subscribe(
+-          topic.c_str(),
+-          [this](const std::string& topic_name, const std::string& payload) {
+-            HandleProjectAirSimMessage(topic_name, payload);
+-          });
+-      if (status != pasc::Status::OK) {
+-        RCLCPP_WARN(get_logger(), "Failed to subscribe to %s: %s",
+-                    topic.c_str(), StatusToString(status).c_str());
+-        continue;
+-      }
+-
++      // Subscribe may synchronously deliver the native cached last value.
++      // Install its handler first so one-shot calibration cannot be lost.
+       {
+         std::lock_guard<std::mutex> lock(subscriptions_mutex_);
+         if (std::find(subscribed_topics_.begin(), subscribed_topics_.end(),
+@@ -347,6 +338,23 @@
+         }
+         subscribed_topics_.push_back(topic);
+       }
++      const auto status = client_->Subscribe(
++          topic.c_str(),
++          [this](const std::string& topic_name, const std::string& payload) {
++            HandleProjectAirSimMessage(topic_name, payload);
++          });
++      if (status != pasc::Status::OK) {
++        RCLCPP_WARN(get_logger(), "Failed to subscribe to %s: %s",
++                    topic.c_str(), StatusToString(status).c_str());
++        std::lock_guard<std::mutex> lock(subscriptions_mutex_);
++        handlers_.erase(topic);
++        image_handlers_.erase(topic);
++        subscribed_topics_.erase(std::remove(subscribed_topics_.begin(),
++                                            subscribed_topics_.end(), topic),
++                                 subscribed_topics_.end());
++        continue;
++      }
++
+       RCLCPP_INFO(get_logger(),
+                   "Bridging Project AirSim topic %s -> ROS topic %s",
+                   topic.c_str(), ToRosTopic(topic).c_str());
