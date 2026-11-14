@@ -33,11 +33,10 @@ def main():
     (out/'px4-preflight.txt').write_text(status)
     import signal
     from urllib.request import build_opener,ProxyHandler
-    config=json.loads((ROOT/'log/projectairsim/diffphys-course.local.json').read_text())
-    env=dict(os.environ,DIFFPHYS_PROFILE='high_speed',DIFFPHYS_DEVICE='cuda',DIFFPHYS_MODEL_DIR=config['model_dir'],
+    env=dict(os.environ,DIFFPHYS_PROFILE='high_speed',DIFFPHYS_DEVICE='cuda',INFERENCE_PORT='18082',
              PYTHONDONTWRITEBYTECODE='1',PYTHONPATH=str(ROOT/'src/inference/runtime'))
     with (out/'worker.log').open('w') as stream:
-        worker=sp.Popen([config['worker_python'],'-m','uvicorn','serve:app','--host','127.0.0.1','--port','18082'],
+        worker=sp.Popen(['bash',str(ROOT/'deployment/inference/start_diffphys.sh')],
             cwd=ROOT/'src/inference/models/diffphys',env=env,stdout=stream,stderr=sp.STDOUT,start_new_session=True)
     http=build_opener(ProxyHandler({}));deadline=time.monotonic()+90
     while time.monotonic()<deadline:

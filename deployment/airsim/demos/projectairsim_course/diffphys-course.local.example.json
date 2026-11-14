@@ -1,4 +1,0 @@
-{
-  "worker_python": "/path/to/diffphys/.venv/bin/python",
-  "model_dir": "/path/to/diffphys-model-directory-with-artifacts-and-manifest"
-}

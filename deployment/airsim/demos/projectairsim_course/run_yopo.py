@@ -36,12 +36,10 @@ def main():
         if old.get('worker'):stop_worker(old['worker'])
     tag=datetime.datetime.now().strftime('%Y%m%d-%H%M%S-%f')
     out=ROOT/'log/projectairsim'/('yopo-course-'+tag);out.mkdir()
-    config=json.loads((ROOT/'log/projectairsim/yopo-course.local.json').read_text())
-    source=Path(os.environ.get('YOPO_SOURCE',config['source']))
-    weights=Path(os.environ.get('YOPO_WEIGHTS',config['weights']))
-    python=Path(os.environ.get('YOPO_PYTHON',config['worker_python']))
-    if not python.exists() or not weights.exists() or not (source/'policy/yopo_network.py').exists():
-        raise RuntimeError('YOPO环境或权重缺失，检查yopo-course.local.json。')
+    model_dir=ROOT/'src/inference/models/yopo'
+    python=model_dir/'.venv/bin/python'
+    if not python.exists():
+        raise RuntimeError('先通过 deployment/inference/setup_models.py 准备 YOPO。')
     probe=sp.run([str(python),'-c',
         'import ctypes,sys; status=ctypes.CDLL("libcuda.so.1").cuInit(0); print("CUDA cuInit:",status); sys.exit(0 if status==0 else 1)'],
         capture_output=True,text=True)
@@ -64,12 +62,11 @@ def main():
         except sp.CalledProcessError:pass
         time.sleep(2)
     else:raise RuntimeError('PX4未就绪，没有起飞。')
-    env=dict(os.environ,YOPO_SOURCE=str(source),YOPO_WEIGHTS=str(weights),YOPO_VELOCITY=str(args.speed),YOPO_DEVICE='cuda',
+    env=dict(os.environ,INFERENCE_PORT='18081',YOPO_VELOCITY=str(args.speed),YOPO_DEVICE='cuda',
              PYTHONDONTWRITEBYTECODE='1',PYTHONPATH=str(ROOT/'src/inference/runtime'))
     with (out/'worker.log').open('w') as log:
-        worker=sp.Popen([str(python),'-m','uvicorn','serve:app','--host','127.0.0.1','--port','18081','--workers','1',
-             '--limit-concurrency','16','--h11-max-incomplete-event-size','16777216'],
-             cwd=ROOT/'src/inference/models/yopo',env=env,stdout=log,stderr=sp.STDOUT,start_new_session=True)
+        worker=sp.Popen(['bash',str(ROOT/'deployment/inference/start_yopo.sh')],
+             cwd=ROOT,env=env,stdout=log,stderr=sp.STDOUT,start_new_session=True)
     session=dict(output=str(out),worker=dict(pid=worker.pid,start_ticks=Path(f'/proc/{worker.pid}/stat').read_text().rsplit(')',1)[1].split()[19]))
     STATE.write_text(json.dumps(session,indent=2))
     http=build_opener(ProxyHandler({}));deadline=time.monotonic()+90

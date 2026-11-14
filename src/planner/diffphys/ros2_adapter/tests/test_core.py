@@ -1,5 +1,4 @@
 import ast
-import os
 from pathlib import Path
 import sys
 from types import SimpleNamespace
@@ -54,7 +53,7 @@ class OfficialDecoding(unittest.TestCase):
 
     def test_nonidentity_against_official_ast(self):
         root=Path(__file__).resolve().parents[4]
-        tree=ast.parse((Path(os.environ.get('DIFFPHYS_MODEL_DIR',str(root/'inference/models/diffphys')))/'artifacts/swarm/eval.py').read_text())
+        tree=ast.parse(((root/'inference/models/diffphys')/'artifacts/swarm/eval.py').read_text())
         main=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='main')
         loop=next(n for n in main.body if isinstance(n,ast.While))
         selected=[];active=False
@@ -83,7 +82,7 @@ class OfficialDecoding(unittest.TestCase):
 
     def test_high_speed_against_official_ast(self):
         root=Path(__file__).resolve().parents[4]
-        tree=ast.parse((Path(os.environ.get('DIFFPHYS_MODEL_DIR',str(root/'inference/models/diffphys')))/'artifacts/high_speed/PlannerBase.py').read_text())
+        tree=ast.parse(((root/'inference/models/diffphys')/'artifacts/high_speed/PlannerBase.py').read_text())
         callback=next(n for n in ast.walk(tree) if isinstance(n,ast.FunctionDef) and n.name=='callback_depth')
         selected=[];active=False
         for n in callback.body:

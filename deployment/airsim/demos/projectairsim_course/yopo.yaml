@@ -6,7 +6,7 @@
     optical_frame: drone0/yopo_front_optical
     depth_model: axial
     camera_pitch_deg: 0.0
-    camera_x_m: 0.5
+    camera_x_m: 0.46
     handoff_lead_s: 0.2
     inference_timeout_s: 0.1
     submission_reserve_s: 0.05

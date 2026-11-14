@@ -43,9 +43,9 @@ YOPO、DiffPhys 只检查启动和输入、不解锁时，加 `--prepare-only`�
 | 算法 | 平台输入 | 执行链 | 本赛道状态 |
 | --- | --- | --- | --- |
 | SUPER | LiDAR、PX4 odom、ROG 地图 | Adapter → FollowTimedPath | 已有真实飞行；5 m/s 一轮在约110.4 m后轨迹过期，未完成 |
-| YOPO | 前视轴向深度、CameraInfo、PX4/AS2 pose/twist、真实相机TF | CUDA Inference → YOPO Planner → FollowTimedPath | 本目录入口；地面/飞行证据分别查看本轮结果，不继承旧AirSimNH通过结论 |
+| YOPO | 前视轴向深度、CameraInfo、PX4/AS2 pose/twist、真实相机TF | CUDA Inference → YOPO Planner → FollowTimedPath | front_center模板、标准Inference入口下，3m/s单轮到点、停车、Land/disarmed通过；非恒高验收 |
 | IPC | 点云、odom、控制会话 | 既有 FollowReference external_acro → 角速度/推力 | 已接入；名义3m/s单轮到点、Land/disarmed通过，碰撞事件与完整控制映射验收未覆盖 |
-| DiffPhys | 专属前视深度、状态、循环策略会话 | CUDA Inference → FollowReference attitude → 姿态/推力 | 已接入并真实飞行；5m/s在约101m处撞击，未通过 |
+| DiffPhys | 专属前视深度、状态、循环策略会话 | CUDA Inference → FollowReference attitude → 姿态/推力 | 标准Inference入口已实飞；5m/s、3m起飞后控制量超限退出，Land/disarmed通过；导航未通过 |
 
 切换算法复用场景、SITL、任务原点、起降和证据格式；传感器、模型、Planner、执行接口和停止判据按算法契约保留。
 YOPO 的原生到点定义是 `ARRIVED_5M` 后物理停止，不等同 SUPER 的 1.5 m 到点门槛。
@@ -53,9 +53,10 @@ YOPO 的原生到点定义是 `ARRIVED_5M` 后物理停止，不等同 SUPER 的
 
 ## YOPO 输入与部署
 
-`prepare_yopo_scene.py` 从本机 WMM 包读取机器人配置，生成独立 scene/robot/profile 到
+`prepare_yopo_scene.py` 从本机 WMM 包读取机器人配置，并从匹配 ProjectAirSim 源码的
+`robot_quadrotor_classic.jsonc` 复制原生 `front_center` 模板，生成独立 scene/robot/profile 到
 `log/projectairsim/yopo-course-config/`；保留磁场覆盖，不改原归档。
-相机为 `yopo_front`，位于机体前方0.5 m、pitch 0、320×185、HFOV 90°，只启用 DepthPlanar。
+相机为 `yopo_front`，保留上游机体前方0.46 m、pitch 0安装姿态；按YOPO输入契约修改为320×185、HFOV 90°，只启用浮点 DepthPlanar。
 关闭本任务不消费的下视相机；保留 LiDAR 和飞控必需传感器。
 
 标准输入为：
@@ -70,11 +71,11 @@ Planner 检查相机几何、采样同步、新鲜度、推理服务和 Behavior
 YOPO worker 的 `YOPO_VELOCITY=5` 与 Planner 的 `max_speed: 5.0` 同时设置。
 不修改训练权重，不将原生加速度缩放称作独立 2 m/s² 限制。
 
-本机专用 `log/projectairsim/yopo-course.local.json` 保存现有 worker Python、上游 YOPO 和权重路径；
-不将个人机器路径写入共享配置。可用 `YOPO_PYTHON`、`YOPO_SOURCE`、`YOPO_WEIGHTS` 环境变量覆盖。
-复制 `yopo-course.local.example.json` 至上述本机路径并填写依赖。
-worker 使用 CUDA、18081 端口，每轮独立进程；通过 PID 与启动时刻确认归属后回收。
-复用原有隔离环境解释器和锁定权重，不改动它们；当前仓库的 worker/Adapter 源码负责运行。
+模型依赖按仓库标准 Inference 入口准备：初始化锁定的 `src/planner/yopo/upstream`，
+通过 `deployment/inference/setup_models.py` 或模型 `setup.sh` 准备本模型 `.venv` 和
+`artifacts`。赛道入口复用 `deployment/inference/start_yopo.sh`，只设置本轮服务端口和
+速度；不再接受赛道专有的源码、解释器或模型目录覆盖。模型启动校验标准源码文件哈希。
+worker 使用 CUDA、18081 端口，每轮独立进程；按 PID 与启动时刻确认归属后回收。
 
 ROS 包在固定 `uav/apps-super-forest:onboard-v0.1.1` 镜像中补编译，不重建共享镜像：
 
@@ -99,52 +100,13 @@ HUD 的 FINISHED 表示计时结束，失败也可能结束计时；不是到达
 
 原生碰撞事件尚未桥接：本入口明确 `collision_coverage: unverified`。
 运行者看到的画面可用于判断本轮现象，但缺少原生碰撞事件时不宣称自动无碰撞验收通过。
-磁场修正已通过地面航向检查；动态深度/地图几何及 YOPO 本赛道飞行仍须独立验证。
+磁场修正已通过地面航向检查；各算法飞行结论独立记录。
 
 停止后 HUD HTTP 端口可能保留 TIME_WAIT。入口按实际 bind 检查端口释放，最长等待90秒；
 不因无 LISTEN 就认为可立即重启，也不杀未知占用进程。超时按具体端口检查归属。
 
 旧入口及算法契约见 [YOPO](../yopo_single/README.md)、[IPC](../ipc_navigation/README.md)、
 [DiffPhys](../diffphys_forest/README.md)。这些旧入口仍针对 AirSimNH，不能直接用于本包。
-
-## 当前验证记录（2026-11-13）
-
-YOPO ROS四个包在固定镜像补编译通过；独立赛道前视相机/原生传感器配置加载通过。
-GPU worker启动失败：当前执行环境最小 `libcuda.so.1` 的 `cuInit(0)` 返回999，
-PyTorch CUDA初始化失败。`nvidia-smi`能看到RTX4090不代表CUDA可执行。
-启动器在场景复位之前检查CUDA，失败即退出。未用CPU或模拟输出替代。
-该段为重启前历史结果；重启后的实际验证见下节。
-没有重置GPU或卸载驱动，以免影响其他工作负载。
-
-进一步诊断已定位：`/dev/nvidia-uvm` open返回EIO；NVIDIA内核报告Xid31、
-Xid154（Node Reboot Required），并明确写出`uvm encountered global fatal error 0x60,
-requiring os reboot to recover`。证据`log/projectairsim/yopo-kernel-errors.txt`。
-需要用户安排主机重启后再运行上述YOPO命令；仅重启场景或容器不足以恢复该内核状态。
-
-## 重启后实际验证（2026-11-13）
-
-CUDA张量计算、YOPO官方权重GPU加载/warmup通过。修复一次性CameraInfo晚订阅：
-仅使用RELIABLE / TRANSIENT_LOCAL / depth=1标定订阅，发布端须提供匹配QoS。实际独立冷启动地面ready通过；
-ROS回归在独立domain验证仅在Planner启动前发布一次标定，轨迹更新/拒绝/取消/停止门通过。
-
-第一轮真实飞行在25–33m往复，取消后停车及降落失败，停止所属SITL收口，未标记成功降落。
-真实起飞深度显示机臂桨叶遮挡，前视相机前移0.5m并同步camera_x_m外参检查。
-不遮罩真实近距像素，不改训练权重；该杆臂是本机体专属配置，尚未完成原生共置模型的完整等价性证明。
-修正后的地面真实深度已无机臂遮挡，图见本轮ground-depth.png。
-
-第二轮仍失败：约30–40m跟踪偏差增大，RUNNING样本最远推进55.69m，触发[-6,6]m横向边界；
-ARRIVED_5M=false，stopped=false，land_success=false，最终disarmed=true（PX4独立确认）。
-证据：`log/projectairsim/yopo-course-20261113-155136-859755/`。
-原生碰撞话题仍未覆盖，不能凭跟踪偏差独断碰撞根因。5m/s全程避障未通过。
-一键入口现可真实启动并飞行，但不声明本场景成功复现。失败退出码为1，结果与恢复字段保留。
-
-观察与算法采集分别配置：原生Chase保持enabled、RGB streaming，供主窗口观察；
-前视yopo_front仅启用DepthPlanar capture、关闭streaming，供YOPO消费。
-下视相机关闭，不因关闭无消费者相机而禁用Chase。
-
-用户确认移除YOPO任务的高度越界终止检查；仅保留x∈[-6,6]、y∈[-2,123]m检查。
-历史3m/s轮在相对高度5.5011m触发旧门限，最大RUNNING推进84.30m、峰值3.276m/s；
-取消后日志STOPPED，原生Land/disarmed通过。该轮仍记未完成，不能事后改判成功。
 
 ## IPC 名义3m/s赛道运行
 
@@ -180,16 +142,6 @@ bash deployment/airsim/demos/ipc_navigation/build_node.sh
 构建日志在log/ipc/；核芯5项数值测试、ROS构建5项测试和实际平台控制帧配对测试通过。
 运行只读挂载本工作区overlay及native-deps，不混入其他工作区的插件二进制。
 
-2026-11-13单轮实际飞行：证据`log/projectairsim/ipc-course-20261113-170256/`。
-`arrived=true, land_success=true, disarmed=true, success=true`，最终uORB arming_state1。
-导航44.877仿真秒，速度中位2.9451、峰值3.6914m/s，记录终点误差0.01247m，
-横向最大偏差0.80864m，高度相对地面1.929…2.131m。实际悬停油门0.59334。
-所有compute子进程正常清理，无强制kill。该轮取消后直接转原生Land，未独立执行
-停车驻留/跨Behavior交接专项验收；旧继承结果中的stopped=false不代表到点失败。
-结果success仅表示本轮任务到点与Land/disarmed，不代表完整算法复现成功。
-原生碰撞事件、真值评分、严格逐帧控制映射和故障恢复矩阵尚未验收。
-原始ROS bag包含IPC求解/会话/控制/PX4模式与位姿，samples日志保留导航状态。
-
 ## DiffPhys 目标5m/s赛道入口
 
 ```bash
@@ -199,9 +151,9 @@ python3 deployment/airsim/demos/projectairsim_course/run_diffphys.py
 运行前构建：`bash deployment/airsim/demos/diffphys_forest/build.sh`。
 复用固定repo-native-20261109镜像与外部`log/diffphys/attitude-overlay`，该overlay包含
 姿态命令源stamp/配对补丁、FollowReference及DiffPhys ROS接口，不混用IPC旧二进制。
-当前机器本地依赖记录于`log/projectairsim/diffphys-course.local.json`；共享示例见
-`diffphys-course.local.example.json`，worker Python和模型目录均须显式准备。
-`DIFFPHYS_MODEL_DIR`让当前适配代码读取已有artifacts.json和官方模型/权重，保留哈希校验。
+模型依赖使用标准 `src/inference/models/diffphys/{.venv,artifacts}` 与锁定算法子模块，
+赛道入口复用 `deployment/inference/start_diffphys.sh`，显式选择 high_speed、CUDA和18082端口。
+不再通过 DIFFPHYS_MODEL_DIR 改变模型或算法源码定位；两种profile均保留来源/权重哈希校验。
 
 模型为官方high_speed，目标5m/s、10m目标前视、指令倾角锥0.5rad；真实姿态超过0.6rad
 记失败。深度相机为640x480、HFOV91°、pitch20°、机体FRD [0.5,0,-0.1]，15Hz。
@@ -226,10 +178,15 @@ DiffPhys 大图传输使用随入口提供的 `diffphys-dds.xml`：桥、标准�
 15 秒对照中，该配置将原始/标准图最大采样间隔恢复至 72 ms。不要靠增大控制超时
 掩盖传输丢帧；只允许原生 Pair0 话题的一个消费者，诊断探针须与桥顺序运行。
 
-2026-11-13 最新实飞 `log/projectairsim/diffphys-course-20261113-195306`：
-原生起飞约1.99m，策略接管后下降至约0.7–1.2m，约101m处用户观察撞击，任务倾角
-超过0.6rad退出。Land Action未成功返回，PX4最终已上锁；不得标记到达或安全降落通过。
-图像传输恢复与最终指令校验修复后能持续执行，但本场景高度/避障适配尚未完成。
+## 最新验证与剩余工作
 
-当前 DiffPhys 配置为起飞/目标高度 3 m、目标速度 5 m/s。3 m 配置尚未完成实飞验收；
-最近 2 m 起飞轮次出现横向越界或最终推力超限，不能视为复现成功。
+2026-11-14，标准源码/模型定位及统一启动脚本已完成CUDA数值对照、真实相机记录HTTP重放及两算法实飞：
+
+| 算法/配置 | 实飞结果 | 证据目录（log/projectairsim/） |
+| --- | --- | --- |
+| YOPO 3m/s、起飞2m | 到达5m门、停车、Land、上锁通过；速度中位2.981、峰值3.268m/s；后半程升高，不代表恒高 | yopo-course-20261114-190858-790815 |
+| DiffPhys 5m/s、起飞3m | 策略控制量被拒后watchdog退出；Land、上锁通过；未到终点 | diffphys-course-20261114-191143 |
+
+DiffPhys仍需解决掉高与控制量超限。原生碰撞事件及完整故障矩阵未验收，不宣称完整复现成功。
+准备与运行均使用仓库锁定子模块、标准模型目录和现有Inference启动脚本；已移除赛道专属源码/模型路径配置。
+历史失败、配置变迁和详细结果见 [验证记录](validation.md)。
