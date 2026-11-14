@@ -19,7 +19,7 @@ from deployment.swarm.topology import ConfigError, load_config, resolve_topology
 ROOT = Path(__file__).resolve().parents[3]
 APP = ROOT / "deployment/airsim/demos/swarm_open_field"
 CONFIG = ROOT / "deployment/swarm/configs/swarm_open_field.yaml"
-ADAPTER = ROOT / "src/planner/swarm_formation/ros2_adapter/bridge/uav_swarm_formation_adapter/node.py"
+ADAPTER = ROOT / "src/tool/navigation/planner/swarm_formation/ros2_adapter/bridge/uav_swarm_formation_adapter/node.py"
 FAKE_DOCKER = ROOT / "deployment/swarm/tests/fake_docker.py"
 sys.path.insert(0, str(APP))
 

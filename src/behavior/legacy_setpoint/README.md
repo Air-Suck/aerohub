@@ -8,7 +8,7 @@
 
 CAT-ORA 当前使用其自有 `cat_ora_as2_adapter_node` 入口复用本包转换实现，
 并将任务的暂停、取消、失败和完成转为 AS2 HOVER 请求及确认；仍不自动申请
-TRAJECTORY。输入、停止与故障回归见 [CAT-ORA adapter](../../planner/cat_ora/ros2_adapter/bridge/README.md)。
+TRAJECTORY。输入、停止与故障回归见 [CAT-ORA adapter](../../tool/navigation/planner/cat_ora/ros2_adapter/bridge/README.md)。
 其他算法的原有入口保持兼容，不要求串联 CAT-ORA 的适配节点。
 
 每条 `TrajectorySetpoints` 必须恰好一个点，frame 为 `<namespace>/odom`。
@@ -48,7 +48,7 @@ ros2 run uav_as2_setpoint_adapter super_as2_mission --ros-args \
 SUPER 和 adapter 应提前启动，避免模式进入后的 500 ms 等待窗口耗在启动进程。
 同机同时只能启用一个参考来源，CAT-ORA / Swarm 桥与 SUPER adapter 不同时激活。
 
-SUPER 使用 `src/planner/super/ros2_adapter/native/super_planner/config/as2_trajectory_ros2.yaml`：
+SUPER 使用 `src/tool/navigation/planner/super/ros2_adapter/native/super_planner/config/as2_trajectory_ros2.yaml`：
 执行定时器开启，速度限制 1 m/s，保留主/备用轨迹和重规划。
 虚拟地面与天花板也是局部 odom 坐标，必须覆盖当前定位原点和目标。
 
@@ -66,9 +66,9 @@ SUPER 使用 `src/planner/super/ros2_adapter/native/super_planner/config/as2_tra
 构建时显式列出嵌套包及 SUPER 消息：
 
 ```bash
-colcon build --paths src/planner/interfaces src/planner/framework \
+colcon build --paths src/tool/navigation/interfaces src/tool/navigation/framework \
   src/behavior/legacy_setpoint \
-  src/planner/super/ros2_adapter/native/mars_uav_sim/mars_quadrotor_msgs
+  src/tool/navigation/planner/super/ros2_adapter/native/mars_uav_sim/mars_quadrotor_msgs
 ```
 
 需要已有 ROS 2 Humble 与 AS2 安装环境。传感器线程及相机配置不由本包修改。

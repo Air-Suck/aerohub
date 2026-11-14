@@ -2,9 +2,9 @@ schema_version: '0.1'
 id: aerohub.planner.yopo-single
 version: '0.1.0'
 source:
-  upstream: src/planner/yopo/upstream
+  upstream: src/tool/navigation/planner/yopo/upstream
   revision: bd8a7f91953cfef9f1aa9a48d7ff0ab7bceee132
-  integration: src/planner/yopo/ros2_adapter
+  integration: src/tool/navigation/planner/yopo/ros2_adapter
   license: MIT
 provides: [planner.yopo-single]
 cards: [cards/planner/yopo-single.yaml]
@@ -17,7 +17,7 @@ runtime:
   images: [onboard_computer:v0.1.0, flight_board:v0.1.0, 'osrf/ros:humble-desktop-full-jammy']
   platform: linux-x86_64-NVIDIA
   dependencies: [aerohub.inference.yopo, uav_follow_path_execution, ROS-2-Humble, AirSimNH, PX4-SITL]
-  source_preparation: src/inference/models/yopo/setup.sh
+  source_preparation: src/basic_function/inference/models/yopo/setup.sh
   build: deployment/airsim/demos/yopo_single/build.sh
   launch: deployment/airsim/demos/yopo_single/run.py
   configuration: deployment/airsim/demos/yopo_single/planner.yaml

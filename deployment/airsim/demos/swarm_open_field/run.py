@@ -93,7 +93,7 @@ def main():
     task['planner']['parameters']['wait_for_output']=False
     (output/'task-follow-path.yaml').write_text(yaml.safe_dump(task,sort_keys=False))
     sources=[APP/'mission.py',APP/'worker.py',APP/'task.yaml',
-             ROOT/'src/planner/framework/uav_planner_framework/ros_node.py',
+             ROOT/'src/tool/navigation/framework/uav_planner_framework/ros_node.py',
              ROOT/'src/behavior/follow_path/src/follow_path_extended.cpp']
     (output/'source-manifest.json').write_text(json.dumps({
         'commit':subprocess.check_output(['git','-C',ROOT,'rev-parse','HEAD'],text=True).strip(),

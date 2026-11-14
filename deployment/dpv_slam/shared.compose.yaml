@@ -29,7 +29,7 @@ services:
     entrypoint: ["/bin/bash", "-lc"]
     command:
       - >-
-        export PYTHONPATH=/workspace/dpv/python:/workspace/aerohub/src/state_estimator/dpv_slam/upstream:$${PYTHONPATH:-} &&
+        export PYTHONPATH=/workspace/dpv/python:/workspace/aerohub/src/basic_function/state_estimator/dpv_slam/upstream:$${PYTHONPATH:-} &&
         export LD_LIBRARY_PATH=$$(find /workspace/dpv/python/nvidia -type d -name lib -print | paste -sd:):/workspace/dpv/cuda/lib:/workspace/dpv/cuda/lib64:$${LD_LIBRARY_PATH:-} &&
         source /opt/ros/humble/setup.bash &&
         source /workspace/dpv/ros/install/setup.bash &&

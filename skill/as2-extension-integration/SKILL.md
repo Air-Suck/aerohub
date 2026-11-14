@@ -11,10 +11,10 @@ description: 按原生 Aerostack2 扩展约定实现 Planner、Behavior、State 
 
 ## 四类实现规则
 
-- Planner：当前通过扩展 FollowPath/FollowTimedPath 适配。算法保留在 `src/planner/<算法>/`，Adapter 生成执行 Goal 并处理 Feedback、Result、取消和机群协调；不把算法整个搬进执行 Behavior，也不直接绕过它发布运动参考。
+- Planner：当前通过扩展 FollowPath/FollowTimedPath 适配。算法保留在 `src/tool/navigation/planner/<算法>/`，Adapter 生成执行 Goal 并处理 Feedback、Result、取消和机群协调；不把算法整个搬进执行 Behavior，也不直接绕过它发布运动参考。
 - Behavior：先检查现有能力。不能满足功能需求时，按原生 `as2_behavior::BehaviorServer<ActionT>` 等约定创建，放在 `src/behavior/<行为>/`。既有 FollowPath 扩展保留原入口和时间化入口的互斥；不能通过取终点或忽略时间来伪造完整轨迹兼容。
-- State Estimator：按原生插件机制复用或新增。读取实际基类、原生示例、loader、plugins.xml、CMake 导出与 launch。外部算法可独立运行，由插件消费其结果并提供 pose/twist/TF；不要求重复 EKF。代码放在 `src/state_estimator/<算法>/`。
-- Perception：优先复用原生能力，不满足时扩展原生功能，仍不适合再独立实现。检查 `as2_map_server` 和 `as2_behaviors_object_perception` 实际能力；允许不同环境表示，不强制经过二维地图服务器。适配与接口归入 `src/perception/<能力>/`。
+- State Estimator：按原生插件机制复用或新增。读取实际基类、原生示例、loader、plugins.xml、CMake 导出与 launch。外部算法可独立运行，由插件消费其结果并提供 pose/twist/TF；不要求重复 EKF。代码放在 `src/basic_function/state_estimator/<算法>/`。
+- Perception：优先复用原生能力，不满足时扩展原生功能，仍不适合再独立实现。检查 `as2_map_server` 和 `as2_behaviors_object_perception` 实际能力；允许不同环境表示，不强制经过二维地图服务器。适配与接口归入 `src/basic_function/perception/<能力>/`。
 
 ## 加载与运行边界
 

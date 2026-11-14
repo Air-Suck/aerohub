@@ -16,7 +16,7 @@ import sys
 root, work = map(Path, sys.argv[1:])
 manifest = {}
 for name, relative in [('uav_inference_interfaces', 'interfaces'), ('uav_inference', 'ros2_adapter')]:
-    source = root / 'src/inference' / relative
+    source = root / 'src/basic_function/inference' / relative
     target = work / 'ws/src' / name
     if target.exists():
         raise FileExistsError('Choose a clean isolated workspace: ' + str(target))

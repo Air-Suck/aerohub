@@ -9,5 +9,5 @@ set -eo pipefail
 source /opt/ros/humble/setup.bash
 source /workspace/log/gcopter/install/setup.bash
 for package in /workspace/log/gcopter/deps/*.deb; do dpkg-deb -x "$package" /; done
-python3 /workspace/src/planner/gcopter/ros2_adapter/native/tests/local_ros_check.py
+python3 /workspace/src/tool/navigation/planner/gcopter/ros2_adapter/native/tests/local_ros_check.py
 '

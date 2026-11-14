@@ -2,7 +2,7 @@
 
 真实IPC在PC算力侧完成A*/Floyd、EMVP安全走廊、MPC与控制转换，经既有FollowReference external_acro插件、AS2控制器、Pixhawk平台、PX4 SITL驱动AirSimNH。任务与算力进程当前共置PC容器，分别管理生命周期；高频控制不经任务脚本转发。真值仅用于评分，不进入IPC输入，不使用AirSim运动API。
 
-2026-11-10，`super-3mps-balanced-01/02`在相同二进制、镜像、任务和预设标准下，两次全新启动完整通过。两轮均为`planar_path=false`，未把路径压到固定巡航高度；出生点与地面相对终点对齐SUPER。固定证据见[自由三维验收摘要](validation-free-xyz-20261110.json)，完整过程和失败记录见[IPC validation](../../../../src/planner/ipc/validation.md)。
+2026-11-10，`super-3mps-balanced-01/02`在相同二进制、镜像、任务和预设标准下，两次全新启动完整通过。两轮均为`planar_path=false`，未把路径压到固定巡航高度；出生点与地面相对终点对齐SUPER。固定证据见[自由三维验收摘要](validation-free-xyz-20261110.json)，完整过程和失败记录见[IPC validation](../../../../src/tool/navigation/planner/ipc/validation.md)。
 
 | 实测导航指标 | 第一次 | 独立复跑 |
 | --- | ---: | ---: |
@@ -21,7 +21,7 @@
 
 ## 构建与运行
 
-复用固定镜像`uav/apps-super-forest:repo-native-20261109`和`flight_board:v0.1.0`，不重建共享镜像。依赖获取、锁定版本与构建前置见[native README](../../../../src/planner/ipc/ros2_adapter/native/README.md)。运行显式加载`log/ipc/control-overlay`和`log/ipc/native-deps`的install overlay；接口/ABI改变时重编译消费者。
+复用固定镜像`uav/apps-super-forest:repo-native-20261109`和`flight_board:v0.1.0`，不重建共享镜像。依赖获取、锁定版本与构建前置见[native README](../../../../src/tool/navigation/planner/ipc/ros2_adapter/native/README.md)。运行显式加载`log/ipc/control-overlay`和`log/ipc/native-deps`的install overlay；接口/ABI改变时重编译消费者。
 
 需要本机AirSimNH可执行场景与Vulkan GPU。保留渲染、LiDAR及PX4传感器，仅关闭未使用的相机传输。
 

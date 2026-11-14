@@ -60,7 +60,7 @@ def main():
     if status.returncode:
         execute(manager('start',output)+['--timeout','90'])
     sources = ['deployment/airsim/demos/catora_open_field/mission.py',
-               'src/planner/framework/uav_planner_framework/ros_node.py',
+               'src/tool/navigation/framework/uav_planner_framework/ros_node.py',
                'src/behavior/follow_path/src/follow_path_extended.cpp']
     manifest = {'commit': subprocess.check_output(['git','-C',str(ROOT),'rev-parse','HEAD'],text=True).strip(),
                 'execution_backend': os.environ.get('CATORA_EXECUTION_BACKEND','legacy_setpoint'),

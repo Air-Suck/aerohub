@@ -22,8 +22,8 @@ def prepare(workspace):
     packages={
         'as2_msgs':work/'ws/src/as2_msgs',
         'px4_msgs':work/'ws/src/px4_msgs',
-        'mars_quadrotor_msgs':ROOT/'src/planner/super/ros2_adapter/native/mars_uav_sim/mars_quadrotor_msgs',
-        'uav_planner_interfaces':ROOT/'src/planner/interfaces'}
+        'mars_quadrotor_msgs':ROOT/'src/tool/navigation/planner/super/ros2_adapter/native/mars_uav_sim/mars_quadrotor_msgs',
+        'uav_planner_interfaces':ROOT/'src/tool/navigation/interfaces'}
     manifest={}
     for name,path in packages.items():
         if name in expected:

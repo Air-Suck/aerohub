@@ -28,7 +28,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /root/aerostack2_ws/src
 COPY as2/aerostack2/ aerostack2/
 COPY as2/as2_platform_pixhawk/ as2_platform_pixhawk/
-COPY src/perception/navigation_inputs/ as2_navigation_inputs/
+COPY src/basic_function/perception/navigation_inputs/ as2_navigation_inputs/
 WORKDIR /root/aerostack2_ws
 # Install only dependencies of the selected flight components, not unrelated
 # Gazebo/platform packages that happen to be present in the upstream monorepo.
@@ -58,7 +58,7 @@ RUN source /opt/ros/humble/setup.bash \
     && ros2 pkg prefix as2_behaviors_motion \
     && ros2 pkg prefix as2_navigation_inputs
 # Project execution overlay; the flight-board image and PX4 dependencies are unchanged.
-COPY src/planner/interfaces/ /opt/uav_execution_ws/src/interfaces/
+COPY src/tool/navigation/interfaces/ /opt/uav_execution_ws/src/interfaces/
 COPY src/behavior/follow_path/ /opt/uav_execution_ws/src/follow_path/
 WORKDIR /opt/uav_execution_ws
 RUN source /opt/ros/humble/setup.bash \

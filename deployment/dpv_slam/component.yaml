@@ -5,7 +5,7 @@ description: Monocular DPV-SLAM global correction and sparse visual landmarks
 source:
   repository: https://github.com/princeton-vl/DPVO.git
   commit: 0ac95b656d1fda91c271d2a106460d19ad966fc7
-  submodule_path: src/state_estimator/dpv_slam/upstream
+  submodule_path: src/basic_function/state_estimator/dpv_slam/upstream
   upstream_modified: false
   license: MIT
 capabilities: [state-estimator.dpv-slam-monocular, perception.dpv-slam-sparse-points]

@@ -146,14 +146,14 @@ def main():
     (out/'profile.json').write_text(json.dumps(profile,indent=2)+'\n')
     (out/'fleet.yaml').write_text(yaml.safe_dump({'vehicles':{'drone0':{'fmu_prefix':'/drone0','target_system_id':61}}}))
     hashes={str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest() for directory in
-            (APP,ROOT/'src/planner/super/ros2_adapter',ROOT/'src/behavior/follow_path',
-             ROOT/'src/planner/framework',ROOT/'deployment/airsim/as2',ROOT/'deployment/airsim/config/as2',ROOT/'deployment/platform/patches') for p in directory.rglob('*')
+            (APP,ROOT/'src/tool/navigation/planner/super/ros2_adapter',ROOT/'src/behavior/follow_path',
+             ROOT/'src/tool/navigation/framework',ROOT/'deployment/airsim/as2',ROOT/'deployment/airsim/config/as2',ROOT/'deployment/platform/patches') for p in directory.rglob('*')
             if p.is_file() and '__pycache__' not in p.parts and p.suffix not in ('.png','.log')}
     (out/'source-manifest.json').write_text(json.dumps({'commit':subprocess.check_output(['git','-C',ROOT,'rev-parse','HEAD'],text=True).strip(),
-        'super_source':{'path':'src/planner/super/ros2_adapter/native','owner':'main repository',
-                        'import':json.loads((ROOT/'src/planner/super/ros2_adapter/native/SOURCE.json').read_text())},
+        'super_source':{'path':'src/tool/navigation/planner/super/ros2_adapter/native','owner':'main repository',
+                        'import':json.loads((ROOT/'src/tool/navigation/planner/super/ros2_adapter/native/SOURCE.json').read_text())},
         'locked_submodules':{name:subprocess.check_output(['git','-C',ROOT,'ls-tree','HEAD',name],text=True).split()[2]
-                      for name in ('as2/aerostack2','as2/as2_platform_pixhawk','src/planner/super/upstream')},
+                      for name in ('as2/aerostack2','as2/as2_platform_pixhawk','src/tool/navigation/planner/super/upstream')},
         'source_hashes':hashes,'ports':{'rpc':43472,'tcp':4881,'relay':4981,'agent':8951},'ros_domain':94},indent=2)+'\n')
     if execution:
         execution.require_super=args.execution_location in ('robopi-all','four-part')

@@ -4,7 +4,7 @@ set -euo pipefail
 root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 workspace=${1:-$root/log/workspaces/dpv_slam}
 image=${ONBOARD_COMPUTER_IMAGE:-onboard_computer:v0.1.0}
-source_rel=src/state_estimator/dpv_slam/upstream
+source_rel=src/basic_function/state_estimator/dpv_slam/upstream
 expected_source=0ac95b656d1fda91c271d2a106460d19ad966fc7
 
 docker image inspect "$image" >/dev/null
@@ -107,7 +107,7 @@ docker run --rm --gpus all --network host --init \
   "${proxy_args[@]}" \
   --env HOST_UID="$(id -u)" \
   --env HOST_GID="$(id -g)" \
-  --env DPVO_SOURCE=/workspace/aerohub/src/state_estimator/dpv_slam/upstream \
+  --env DPVO_SOURCE=/workspace/aerohub/src/basic_function/state_estimator/dpv_slam/upstream \
   --env DPVO_COMMIT="$dpvo_commit" \
   --volume "$root:/workspace/aerohub:ro" \
   --volume "$workspace:/workspace/dpv" \

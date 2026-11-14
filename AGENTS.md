@@ -25,8 +25,8 @@
 
 ### 2026-11-07 目标架构补充（优先于下方早期分层描述）
 
-- 目标运行链为 Application → Mission（人类目标、Online Agent）→ Tool → 基础 Behavior → 基础能力与平台。现有 Planner 和 adapter 是 Navigation Tool 的实现基础；本次不实现 Mission 或 Tool。
-- Tool 可直接读取传感器、状态与地图。基础能力层的 State Estimator 聚焦自身状态；新增 `src/perception/` 对应并列的环境感知、建图与环境表示，不将地图塞入自定位接口。
+- 目标运行链为 Application → Mission（人类目标、Online Agent）→ Tool → 基础 Behavior → 基础能力与平台。现有 Planner 和 adapter 按 Navigation Tool 职责组织；目录归类不代表通用 Mission、Tool 生命周期或资源仲裁已经实现。
+- Tool 可直接读取传感器、状态与地图。基础能力层的 State Estimator 聚焦自身状态；新增 `src/basic_function/perception/` 对应并列的环境感知、建图与环境表示，不将地图塞入自定位接口。
 - 高层复合 Behavior 不加载、不暴露，保留上游代码；基础执行按需兼容扩展。
 - Tool 必须声明功能卡片；资源互斥、取消交接和应急优先级由运行时软件强制执行，不仅依赖 Agent 自律。
 - Offline Agent 负责适配和部署，Online Agent 负责任务编排。详细接口、目录和验证约束见 `docs/开发者贡献指导.md`。
@@ -105,8 +105,8 @@
 
 ## 目录约定
 
-新增 `src/inference/` 提供与 Perception、State Estimator 并列的 Inference Robotic Function：对外使用 ROS 2，内部 FastAPI runtime 与每模型独立 uv 环境隔离。`interfaces/`、`ros2_adapter/`、`runtime/` 保存公共服务设施，`models/<模型>/` 保存推理适配和环境。算法源码仍按功能归属原分类；Inference 模块只引用模型实现，不迁移或复制 Planner 算法，不承担轨迹重建或运动执行。
+新增 `src/basic_function/inference/` 提供与 Perception、State Estimator 并列的 Inference Robotic Function：对外使用 ROS 2，内部 FastAPI runtime 与每模型独立 uv 环境隔离。`interfaces/`、`ros2_adapter/`、`runtime/` 保存公共服务设施，`models/<模型>/` 保存推理适配和环境。算法源码仍按功能归属原分类；Inference 模块只引用模型实现，不迁移或复制 Planner 算法，不承担轨迹重建或运动执行。
 
 CUDA 模型迁移、独立环境与模型文件准备按正式子 Skill [model-migration-cuda](skill/model-migration-cuda/SKILL.md) 执行；每模型 README/setup 及验证要求集中在该 Skill 维护。
 
-自建代码位于 `src/`，先按 `planner/`、`behavior/`、`state_estimator/`、`perception/`、`inference/` 分类，再按对象分子目录。CAT-ORA 与 Swarm-Formation 使用 `upstream/`、`ros2_adapter/`、`ros1_proxy/`。上游算法分别在 `src/planner/cat_ora/upstream/` 和 `src/planner/swarm_formation/upstream/`。同类对象的目录规则见 `docs/开发者贡献指导.md`。AS2 依赖在 `as2/`，PX4 在 `px4/`，官方 Gazebo 工程在 `simulator/gazebo/`，均以 `.gitmodules` 和 gitlink 锁定。运行产物与测试日志统一进入被忽略的 `log/`。部署入口仍为 `deployment/`，不得重新依赖项目外部的旧源码路径。
+自建代码位于 `src/`，顶层按 `tool/`、`basic_function/`、`behavior/` 三类组织。导航算法位于 `tool/navigation/planner/`，共用协调与接口分别位于 `tool/navigation/framework/` 和 `tool/navigation/interfaces/`；Inference、State Estimator、Perception 位于 `basic_function/` 下。面向任务的目标检测 Tool 应放入 `tool/object_detection/`，其模型推理适配仍归 `basic_function/inference/models/`。CAT-ORA 与 Swarm-Formation 使用 `upstream/`、`ros2_adapter/`、`ros1_proxy/`。同类对象的目录规则见 `docs/开发者贡献指导.md` 和 `src/README.md`。AS2 依赖在 `as2/`，PX4 在 `px4/`，官方 Gazebo 工程在 `simulator/gazebo/`，均以 `.gitmodules` 和 gitlink 锁定。运行产物与测试日志统一进入被忽略的 `log/`。部署入口仍为 `deployment/`，不得重新依赖项目外部的旧源码路径。

@@ -145,15 +145,15 @@ def start(output, scene):
     (output/'images.json').write_text(json.dumps(images,indent=2)+'\n')
     source_manifest = {'files': {}, 'as2_checkout': capture(['git','-C',ROOT/'as2/aerostack2','rev-parse','HEAD']).strip(),
                        'as2_gitlink': capture(['git','-C',ROOT,'ls-files','-s','as2/aerostack2']).strip()}
-    for folder in [APP, ROOT/'src/planner/yopo/ros2_adapter', ROOT/'src/inference/interfaces',
-                   ROOT/'src/inference/ros2_adapter', ROOT/'src/behavior/follow_path']:
+    for folder in [APP, ROOT/'src/tool/navigation/planner/yopo/ros2_adapter', ROOT/'src/basic_function/inference/interfaces',
+                   ROOT/'src/basic_function/inference/ros2_adapter', ROOT/'src/behavior/follow_path']:
         for path in folder.rglob('*'):
             if path.is_file() and '__pycache__' not in path.parts:
                 source_manifest['files'][str(path.relative_to(ROOT))] = hashlib.sha256(path.read_bytes()).hexdigest()
     with build_opener(ProxyHandler({})).open('http://127.0.0.1:18081/health/ready', timeout=3) as response:
         source_manifest['model_health'] = json.load(response)
     health = source_manifest['model_health']
-    weight_hash = (ROOT/'src/inference/models/yopo/weights.sha256').read_text().split()[0]
+    weight_hash = (ROOT/'src/basic_function/inference/models/yopo/weights.sha256').read_text().split()[0]
     if (health.get('model_id') != 'yopo' or health.get('device') != 'cuda' or
             health.get('velocity_m_s') != 2.0 or health.get('preprocessing_version') != 'ros-reference-u8-inpaint-v1' or
             not health.get('model_version','').startswith('sha256:'+weight_hash)):
@@ -225,7 +225,7 @@ def mission(output, args):
                     if not all(token in cmd for token in [b'uvicorn',b'serve:app',b'18081']):
                         raise RuntimeError('worker process identity mismatch')
                     cwd = Path('/proc/'+str(args.worker_pid)+'/cwd').resolve()
-                    if cwd not in (ROOT, ROOT/'src/inference/models/yopo'):
+                    if cwd not in (ROOT, ROOT/'src/basic_function/inference/models/yopo'):
                         raise RuntimeError('worker workspace mismatch')
                     evidence['worker_pid'] = args.worker_pid
                     evidence['worker_stat'] = Path('/proc/'+str(args.worker_pid)+'/stat').read_text()

@@ -133,7 +133,7 @@ def main():
                'exec python3 /course/app/mission.py')
         run(base+['--name',flight,'-e','SUPER_APP_ROOT=/course/app','-e','SUPER_EVIDENCE_ROOT=/course',
                   '-e','SUPER_CASE=course','-e','SUPER_HUD_PORT=9011','-v',str(out)+':/course',
-                  '-v',str(ROOT/'src/planner/super/ros2_adapter/bridge/uav_super_adapter/polynomial.py')+
+                  '-v',str(ROOT/'src/tool/navigation/planner/super/ros2_adapter/bridge/uav_super_adapter/polynomial.py')+
                   ':/opt/super_app_ws/install/lib/python3.10/site-packages/uav_super_adapter/polynomial.py:ro',
                   '--entrypoint','bash',IMAGE,'-lc',cmd])
         started = True

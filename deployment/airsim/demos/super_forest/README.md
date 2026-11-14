@@ -91,7 +91,7 @@ ROS domain94、RPC43472、TCP4881/4981、DDS Agent8951及容器前缀
 原生SUPER保持自身规划、重规划及备用轨迹；Adapter只转换执行请求，不发布运动参考。
 成功须同时满足 FollowTimedPath 成功、原任务1.5m到点与低速保持2秒、停止确认及降落解除解锁。
 
-Adapter说明与测试见 [SUPER接入](../../../../src/planner/super/README.md)。
+Adapter说明与测试见 [SUPER接入](../../../../src/tool/navigation/planner/super/README.md)。
 结果写入新输出目录的 result.json；失败、镜像ID和源码哈希均保留。
 这不是 RoboPi、混合部署或固定扰动下备用切换成功率验收。
 
@@ -100,7 +100,7 @@ Adapter说明与测试见 [SUPER接入](../../../../src/planner/super/README.md)
 SUPER 原生源码中的 PlanFromRest 已直接修复：地图内未占据的实际起点
 直接作为轨迹边界，避免先取 0.2m 栅格中心引入位置跳变；起点被占据或超出地图时
 仍调用原最近非占据栅格搜索。实际算法源码受主仓库管理，位于
-`src/planner/super/ros2_adapter/native/`，Docker 直接编译这里的三个 ROS 2 包。
+`src/tool/navigation/planner/super/ros2_adapter/native/`，Docker 直接编译这里的三个 ROS 2 包。
 `upstream/` 固定在原参考提交 `3bfa403`，只用于对照，不参与构建或运行。
 
 启动修复曾提交到 SUPER fork 的 `148116e`，现已完整导入主仓库 native 目录；

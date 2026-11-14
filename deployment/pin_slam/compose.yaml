@@ -9,8 +9,8 @@ services:
       ROS_DOMAIN_ID: "${PIN_SLAM_DOMAIN:-81}"
       PIN_SLAM_USE_SIM_TIME: "${PIN_SLAM_USE_SIM_TIME:-true}"
       PIN_SLAM_NAMESPACE: "${PIN_SLAM_NAMESPACE:-drone0}"
-      PIN_SLAM_ROOT: /repo/src/state_estimator/pin_slam/upstream
-      PYTHONPATH: /repo/src/state_estimator/pin_slam/upstream
+      PIN_SLAM_ROOT: /repo/src/basic_function/state_estimator/pin_slam/upstream
+      PYTHONPATH: /repo/src/basic_function/state_estimator/pin_slam/upstream
       NVIDIA_VISIBLE_DEVICES: "${PIN_SLAM_GPU:-0}"
       NVIDIA_DRIVER_CAPABILITIES: compute,utility
     volumes:

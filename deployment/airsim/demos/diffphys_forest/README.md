@@ -29,7 +29,7 @@ Behavior→AS2→PX4。运动不经AirSim RPC；RPC用于传感器和评分。�
 PyYAML、msgpack和msgpack-rpc-python（可复用已有uv环境）。
 
 ```bash
-bash src/inference/models/diffphys/setup.sh --check-cuda
+bash src/basic_function/inference/models/diffphys/setup.sh --check-cuda
 bash deployment/airsim/demos/diffphys_forest/build.sh
 DIFFPHYS_PROFILE=high_speed INFERENCE_PORT=18082 bash deployment/inference/start_diffphys.sh
 ```

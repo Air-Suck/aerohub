@@ -1,6 +1,6 @@
 # 外部角速度／姿态与推力 FollowReference 插件
 
-本包扩展原生 `FollowReferenceBase`，保留 `as2_msgs/action/FollowReference`，不新增导航 Behavior 或 Tool。算法、地图、MPC、推力估计和控制转换留在外部 Robotic Functions；此包只管理执行会话和运动参考。已通过接口验证及独立 [AirSim + flight_board 短程控制闭环](../../../deployment/airsim/demos/ipc_control/README.md)；真实IPC自由XYZ、SUPER同起终点约238m森林已以名义3m/s两次完整通过；旧20m定高结果仅作历史，范围及失败历史见 [IPC validation](../../planner/ipc/validation.md)；板端及真机尚未验收。
+本包扩展原生 `FollowReferenceBase`，保留 `as2_msgs/action/FollowReference`，不新增导航 Behavior 或 Tool。算法、地图、MPC、推力估计和控制转换留在外部 Robotic Functions；此包只管理执行会话和运动参考。已通过接口验证及独立 [AirSim + flight_board 短程控制闭环](../../../deployment/airsim/demos/ipc_control/README.md)；真实IPC自由XYZ、SUPER同起终点约238m森林已以名义3m/s两次完整通过；旧20m定高结果仅作历史，范围及失败历史见 [IPC validation](../../tool/navigation/planner/ipc/validation.md)；板端及真机尚未验收。
 
 ## 构建与加载
 

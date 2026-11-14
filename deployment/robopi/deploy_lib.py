@@ -170,7 +170,7 @@ def main():
             app=stage/'as2/super_app';app.mkdir()
             for name in ('mission.py','task.json','planner.yaml','reference_origin.json','manage_mission.py','compute_runtime.py'):
                 shutil.copyfile(ROOT/'deployment/airsim/demos/super_forest'/name,app/name)
-            shutil.copyfile(ROOT/'src/perception/navigation_inputs/config/drone0.yaml',app/'navigation.yaml')
+            shutil.copyfile(ROOT/'src/basic_function/perception/navigation_inputs/config/drone0.yaml',app/'navigation.yaml')
             deps=Path(os.environ['OHOS_SYSDEPS'])
             if not deps.is_absolute():deps=ROOT/deps
             runtime=stage/'as2/super_runtime/lib';runtime.mkdir(parents=True)

@@ -8,9 +8,9 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
 super_cfg = yaml.safe_load((ROOT/'deployment/airsim/demos/super_forest/planner.yaml').read_text())
-gcopter_cfg = yaml.safe_load((ROOT/'src/planner/gcopter/ros2_adapter/native/config/local_map.yaml').read_text())
+gcopter_cfg = yaml.safe_load((ROOT/'src/tool/navigation/planner/gcopter/ros2_adapter/native/config/local_map.yaml').read_text())
 super_task = json.loads((ROOT/'deployment/airsim/demos/super_forest/task.json').read_text())
-local_source = (ROOT/'src/planner/gcopter/ros2_adapter/native/src/local_node.cpp').read_text()
+local_source = (ROOT/'src/tool/navigation/planner/gcopter/ros2_adapter/native/src/local_node.cpp').read_text()
 mission_source = (ROOT/'deployment/gcopter/mission.py').read_text()
 
 

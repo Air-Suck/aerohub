@@ -54,10 +54,10 @@ SUPER 工作站已实现此方式；通用 onboard 开发入口的现状见
 
 AirSim / RoboPi 扩展与主线 Gazebo、FAST-LIVO2 入口并存：
 
-- 自建算法和适配器：`src/planner/`；基础执行：`src/behavior/`；导航输入整理：`src/perception/navigation_inputs/`。
+- 自建算法和适配器：`src/tool/navigation/planner/`；基础执行：`src/behavior/`；导航输入整理：`src/basic_function/perception/navigation_inputs/`。
 - AirSim 场景配置、模拟器启动与管理、传感器桥：`simulator/airsim/`；跨组件演示和 AS2 启动入口：`deployment/airsim/`；板端管理工具：`tools/robopi/`。
 - 主线 AS2 依赖仍在 `as2/aerostack2/` 和 `as2/as2_platform_pixhawk/`；AS2 核心直接锁定 AeroHub fork，Pixhawk 的 PX4 1.18 适配在构建副本应用兼容补丁。
-- SUPER 实际源码与 CAT-ORA 一致：`src/planner/super/ros2_adapter/native/`，AS2 适配在 `bridge/`，`upstream/` 子模块只作参考。运行产物进入被忽略的 `log/airsim/`。
+- SUPER 实际源码与 CAT-ORA 一致：`src/tool/navigation/planner/super/ros2_adapter/native/`，AS2 适配在 `bridge/`，`upstream/` 子模块只作参考。运行产物进入被忽略的 `log/airsim/`。
 
 已有 Skill 集中在 `skill/`；历史运行证据保留在忽略的 `log/pr-history/`，复现过程记录在 `skill/temp/`。`docs/` 只跟踪三份主文档及其图片。AS2 直接使用 AeroHub fork 子模块并锁定到 `f387e0d`；构建流程不再对官方 AS2 副本重复应用同等补丁。
 

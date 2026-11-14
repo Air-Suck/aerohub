@@ -84,9 +84,9 @@ Demo 封面来自[作者官方视频的公开封面](https://i.ytimg.com/vi/GPHu
 
 | 模块 | 输入 → 输出 | 实现与职责 |
 | --- | --- | --- |
-| 导航输入 | 位姿、点云 → 规划所需导航输入 | `src/perception/navigation_inputs/`；环境输入与自身定位职责分开 |
-| 原生 SUPER | 导航输入、目标 → 已提交的多项式轨迹 | 当前构建使用主仓库 `src/planner/super/ros2_adapter/native/`；`upstream/` 保留为参考，来源记录见 native 内的 `SOURCE.json` |
-| ROS 2 bridge | committed polynomial → `TimedTrajectorySegment` → Action 调用 | `src/planner/super/ros2_adapter/bridge/uav_super_adapter/node.py`；保留原生曲线与执行时间，借助公共 `FleetFollowPathClient` 管理滚动更新 |
+| 导航输入 | 位姿、点云 → 规划所需导航输入 | `src/basic_function/perception/navigation_inputs/`；环境输入与自身定位职责分开 |
+| 原生 SUPER | 导航输入、目标 → 已提交的多项式轨迹 | 当前构建使用主仓库 `src/tool/navigation/planner/super/ros2_adapter/native/`；`upstream/` 保留为参考，来源记录见 native 内的 `SOURCE.json` |
+| ROS 2 bridge | committed polynomial → `TimedTrajectorySegment` → Action 调用 | `src/tool/navigation/planner/super/ros2_adapter/bridge/uav_super_adapter/node.py`；保留原生曲线与执行时间，借助公共 `FleetFollowPathClient` 管理滚动更新 |
 
 接入时参考的派生仓库为 [Popc0rn7/SUPER-sim](https://github.com/Popc0rn7/SUPER-sim)，作者官方演示来自 `hku-mars/SUPER`。此页记录的实现版本以集成仓库 `ca3581e` 为依据，不能用参考子模块的版本替代实际 native 构建来源。当前展示为单机 `drone0`，不推导出多机规划或同步能力。
 
@@ -104,7 +104,7 @@ SUPER 内部 ROG-Map 消费对齐点云和对应时刻的 TF，维护环境占�
 
 AS2 State Estimator 继续提供现有状态及 TF，Motion Controller 直接消费参考与自身状态。Adapter 还读取 `sensor_measurements/odom` 监测位姿时效。传感器、TF 与时钟是启动依赖；仿真时间回退不能直接沿用旧地图。平台边界仍为 AS2 平台适配与 PX4。
 
-核查入口：`src/perception/navigation_inputs/README.md`、native 中的 `super_planner/AS2_INPUTS.md` 与 `config/as2_inputs_ros2.yaml`，以及 bridge 中 `SuperAdapter` 的订阅与公共 Client 调用。这里描述接入关系，不扩大已有地图精度或飞行验收结论。
+核查入口：`src/basic_function/perception/navigation_inputs/README.md`、native 中的 `super_planner/AS2_INPUTS.md` 与 `config/as2_inputs_ros2.yaml`，以及 bridge 中 `SuperAdapter` 的订阅与公共 Client 调用。这里描述接入关系，不扩大已有地图精度或飞行验收结论。
 
 ### 四方部署目标与历史拓扑
 

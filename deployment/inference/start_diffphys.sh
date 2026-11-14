@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-model_dir="$repo_dir/src/inference/models/diffphys"
+model_dir="$repo_dir/src/basic_function/inference/models/diffphys"
 if [[ ! -x "$model_dir/.venv/bin/python" ]]; then
   echo "Run bash $model_dir/setup.sh --check-cuda first" >&2
   exit 1

@@ -44,6 +44,6 @@ lifecycle:
   recovery: stop-then-native-Land-confirm-disarmed-before-reset-or-restart
 validation:
   status: accepted
-  evidence: [src/planner/gcopter/VALIDATION.md]
+  evidence: [src/tool/navigation/planner/gcopter/VALIDATION.md]
   verified_slice: single-UAV-live-LiDAR-local-forest-about-3m_s-AirSim-PX4
   limitations: [no-SUPER-exploration-or-backup-optimizer, no-global-exploration-completeness, no-multi-UAV, no-RoboPi, no-real-flight, fault-matrix-incomplete]

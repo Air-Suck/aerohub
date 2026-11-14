@@ -34,13 +34,13 @@ COPY deployment/fast_livo2/sophus/ /opt/sophus/
 RUN patch --batch -p1 -d /opt/sophus < /opt/sophus/complex.patch \
     && cmake -S /opt/sophus -B /opt/sophus/build -DCMAKE_BUILD_TYPE=Release \
     && cmake --build /opt/sophus/build -j2 && cmake --install /opt/sophus/build && ldconfig
-COPY src/state_estimator/fast_livo2/upstream/ /opt/fast_livo_ws/src/fast_livo/
+COPY src/basic_function/state_estimator/fast_livo2/upstream/ /opt/fast_livo_ws/src/fast_livo/
 COPY deployment/fast_livo2/imu-output.patch /tmp/imu-output.patch
 RUN patch --batch -p1 -d /opt/fast_livo_ws/src/fast_livo < /tmp/imu-output.patch
 WORKDIR /opt/fast_livo_ws
 RUN source /opt/ros/noetic/setup.bash && catkin_make -j2 -DCMAKE_BUILD_TYPE=Release
-COPY src/state_estimator/fast_livo2/ros1_proxy/output_bridge.py /opt/fast_livo_ws/src/fast_livo/scripts/output_bridge.py
-COPY src/state_estimator/fast_livo2/ros1_proxy/airsim_input_bridge.py /opt/fast_livo_ws/src/fast_livo/scripts/airsim_input_bridge.py
+COPY src/basic_function/state_estimator/fast_livo2/ros1_proxy/output_bridge.py /opt/fast_livo_ws/src/fast_livo/scripts/output_bridge.py
+COPY src/basic_function/state_estimator/fast_livo2/ros1_proxy/airsim_input_bridge.py /opt/fast_livo_ws/src/fast_livo/scripts/airsim_input_bridge.py
 COPY simulator/airsim/sensors/uav_as2_sensor_adapter/rpc.py /opt/fast_livo_ws/src/fast_livo/scripts/airsim_rpc.py
 COPY deployment/fast_livo2/mapping.launch /opt/fast_livo_ws/src/fast_livo/launch/as2_mapping.launch
 COPY deployment/fast_livo2/airsim.yaml deployment/fast_livo2/camera_airsim.yaml /opt/fast_livo_ws/src/fast_livo/config/

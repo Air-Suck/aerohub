@@ -3,7 +3,7 @@ set -euo pipefail
 
 repo=${1:-/workspace/aerohub}
 workspace=${2:-/workspace/dpv}
-source_root="$repo/src/state_estimator/dpv_slam/upstream"
+source_root="$repo/src/basic_function/state_estimator/dpv_slam/upstream"
 python_root="$workspace/python"
 cuda_root="$workspace/cuda"
 wheelhouse="$workspace/wheelhouse"
@@ -123,7 +123,7 @@ source /opt/ros/humble/setup.bash
 source /opt/px4_ws/install/setup.bash
 set -u
 colcon --log-base "$workspace/ros/log" build \
-  --base-paths "$repo/src/state_estimator/dpv_slam/ros2_adapter" \
+  --base-paths "$repo/src/basic_function/state_estimator/dpv_slam/ros2_adapter" \
   --build-base "$workspace/ros/build" \
   --install-base "$workspace/ros/install" \
   --merge-install --packages-select uav_dpv_slam_ros2
@@ -134,7 +134,7 @@ set +u
 source /root/aerostack2_ws/install/setup.bash
 set -u
 colcon --log-base "$workspace/plugin/log" build \
-  --base-paths "$repo/src/state_estimator/dpv_slam/plugin" \
+  --base-paths "$repo/src/basic_function/state_estimator/dpv_slam/plugin" \
   --build-base "$workspace/plugin/build" \
   --install-base "$workspace/plugin/install" \
   --merge-install --packages-select uav_dpv_slam \

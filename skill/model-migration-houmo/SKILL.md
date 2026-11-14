@@ -7,7 +7,7 @@ description: 使用固定 Houmo 工具链 Docker 将 ONNX 量化编译为 HMM，
 
 ## 任务入口
 
-先按 [Inference 前置条件](../../src/inference/README.md#开始前准备什么)确定任务。
+先按 [Inference 前置条件](../../src/basic_function/inference/README.md#开始前准备什么)确定任务。
 仅运行已有板端包时，按模型 README 启动并验证服务；需要重新导出、量化、编译或
 打包时再进入下列迁移步骤。开始前核对各阶段资源是否已存在，明确缺少的是工具、
 目标开发资源还是模型文件，避免把模型适配过程列成额外安装工具。
@@ -33,7 +33,7 @@ ROS overlay 另复用已有 OHOS ROS builder/工作区；阶段与配置映射�
 
 ## 开始迁移
 
-读取模型现有入口、锁定源码与权重。算法源码保持原分类；Houmo 适配维护在 `src/inference/models/<model>/houmo/`，与原有推理实现并列。先确定输入输出契约和对照门槛，再导出或改写图。
+读取模型现有入口、锁定源码与权重。算法源码保持原分类；Houmo 适配维护在 `src/basic_function/inference/models/<model>/houmo/`，与原有推理实现并列。先确定输入输出契约和对照门槛，再导出或改写图。
 
 ```bash
 docker pull harbor.houmo.ai/toolchain/release:Dadao-xh2-v1.5.0-ubuntu24.04-x86.64
@@ -57,12 +57,12 @@ bash skill/model-migration-houmo/scripts/run.sh yopo python3 --version
 
 合成输入可以验证导出和工具链，不能证明代表性量化精度。实际部署前按需读取 [oh-ros-build](../oh-ros-build/SKILL.md) 和 [hdc-helper](../hdc-helper/SKILL.md)，核对目标 ABI、HAL、驱动和模型中的 TCIM 版本。
 
-YOPO 的已验证入口、数值和限制见[模型说明](../../src/inference/models/yopo/houmo/README.md)。过程保存在 `skill/temp/<任务>/`，原始证据保存在 `log/`，转换产物保存在模型忽略的 `houmo/artifacts/`。
+YOPO 的已验证入口、数值和限制见[模型说明](../../src/basic_function/inference/models/yopo/houmo/README.md)。过程保存在 `skill/temp/<任务>/`，原始证据保存在 `log/`，转换产物保存在模型忽略的 `houmo/artifacts/`。
 
 ## Python HMM 服务
 
-沿用 `src/inference/runtime/aerohub_inference.create_app` 的服务契约；
-`src/inference/runtime_houmo/aerohub_houmo.HmmBackend` 提供通用命名张量执行，
+沿用 `src/basic_function/inference/runtime/aerohub_inference.create_app` 的服务契约；
+`src/basic_function/inference/runtime_houmo/aerohub_houmo.HmmBackend` 提供通用命名张量执行，
 模型 CPU 前后处理在模型共享层维护，`<model>/houmo/adapter.py` 只准备参数并构造后端。ROS adapter 通过原 HTTP
 协议调用，后端选择由 endpoint 对应的 worker 决定。
 
@@ -72,7 +72,7 @@ YOPO 的已验证入口、数值和限制见[模型说明](../../src/inference/m
 主机程序，不能作为目标 Python 库。当前脚本适用 Python 3.12 / AArch64 OHOS，显式
 链接目标 `libpython3.12`，并将扩展命名为目标 SOABI；其他 Python 版本需先调整核对。
 
-YOPO 的打包脚本、板端依赖核对、启动方式和已验证范围见[模型说明](../../src/inference/models/yopo/houmo/README.md#robopi-python-服务)。
+YOPO 的打包脚本、板端依赖核对、启动方式和已验证范围见[模型说明](../../src/basic_function/inference/models/yopo/houmo/README.md#robopi-python-服务)。
 先验证 CPU 前后处理与上游一致，再验证实际 HMM HTTP 请求；服务冒烟与 ROS 调用
 分别记录。板端服务缺少自定义 ROS 接口包时，按 OHOS Skill 编译部署后再验收 ROS，
 不以 HTTP 成功代替 ROS 成功。测试结束回收本任务 worker，保留部署文件及证据。

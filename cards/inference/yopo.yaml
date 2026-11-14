@@ -20,7 +20,7 @@ interfaces:
     interaction: request_response
     protocol: ros2_service
     schema: uav_inference_interfaces/srv/InferYopo
-    parameter_schema: src/inference/interfaces/srv/InferYopo.srv
+    parameter_schema: src/basic_function/inference/interfaces/srv/InferYopo.srv
 
 lifecycle:
   management: system_managed

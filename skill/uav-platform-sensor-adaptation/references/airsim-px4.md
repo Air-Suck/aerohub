@@ -17,9 +17,9 @@ AS2 的 IMU topic 名不能证明数据未经处理；检查角速度、加速�
 - `simulator/airsim/config/`：场景、传感器与资源配置。
 - `simulator/airsim/sensors/`：RPC 与 ROS 传感器桥。
 - `deployment/flight_board/`：PX4 SITL、消息及传感器/时钟桥环境。
-- `src/perception/navigation_inputs/`：导航坐标注册；不是通用雷达逐点去畸变。
-- `src/state_estimator/fast_livo2/`：算法、原生插件和现有输出桥；检查是否另有输入桥，不推定输出桥能反向使用。
-- `src/state_estimator/pin_slam/`：复用现有标准 ROS 2 LiDAR 话题的算法 Adapter 与状态插件；不要再增加第二个 AirSim RPC 读取器。
+- `src/basic_function/perception/navigation_inputs/`：导航坐标注册；不是通用雷达逐点去畸变。
+- `src/basic_function/state_estimator/fast_livo2/`：算法、原生插件和现有输出桥；检查是否另有输入桥，不推定输出桥能反向使用。
+- `src/basic_function/state_estimator/pin_slam/`：复用现有标准 ROS 2 LiDAR 话题的算法 Adapter 与状态插件；不要再增加第二个 AirSim RPC 读取器。
 
 先确认 scene 二进制、AirSim/PX4 源码版本与实际配置一致。源码中存在功能不证明下载的预编译场景包含它。检查仿真时间与 PX4 时间如何映射、暂停/reset 后是否清空旧数据，以及各车辆 TF/话题是否隔离。
 

@@ -36,7 +36,7 @@ def main():
         if old.get('worker'):stop_worker(old['worker'])
     tag=datetime.datetime.now().strftime('%Y%m%d-%H%M%S-%f')
     out=ROOT/'log/projectairsim'/('yopo-course-'+tag);out.mkdir()
-    model_dir=ROOT/'src/inference/models/yopo'
+    model_dir=ROOT/'src/basic_function/inference/models/yopo'
     python=model_dir/'.venv/bin/python'
     if not python.exists():
         raise RuntimeError('先通过 deployment/inference/setup_models.py 准备 YOPO。')
@@ -63,7 +63,7 @@ def main():
         time.sleep(2)
     else:raise RuntimeError('PX4未就绪，没有起飞。')
     env=dict(os.environ,INFERENCE_PORT='18081',YOPO_VELOCITY=str(args.speed),YOPO_DEVICE='cuda',
-             PYTHONDONTWRITEBYTECODE='1',PYTHONPATH=str(ROOT/'src/inference/runtime'))
+             PYTHONDONTWRITEBYTECODE='1',PYTHONPATH=str(ROOT/'src/basic_function/inference/runtime'))
     with (out/'worker.log').open('w') as log:
         worker=sp.Popen(['bash',str(ROOT/'deployment/inference/start_yopo.sh')],
              cwd=ROOT,env=env,stdout=log,stderr=sp.STDOUT,start_new_session=True)
@@ -82,7 +82,7 @@ def main():
     setup=('source /opt/ros/humble/setup.bash && source /opt/px4_ws/install/setup.bash && '
            'source /root/aerostack2_ws/install/setup.bash && source /opt/uav_execution_ws/install/setup.bash && '
            'source /repo/log/yopo-single/ros_ws/install/setup.bash && '
-           'export PYTHONPATH=/repo/src/planner/yopo/ros2_adapter:/repo/src/inference/ros2_adapter:$PYTHONPATH && ')
+           'export PYTHONPATH=/repo/src/tool/navigation/planner/yopo/ros2_adapter:/repo/src/basic_function/inference/ros2_adapter:$PYTHONPATH && ')
     compute='aerohub-yopo-course-compute-'+tag;session['compute']=compute;STATE.write_text(json.dumps(session,indent=2))
     c.run(base+['--name',compute,'-e','AS2_EXECUTION_BACKEND=follow_path','-e','YOPO_COURSE_SPEED='+str(args.speed),
         '-e','AS2_FLEET_FILE=/repo/deployment/airsim/demos/projectairsim_course/fleet.yaml',

@@ -176,9 +176,9 @@ def source_manifest(output):
         ROOT / 'deployment/onboard_computer/prepare_execution_overlay.sh',
         ROOT / 'deployment/airsim/as2/run.py',
         ROOT / 'deployment/airsim/as2/scoped_tf.launch.py',
-        ROOT / 'src/state_estimator/fast_livo2/plugin',
-        ROOT / 'src/state_estimator/fast_livo2/ros2_adapter',
-        ROOT / 'src/perception/fast_livo2',
+        ROOT / 'src/basic_function/state_estimator/fast_livo2/plugin',
+        ROOT / 'src/basic_function/state_estimator/fast_livo2/ros2_adapter',
+        ROOT / 'src/basic_function/perception/fast_livo2',
         ROOT / 'simulator/airsim/scenarios/fast_livo2',
         ROOT / 'simulator/airsim/sensors',
     ]
@@ -202,7 +202,7 @@ def source_manifest(output):
         'commit': subprocess.check_output(
             ['git', '-C', ROOT, 'rev-parse', 'HEAD'], text=True).strip(),
         'fast_livo2_commit': subprocess.check_output(
-            ['git', '-C', ROOT / 'src/state_estimator/fast_livo2/ros2_upstream',
+            ['git', '-C', ROOT / 'src/basic_function/state_estimator/fast_livo2/ros2_upstream',
              'rev-parse', 'HEAD'], text=True).strip(),
         'dirty': bool(subprocess.check_output(['git', '-C', ROOT, 'status', '--porcelain'])),
         'ros_domain': 96,

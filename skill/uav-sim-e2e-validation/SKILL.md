@@ -50,7 +50,7 @@ SUPER 滚动更新出现 `invalid trajectory point` 时，保存被拒计划的�
 `submitted_from`，按 ROS 纳秒序列回放检查有限值和严格递增。分段边界与固定采样网格
 可能是不同浮点数，却序列化为同一纳秒；只比较浮点时间的 set 不足以去重。
 按实际发送精度去重并优先保留原始分段边界，保留原曲线绝对执行时间；回归入口为
-`src/planner/super/ros2_adapter/bridge/tests/test_polynomial.py`。
+`src/tool/navigation/planner/super/ros2_adapter/bridge/tests/test_polynomial.py`。
 该回归只证明时间序列转换，修复后仍需单独执行真实飞行。
 
 先检查场景可执行文件、图形设备/渲染器、运行镜像和子模块是否真实可用。场景资源与镜像可能不随源码提供；下载成功不证明可启动。冻结本次源码与镜像映射，发布镜像或其他 worktree 的编译产物只能作为明确记录的依赖，不能冒充当前源码重建。

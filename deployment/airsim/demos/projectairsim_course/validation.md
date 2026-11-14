@@ -67,8 +67,8 @@ ARRIVED_5M=false，stopped=false，land_success=false，最终disarmed=true（PX
 
 ## 源码基线与整合约定（2026-11-14 用户确认）
 
-YOPO 已有验证过的标准代码，用户指定 `src/planner/YOPO/native` 为后续对齐基线；
-DiffPhys 同样以既有标准实现和验证为基线。当前工作树目录为小写 `src/planner/yopo/`，
+YOPO 已有验证过的标准代码，当时用户指定 `src/planner/YOPO/native` 为后续对齐基线（历史路径原样保留）；
+DiffPhys 同样以既有标准实现和验证为基线。当前工作树目录为小写 `src/tool/navigation/planner/yopo/`，
 尚无该 native 路径，后续先核对目录/版本对应关系，再统一入口，不因本次审查重做模型迁移。
 YOPO_SOURCE / DIFFPHYS_MODEL_DIR 临时覆盖已移除，源码与资源按标准目录定位；
 服务启动复用已有 Inference 脚本。赛道仍负责其本轮worker生命周期，不表示新增常驻服务管理器。

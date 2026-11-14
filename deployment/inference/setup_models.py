@@ -12,7 +12,7 @@ import yaml
 
 
 REPO = Path(__file__).resolve().parents[2]
-MANIFEST = REPO / "src/inference/manifest.json"
+MANIFEST = REPO / "src/basic_function/inference/manifest.json"
 
 
 def read_document(path):
@@ -38,9 +38,9 @@ def supported_models():
             raise ValueError("{}: directory must be repository-relative".format(model_id))
         path = (REPO / directory).resolve()
         try:
-            path.relative_to((REPO / "src/inference/models").resolve())
+            path.relative_to((REPO / "src/basic_function/inference/models").resolve())
         except ValueError as error:
-            raise ValueError("{}: directory must be within src/inference/models".format(model_id)) from error
+            raise ValueError("{}: directory must be within src/basic_function/inference/models".format(model_id)) from error
         for filename in ("README.md", "setup.sh", "pyproject.toml", "uv.lock"):
             if not (path / filename).is_file():
                 raise ValueError("{}: missing {}".format(model_id, filename))

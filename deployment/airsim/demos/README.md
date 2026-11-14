@@ -30,7 +30,7 @@ python3 deployment/airsim/demos/swarm_open_field/run_robopi.py --preflight-only 
 - 每个示例放在 `deployment/airsim/demos/<library>_<scenario>/`，包含 README、运行入口、任务与场景配置。
 - README 声明前置资源、运行拓扑、地面检查、完整运行、停止方式、通过条件和未覆盖范围。
 - Demo 负责场景、任务编排、控制权交接、观测和验收；可复用算法、输入输出转换及
-  算法专有 adapter 放在 `src/planner/<name>/ros2_adapter/`。公共执行能力归 `src/behavior/` 和 AS2。
+  算法专有 adapter 放在 `src/tool/navigation/planner/<name>/ros2_adapter/`。公共执行能力归 `src/behavior/` 和 AS2。
 - 通用构建、部署与设备工具继续放在 `tools/robopi/`、`deployment/`；完整示例入口放在本目录，
   不在这些工具目录中另起一套任务。
 - 结果、日志、截图及生成配置写入 `log/airsim/`，不得覆盖已有成功或失败记录。

@@ -71,7 +71,7 @@ Planner 检查相机几何、采样同步、新鲜度、推理服务和 Behavior
 YOPO worker 的 `YOPO_VELOCITY=5` 与 Planner 的 `max_speed: 5.0` 同时设置。
 不修改训练权重，不将原生加速度缩放称作独立 2 m/s² 限制。
 
-模型依赖按仓库标准 Inference 入口准备：初始化锁定的 `src/planner/yopo/upstream`，
+模型依赖按仓库标准 Inference 入口准备：初始化锁定的 `src/tool/navigation/planner/yopo/upstream`，
 通过 `deployment/inference/setup_models.py` 或模型 `setup.sh` 准备本模型 `.venv` 和
 `artifacts`。赛道入口复用 `deployment/inference/start_yopo.sh`，只设置本轮服务端口和
 速度；不再接受赛道专有的源码、解释器或模型目录覆盖。模型启动校验标准源码文件哈希。
@@ -151,7 +151,7 @@ python3 deployment/airsim/demos/projectairsim_course/run_diffphys.py
 运行前构建：`bash deployment/airsim/demos/diffphys_forest/build.sh`。
 复用固定repo-native-20261109镜像与外部`log/diffphys/attitude-overlay`，该overlay包含
 姿态命令源stamp/配对补丁、FollowReference及DiffPhys ROS接口，不混用IPC旧二进制。
-模型依赖使用标准 `src/inference/models/diffphys/{.venv,artifacts}` 与锁定算法子模块，
+模型依赖使用标准 `src/basic_function/inference/models/diffphys/{.venv,artifacts}` 与锁定算法子模块，
 赛道入口复用 `deployment/inference/start_diffphys.sh`，显式选择 high_speed、CUDA和18082端口。
 不再通过 DIFFPHYS_MODEL_DIR 改变模型或算法源码定位；两种profile均保留来源/权重哈希校验。
 

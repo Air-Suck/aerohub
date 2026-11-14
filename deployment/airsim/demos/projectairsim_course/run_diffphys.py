@@ -34,10 +34,10 @@ def main():
     import signal
     from urllib.request import build_opener,ProxyHandler
     env=dict(os.environ,DIFFPHYS_PROFILE='high_speed',DIFFPHYS_DEVICE='cuda',INFERENCE_PORT='18082',
-             PYTHONDONTWRITEBYTECODE='1',PYTHONPATH=str(ROOT/'src/inference/runtime'))
+             PYTHONDONTWRITEBYTECODE='1',PYTHONPATH=str(ROOT/'src/basic_function/inference/runtime'))
     with (out/'worker.log').open('w') as stream:
         worker=sp.Popen(['bash',str(ROOT/'deployment/inference/start_diffphys.sh')],
-            cwd=ROOT/'src/inference/models/diffphys',env=env,stdout=stream,stderr=sp.STDOUT,start_new_session=True)
+            cwd=ROOT/'src/basic_function/inference/models/diffphys',env=env,stdout=stream,stderr=sp.STDOUT,start_new_session=True)
     http=build_opener(ProxyHandler({}));deadline=time.monotonic()+90
     while time.monotonic()<deadline:
         if worker.poll() is not None:raise RuntimeError('DiffPhys worker exited; see worker.log')
