@@ -61,7 +61,7 @@ def container_exists(name):
 
 def manager(action, output):
     command = [
-        sys.executable, ROOT / "simulator/manager/manager.py", action,
+        sys.executable, ROOT / "simulator/airsim/manager/manager.py", action,
         "--profile", output / "airsim-profile.json",
         "--run-dir", output / "scene",
     ]
