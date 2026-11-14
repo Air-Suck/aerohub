@@ -29,7 +29,7 @@ def execute(command,**kwargs):
 
 
 def manager(action,output):
-    return [sys.executable,ROOT/'simulator/manager/manager.py',action,
+    return [sys.executable,ROOT/'simulator/airsim/manager/manager.py',action,
             '--profile',output/'profile.json','--run-dir',output/'scene']
 
 

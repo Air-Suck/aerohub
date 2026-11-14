@@ -65,12 +65,9 @@ class Planner(Node):
         self.status=self.create_publisher(String,'diffphys/status',10)
         self.create_subscription(PoseStamped,'self_localization/pose',self.pose_history.append,qos_profile_sensor_data)
         self.create_subscription(TwistStamped,'self_localization/twist',self.twists.append,qos_profile_sensor_data)
-        camera_reliable=bool(self.declare_parameter('camera_reliable',self.profile=='high_speed').value)
-        camera_qos=QoSProfile(depth=1,reliability=ReliabilityPolicy.RELIABLE) if camera_reliable else qos_profile_sensor_data
+        camera_qos=QoSProfile(depth=1,reliability=ReliabilityPolicy.RELIABLE) if self.profile=='high_speed' else qos_profile_sensor_data
         self.create_subscription(Image,'sensor_measurements/diffphys_front/depth_planar/image',self.on_depth,camera_qos)
-        info_persistent=bool(self.declare_parameter('camera_info_transient_local',False).value)
-        info_qos=QoSProfile(depth=1,reliability=ReliabilityPolicy.RELIABLE,durability=DurabilityPolicy.TRANSIENT_LOCAL) if info_persistent else camera_qos
-        self.create_subscription(CameraInfo,'sensor_measurements/diffphys_front/depth_planar/camera_info',lambda m:setattr(self,'info',m),info_qos)
+        self.create_subscription(CameraInfo,'sensor_measurements/diffphys_front/depth_planar/camera_info',lambda m:setattr(self,'info',m),camera_qos)
         self.create_subscription(ControlSession,'external_acro/session',self.on_session,QoSProfile(depth=1,durability=DurabilityPolicy.TRANSIENT_LOCAL))
         self.log=Path('/evidence/policy.jsonl').open('w')
         self.create_timer(.01,self.tick)

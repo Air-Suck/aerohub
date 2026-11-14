@@ -1,6 +1,6 @@
 # DiffPhys 官方 checkpoint 推理
 
-本模块默认加载官方 v1.0 的 `swarm.pth`，保留有里程计、10维观测、6维输出和192维 GRU 隐状态。算法源码继续位于 `src/tool/navigation/planner/diffphys/upstream/`，不运行训练。模型配置与产物固定从本模型目录读取，不通过 `DIFFPHYS_MODEL_DIR` 改变算法源码位置。`DIFFPHYS_PROFILE=high_speed` 显式选择另一套 Flightmare 高速评估的 `base.pth` 与发布包模型源码，分别校验SHA256并严格加载；这不是swarm网络的可互换权重。
+本模块默认加载官方 v1.0 的 `swarm.pth`，保留有里程计、10维观测、6维输出和192维 GRU 隐状态。算法源码继续位于 `src/tool/navigation/planner/diffphys/upstream/`，不运行训练。`DIFFPHYS_PROFILE=high_speed` 显式选择另一套 Flightmare 高速评估的 `base.pth` 与发布包模型源码，分别校验SHA256并严格加载；这不是swarm网络的可互换权重。
 
 ROS Planner与ATTITUDE执行已接通，短程及部分长程诊断有真实AirSim＋PX4证据，但完整复现仍未完成，见[森林Demo](../../../../../deployment/airsim/demos/diffphys_forest/README.md)。官方 `swarm/eval.py` 使用 SimpleFlight 与 AirSim 姿态/推力 API，不能当成本项目 AS2/PX4 执行链的验收入口。
 

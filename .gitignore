@@ -15,7 +15,7 @@ Desktop.ini
 !.env.example
 !.env.sample
 !.env.template
-.venv
+.venv/
 venv/
 env/
 
@@ -93,9 +93,9 @@ rosbag2_*/
 .env.*
 !.env.example
 .aws/
-.venv
+.venv/
 /artifacts/
-/src/basic_function/inference/models/*/artifacts
+/src/basic_function/inference/models/*/artifacts/
 /deployment/dpv_slam/models/
 /deployment/dpv_slam/wheelhouse/
 /config/inference.local.yaml
@@ -109,6 +109,3 @@ rosbag2_*/
 /gallery/node_modules/
 /gallery/.astro/
 /src/basic_function/inference/models/*/houmo/artifacts/
-
-# Machine-specific simulator configurations
-/config/simulator/*.local.yaml

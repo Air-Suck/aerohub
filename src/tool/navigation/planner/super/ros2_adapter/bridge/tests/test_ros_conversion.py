@@ -9,14 +9,6 @@ except ImportError:
 
 @unittest.skipIf(PolynomialTrajectory is None,'requires generated ROS messages')
 class ConversionTest(unittest.TestCase):
-    @staticmethod
-    def adapter():
-        node=SuperAdapter.__new__(SuperAdapter)
-        node.client=Mock(revision=0)
-        node.reference_ready=True
-        node.first_start=None
-        return node
-
     def test_preserves_source_epoch_full_suffix_and_pva(self):
         msg=PolynomialTrajectory()
         msg.header.stamp.sec=100
@@ -26,7 +18,7 @@ class ConversionTest(unittest.TestCase):
         msg.coef_pos_x=[0.,0.,1.,0.]
         msg.coef_pos_y=[0.,0.,0.,0.]
         msg.coef_pos_z=[0.,0.,0.,2.]
-        node=self.adapter()
+        node=SuperAdapter.__new__(SuperAdapter)
         node.now_seconds=lambda:100.
         node.get_parameter=lambda _:Mock(value=.1)
         node.goal=[3.,0.,2.];node.task='test';node.vehicle='drone0'
@@ -47,7 +39,7 @@ class ConversionTest(unittest.TestCase):
         msg.header.stamp.sec=100;msg.start_wt_pos=99.
         msg.piece_num_pos=1;msg.order_pos=3;msg.time_pos=[3.]
         msg.coef_pos_x=[0.,0.,0.,3.];msg.coef_pos_y=[0.]*4;msg.coef_pos_z=[0.,0.,0.,2.]
-        node=self.adapter()
+        node=SuperAdapter.__new__(SuperAdapter)
         node.now_seconds=lambda:100.
         node.get_parameter=lambda k:Mock(value=.1 if k=='lead_time' else 1.5)
         node.goal=[3.8,0.,2.];node.task='test';node.vehicle='drone0'
@@ -59,7 +51,7 @@ class ConversionTest(unittest.TestCase):
         msg.header.stamp.sec=100;msg.start_wt_pos=99.
         msg.piece_num_pos=1;msg.order_pos=3;msg.time_pos=[1.]
         msg.coef_pos_x=msg.coef_pos_y=msg.coef_pos_z=[0.]*4
-        node=self.adapter()
+        node=SuperAdapter.__new__(SuperAdapter)
         node.now_seconds=lambda:100.
         node.get_parameter=lambda _:Mock(value=.1)
         node.goal=[0.,0.,0.];node.task='test';node.vehicle='drone0'
@@ -67,7 +59,7 @@ class ConversionTest(unittest.TestCase):
 
     def test_heartbeat_and_repeated_command_do_not_refresh_execution(self):
         from mars_quadrotor_msgs.msg import PositionCommand
-        node=self.adapter()
+        node=SuperAdapter.__new__(SuperAdapter)
         node.enabled=True;node.frame='drone0/odom';node.last_plan=99.
         node.queued=None;node.now_seconds=lambda:100.
         node.last_command=100.;node.last_wall=9.;node.flags={};node.fail=Mock()
@@ -96,7 +88,7 @@ class ConversionTest(unittest.TestCase):
     def test_late_update_keeps_existing_plan_without_renewal(self):
         from unittest.mock import patch
         from uav_super_adapter.polynomial import InsufficientCoverage
-        node=self.adapter()
+        node=SuperAdapter.__new__(SuperAdapter)
         node.client=Mock(complete=False,ready=True,pending=set(),revision=5,cancel_started=False,settling_vehicles=set())
         node.enabled=True;node.last_wall=9.8;node.started=1.;node.now_seconds=lambda:100.
         node.queued=PolynomialTrajectory();node.queued.header.stamp.sec=100

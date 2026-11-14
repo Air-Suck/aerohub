@@ -59,29 +59,3 @@ description: 为无人机算法及 AS2 扩展建立固定工具镜像内的可�
 记录外部工作区、源文件与生成构建胶水；该工作区不作为源码的唯一保存位置。
 
 ROS shell 环境脚本不一定支持 Bash nounset。入口可在 source ROS/AS2/colcon setup 时暂不启用 `set -u`，加载后再启用；用真实目标镜像构造节点，而不只做 Python 语法检查。Python ROS 节点避免以 `handle`、`clients` 等 Node 只读属性命名自己的状态；目标 rclpy 的真实构造检查能检出这类问题。
-
-## ProjectAirSim Unreal 构建
-
-对 UE 5.2.1 / ProjectAirSim `92032a6` 已验证：显式传入 `UE_ROOT`，确保
-SimLibs 与 Unreal 插件使用同一 UE Clang/libc++；记录实际提交，`v1.1.0-N`
-不能标成正式 v1.1.0。首次 Release ExternalProject 可能重复克隆 Debug 已有依赖。
-下载停滞时先停止并核对本轮进程；复用源码前检查锁定 tag/commit、工作树与全部
-子模块，保留中断目录，Release 库仍重新编译。克隆完成标记只在这些检查后更新。
-
-分别保存 Build、Cook、Stage/Archive 和运行结果。若 Stage 调用 `env` 时被 PATH
-中的不可执行同名文件挡住，可仅为本轮设置系统 PATH；Build/Cook 已通过时用
-`BuildCookRun -skipbuild -skipcook` 续做原配置的 Stage/Archive，避免再次 `-clean`。
-打包前后检查磁盘余量。运行验证至少核对服务返回的构建提交、场景加载与真实
-传感器消息；离屏传感器冒烟与有屏 PX4/AS2 飞行验收分别报告。
-
-ProjectAirSim ROS bridge 使用 `simulator/projectairsim/build_bridge.sh`：只把 ROS 包
-暂存到外部 workspace/src，应用仓库版本化补丁，C++ client 以
-PROJECTAIRSIM_CPP_CLIENT_DIR 指向只读上游。固定 ROS 工具镜像中构建、测试，
-保留独立 install overlay；不为补丁重建共享镜像。切换已缓存源码路径时用新
-workspace，避免 CMake source-dir 不一致。脚本实际构建及 colcon41汇总测试已通过。
-
-磁力计等 core_sim 静态库源码迭代时，可复用上述构建树定向编译 core_sim_gtests，
-先以真实传感器代码路径的回归验证，再确认 POST_BUILD 已更新插件 SimLibs 的
-Release libcore_sim.a，最后重链接 UE 插件/游戏并打包。旧 Game 二进制不会因为
-静态库已更新而自动包含新逻辑。2026-11-13 显式 NED 世界磁场扩展在8项磁力计
-测试与新打包程序/原版PX4地面实测通过；未执行空中地图和避障，不据此扩大验收。

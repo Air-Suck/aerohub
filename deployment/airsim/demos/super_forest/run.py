@@ -28,7 +28,7 @@ def run(command,**kwargs):return subprocess.run(list(map(str,command)),check=Tru
 
 
 def manager(action,out):
-    return [sys.executable,str(ROOT/'simulator/manager/manager.py'),action,
+    return [sys.executable,str(ROOT/'simulator/airsim/manager/manager.py'),action,
             '--profile',str(out/'profile.json'),'--run-dir',str(out/'scene')]
 
 
