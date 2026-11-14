@@ -107,6 +107,8 @@ class Harness:
             except subprocess.TimeoutExpired:
                 self.process.kill()
                 self.process.wait(timeout=5)
+        if self.process and self.process.stdout:
+            self.process.stdout.close()
         self.process = None
 
     def cloud(self, at, valid=True, overlapping_xyz=False):
