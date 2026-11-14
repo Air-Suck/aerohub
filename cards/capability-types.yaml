@@ -1,0 +1,398 @@
+schema_version: "1.0"
+
+capability_types:
+  - id: sensor/imu/inertial/6dof
+    name: Six-axis inertial measurement
+    description: Time-stamped linear acceleration and angular velocity measured by a vehicle IMU.
+    transport:
+      protocol: ros2_topic
+      schema: sensor_msgs/msg/Imu
+      qos:
+        reliability: best_effort
+        durability: volatile
+        history: keep_last
+        depth: 5
+    semantics:
+      unit_system: SI
+      units: {linear_acceleration: m/s^2, angular_velocity: rad/s}
+      coordinate_frame: sensor_frame
+      axes: FLU
+      timestamp: measurement_time
+
+  - id: sensor/camera/rgb/image
+    name: RGB camera image
+    description: Time-stamped RGB image in the calibrated optical frame.
+    transport:
+      protocol: ros2_topic
+      schema: sensor_msgs/msg/Image
+      qos:
+        reliability: best_effort
+        durability: volatile
+        history: keep_last
+        depth: 5
+    semantics:
+      unit_system: pixel
+      units: {encoding: rgb8}
+      coordinate_frame: camera_optical_frame
+      axes: optical_x_right_y_down_z_forward
+      timestamp: measurement_time
+
+  - id: sensor/camera/rgb/camera-info
+    name: RGB camera calibration
+    description: Camera intrinsics and image geometry corresponding to the RGB image stream.
+    transport:
+      protocol: ros2_topic
+      schema: sensor_msgs/msg/CameraInfo
+      qos:
+        reliability: best_effort
+        durability: volatile
+        history: keep_last
+        depth: 5
+    semantics:
+      unit_system: pixel
+      units: {}
+      coordinate_frame: camera_optical_frame
+      axes: optical_x_right_y_down_z_forward
+      timestamp: measurement_time
+
+  - id: sensor/camera/depth/axial-image
+    name: Axial depth image
+    description: Per-pixel depth along the camera optical axis, not Euclidean range from the camera center.
+    transport:
+      protocol: ros2_topic
+      schema: sensor_msgs/msg/Image
+      qos:
+        reliability: best_effort
+        durability: volatile
+        history: keep_last
+        depth: 5
+    semantics:
+      unit_system: encoding_dependent
+      units: {32FC1: m, 16UC1: mm}
+      coordinate_frame: camera_optical_frame
+      axes: optical_x_right_y_down_z_forward
+      timestamp: measurement_time
+
+  - id: sensor/camera/depth/camera-info
+    name: Depth camera calibration
+    description: Camera intrinsics and image geometry corresponding to the axial depth stream.
+    transport:
+      protocol: ros2_topic
+      schema: sensor_msgs/msg/CameraInfo
+      qos:
+        reliability: best_effort
+        durability: volatile
+        history: keep_last
+        depth: 5
+    semantics:
+      unit_system: pixel
+      units: {}
+      coordinate_frame: camera_optical_frame
+      axes: optical_x_right_y_down_z_forward
+      timestamp: measurement_time
+
+  - id: sensor/lidar/point-cloud/3d
+    name: 3D LiDAR point cloud
+    description: Packed little-endian PointCloud2 containing scalar FLOAT32 XYZ returns in the LiDAR frame.
+    transport:
+      protocol: ros2_topic
+      schema: sensor_msgs/msg/PointCloud2
+      qos:
+        reliability: best_effort
+        durability: volatile
+        history: keep_last
+        depth: 5
+    semantics:
+      unit_system: SI
+      units: {x: m, y: m, z: m}
+      coordinate_frame: lidar_sensor_frame
+      axes: FLU
+      timestamp: measurement_time
+
+  - id: state/local/odometry/3d
+    name: Local vehicle odometry
+    description: Locally continuous vehicle pose and twist used as a metric motion reference.
+    transport:
+      protocol: ros2_topic
+      schema: nav_msgs/msg/Odometry
+      qos:
+        reliability: best_effort
+        durability: volatile
+        history: keep_last
+        depth: 5
+    semantics:
+      unit_system: SI
+      units: {position: m, linear_velocity: m/s, angular_velocity: rad/s}
+      coordinate_frame: local_odom_parent_and_vehicle_body_child
+      axes: parent_ENU_child_FLU
+      timestamp: measurement_time
+
+  - id: state/self/pose/3d
+    name: Canonical self pose
+    description: Vehicle position and orientation published by the selected AS2 State Estimator authority.
+    transport:
+      protocol: ros2_topic
+      schema: geometry_msgs/msg/PoseStamped
+      qos:
+        reliability: reliable
+        durability: volatile
+        history: keep_last
+        depth: 10
+    semantics:
+      unit_system: SI
+      units: {position: m, orientation: unit_quaternion}
+      coordinate_frame: as2_earth
+      axes: ENU
+      timestamp: measurement_time
+
+  - id: state/self/twist/3d
+    name: Canonical self twist
+    description: Vehicle linear and angular velocity published by the selected AS2 State Estimator authority.
+    transport:
+      protocol: ros2_topic
+      schema: geometry_msgs/msg/TwistStamped
+      qos:
+        reliability: reliable
+        durability: volatile
+        history: keep_last
+        depth: 10
+    semantics:
+      unit_system: SI
+      units: {linear_velocity: m/s, angular_velocity: rad/s}
+      coordinate_frame: as2_vehicle_base
+      axes: FLU
+      timestamp: measurement_time
+
+  - id: control/controller/status
+    name: AS2 controller status
+    description: Current AS2 controller mode and status used by motion tools.
+    transport:
+      protocol: ros2_topic
+      schema: as2_msgs/msg/ControllerInfo
+      qos:
+        reliability: best_effort
+        durability: volatile
+        history: keep_last
+        depth: 5
+    semantics:
+      unit_system: none
+      units: {}
+      coordinate_frame: none
+      axes: none
+      timestamp: publication_time
+
+  - id: perception/map/registered-points/3d
+    name: Registered 3D points
+    description: Scan points registered into an algorithm-owned local world frame; not a free-space or collision map.
+    transport:
+      protocol: ros2_topic
+      schema: sensor_msgs/msg/PointCloud2
+      qos:
+        reliability: best_effort
+        durability: volatile
+        history: keep_last
+        depth: 5
+    semantics:
+      unit_system: SI
+      units: {x: m, y: m, z: m}
+      coordinate_frame: algorithm_local_world_with_tf_to_as2_earth
+      axes: frame_defined
+      timestamp: algorithm_update_time
+
+  - id: perception/map/sparse-visual-landmarks/3d
+    name: Sparse visual landmarks
+    description: Metric-aligned sparse visual patch landmarks; not dense geometry, free space, or a collision map.
+    transport:
+      protocol: ros2_topic
+      schema: sensor_msgs/msg/PointCloud2
+      qos:
+        reliability: reliable
+        durability: volatile
+        history: keep_last
+        depth: 2
+    semantics:
+      unit_system: SI
+      units: {x: m, y: m, z: m}
+      coordinate_frame: dpv_slam_map
+      axes: frame_defined
+      timestamp: latest_accepted_image_time
+
+  - id: perception/map/neural-point-anchors/3d
+    name: Neural-point anchors
+    description: Downsampled support-point anchors from a PIN-SLAM implicit map, not the complete neural model.
+    transport:
+      protocol: ros2_topic
+      schema: sensor_msgs/msg/PointCloud2
+      qos:
+        reliability: reliable
+        durability: volatile
+        history: keep_last
+        depth: 2
+    semantics:
+      unit_system: SI
+      units: {x: m, y: m, z: m}
+      coordinate_frame: pin_slam_map
+      axes: frame_defined
+      timestamp: latest_accepted_lidar_time
+
+  - id: perception/navigation/obstacle-points/3d
+    name: Navigation obstacle points
+    description: Registered scalar FLOAT32 XYZ obstacle samples in the fixed navigation frame.
+    transport:
+      protocol: ros2_topic
+      schema: sensor_msgs/msg/PointCloud2
+      qos:
+        reliability: best_effort
+        durability: volatile
+        history: keep_last
+        depth: 5
+    semantics:
+      unit_system: SI
+      units: {x: m, y: m, z: m}
+      coordinate_frame: fixed_navigation_frame
+      axes: ENU
+      timestamp: measurement_time
+
+  - id: perception/navigation/processed-obstacle-points/3d
+    name: Processed navigation obstacle points
+    description: Cropped and downsampled obstacle samples used by the IPC local planner.
+    transport:
+      protocol: ros2_topic
+      schema: sensor_msgs/msg/PointCloud2
+      qos:
+        reliability: best_effort
+        durability: volatile
+        history: keep_last
+        depth: 5
+    semantics:
+      unit_system: SI
+      units: {x: m, y: m, z: m}
+      coordinate_frame: fixed_navigation_frame
+      axes: ENU
+      timestamp: source_measurement_time
+
+  - id: control/external-acro/session
+    name: External acro control session
+    description: Active FollowReference session, target, yaw policy, revision, and per-axis velocity limits.
+    transport:
+      protocol: ros2_topic
+      schema: uav_follow_reference_acro/msg/ControlSession
+      qos:
+        reliability: reliable
+        durability: transient_local
+        history: keep_last
+        depth: 1
+    semantics:
+      unit_system: SI
+      units: {target_position: m, yaw: rad, max_speed: m/s}
+      coordinate_frame: target_header_frame
+      axes: target_frame_axes
+      timestamp: session_update_time
+
+  - id: control/external-acro/frame
+    name: External acro control frame
+    description: Atomic body-rate and collective-thrust command for the active FollowReference session.
+    transport:
+      protocol: ros2_topic
+      schema: uav_follow_reference_acro/msg/ControlFrame
+      qos:
+        reliability: best_effort
+        durability: volatile
+        history: keep_last
+        depth: 5
+    semantics:
+      unit_system: SI
+      units: {body_rates: rad/s, thrust: N}
+      coordinate_frame: vehicle_body
+      axes: FLU
+      timestamp: control_computation_time
+
+  - id: planning/path/3d
+    name: Planned 3D path
+    description: Ordered position-only path in a fixed navigation frame, intended for observation rather than timed execution.
+    transport:
+      protocol: ros2_topic
+      schema: nav_msgs/msg/Path
+      qos:
+        reliability: reliable
+        durability: volatile
+        history: keep_last
+        depth: 1
+    semantics:
+      unit_system: SI
+      units: {position: m}
+      coordinate_frame: fixed_navigation_frame
+      axes: ENU
+      timestamp: planning_time
+
+  - id: diagnostics/readiness/bool
+    name: Readiness flag
+    description: Boolean readiness indication whose detailed meaning is defined by the producing component.
+    transport:
+      protocol: ros2_topic
+      schema: std_msgs/msg/Bool
+      qos:
+        reliability: reliable
+        durability: volatile
+        history: keep_last
+        depth: 1
+    semantics:
+      unit_system: none
+      units: {}
+      coordinate_frame: none
+      axes: none
+      timestamp: publication_time
+
+  - id: diagnostics/health/text
+    name: Health status text
+    description: Structured or human-readable component health status carried in a text message.
+    transport:
+      protocol: ros2_topic
+      schema: std_msgs/msg/String
+      qos:
+        reliability: reliable
+        durability: volatile
+        history: keep_last
+        depth: 10
+    semantics:
+      unit_system: none
+      units: {}
+      coordinate_frame: none
+      axes: none
+      timestamp: publication_time
+
+  - id: task/yopo/status
+    name: YOPO task status
+    description: JSON status containing task state, reason, readiness, task ID, and accepted/effective revisions.
+    transport:
+      protocol: ros2_topic
+      schema: std_msgs/msg/String
+      qos:
+        reliability: reliable
+        durability: volatile
+        history: keep_last
+        depth: 10
+    semantics:
+      unit_system: none
+      units: {}
+      coordinate_frame: none
+      axes: none
+      timestamp: publication_time
+
+  - id: task/yopo/events
+    name: YOPO planning events
+    description: JSON event stream containing submitted curves and execution acknowledgements.
+    transport:
+      protocol: ros2_topic
+      schema: std_msgs/msg/String
+      qos:
+        reliability: reliable
+        durability: volatile
+        history: keep_last
+        depth: 100
+    semantics:
+      unit_system: SI
+      units: {position: m, velocity: m/s, acceleration: m/s^2, yaw: rad}
+      coordinate_frame: vehicle_fixed_odom
+      axes: ENU
+      timestamp: event_time

@@ -1,54 +1,55 @@
-schema_version: 0.1
+schema_version: "1.0"
 id: perception.fast-livo2-registered-points
-name: FAST-LIVO2 registered points
 version: ros2-a713004-aerohub-0.2.0
-type: perception
-description: Registered point output from the shared FAST-LIVO2 process
-component:
-  id: fast-livo2
+type: capability
+name: FAST-LIVO2 registered points
+description: Provides scan points registered by the shared FAST-LIVO2 process; this stream is not a free-space or collision map.
+
+implementation:
+  component_id: fast-livo2
   manifest: deployment/fast_livo2/component.yaml
-  shared_process_group: fast-livo2
-  coupled_capabilities: [state-estimator.fast-livo2]
-usage:
-  mode: continuous-provider
-  selection_phase: deployment
-  invocation_interface: /<namespace>/perception/fast_livo2/registered_points
-  switching_constraints:
-    - Cannot start, stop, reset or upgrade independently of FAST-LIVO2 state estimation.
+  shared_runtime: fast-livo2
+  coupled_capabilities:
+    - state-estimator.fast-livo2
+
 inputs:
-  - interface: FAST-LIVO2 internal registered cloud
-    schema: sensor_msgs/msg/PointCloud2
-    frame: camera_init local world
-    time: corresponding LIO or VIO update time
+  - id: imu
+    capability_type: sensor/imu/inertial/6dof
+  - id: rgb_image
+    capability_type: sensor/camera/rgb/image
+  - id: lidar_points
+    capability_type: sensor/lidar/point-cloud/3d
+
 outputs:
-  - interface: /<namespace>/perception/fast_livo2/registered_points
-    schema: sensor_msgs/msg/PointCloud2 with original fields and binary layout
-    frame: <namespace>/livo_world, transformable to canonical ENU odom
-    time: preserved algorithm update time
-    representation: registered scan points, not a complete navigation map
-hardware_requirements:
-  sensors: [imu, rgb-camera, 3d-lidar]
-  compute: NVIDIA GPU and fixed onboard-computer runtime
-resources:
-  reads: [fast-livo2.registered-cloud]
-  writes: [drone0.perception.fast-livo2-registered-points]
-  conflicts: [shared FAST-LIVO2 process reset]
+  - id: registered_points
+    capability_type: perception/map/registered-points/3d
+
+interfaces: []
+
 lifecycle:
-  readiness: at least one nonempty cloud with a valid frame and monotonic stamp
-  freshness: latest-sample adapter; duplicate state stamps are not republished
-  failure: no new cloud after sensor, adapter or algorithm loss
-  recovery: process restart creates a new map epoch
-type_specific:
-  representation: registered point cloud
-  query: no occupancy, ESDF, TSDF, mesh or collision query interface
-  reset: coupled to the FAST-LIVO2 state process
-validation:
-  stage: reproduced
-  gate: deployment/fast_livo2/validation.yaml
-  evidence:
-    - log/fast_livo2/shadow-formal-ca38fa8-20261113-01/result.json
-    - log/fast_livo2/authority-formal-ca38fa8-20261113-01/result.json
-    - log/fast_livo2/sensor-fault-formal-ca38fa8-20261113-02/result.json
-    - log/fast_livo2/algorithm-fault-formal-ca38fa8-20261113-01/result.json
-  limitations:
-    - No navigation consumer may treat this stream as free space without a validated conversion.
+  management: shared_managed
+  operations: {start: null, status: null, stop: null}
+
+hardware_requirements:
+  - hardware_type: compute/cpu/x86-64
+  - hardware_type: compute/gpu/cuda
+  - hardware_type: sensor/imu/6dof
+  - hardware_type: sensor/camera/rgb
+  - hardware_type: sensor/lidar/3d
+
+resource_access:
+  reads:
+    - sensor/imu
+    - sensor/front-rgb
+    - sensor/lidar
+  shared_writes:
+    - compute/gpu
+  exclusive_writes: []
+
+demo:
+  representations:
+    - id: registered_points
+      stage: intermediate
+      description: LiDAR scan points registered into the FAST-LIVO2 local world frame.
+      interface: {protocol: ros2_topic, schema: sensor_msgs/msg/PointCloud2}
+      renderer: point_cloud_3d
