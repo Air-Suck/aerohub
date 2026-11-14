@@ -7,13 +7,3 @@ resources:
     path: ~/AirSim/scenes/town05/CarlaUE4/Binaries/Linux/CarlaUE4
   racer_yolo_plant:
     path: ~/AirSim/scenes/plant/SuperGridStarterpack/Binaries/Linux/SuperGridStarterpack-Linux-Shipping
-  projectairsim_blocks:
-    path: ~/ProjectAirSim/packages/Blocks/Binaries/Linux/Blocks
-  projectairsim_scene_px4:
-    path: ~/ProjectAirSim/client/python/example_user_scripts/sim_config/scene_px4_sitl.jsonc
-  projectairsim_python_client:
-    path: ~/ProjectAirSim/client/python/projectairsim/src
-  projectairsim_python:
-    path: /absolute/path/to/projectairsim-client/bin/python
-  projectairsim_ros2_setup:
-    path: ~/ProjectAirSim/ros/install/setup.bash

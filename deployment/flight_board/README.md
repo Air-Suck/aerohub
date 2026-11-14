@@ -6,46 +6,7 @@ Agent、Humble AirSim 传感器桥和全局时钟桥。镜像保留原 PX4 所�
 
 ## 使用固定镜像
 
-新增部署使用 `flight_board:v0.1.1`，同时支持原 AirSim settings 和
-Simulator Manager 生成的 `runtime.json`。该版本基于固定 `v0.1.0`，仅更新
-supervisor，PX4、DDS Agent 和传感器程序沿用原版本；不设置
-`SIMULATOR_RUNTIME_CONFIG` 时保留旧 AirSim 启动方式。
-
-显式选择镜像（Compose 的历史默认值仍为 `v0.1.0`）：
-
-```bash
-export FLIGHT_BOARD_IMAGE=flight_board:v0.1.1
-docker compose -f deployment/flight_board/compose.yaml up -d
-```
-
-上面的 Compose 是旧 AirSim settings 拓扑。ProjectAirSim 使用 manager 的
-`runtime.json`，设置 `SIMULATOR_RUNTIME_CONFIG`、`VEHICLE_NAME` 和
-`FLIGHT_BOARD_SENSORS=0`，时钟与传感器由仿真侧 adapter 提供，不启动该 Compose
-中的 AirSim clock 服务，详见 [Simulator Manager](../../simulator/manager/README.md#接口契约)。
-支持 `FLIGHT_BOARD_IMAGE` 的入口可用该变量选择新版；硬编码 `v0.1.0` 的 Demo
-需单独调整镜像选择，不会因 export 自动切换。
-
-本地构建及离线导出：
-
-```bash
-FLIGHT_BOARD_DEV_IMAGE=flight_board:v0.1.1 bash deployment/flight_board/build-sim-manager.sh
-docker save -o flight-board-v0.1.1-linux-amd64.tar flight_board:v0.1.1
-sha256sum flight-board-v0.1.1-linux-amd64.tar > flight-board-v0.1.1-linux-amd64.tar.sha256
-```
-
-接收端在归档目录运行 `sha256sum -c flight-board-v0.1.1-linux-amd64.tar.sha256`，
-再用 `docker load -i flight-board-v0.1.1-linux-amd64.tar` 加载。
-GHCR 目标为 `ghcr.io/popc0rn7/aerohub/flight-board:v0.1.1`，远端获取前需核对
-发布状态与摘要，见[版本说明](../releases/README.md#flight_board-v011仿真后端兼容)。
-
-本次新 tag 已通过镜像内 supervisor 哈希、旧 AirSim 命令构造、ProjectAirSim
-runtime 命令与端口映射、时钟/传感器归属检查；未针对该 tag 重新执行完整飞行回归。
-此前开发 tag 的飞行结果不自动作为新 tag 的完整验收结果。
-
-### 历史 v0.1.0 的固定校验与交付
-
-以下 `image.sh` 命令固定校验 `v0.1.0` 的镜像 ID，不用于 `v0.1.1`。
-历史部署使用 `flight_board:v0.1.0`，Compose
+日常启动直接使用 `flight_board:v0.1.0`，Compose
 不执行 build，也不自动拉取镜像。该版本为 Linux amd64，镜像 ID：
 `sha256:8c33881fde6985fe5a43a894bde075471df85064e45ac8e5de28efebcc737cd2`。
 `v0.1.0` 固定为已验收的 `airsim-px4-humble-threaded-20261105` 相同镜像内容，旧标签保留。

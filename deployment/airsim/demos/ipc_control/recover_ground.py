@@ -25,7 +25,7 @@ def main():
             subprocess.run(['docker','logs',name],stdout=log,stderr=subprocess.STDOUT)
         subprocess.run(['docker','stop','--time','10',name],check=True)
     root = Path(__file__).resolve().parents[4]
-    subprocess.run([sys.executable,str(root/'simulator/manager/manager.py'),
+    subprocess.run([sys.executable,str(root/'simulator/airsim/manager/manager.py'),
         'stop','--run-dir',str(out/'scene')],check=True)
     relay = json.loads((out/'relay.json').read_text())['pid']
     try:

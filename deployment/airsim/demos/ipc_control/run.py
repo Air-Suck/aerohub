@@ -164,7 +164,7 @@ def main():
             'compute_role':'real IPC native + AS2 on PC','task':'forest' if args.forest else ('disarmed shadow' if args.ground_only else ('short navigation gate' if args.short else 'control gate')),
             'runtime_install':'log/ipc/native-deps/ros-install','dependencies_install':'log/ipc/native-deps/install',
             'not_accepted':['RoboPi','real aircraft','100Hz']},indent=2)+'\n')
-    manager = [sys.executable,ROOT/'simulator/manager/manager.py']
+    manager = [sys.executable,ROOT/'simulator/airsim/manager/manager.py']
     def scene(action):
         cmd = manager+[action,'--profile',out/'profile.json','--run-dir',out/'scene']
         if args.binary: cmd += ['--binary',args.binary]
