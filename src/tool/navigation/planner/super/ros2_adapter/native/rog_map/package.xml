@@ -3,7 +3,7 @@
     <name>rog_map</name>
     <description>rog_map</description>
     <maintainer email="renyf@connect.hku.hk">Yunfan Ren</maintainer>
-    <license>BSD</license>
+    <license>LGPL-3.0-or-later</license>
     <buildtool_depend>ament_cmake</buildtool_depend>
     <depend>rclcpp</depend>
     <depend>sensor_msgs</depend>

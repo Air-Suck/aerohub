@@ -1,0 +1,12 @@
+std_msgs/Header header
+builtin_interfaces/Time last_update
+bool ready
+bool epoch_valid
+uint64 accepted_clouds
+uint64 rejected_malformed
+uint64 rejected_time
+uint64 rejected_tf
+uint64 last_point_count
+float64 input_age
+float64 resolution
+float64 inflation_resolution

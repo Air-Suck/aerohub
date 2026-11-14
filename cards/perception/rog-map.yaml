@@ -1,0 +1,70 @@
+schema_version: "1.0"
+id: perception.rog-map
+version: "0.1.0"
+type: capability
+name: ROG-Map occupancy and distance map
+description: Maintains a rolling robocentric 3D occupancy map with obstacle inflation, ESDF, voxel queries and collision-line queries.
+
+implementation:
+  component_id: rog-map
+  manifest: deployment/rog_map/component.yaml
+  shared_runtime: rog-map
+  coupled_capabilities: []
+
+inputs:
+  - id: registered_points
+    capability_type: perception/map/registered-points/3d
+
+outputs:
+  - id: occupied_voxels
+    capability_type: perception/map/occupied-voxels/3d
+  - id: inflated_occupied_voxels
+    capability_type: perception/map/inflated-occupied-voxels/3d
+
+interfaces:
+  - id: query_voxel
+    role: functional_operation
+    interaction: request_response
+    protocol: ros2_service
+    schema: uav_rog_map_interfaces/srv/QueryVoxel
+    parameter_schema: src/basic_function/perception/rog_map/interfaces/srv/QueryVoxel.srv
+  - id: check_line
+    role: functional_operation
+    interaction: request_response
+    protocol: ros2_service
+    schema: uav_rog_map_interfaces/srv/CheckLine
+    parameter_schema: src/basic_function/perception/rog_map/interfaces/srv/CheckLine.srv
+
+lifecycle:
+  management: system_managed
+  operations: {start: null, status: null, stop: null}
+
+hardware_requirements:
+  - hardware_type: compute/cpu/x86-64
+  - hardware_type: sensor/lidar/3d
+
+resource_access:
+  reads:
+    - sensor/lidar
+    - state/tf
+  shared_writes:
+    - environment/map
+  exclusive_writes: []
+
+demo:
+  representations:
+    - id: occupied_voxels
+      stage: final
+      description: Rolling centers of occupied voxels in the configured map frame.
+      interface: {protocol: ros2_topic, schema: sensor_msgs/msg/PointCloud2}
+      renderer: point_cloud_3d
+    - id: inflated_occupied_voxels
+      stage: final
+      description: Rolling occupied centers after configured vehicle-radius inflation.
+      interface: {protocol: ros2_topic, schema: sensor_msgs/msg/PointCloud2}
+      renderer: point_cloud_3d
+    - id: esdf_slice
+      stage: intermediate
+      description: Horizontal ESDF inspection slice with distance stored as point intensity.
+      interface: {protocol: ros2_topic, schema: sensor_msgs/msg/PointCloud2}
+      renderer: scalar_point_cloud_3d

@@ -1,0 +1,10 @@
+geometry_msgs/Point start
+geometry_msgs/Point end
+bool use_inflated
+bool unknown_as_occupied
+---
+bool ready
+bool clear
+builtin_interfaces/Time map_stamp
+string frame_id
+string message
