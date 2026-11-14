@@ -7,7 +7,6 @@ from pathlib import Path
 import signal
 import subprocess
 import time
-from urllib.request import Request, ProxyHandler, build_opener
 
 import rclpy
 from rclpy.node import Node
@@ -30,19 +29,6 @@ from airsim_rpc import Rpc
 
 
 class Mission(Node):
-    def display_event(self, event):
-        port = os.environ.get('SUPER_HUD_PORT')
-        if not port or (event == 'finish' and not getattr(self, 'display_timer_running', False)):
-            return
-        try:
-            request = Request(f'http://127.0.0.1:{int(port)}/aerohub/mission/{event}', data=b'')
-            with build_opener(ProxyHandler({})).open(request, timeout=2) as response:
-                response.read()
-            self.display_timer_running = event == 'start'
-        except (OSError, ValueError) as exc:
-            self.result.setdefault('display_errors', []).append(f'{event}: {exc}')
-            self.get_logger().warning(f'HUD {event} failed: {exc}')
-
     def __init__(self):
         super().__init__('super_forest_migration',parameter_overrides=[Parameter('use_sim_time',value=True)])
         self.root=Path(os.environ.get('SUPER_APP_ROOT','/opt/super_app'));self.out=Path(os.environ.get('SUPER_EVIDENCE_ROOT','/evidence'))
@@ -276,7 +262,6 @@ class Mission(Node):
         self.start('super',['ros2','run','super_planner','fsm_node','--ros-args','-p','use_sim_time:=true','-p','config_name:='+str(self.out/'planner.yaml')])
         self.start('adapter',['ros2','run','uav_super_adapter','super_timed_path_adapter','--ros-args',
             '-r','__ns:=/drone0','-p','use_sim_time:=true','-p','goal:='+str(target),
-            '-p','max_speed:='+str(float(self.task['speed_m_s'])),
             '-p','goal_tolerance:='+str(float(self.task['goal_tolerance_m']))])
         self.wait(lambda:self.counts['map']>=3 and self.counts['inflated']>=3,60)
         return target
@@ -324,7 +309,6 @@ class Mission(Node):
                 return self.state.get('revision',0)>0 and self.controller.input_control_mode.control_mode==ControlMode.TRAJECTORY
             self.wait(executing,15)
             self.phase='route';self.started=self.now_seconds();stable=None
-            self.display_event('start')
             if self.case in ('short-cancel','short-input-loss','short-takeover'):
                 self.wait(lambda:self.now_seconds()-self.started>=.5,10)
                 self.phase='fault'
@@ -364,14 +348,12 @@ class Mission(Node):
                 else:stable=None
                 return stable is not None and self.now_seconds()-stable>=2 and self.state.get('complete',False)
             self.wait(arrived,self.task['leg_timeout_s'])
-            self.display_event('finish')
             self.result.update(arrived=True,execution_completed=bool(self.state.get('complete')),arrival_error_m=math.dist(self.position(),target),
                 route_sim_seconds=self.now_seconds()-self.started,final_task_enu_m=self.local())
         except BaseException as exc:
             self.result.update(error=str(exc),failed_phase=self.phase)
             self.get_logger().error(str(exc))
         finally:
-            self.display_event('finish')
             self.phase='stopping'
             if self.platform is not None and self.platform.armed:
                 try:
