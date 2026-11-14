@@ -52,3 +52,11 @@ src/
 - 相关 Python 回归测试 83 项通过；其中 6 项 ROS 消息测试在接口生成并加载 overlay 后补跑通过。FollowPath 的 C++ timeline 测试 1 项通过。
 - 证据位于 `log/src-layout-validation.itezrR/`，包含静态检查、测试、模型清单解析、核心包及 FollowPath 构建和测试日志。首次尝试使用宿主 UID 运行容器，因无法读取镜像 `/root/` 内的 AS2 环境而停止；后续调整容器运行权限并完成检查，首次尝试的现场目录 `log/src-layout-validation.v8MVEd/` 保留。
 - 未重新运行全算法构建、GPU 模型推理、RoboPi 或 AirSim + PX4 飞行验收；本次结果只证明上述目录迁移检查通过。历史验证结果仍对应原版本和原环境。
+
+### 合入最新 dev 后的检查
+
+合并提交 `af61c32` 纳入 `dev` 的 `7493c5e`，保留 scene-player 撤回结果。合并后的静态检查覆盖 346 个 Python 文件、80 个 Shell 脚本和 263 处文档链接；包定义、ROS 接口及子模块锁定版本保持不变。
+
+在固定共享镜像中重新构建上述六个包，以及 `mars_quadrotor_msgs`、`uav_super_adapter`，八个包全部成功。Python 测试结果为 87 项通过、4 项失败，FollowPath timeline 测试通过。四项失败均来自 SUPER 的 ROS conversion 测试；在 `dev` 原路径直接复跑得到相同四项失败，相关节点与测试文件的 Git blob 与整理分支一致。测试夹具未初始化节点所需属性，触发 AttributeError；本次未修改 SUPER 行为或测试来掩盖基线问题。
+
+本轮证据在任务 worktree 的 `log/merge-validation.0KFgZV/`，包含 `commit.txt`、构建日志、测试日志和 `baseline-super-tests.log`。本轮不是全部测试通过，也未执行新的 GPU 或飞行验收；前述 84 项通过记录仅对应合并前的检查范围。
