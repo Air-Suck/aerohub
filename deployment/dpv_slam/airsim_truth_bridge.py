@@ -29,6 +29,10 @@ class TruthBridge(Node):
         self.last_stamp = 0
         self.create_timer(period, self.publish_truth)
 
+    def destroy_node(self):
+        self.rpc.close()
+        return super().destroy_node()
+
     def publish_truth(self):
         try:
             state = self.rpc.call("getMultirotorState", self.vehicle)

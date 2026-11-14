@@ -35,5 +35,9 @@ type_specific:
   reset: coupled to the DPV-SLAM state process
 validation:
   stage: reproduced
+  evidence:
+    - log/dpv_slam/shadow-schema-0.2-current-frame-20261114-01
+    - log/dpv_slam/authority-schema-0.2-current-frame-20261114-01
   limitations:
     - A navigation consumer requires an explicit validated conversion.
+    - This sparse landmark view is coupled to the reproduced state process but is not a navigation map.

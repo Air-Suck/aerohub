@@ -14,10 +14,15 @@ from as2_msgs.msg import PlatformInfo, PlatformStatus
 from diagnostic_msgs.msg import DiagnosticArray
 from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import Odometry
-from px4_msgs.msg import VehicleControlMode
+from px4_msgs.msg import (
+    FailsafeFlags,
+    VehicleCommandAck,
+    VehicleControlMode,
+    VehicleStatus,
+)
 from rclpy.action import ActionClient
 from rclpy.parameter import Parameter
-from rclpy.qos import qos_profile_sensor_data
+from rclpy.qos import QoSProfile, qos_profile_sensor_data
 from sensor_msgs.msg import CameraInfo, Image, PointCloud2
 from std_srvs.srv import SetBool
 
@@ -38,6 +43,14 @@ def rate_hz(stamps):
     return (len(ordered) - 1) / duration if duration > 0.0 else 0.0
 
 
+def maximum_gap_s(stamps):
+    ordered = sorted(set(stamps))
+    return max(
+        ((right - left) * 1.0e-9 for left, right in zip(ordered, ordered[1:])),
+        default=None,
+    )
+
+
 class ShadowRun:
     def __init__(self):
         self.node = rclpy.create_node(
@@ -45,32 +58,48 @@ class ShadowRun:
             parameter_overrides=[Parameter("use_sim_time", Parameter.Type.BOOL, True)],
         )
         self.pose = None
-        self.canonical_stamps = []
+        self.canonical_samples = []
+        self.canonical_airborne_start = None
+        self.canonical_airborne_end = None
         self.control = None
+        self.vehicle_status = None
+        self.failsafe = None
+        self.acks = {}
         self.platform = None
         self.images = {}
         self.camera_info_stamps = set()
         self.truth = {}
         self.candidates = {}
         self.candidate_arrivals = []
+        self.processed_input_stamps = set()
+        self.last_stream_arrival = {}
         self.sparse_samples = {}
         self.diagnostics = {}
         self.alignment_scale = None
         self.alignment_rmse = None
         self.airborne_started = None
         self.airborne_duration_s = 0.0
+        self.executed_waypoints = 0
         self.active_goal = None
+        self.scenario = os.environ.get("DPV_SLAM_SCENARIO", "shadow")
+        self.fault_evidence = None
 
+        evidence_sensor_qos = QoSProfile(
+            history=qos_profile_sensor_data.history,
+            depth=200,
+            reliability=qos_profile_sensor_data.reliability,
+            durability=qos_profile_sensor_data.durability,
+        )
         self.node.create_subscription(
             PoseStamped, "/drone0/self_localization/pose",
             self.pose_callback, qos_profile_sensor_data)
         self.node.create_subscription(
             Image, "/drone0/sensor_measurements/FrontCamera/rgb/image",
-            self.image_callback, qos_profile_sensor_data)
+            self.image_callback, evidence_sensor_qos)
         self.node.create_subscription(
             CameraInfo, "/drone0/sensor_measurements/FrontCamera/rgb/camera_info",
             lambda message: self.camera_info_stamps.add(stamp_ns(message)),
-            qos_profile_sensor_data)
+            evidence_sensor_qos)
         self.node.create_subscription(
             PoseStamped, "/dpv_slam/validation/airsim_truth",
             self.truth_callback, qos_profile_sensor_data)
@@ -84,12 +113,23 @@ class ShadowRun:
             VehicleControlMode, "/drone0/fmu/out/vehicle_control_mode",
             lambda message: setattr(self, "control", message), qos_profile_sensor_data)
         self.node.create_subscription(
+            VehicleStatus, "/drone0/fmu/out/vehicle_status_v4",
+            lambda message: setattr(self, "vehicle_status", message),
+            qos_profile_sensor_data)
+        self.node.create_subscription(
+            FailsafeFlags, "/drone0/fmu/out/failsafe_flags",
+            lambda message: setattr(self, "failsafe", message), qos_profile_sensor_data)
+        self.node.create_subscription(
+            VehicleCommandAck, "/drone0/fmu/out/vehicle_command_ack_v1",
+            self.ack_callback, qos_profile_sensor_data)
+        self.node.create_subscription(
             PlatformInfo, "/drone0/platform/info",
             lambda message: setattr(self, "platform", message), qos_profile_sensor_data)
         self.node.create_subscription(
             DiagnosticArray, "/drone0/dpv_slam/status", self.status_callback, 10)
 
     def image_callback(self, message):
+        self.last_stream_arrival["image"] = time.monotonic()
         sample_stamp = stamp_ns(message)
         if sample_stamp not in self.images:
             self.images[sample_stamp] = {
@@ -102,12 +142,16 @@ class ShadowRun:
 
     def pose_callback(self, message):
         self.pose = message
-        self.canonical_stamps.append(stamp_ns(message))
+        self.canonical_samples.append({
+            "source_stamp_ns": stamp_ns(message),
+            "arrival_monotonic_ns": time.monotonic_ns(),
+        })
 
     def truth_callback(self, message):
         self.truth[stamp_ns(message)] = message.pose
 
     def candidate_callback(self, message):
+        self.last_stream_arrival["candidate"] = time.monotonic()
         sample_stamp = stamp_ns(message)
         self.candidate_arrivals.append(sample_stamp)
         self.candidates[sample_stamp] = message
@@ -124,30 +168,132 @@ class ShadowRun:
             values = {value.key: value.value for value in item.values}
             if item.message == "tracking":
                 try:
+                    self.processed_input_stamps.add(int(values["source_stamp_ns"]))
                     self.alignment_scale = float(values["scale"])
                     self.alignment_rmse = float(values["alignment_rmse"])
                 except (KeyError, ValueError):
                     pass
+
+    def ack_callback(self, message):
+        self.acks[message.command] = {
+            "result": message.result,
+            "result_param1": message.result_param1,
+            "result_param2": message.result_param2,
+            "target_system": message.target_system,
+            "target_component": message.target_component,
+            "timestamp": message.timestamp,
+        }
+
+    def px4_snapshot(self):
+        control_fields = (
+            "timestamp",
+            "flag_armed",
+            "flag_control_offboard_enabled",
+            "flag_control_position_enabled",
+            "flag_control_velocity_enabled",
+        )
+        status_fields = (
+            "timestamp",
+            "arming_state",
+            "nav_state",
+            "failsafe",
+            "pre_flight_checks_pass",
+            "power_input_valid",
+            "usb_connected",
+            "open_drone_id_system_present",
+            "open_drone_id_system_healthy",
+        )
+        failsafe_fields = (
+            "timestamp",
+            "angular_velocity_invalid",
+            "attitude_invalid",
+            "local_altitude_invalid",
+            "local_position_invalid",
+            "local_position_invalid_relaxed",
+            "local_velocity_invalid",
+            "global_position_invalid",
+            "global_position_invalid_relaxed",
+            "offboard_control_signal_lost",
+            "home_position_invalid",
+            "manual_control_signal_lost",
+            "gcs_connection_lost",
+            "battery_unhealthy",
+            "geofence_breached",
+            "navigator_failure",
+            "fd_critical_failure",
+            "fd_esc_arming_failure",
+            "fd_motor_failure",
+        )
+
+        def fields(message, names):
+            if message is None:
+                return None
+            return {name: getattr(message, name) for name in names}
+
+        return {
+            "wall_time_ns": time.time_ns(),
+            "control": fields(self.control, control_fields),
+            "vehicle_status": fields(self.vehicle_status, status_fields),
+            "failsafe_flags": fields(self.failsafe, failsafe_fields),
+            "command_acks": self.acks,
+        }
+
+    def write_px4_snapshot(self, stage):
+        snapshot = self.px4_snapshot()
+        (OUTPUT / ("px4-" + stage + ".json")).write_text(
+            json.dumps(snapshot, indent=2) + "\n")
+        return snapshot
 
     def spin(self, seconds):
         deadline = time.monotonic() + seconds
         while time.monotonic() < deadline:
             rclpy.spin_once(self.node, timeout_sec=0.05)
 
-    def wait(self, predicate, seconds=30):
+    def wait(self, predicate, seconds=30, description="condition"):
         deadline = time.monotonic() + seconds
         while not predicate():
             if time.monotonic() > deadline:
-                raise RuntimeError("timeout waiting for condition")
+                raise RuntimeError("timeout waiting for " + description)
             rclpy.spin_once(self.node, timeout_sec=0.1)
 
-    def service(self, name, value):
+    def service(self, name, value, command, feedback):
         client = self.node.create_client(SetBool, "/drone0/" + name)
-        self.wait(client.service_is_ready, 20)
+        self.wait(client.service_is_ready, 20, name + " service")
+        self.acks.pop(command, None)
         future = client.call_async(SetBool.Request(data=value))
-        self.wait(future.done, 15)
+        self.wait(future.done, 15, name + " service response")
         if not future.result().success:
+            self.write_px4_snapshot(name + "-service-rejected")
             raise RuntimeError(name + " rejected")
+        self.wait(lambda: command in self.acks, 15, name + " PX4 acknowledgement")
+        acknowledgement = self.acks[command]
+        if acknowledgement["result"] != VehicleCommandAck.VEHICLE_CMD_RESULT_ACCEPTED:
+            snapshot = self.write_px4_snapshot(name + "-px4-rejected")
+            raise RuntimeError(
+                name + " rejected by PX4: " + json.dumps(snapshot, sort_keys=True))
+        self.wait(feedback, 15, name + " firmware state")
+        self.write_px4_snapshot(name + "-confirmed")
+
+    def wait_for_preflight(self):
+        self.wait(
+            lambda: self.vehicle_status is not None,
+            30,
+            "PX4 vehicle status",
+        )
+        timeout = float(os.environ.get("PX4_PREFLIGHT_TIMEOUT_SECONDS", "45"))
+        try:
+            self.wait(
+                lambda: self.vehicle_status.pre_flight_checks_pass,
+                timeout,
+                "PX4 preflight checks",
+            )
+        except Exception as error:
+            snapshot = self.write_px4_snapshot("preflight-failed")
+            raise RuntimeError(
+                "PX4 preflight checks did not pass: "
+                + json.dumps(snapshot, sort_keys=True)
+            ) from error
+        self.write_px4_snapshot("preflight-passed")
 
     def action(self, kind, name, goal, success_field, seconds=120):
         client = ActionClient(self.node, kind, "/drone0/" + name)
@@ -185,16 +331,152 @@ class ShadowRun:
         self.truth.clear()
         self.candidates.clear()
         self.candidate_arrivals.clear()
+        self.processed_input_stamps.clear()
+        self.last_stream_arrival.clear()
         self.sparse_samples.clear()
         self.diagnostics.clear()
-        self.canonical_stamps.clear()
+        self.canonical_samples.clear()
+        self.canonical_airborne_start = None
+        self.canonical_airborne_end = None
         self.spin(1)
+
+    def execute_fault(self):
+        if self.scenario not in ("sensor_fault", "algorithm_fault"):
+            raise ValueError("execute_fault requires a fault scenario")
+
+        self.prepare_observation_window()
+        self.wait(lambda: self.vehicle_status is not None, 30, "PX4 vehicle status")
+        self.wait(lambda: self.control is not None, 30, "PX4 control mode")
+        self.write_px4_snapshot("before-offboard")
+        if not self.control.flag_control_offboard_enabled:
+            self.service(
+                "set_offboard_mode",
+                True,
+                176,
+                lambda: (
+                    self.control is not None
+                    and self.control.flag_control_offboard_enabled
+                ),
+            )
+        self.wait_for_preflight()
+        self.service(
+            "set_arming_state",
+            True,
+            400,
+            lambda: self.control is not None and self.control.flag_armed,
+        )
+        initial_z = self.pose.pose.position.z
+        self.action(
+            Takeoff, "TakeoffBehavior",
+            Takeoff.Goal(takeoff_height=1.5, takeoff_speed=0.5), "takeoff_success")
+        self.wait(lambda: self.pose.pose.position.z > initial_z + 0.7, 30)
+        self.wait(
+            lambda: self.platform is not None
+            and self.platform.status.state == PlatformStatus.FLYING,
+            30,
+            "platform flying state",
+        )
+        self.canonical_airborne_start = len(self.canonical_samples)
+        self.airborne_started = time.monotonic()
+        for dx, dy in (
+                (1.0, 0.0), (0.0, 1.0), (-1.0, 0.0), (0.0, -1.0),
+                (1.0, 0.0), (0.0, 1.0), (-1.0, 0.0), (0.0, -1.0)):
+            position = self.pose.pose.position
+            goal = GoToWaypoint.Goal()
+            goal.target_pose.header.frame_id = "earth"
+            goal.target_pose.point.x = position.x + dx
+            goal.target_pose.point.y = position.y + dy
+            goal.target_pose.point.z = position.z
+            goal.max_speed = 0.5
+            self.action(GoToWaypoint, "GoToBehavior", goal, "go_to_success", 120)
+            self.executed_waypoints += 1
+        self.wait(
+            lambda: self.alignment_scale is not None and len(self.candidates) >= 20,
+            60,
+            "DPV-SLAM tracking before fault injection",
+        )
+
+        stream = "image" if self.scenario == "sensor_fault" else "candidate"
+        baseline = {
+            "image_messages": len(self.images),
+            "candidate_messages": len(self.candidates),
+            "canonical_pose_samples": len(self.canonical_samples),
+        }
+        ready = {
+            "scenario": self.scenario,
+            "watched_stream": stream,
+            "baseline": baseline,
+            "ready_wall_time": time.time(),
+        }
+        (OUTPUT / "fault-ready.json").write_text(json.dumps(ready, indent=2) + "\n")
+        detection_started = time.monotonic()
+        self.wait(
+            lambda: (
+                stream in self.last_stream_arrival
+                and time.monotonic() - self.last_stream_arrival[stream] >= 2.0
+            ),
+            30,
+            f"{stream} stream to stop after fault injection",
+        )
+        detection_seconds = time.monotonic() - detection_started
+        detected_wall_time = time.time()
+        canonical_at_detection = len(self.canonical_samples)
+        self.spin(1.0)
+        canonical_after_hold = len(self.canonical_samples)
+        if canonical_after_hold - canonical_at_detection < 20:
+            raise RuntimeError("canonical state did not remain live after DPV fault")
+
+        self.airborne_duration_s = time.monotonic() - self.airborne_started
+        self.canonical_airborne_end = len(self.canonical_samples)
+        self.action(Land, "LandBehavior", Land.Goal(land_speed=0.5), "land_success", 120)
+        self.wait(
+            lambda: self.control is not None and not self.control.flag_armed,
+            30,
+            "PX4 disarmed state after fault landing",
+        )
+        self.write_px4_snapshot("landed")
+        self.spin(3)
+        self.fault_evidence = {
+            "scenario": self.scenario,
+            "watched_stream": stream,
+            "baseline": baseline,
+            "final": {
+                "image_messages": len(self.images),
+                "candidate_messages": len(self.candidates),
+                "canonical_pose_samples": len(self.canonical_samples),
+            },
+            "detection_seconds": detection_seconds,
+            "recovery_seconds": time.monotonic() - detection_started,
+            "detected_wall_time": detected_wall_time,
+            "stream_stale_seconds": (
+                time.monotonic() - self.last_stream_arrival[stream]),
+            "canonical_samples_during_hold": (
+                canonical_after_hold - canonical_at_detection),
+            "landed_and_disarmed": True,
+        }
 
     def execute_flight(self):
         self.prepare_observation_window()
-        self.service("set_arming_state", True)
-        if not (self.control and self.control.flag_control_offboard_enabled):
-            self.service("set_offboard_mode", True)
+        self.wait(lambda: self.vehicle_status is not None, 30, "PX4 vehicle status")
+        self.wait(lambda: self.control is not None, 30, "PX4 control mode")
+        self.write_px4_snapshot("before-offboard")
+        if not self.control.flag_control_offboard_enabled:
+            self.service(
+                "set_offboard_mode",
+                True,
+                176,
+                lambda: (
+                    self.control is not None
+                    and self.control.flag_control_offboard_enabled
+                ),
+            )
+        self.wait_for_preflight()
+        self.service(
+            "set_arming_state",
+            True,
+            400,
+            lambda: self.control is not None and self.control.flag_armed,
+        )
         initial_z = self.pose.pose.position.z
         self.action(
             Takeoff, "TakeoffBehavior",
@@ -203,6 +485,7 @@ class ShadowRun:
         self.wait(
             lambda: self.platform is not None
             and self.platform.status.state == PlatformStatus.FLYING, 30)
+        self.canonical_airborne_start = len(self.canonical_samples)
         self.airborne_started = time.monotonic()
         waypoint_count = int(os.environ.get("DPV_SLAM_WAYPOINT_COUNT", "8"))
         minimum_airborne_seconds = float(
@@ -210,7 +493,9 @@ class ShadowRun:
         if waypoint_count <= 0 or minimum_airborne_seconds < 0.0:
             raise ValueError("flight count and duration must be non-negative")
         offsets = ((1.0, 0.0), (0.0, 1.0), (-1.0, 0.0), (0.0, -1.0))
-        for index in range(waypoint_count):
+        index = 0
+        while (index < waypoint_count or
+               time.monotonic() - self.airborne_started < minimum_airborne_seconds):
             position = self.pose.pose.position
             dx, dy = offsets[index % len(offsets)]
             goal = GoToWaypoint.Goal()
@@ -220,14 +505,22 @@ class ShadowRun:
             goal.target_pose.point.z = position.z
             goal.max_speed = 0.5
             self.action(GoToWaypoint, "GoToBehavior", goal, "go_to_success", 120)
-            self.spin(2)
-        self.spin(max(
-            0.0, minimum_airborne_seconds - (time.monotonic() - self.airborne_started)))
+            index += 1
+            self.executed_waypoints = index
         self.airborne_duration_s = time.monotonic() - self.airborne_started
+        self.canonical_airborne_end = len(self.canonical_samples)
         self.action(Land, "LandBehavior", Land.Goal(land_speed=0.5), "land_success", 120)
+        self.wait(
+            lambda: self.control is not None and not self.control.flag_armed,
+            30,
+            "PX4 disarmed state after landing",
+        )
+        self.write_px4_snapshot("landed")
         self.spin(5)
 
     def recover(self):
+        if self.canonical_airborne_start is not None and self.canonical_airborne_end is None:
+            self.canonical_airborne_end = len(self.canonical_samples)
         if self.active_goal is not None:
             try:
                 cancel_future = self.active_goal.cancel_goal_async()
@@ -244,26 +537,55 @@ class ShadowRun:
             pass
         if self.control and self.control.flag_armed:
             try:
-                self.service("set_arming_state", False)
+                self.service(
+                    "set_arming_state",
+                    False,
+                    400,
+                    lambda: self.control is not None and not self.control.flag_armed,
+                )
                 self.spin(2)
             except Exception:
                 pass
 
     def evaluate(self, result_filename="result.json"):
-        output_stamps = sorted(self.candidates)
+        canonical_start = (
+            self.canonical_airborne_start
+            if self.canonical_airborne_start is not None else 0)
+        canonical_end = (
+            self.canonical_airborne_end
+            if self.canonical_airborne_end is not None else len(self.canonical_samples))
+        canonical_window = self.canonical_samples[canonical_start:canonical_end]
+        window_source_stamps = [
+            sample["source_stamp_ns"] for sample in canonical_window]
+        window_start = min(window_source_stamps, default=None)
+        window_end = max(window_source_stamps, default=None)
+
+        def inside_window(stamp):
+            return (
+                window_start is None
+                or window_end is None
+                or window_start <= stamp <= window_end
+            )
+
+        output_stamps = sorted(
+            stamp for stamp in self.candidates if inside_window(stamp))
         if not output_stamps:
-            raise RuntimeError("no candidate odometry received")
+            raise RuntimeError("no candidate odometry received in the evaluation window")
         image_stamps = sorted(
             stamp for stamp in self.images
-            if output_stamps[0] <= stamp <= output_stamps[-1])
+            if inside_window(stamp))
         matched_info = set(image_stamps).intersection(self.camera_info_stamps)
-        candidate_input_pairs = set(output_stamps).intersection(image_stamps)
+        processed_input_stamps = {
+            stamp for stamp in self.processed_input_stamps if inside_window(stamp)}
+        candidate_input_pairs = set(output_stamps).intersection(processed_input_stamps)
         coverage = len(candidate_input_pairs) / len(output_stamps)
         gaps = [(right - left) * 1.0e-9
                 for left, right in zip(output_stamps, output_stamps[1:])]
+        candidate_arrivals = [
+            stamp for stamp in self.candidate_arrivals if inside_window(stamp)]
         non_monotonic = sum(
             right <= left for left, right in
-            zip(self.candidate_arrivals, self.candidate_arrivals[1:]))
+            zip(candidate_arrivals, candidate_arrivals[1:]))
 
         raw_rows = []
         pairing_errors = []
@@ -334,25 +656,36 @@ class ShadowRun:
             self.diagnostics.get("tracking_lost", 0)
             + self.diagnostics.get("processing_failed", 0)
             + self.diagnostics.get("alignment_rejected", 0))
+        canonical_source_stamps = [
+            sample["source_stamp_ns"] for sample in canonical_window]
+        canonical_arrival_stamps = [
+            sample["arrival_monotonic_ns"] for sample in canonical_window]
         result = {
+            "scenario": self.scenario,
             "samples": len(rows),
+            "evaluation_window_start_ns": window_start,
+            "evaluation_window_end_ns": window_end,
             "airborne_duration_s": self.airborne_duration_s,
+            "executed_waypoints": self.executed_waypoints,
             "image_messages": len(image_stamps),
             "camera_info_messages": len(matched_info),
+            "processed_input_messages": len(processed_input_stamps),
             "candidate_odom_messages": len(output_stamps),
             "candidate_input_pairs": len(candidate_input_pairs),
-            "sparse_point_samples": len(self.sparse_samples),
-            "sparse_point_max_count": max(self.sparse_samples.values(), default=0),
+            "sparse_point_samples": sum(
+                1 for stamp in self.sparse_samples if inside_window(stamp)),
+            "sparse_point_max_count": max(
+                (count for stamp, count in self.sparse_samples.items()
+                 if inside_window(stamp)), default=0),
             "truth_max_horizontal_movement_m": horizontal_motion,
             "truth_max_horizontal_displacement_m": horizontal_displacement,
             "image_input_rate_hz": rate_hz(image_stamps),
             "candidate_output_rate_hz": rate_hz(output_stamps),
-            "canonical_pose_rate_hz": rate_hz(self.canonical_stamps),
-            "canonical_pose_maximum_gap_s": max(
-                ((right - left) * 1.0e-9 for left, right in
-                 zip(sorted(set(self.canonical_stamps)),
-                     sorted(set(self.canonical_stamps))[1:])),
-                default=None),
+            "canonical_pose_samples": len(canonical_window),
+            "canonical_pose_rate_hz": rate_hz(canonical_source_stamps),
+            "canonical_pose_arrival_rate_hz": rate_hz(canonical_arrival_stamps),
+            "canonical_pose_source_maximum_gap_s": maximum_gap_s(canonical_source_stamps),
+            "canonical_pose_arrival_maximum_gap_s": maximum_gap_s(canonical_arrival_stamps),
             "sample_coverage": coverage,
             "maximum_output_gap_s": max(gaps, default=None),
             "maximum_pairing_error_s": max(pairing_errors, default=None),
@@ -372,9 +705,13 @@ class ShadowRun:
             "yaw_p95_deg": yaw_errors[min(len(yaw_errors) - 1, int(len(yaw_errors) * 0.95))],
             "landed_and_disarmed": bool(self.control and not self.control.flag_armed),
         }
+        if self.fault_evidence is not None:
+            result["fault"] = self.fault_evidence
         (OUTPUT / "samples.json").write_text(json.dumps(rows, indent=2) + "\n")
         (OUTPUT / "input-samples.json").write_text(
             json.dumps([self.images[key] for key in sorted(self.images)], indent=2) + "\n")
+        (OUTPUT / "canonical-samples.json").write_text(
+            json.dumps(canonical_window, indent=2) + "\n")
         (OUTPUT / result_filename).write_text(json.dumps(result, indent=2) + "\n")
         print(json.dumps(result, indent=2))
         return result
@@ -388,6 +725,8 @@ def main():
         if observe_only_seconds > 0.0:
             run.prepare_observation_window()
             run.spin(observe_only_seconds)
+        elif run.scenario in ("sensor_fault", "algorithm_fault"):
+            run.execute_fault()
         else:
             run.execute_flight()
         run.evaluate()
@@ -400,6 +739,7 @@ def main():
         failure = {
             "error": repr(error),
             "landed_and_disarmed": bool(run.control and not run.control.flag_armed),
+            "px4": run.write_px4_snapshot("failure"),
             "partial_result": partial_result,
         }
         (OUTPUT / "failure.json").write_text(json.dumps(failure, indent=2) + "\n")

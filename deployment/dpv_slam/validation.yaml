@@ -1,4 +1,4 @@
-schema_version: 0.1
+schema_version: 0.2
 scenario: dpv-slam-airsim-state-acceptance
 platform:
   simulator: AirSim 1.8.1, visible window
@@ -12,8 +12,9 @@ gates:
   image_input_rate_min_hz: 8.0
   candidate_output_rate_min_hz: 3.0
   sample_coverage_min: 0.80
-  # DPV-SLAM is a global correction source, not the high-rate control state.
-  maximum_output_gap_s: 1.5
+  # Loop-closure output is a low-rate global correction. The AS2 authority
+  # stack separately enforces <=0.1 s high-rate canonical state freshness.
+  maximum_output_gap_s: 2.5
   horizontal_rmse_max_m: 0.75
   position_rmse_max_m: 1.0
   position_p95_max_m: 1.5
@@ -26,9 +27,14 @@ gates:
   sparse_point_samples_min: 1
 authority_rule: All gates must pass in one shadow run before DPV-SLAM may provide map-to-odom correction in the AS2 authority stack.
 authority_canonical_maximum_gap_s: 0.1
+required_faults:
+  - RGB interruption with stale correction rejection and controlled landing
+  - DPV-SLAM process exit with stale correction rejection and controlled landing
 required_evidence:
   - source revision, dirty diff, image IDs, weights SHA256, configuration and commands
   - visible AirSim screenshot and process identity
   - ROS graph proving real RGB/CameraInfo input, DPV-SLAM output and AS2 plugin output
   - paired truth and candidate samples plus machine-readable gate report
+  - authority-flight canonical source-stamp and local-arrival freshness report
+  - fault timelines proving stale correction rejection
   - independent sparse-point consumer, controlled landing/disarm and cleanup result

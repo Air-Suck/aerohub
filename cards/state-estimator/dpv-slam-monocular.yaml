@@ -47,6 +47,12 @@ type_specific:
 validation:
   stage: reproduced
   gate: deployment/dpv_slam/validation.yaml
+  evidence:
+    - log/dpv_slam/shadow-schema-0.2-current-frame-20261114-01
+    - log/dpv_slam/authority-schema-0.2-current-frame-20261114-01
+    - log/dpv_slam/sensor-fault-schema-0.2-final-20261114-01
+    - log/dpv_slam/algorithm-fault-schema-0.2-final-20261114-01
   limitations:
     - Native monocular output is not metric without alignment.
     - The current metric alignment depends on an existing local odometry source and is frozen after startup.
+    - Validation covers the locked AirSim + PX4 SITL environment, not real flight.
