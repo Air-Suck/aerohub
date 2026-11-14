@@ -32,8 +32,8 @@ AirSim 场景在 PC 宿主机独立运行，binary 通过资源 YAML 配置，�
 RoboPi 原生运行 AS2，不运行 Docker。SDK、目标 ROS 和第三方依赖由官方环境提供。
 
 当前两份正式镜像统一为 **v0.1.0**，见[发布清单](releases/v0.1.0.json)与
-[验收说明](releases/README.md)。镜像已发布至 `ghcr.io/popc0rn7/aerohub/`，由个人账号托管，
-通过[获取与发布说明](releases/README.md#从-ghcr-获取)提供仓库文档链接；未正式关联 GitHub Packages。
+[验收说明](releases/README.md)。镜像已发布至 `ghcr.io/air-suck/`，由仓库所有者 `Air-Suck` 托管。
+通过[获取与发布说明](releases/README.md#从-ghcr-获取)拉取；包与 `Air-Suck/aerohub` 的页面关联在 Package settings 中连接。
 
 ## 首次使用顺序
 

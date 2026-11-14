@@ -2,17 +2,30 @@
 set -euo pipefail
 repo=$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)
 workspace=${1:-"$repo/log/ipc/plugin-build"}
-image=${IPC_PLUGIN_BUILD_IMAGE:-uav/apps-super-forest:repo-native-20261109}
+image=${IPC_PLUGIN_BUILD_IMAGE:-onboard_computer:v0.1.0}
+platform_overlay=${IPC_PLATFORM_OVERLAY:-}
 mkdir -p "$workspace"
 workspace=$(cd "$workspace" && pwd)
 run="$(date -u +%Y%m%dT%H%M%SZ)-$$"
 docker image inspect "$image" --format '{{.Id}}' > "$workspace/image-$run.txt"
-docker run --rm --network none --entrypoint /bin/bash \
+docker_args=(--rm --network none --entrypoint /bin/bash)
+if [[ -n $platform_overlay ]]; then
+  platform_overlay=$(cd "$platform_overlay" && pwd)
+  [[ -f $platform_overlay/install/setup.bash ]] || {
+    echo "Missing platform overlay install/setup.bash: $platform_overlay" >&2
+    exit 1
+  }
+  docker_args+=(-v "$platform_overlay:/platform-overlay:ro")
+fi
+docker run "${docker_args[@]}" \
   -e ROS_DOMAIN_ID=184 -e VERIFY_RUN="$run" \
   -v "$repo:/repo:ro" -v "$workspace:/work" "$image" -lc '
     set -euo pipefail
     set +u
     source /root/aerostack2_ws/install/setup.bash
+    if test -f /platform-overlay/install/setup.bash; then
+      source /platform-overlay/install/setup.bash
+    fi
     set -u
     cd /work
     mkdir -p "runs/$VERIFY_RUN"

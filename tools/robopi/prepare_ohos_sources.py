@@ -45,8 +45,6 @@ paths['uav_follow_path_execution'] = root / 'src/behavior/follow_path'
 for name, source in paths.items():
     shutil.copytree(source, workspace / name, dirs_exist_ok=True,
                     ignore=shutil.ignore_patterns('.git', '__pycache__', 'build', 'install', 'log'))
-subprocess.run(['patch', '--batch', '--forward', '-p1', '-d', str(workspace / 'as2_platform_pixhawk'),
-                '-i', str(root / 'deployment/platform/patches/as2-platform-px4-v1.18.patch')], check=True)
 if not (workspace / 'as2_motion_controller/thirdparties/pid_controller/CMakeLists.txt').exists():
     raise SystemExit('Missing offline PID source; initialize a complete workspace with prepare.sh first')
 for source in (root / 'deployment/onboard_computer/px4_msgs/overrides').glob('*.msg'):

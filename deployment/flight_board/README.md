@@ -30,7 +30,7 @@ docker compose -f deployment/flight_board/compose.yaml up -d
 ```
 
 加载入口校验归档文件的 SHA256 及加载后的镜像 ID。无需源码编译或下载
-基础镜像。也可从 `ghcr.io/popc0rn7/aerohub/flight-board:v0.1.0` 获取，
+基础镜像。也可从 `ghcr.io/air-suck/flight-board:v0.1.0` 获取，
 见[GHCR 拉取与摘要说明](../releases/README.md#从-ghcr-获取)。
 
 ## 采集线程与相机开关

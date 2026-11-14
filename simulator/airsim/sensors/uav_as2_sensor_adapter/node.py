@@ -3,6 +3,8 @@ import json
 import math
 import re
 from functools import partial
+from itertools import cycle
+from threading import Lock
 
 import rclpy
 from rclpy.node import Node
@@ -35,6 +37,7 @@ class SensorNode(Node):
         self.declare_parameter('rpc_host', '127.0.0.1')
         self.declare_parameter('rpc_port', 41471)
         self.declare_parameter('camera_rate_hz', 5.0)
+        self.declare_parameter('camera_parallelism', 1)
         self.declare_parameter('camera_enabled', True)
         self.declare_parameter('imu_rate_hz', 100.0)
         self.declare_parameter('lidar_rate_hz', 10.0)
@@ -57,6 +60,7 @@ class SensorNode(Node):
         transforms = []
         self.streams = []
         self.workers = []
+        self.rpc_clients = []
         self.last_stamp = {}
         self.errors = {}
         for name, camera in vehicle.get('Cameras', {}).items():
@@ -84,8 +88,13 @@ class SensorNode(Node):
                              self.create_publisher(CameraInfo, topic + '/camera_info', qos_profile_sensor_data)))
                 captures.append(capture)
             if requests:
-                callback = partial(self.camera, name, frame, requests, pubs, captures)
-                self.timer('camera_rate_hz', callback, 'camera-' + name)
+                parallelism = int(self.get_parameter('camera_parallelism').value)
+                if not 1 <= parallelism <= 4:
+                    raise ValueError('camera_parallelism must be between 1 and 4')
+                callback = partial(
+                    self.camera, name, frame, requests, pubs, captures, Lock())
+                self.timer(
+                    'camera_rate_hz', callback, 'camera-' + name, parallelism)
         for name, config in vehicle.get('Sensors', {}).items():
             if not config.get('Enabled', True):
                 continue
@@ -112,13 +121,22 @@ class SensorNode(Node):
         for worker in self.workers:
             worker.start()
 
-    def timer(self, parameter, callback, name):
+    def timer(self, parameter, callback, name, parallelism=1):
         rate = float(self.get_parameter(parameter).value)
         if not math.isfinite(rate) or rate <= 0:
             raise ValueError(parameter + ' must be positive and finite')
-        worker = SensorWorker(name, partial(self.guarded, callback))
-        self.workers.append(worker)
-        self.streams.append(self.create_timer(1.0 / rate, worker.request))
+        workers = []
+        for index in range(parallelism):
+            rpc = Rpc(self.host, self.port, self.timeout)
+            worker_name = name if parallelism == 1 else f'{name}-{index}'
+            worker = SensorWorker(
+                worker_name, partial(self.guarded, callback, rpc))
+            self.workers.append(worker)
+            self.rpc_clients.append(rpc)
+            workers.append(worker)
+        requests = cycle(workers)
+        self.streams.append(self.create_timer(
+            1.0 / rate, lambda: next(requests).request()))
 
     def destroy_node(self):
         # Stop all producers before destroying publishers/clock used by their callbacks.
@@ -126,13 +144,15 @@ class SensorNode(Node):
             timer.cancel()
         for worker in self.workers:
             worker.stop()
+        for rpc in self.rpc_clients:
+            rpc.close()
         for worker in self.workers:
             worker.join()
         return super().destroy_node()
 
-    def guarded(self, callback):
+    def guarded(self, callback, rpc):
         try:
-            callback()
+            callback(rpc)
         except Exception as exc:
             if not rclpy.ok(context=self.context):
                 return
@@ -141,9 +161,6 @@ class SensorNode(Node):
             if now - self.errors.get(key, -10**30) > 5_000_000_000:
                 self.get_logger().error(f'sensor read failed: {exc}')
                 self.errors[key] = now
-
-    def rpc(self, method, *args):
-        return Rpc(self.host, self.port, self.timeout).call(method, *args)
 
     def transform(self, frame, config, optical=False):
         msg = TransformStamped()
@@ -161,38 +178,45 @@ class SensorNode(Node):
         msg.header.frame_id = frame
         msg.header.stamp.sec, msg.header.stamp.nanosec = divmod(timestamp, 1_000_000_000)
 
-    def camera(self, name, frame, requests, publishers, captures):
-        responses = self.rpc('simGetImages', requests, self.vehicle, False)
+    def camera(self, name, frame, requests, publishers, captures, lock, rpc):
+        responses = rpc.call('simGetImages', requests, self.vehicle, False)
         if len(responses) != len(requests):
             raise ValueError('incomplete image response')
-        for request, response, (pub, info_pub), capture in zip(requests, responses, publishers, captures):
-            key = (name, request['image_type'])
-            timestamp = int(response['time_stamp'])
-            if self.last_stamp.get(key) == timestamp:
-                continue
+        converted = []
+        for request, response, publishers_for_image, capture in zip(
+                requests, responses, publishers, captures):
             encoding, step, data = image_payload(response, request['image_type'], self.color_order)
-            msg = Image()
-            self.header(msg, frame, timestamp)
-            msg.width, msg.height = response['width'], response['height']
-            msg.encoding, msg.step, msg.data = encoding, step, data
-            fov = float(capture.get('FOV_Degrees', 90))
-            if not math.isfinite(fov) or not 0 < fov < 180:
-                raise ValueError('invalid camera FOV')
-            focal = msg.width / (2 * math.tan(math.radians(fov) / 2))
-            cx, cy = (msg.width - 1) / 2, (msg.height - 1) / 2
-            info = CameraInfo()
-            info.header = msg.header
-            info.width, info.height = msg.width, msg.height
-            info.distortion_model, info.d = 'plumb_bob', [0.0] * 5
-            info.k = [focal, 0., cx, 0., focal, cy, 0., 0., 1.]
-            info.r = [1., 0., 0., 0., 1., 0., 0., 0., 1.]
-            info.p = [focal, 0., cx, 0., 0., focal, cy, 0., 0., 0., 1., 0.]
-            pub.publish(msg)
-            info_pub.publish(info)
-            self.last_stamp[key] = timestamp
+            converted.append((request, response, publishers_for_image, capture,
+                              encoding, step, data))
+        with lock:
+            for (request, response, (pub, info_pub), capture,
+                 encoding, step, data) in converted:
+                key = (name, request['image_type'])
+                timestamp = int(response['time_stamp'])
+                if timestamp <= self.last_stamp.get(key, 0):
+                    continue
+                msg = Image()
+                self.header(msg, frame, timestamp)
+                msg.width, msg.height = response['width'], response['height']
+                msg.encoding, msg.step, msg.data = encoding, step, data
+                fov = float(capture.get('FOV_Degrees', 90))
+                if not math.isfinite(fov) or not 0 < fov < 180:
+                    raise ValueError('invalid camera FOV')
+                focal = msg.width / (2 * math.tan(math.radians(fov) / 2))
+                cx, cy = (msg.width - 1) / 2, (msg.height - 1) / 2
+                info = CameraInfo()
+                info.header = msg.header
+                info.width, info.height = msg.width, msg.height
+                info.distortion_model, info.d = 'plumb_bob', [0.0] * 5
+                info.k = [focal, 0., cx, 0., focal, cy, 0., 0., 1.]
+                info.r = [1., 0., 0., 0., 1., 0., 0., 0., 1.]
+                info.p = [focal, 0., cx, 0., 0., focal, cy, 0., 0., 0., 1., 0.]
+                pub.publish(msg)
+                info_pub.publish(info)
+                self.last_stamp[key] = timestamp
 
-    def lidar(self, name, frame, data_frame, publisher):
-        response = self.rpc('getLidarData', name, self.vehicle)
+    def lidar(self, name, frame, data_frame, publisher, rpc):
+        response = rpc.call('getLidarData', name, self.vehicle)
         timestamp = int(response['time_stamp'])
         if self.last_stamp.get(name) == timestamp:
             return
@@ -207,8 +231,8 @@ class SensorNode(Node):
         publisher.publish(msg)
         self.last_stamp[name] = timestamp
 
-    def imu(self, name, frame, publisher):
-        response = self.rpc('getImuData', name, self.vehicle)
+    def imu(self, name, frame, publisher, rpc):
+        response = rpc.call('getImuData', name, self.vehicle)
         timestamp = int(response['time_stamp'])
         key = (name, 'imu')
         if self.last_stamp.get(key) == timestamp:
