@@ -1,0 +1,51 @@
+name: aerohub-dpv-slam-shared
+
+x-dpv-common: &dpv-common
+  image: "${ONBOARD_COMPUTER_IMAGE:-onboard_computer:v0.1.0}"
+  init: true
+  network_mode: host
+  environment:
+    ROS_DOMAIN_ID: "${DPV_SLAM_DOMAIN:-82}"
+    DPV_SLAM_USE_SIM_TIME: "${DPV_SLAM_USE_SIM_TIME:-true}"
+  volumes:
+    - ../..:/workspace/aerohub:ro
+    - "${DPV_SLAM_WORKSPACE:?set DPV_SLAM_WORKSPACE to the prepared absolute path}:/workspace/dpv:ro"
+  stop_grace_period: 30s
+
+services:
+  algorithm:
+    <<: *dpv-common
+    runtime: nvidia
+    environment:
+      ROS_DOMAIN_ID: "${DPV_SLAM_DOMAIN:-82}"
+      DPV_SLAM_NAMESPACE: "${DPV_SLAM_NAMESPACE:-drone0}"
+      NVIDIA_VISIBLE_DEVICES: "${DPV_SLAM_GPU:-0}"
+      NVIDIA_DRIVER_CAPABILITIES: compute,utility
+    volumes:
+      - ../..:/workspace/aerohub:ro
+      - "${DPV_SLAM_WORKSPACE:?set DPV_SLAM_WORKSPACE to the prepared absolute path}:/workspace/dpv:ro"
+      - ./algorithm.params.yaml:/config/algorithm.yaml:ro
+      - ../../log/dpv_slam:/results
+    entrypoint: ["/bin/bash", "-lc"]
+    command:
+      - >-
+        export PYTHONPATH=/workspace/dpv/python:/workspace/aerohub/src/state_estimator/dpv_slam/upstream:$${PYTHONPATH:-} &&
+        export LD_LIBRARY_PATH=$$(find /workspace/dpv/python/nvidia -type d -name lib -print | paste -sd:):/workspace/dpv/cuda/lib:/workspace/dpv/cuda/lib64:$${LD_LIBRARY_PATH:-} &&
+        source /opt/ros/humble/setup.bash &&
+        source /workspace/dpv/ros/install/setup.bash &&
+        exec ros2 run uav_dpv_slam_ros2 dpv_slam_node --ros-args
+        -r __ns:=/$${DPV_SLAM_NAMESPACE:-drone0}
+        --params-file /config/algorithm.yaml
+
+  estimator:
+    <<: *dpv-common
+    profiles: [plugin-smoke]
+    entrypoint: ["/bin/bash", "-lc"]
+    command:
+      - >-
+        source /opt/ros/humble/setup.bash &&
+        source /root/aerostack2_ws/install/setup.bash &&
+        source /workspace/dpv/plugin/install/setup.bash &&
+        exec ros2 launch uav_dpv_slam dpv_slam.launch.py
+        namespace:=$${DPV_SLAM_NAMESPACE:-drone0}
+        use_sim_time:=$${DPV_SLAM_USE_SIM_TIME:-true}

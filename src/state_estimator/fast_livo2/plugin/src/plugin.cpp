@@ -50,7 +50,8 @@ public:
 #else
   void on_setup() override { setup_common(); }
   bool get_earth_to_map_transform(geometry_msgs::msg::TransformStamped &out) override {
-    out = tf_message(earth_world_, get_earth_frame(), get_map_frame(), node_ptr_->now());
+    out = tf_message(
+      tf2::Transform::getIdentity(), get_earth_frame(), get_map_frame(), node_ptr_->now());
     return true;
   }
 #endif
@@ -64,16 +65,19 @@ private:
     imu_base_ = transform_parameter("imu_from_base");
     auto stamp = node_ptr_->now();
 #ifndef FAST_LIVO2_AS2_STATE_INTERFACE
-    publish_static_transform(tf_message(earth_world_, get_earth_frame(), get_map_frame(), stamp));
-    publish_static_transform(tf_message(tf2::Transform::getIdentity(), get_map_frame(), get_odom_frame(), stamp));
+    publish_static_transform(tf_message(
+      tf2::Transform::getIdentity(), get_earth_frame(), get_map_frame(), stamp));
+    publish_static_transform(tf_message(
+      tf2::Transform::getIdentity(), get_map_frame(), get_odom_frame(), stamp));
 #else
     if (node_ptr_->getParameter<double>("publish_hz", 0.0) > 0.0)
       throw std::runtime_error("FAST-LIVO2 requires publish_hz=0 to avoid stale state republication");
     cloud_tf_ = std::make_shared<tf2_ros::StaticTransformBroadcaster>(*node_ptr_);
 #endif
-    // The bridge's namespaced livo_world is an alias for the upstream camera_init chart.
+    // Keep the registered cloud in FAST-LIVO2's native world chart while AS2
+    // earth/map/odom remain the canonical ENU chart used by the PX4 platform.
     auto cloud_frame = node_ptr_->getParameter<std::string>("cloud_frame", "drone0/livo_world");
-    auto alias = tf_message(tf2::Transform::getIdentity(), get_odom_frame(), cloud_frame, stamp);
+    auto alias = tf_message(earth_world_, get_odom_frame(), cloud_frame, stamp);
 #ifdef FAST_LIVO2_AS2_STATE_INTERFACE
     cloud_tf_->sendTransform(alias);
 #else
@@ -122,16 +126,17 @@ private:
     // The host registers authority after onSetup; initialize only on the first
     // valid measurement, then let the host own the canonical state and TF.
     if (!frames_initialized_) {
-      state_estimator_interface_->setEarthToMap(earth_world_, m.header.stamp, true);
+      state_estimator_interface_->setEarthToMap(
+        tf2::Transform::getIdentity(), m.header.stamp, true);
       state_estimator_interface_->setMapToOdomPose(tf2::Transform::getIdentity(), m.header.stamp, true);
       frames_initialized_ = true;
     }
-    state_estimator_interface_->setOdomToBaseLinkPose(world_base, m.header.stamp);
+    state_estimator_interface_->setOdomToBaseLinkPose(earth_base, m.header.stamp);
     geometry_msgs::msg::TwistWithCovariance body_twist;
     body_twist.twist = twist.twist;
     state_estimator_interface_->setTwistInBaseFrame(body_twist, m.header.stamp);
 #else
-    publish_transform(tf_message(world_base, get_odom_frame(), get_base_frame(), m.header.stamp));
+    publish_transform(tf_message(earth_base, get_odom_frame(), get_base_frame(), m.header.stamp));
     publish_pose(pose); publish_twist(twist);
 #endif
   }

@@ -175,7 +175,7 @@ FollowReference 外部插件已在匹配部署的 AS2 overlay 上完成编译、
 
 ## 交付内容
 
-上述推力缺口现有独立补丁 `deployment/platform/patches/as2-body-rates-bypass.patch`，用于AS2 f387e0d构建副本，要求BODY_RATES分量齐全、时间戳相同、机体系正确并且有限/新鲜，再传递推力和角速度。用 `deployment/airsim/demos/ipc_control/build_overlay.sh` 显式补编译，并通过该目录的真实AirSim/PX4短程入口验证；共享镜像不变。Offboard初始化可能重置PX4内部模式而保留上层缓存，因此先确认实际VehicleControlMode的armed/Offboard反馈，再执行后续模式切换；预先设置模式的地面探针必须纳入此检查。未解锁时原控制器/平台抑制输出，不能为完成地面数值测试伪造FLYING或armed。
+上述推力与配对修复现已进入锁定的 AS2 Fork `1a8e52478474f25f13c0beee332fb3758c7777e9` 和 Pixhawk Fork `4e5616408e0078abf38387d5b8c681f1387cfed6`；`deployment/airsim/demos/ipc_control/build_overlay.sh` 直接从这两个 gitlink 补编译，不再给旧源码应用三个构建补丁。2026-11-10 的真实 AirSim/PX4 结果使用补丁后等价逻辑，是历史功能证据，不自动构成新 Fork 来源的验收；迁移版本必须重跑配对回归与受影响场景。Offboard初始化可能重置PX4内部模式而保留上层缓存，因此先确认实际VehicleControlMode的armed/Offboard反馈，再执行后续模式切换；预先设置模式的地面探针必须纳入此检查。未解锁时原控制器/平台抑制输出，不能为完成地面数值测试伪造FLYING或armed。
 
 控制计算很快仍超时时，把路径搜索、走廊构造、求解和回调等待分别计时。静态导航可用独立快照/独立栅格异步重规划；安装时校验会话和地图年龄，控制计算继续使用当前障碍输入，旧规划失败不能成为旧控制解续期的理由。输入、规划与控制共享可变算法对象会引入数据竞争，不能只增加 executor 线程数。
 

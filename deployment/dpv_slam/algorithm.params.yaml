@@ -7,8 +7,9 @@
     expected_camera_frame: drone0/FrontCamera_optical
     map_frame: dpv_slam_map
     camera_frame: dpv_slam_camera
-    config_path: /opt/dpv_slam/default.yaml
-    network_path: /opt/dpv_slam/dpvo.pth
+    config_path: /workspace/aerohub/deployment/dpv_slam/dpvo-airsim.yaml
+    network_path: /workspace/aerohub/deployment/dpv_slam/models/dpvo.pth
+    random_seed: 1234
     pairing_tolerance: 0.05
     alignment_window: 120
     alignment_freeze_samples: 30

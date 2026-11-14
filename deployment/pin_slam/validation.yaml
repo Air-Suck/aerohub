@@ -9,14 +9,23 @@ platform:
     rotations_per_second: 10
     points_per_second: 80000
     configured_points_per_rotation: 8000
-    ros_publish_rate_hz: 3.0
+    ros_publish_rate_hz: 4.0
     rationale: >-
-      Preserve the platform LiDAR model and explicitly rate-limit the ROS
-      bridge below the measured sustained PIN-SLAM processing rate on the RTX
-      4090. The bridge preserves the selected AirSim sample timestamp.
+      Preserve the platform LiDAR model and explicitly select AirSim samples at
+      4.0 Hz, within the sustained rate measured with the shared onboard image
+      and real RTX 4090 execution. The bridge preserves the selected AirSim
+      sample timestamp; the full shadow run must still prove every gate,
+      including the immutable 0.5-second maximum output gap.
+  cameras_enabled: false
 duration:
   minimum_airborne_seconds: 60.0
   minimum_horizontal_truth_motion_m: 5.0
+motion:
+  takeoff_speed_mps: 0.3
+  translation_speed_mps: 0.4
+  rationale: >-
+    Keep takeoff and translation within the stable LiDAR tracking envelope
+    while retaining the full distance and airborne-duration gates.
 alignment:
   method: first valid candidate pose to simultaneous AirSim truth pose
   scale: fixed at 1.0
@@ -40,10 +49,16 @@ authority_rule: >-
   All gates must pass in the same shadow run before PIN-SLAM can become the
   AS2 state and TF authority. Failure or missing evidence leaves authority
   unexecuted; thresholds must not be relaxed after inspecting the result.
+authority_canonical_maximum_gap_s: 0.1
+required_faults:
+  - LiDAR interruption with stale correction rejection and controlled landing
+  - PIN-SLAM process exit with stale correction rejection and controlled landing
 required_evidence:
   - source revision, dirty diff, image IDs, configuration and commands
   - visible AirSim screenshot and process identity
   - ROS graph proving real LiDAR input and AS2 plugin output
   - paired truth and candidate samples plus computed metrics
   - independent subscriber evidence for nonempty neural points
+  - authority-flight canonical source-stamp and local-arrival freshness report
+  - fault timelines proving stale correction rejection
   - controlled landing, disarm and resource cleanup result

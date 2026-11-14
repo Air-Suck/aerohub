@@ -208,14 +208,15 @@ index 91cff02..ce7a224 100644
    msg.param1 = param1;
    msg.param2 = param2;
    msg.command = command;
-@@ -597,7 +628,7 @@ void PixhawkPlatform::PX4publishVisualOdometry()
-   px4_visual_odometry_msg_.angular_velocity[2] = -odometry_msg_.twist.twist.angular.z;
- 
-   // px4_visual_odometry_msg_.timestamp = timestamp_.load();
+@@ -579 +610,3 @@ void PixhawkPlatform::PX4publishVisualOdometry()
+-  Eigen::Quaterniond q_aircraft = q_baselink * q_baselink_to_aircraft_.inverse();
++  // Express both the reference and body axes in FRD. Applying only the body
++  // conversion makes a level identity pose look like a 180 degree roll.
++  Eigen::Quaterniond q_aircraft = q_baselink_to_aircraft_ * q_baselink * q_baselink_to_aircraft_.inverse();
+@@ -600 +633,2 @@ void PixhawkPlatform::PX4publishVisualOdometry()
 -  px4_visual_odometry_msg_.timestamp = this->get_clock()->now().nanoseconds() / 1000;
 +  px4_visual_odometry_msg_.timestamp = px4_clock_.now().nanoseconds() / 1000;
-   px4_visual_odometry_pub_->publish(px4_visual_odometry_msg_);
- }
++  px4_visual_odometry_msg_.timestamp_sample = px4_visual_odometry_msg_.timestamp;
  
 @@ -772,9 +803,10 @@ void PixhawkPlatform::px4GpsCallback(const px4_msgs::msg::SensorGps::SharedPtr m
    }

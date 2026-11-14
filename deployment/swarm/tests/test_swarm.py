@@ -7,6 +7,7 @@ import unittest
 from unittest import mock
 
 from deployment.swarm.overhead_view import centroid, pose_position, update_camera
+from deployment.swarm.view import camera_options
 from deployment.swarm.orchestrator import run_matrix
 from deployment.swarm.topology import (
     ConfigError,
@@ -27,25 +28,46 @@ class SwarmTopologyTest(unittest.TestCase):
     def setUp(self):
         self.config = load_config(EXAMPLE)
 
-    def test_exactly_one_board_and_remaining_pc(self):
-        for count in (2, 3, 6):
+    def test_pc_simulation_uses_one_onboard_container_per_vehicle(self):
+        for count in (1, 3, 6):
             config = copy.deepcopy(self.config)
             config["fleet"]["vehicle_count"] = count
-            config["fleet"]["board_vehicle_index"] = count - 1
             topology = resolve_topology(config)
+            self.assertEqual("pc_simulation", topology["deployment_stage"])
+            self.assertIsNone(topology["board_vehicle"])
             self.assertEqual(
-                1, sum(vehicle["placement"] == "board" for vehicle in topology["vehicles"])
+                count, len(topology["onboard_computer_vehicles"])
             )
-            self.assertEqual(count - 1, len(topology["pc_vehicles"]))
             self.assertTrue(
                 all(
                     vehicle["supervisor"] == "independent_thread"
-                    for vehicle in topology["pc_vehicles"]
+                    for vehicle in topology["onboard_computer_vehicles"]
                 )
             )
 
-    def test_centralized_matrix_covers_both_board_roles(self):
-        topology = resolve_topology(self.config)
+    def hybrid_config(self, count=3, board_index=0):
+        config = copy.deepcopy(self.config)
+        config["deployment"]["stage"] = "hybrid_board"
+        config["fleet"]["vehicle_count"] = count
+        config["fleet"]["board_vehicle_index"] = board_index
+        config["coordination"]["centralized_cases"] = ["board_center", "board_worker"]
+        return config
+
+    def test_hybrid_board_uses_one_board_and_n_minus_one_containers(self):
+        for count in (2, 3, 6):
+            topology = resolve_topology(self.hybrid_config(count, count - 1))
+            self.assertEqual("hybrid_board", topology["deployment_stage"])
+            self.assertEqual(
+                1,
+                sum(
+                    vehicle["placement"] == "physical_board"
+                    for vehicle in topology["vehicles"]
+                ),
+            )
+            self.assertEqual(count - 1, len(topology["onboard_computer_vehicles"]))
+
+    def test_hybrid_centralized_matrix_covers_both_board_roles(self):
+        topology = resolve_topology(self.hybrid_config())
         self.assertEqual(
             ["board_center", "board_worker"],
             [scenario["name"] for scenario in topology["scenarios"]],
@@ -55,8 +77,20 @@ class SwarmTopologyTest(unittest.TestCase):
         self.assertNotEqual(board, board_worker["center_vehicle"])
         self.assertIn(
             board_worker["center_vehicle"],
-            [vehicle["name"] for vehicle in topology["pc_vehicles"]],
+            [vehicle["name"] for vehicle in topology["onboard_computer_vehicles"]],
         )
+
+    def test_board_index_is_ignored_in_pc_simulation(self):
+        config = copy.deepcopy(self.config)
+        config["fleet"]["board_vehicle_index"] = 99
+        topology = resolve_topology(config)
+        self.assertIsNone(topology["board_vehicle"])
+
+    def test_hybrid_requires_a_valid_board_index(self):
+        config = self.hybrid_config()
+        config["fleet"].pop("board_vehicle_index")
+        with self.assertRaisesRegex(ConfigError, "board_vehicle_index"):
+            validate_config(config)
 
     def test_invalid_ground_station_placement_is_rejected(self):
         config = copy.deepcopy(self.config)
@@ -64,11 +98,16 @@ class SwarmTopologyTest(unittest.TestCase):
         with self.assertRaisesRegex(ConfigError, "placement must be pc"):
             validate_config(config)
 
+    def test_onboard_computer_image_is_required(self):
+        config = copy.deepcopy(self.config)
+        config["nodes"]["onboard_computer"]["image"] = ""
+        with self.assertRaisesRegex(ConfigError, "onboard_computer.image"):
+            validate_config(config)
+
     def test_generated_camera_is_top_down_at_single_and_multi_centroid(self):
         for count in (1, 4):
             config = copy.deepcopy(self.config)
             config["fleet"]["vehicle_count"] = count
-            config["fleet"]["board_vehicle_index"] = 0
             if count == 1:
                 config["coordination"]["mode"] = "decentralized"
                 config["coordination"]["centralized_cases"] = []
@@ -82,8 +121,24 @@ class SwarmTopologyTest(unittest.TestCase):
             self.assertEqual("Manual", settings["ViewMode"])
             self.assertTrue(settings["SubWindows"][0]["Visible"])
 
+    def test_primary_overhead_view_uses_live_updatable_fpv_camera(self):
+        config = copy.deepcopy(self.config)
+        config["airsim"]["camera"]["primary_view"] = True
+        settings = render_airsim_settings(config)
+        self.assertEqual("Fpv", settings["ViewMode"])
+        self.assertEqual(-90.0, settings["Vehicles"]["Drone0"]["Cameras"]["0"]["Pitch"])
+        self.assertTrue(settings["SubWindows"][0]["External"])
+
 
 class OverheadTrackerTest(unittest.TestCase):
+    def test_camera_startup_delay_is_explicit_and_non_negative(self):
+        self.assertEqual(3.0, camera_options()["startup_delay_s"])
+        self.assertEqual(
+            1.5, camera_options({"startup_delay_s": 1.5})["startup_delay_s"]
+        )
+        with self.assertRaisesRegex(ValueError, "startup_delay_s"):
+            camera_options({"startup_delay_s": -0.1})
+
     def test_centroid_uses_all_live_vehicle_poses(self):
         points = [(1.0, 3.0, -2.0), (5.0, -1.0, -4.0), (0.0, 4.0, 0.0)]
         self.assertEqual((2.0, 2.0, -2.0), centroid(points))
@@ -133,6 +188,49 @@ class OverheadTrackerTest(unittest.TestCase):
             pose["position"],
         )
 
+    def test_primary_and_evidence_camera_follow_two_live_centroids(self):
+        identity = {"w_val": 1, "x_val": 0, "y_val": 0, "z_val": 0}
+
+        class FakeRpc:
+            def __init__(self):
+                self.calls = []
+                self.poses = {}
+
+            def call(self, method, *args):
+                if method == "simGetVehiclePose":
+                    return self.poses[args[0]]
+                if method == "simSetCameraPose":
+                    self.calls.append(args)
+                    return True
+                raise AssertionError(method)
+
+        def pose(x, y, z):
+            return {
+                "position": {"x_val": x, "y_val": y, "z_val": z},
+                "orientation": identity,
+            }
+
+        rpc = FakeRpc()
+        camera = {"name": "swarm_overhead", "altitude_m": 20.0}
+        rpc.poses = {"Drone0": pose(0, 0, -2), "Drone1": pose(4, 0, -2)}
+        first = update_camera(rpc, ["Drone0", "Drone1"], camera, "Drone0")
+        rpc.poses = {"Drone0": pose(1, 2, -3), "Drone1": pose(9, 6, -3)}
+        second = update_camera(rpc, ["Drone0", "Drone1"], camera, "Drone0")
+
+        self.assertEqual((2.0, 0.0, -2.0), first)
+        self.assertEqual((5.0, 4.0, -3.0), second)
+        external = [call for call in rpc.calls if call[3] is True]
+        primary = [call for call in rpc.calls if call[3] is False]
+        self.assertEqual(2, len(external))
+        self.assertEqual(2, len(primary))
+        self.assertNotEqual(
+            external[0][1]["position"], external[1][1]["position"]
+        )
+        self.assertNotEqual(
+            primary[0][1]["position"], primary[1][1]["position"]
+        )
+        self.assertTrue(all(call[0] == "0" and call[2] == "Drone0" for call in primary))
+
 
 
 class ManagerTrackerDependencyTest(unittest.TestCase):
@@ -150,30 +248,68 @@ class ManagerTrackerDependencyTest(unittest.TestCase):
             with self.assertRaisesRegex(ImportError, "requirements.txt"):
                 manager.load_profile(ROOT / "simulator/airsim/scenarios/swarm_open_field/profile.json")
 
+    def test_tracker_health_requires_fresh_structured_updates(self):
+        manager = self.load_manager()
+        process = {"update_hz": 5.0}
+        state = {
+            "last_update_unix_s": 100.0,
+            "update_count": 2,
+            "consecutive_failures": 0,
+            "latest_centroid": [1, 2, 3],
+            "latest_camera_position": [1, 2, -22],
+        }
+        self.assertTrue(manager.tracker_state_healthy(process, state, now=100.5))
+        stale = dict(state, last_update_unix_s=90.0)
+        self.assertFalse(manager.tracker_state_healthy(process, stale, now=100.5))
+        one_update = dict(state, update_count=1)
+        self.assertFalse(manager.tracker_state_healthy(process, one_update, now=100.5))
+
 
 class SwarmOrchestratorTest(unittest.TestCase):
-    def test_fake_matrix_uses_independent_pc_threads(self):
+    def test_pc_simulation_matrix_uses_n_independent_onboard_threads(self):
         config = load_config(EXAMPLE)
         command = ["python3", str(FAKE)]
-        config["nodes"]["board"]["launch_command"] = command
-        config["nodes"]["pc"]["launch_command"] = command
+        config["nodes"]["onboard_computer"]["launch_command"] = command
         config["ground_station"]["launch_command"] = command
         config["validation"]["smoke_duration_s"] = 0.2
         with tempfile.TemporaryDirectory() as temporary:
             report = run_matrix(config, Path(temporary), duration_s=0.2)
             self.assertTrue(report["passed"], json.dumps(report, indent=2))
             self.assertEqual(
+                ["onboard_center"], report["required_scenarios"]
+            )
+            for scenario in report["reports"]:
+                onboard = [
+                    service
+                    for service in scenario["services"]
+                    if service["identity"].startswith("onboard-")
+                ]
+                self.assertEqual(3, len(onboard))
+                self.assertEqual(
+                    3, len({service["supervisor_thread_id"] for service in onboard})
+                )
+                self.assertEqual(0, scenario["assertions"]["board_vehicle_count"])
+                self.assertTrue(scenario["assertions"]["ground_station_on_pc"])
+
+    def test_hybrid_matrix_uses_one_board_and_n_minus_one_containers(self):
+        config = load_config(EXAMPLE)
+        command = ["python3", str(FAKE)]
+        config["deployment"]["stage"] = "hybrid_board"
+        config["fleet"]["board_vehicle_index"] = 1
+        config["coordination"]["centralized_cases"] = ["board_center", "board_worker"]
+        config["nodes"]["board"]["launch_command"] = command
+        config["nodes"]["onboard_computer"]["launch_command"] = command
+        config["ground_station"]["launch_command"] = command
+        with tempfile.TemporaryDirectory() as temporary:
+            report = run_matrix(config, Path(temporary), duration_s=0.1)
+            self.assertTrue(report["passed"], json.dumps(report, indent=2))
+            self.assertEqual(
                 ["board_center", "board_worker"], report["required_scenarios"]
             )
             for scenario in report["reports"]:
-                pc = [
-                    service
-                    for service in scenario["services"]
-                    if service["identity"].startswith("pc-")
-                ]
-                self.assertEqual(2, len(pc))
-                self.assertEqual(2, len({service["supervisor_thread_id"] for service in pc}))
-                self.assertTrue(scenario["assertions"]["ground_station_on_pc"])
+                placements = [service["placement"] for service in scenario["services"]]
+                self.assertEqual(1, placements.count("physical_board"))
+                self.assertEqual(2, placements.count("onboard_computer_container"))
 
 
 if __name__ == "__main__":

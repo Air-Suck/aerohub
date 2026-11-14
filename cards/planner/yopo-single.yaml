@@ -1,50 +1,72 @@
-schema_version: '0.1'
+schema_version: "1.0"
 id: planner.yopo-single
-name: YOPO reference-mode single vehicle planning
-version: '0.1.0'
-type: planner
-description: Depth-conditioned rolling planning through the existing FollowTimedPath execution Behavior.
-component:
-  id: aerohub.planner.yopo-single
+version: "0.1.0"
+type: tool
+name: YOPO reference-mode single-vehicle navigation
+description: Accepts a single-vehicle goal and performs rolling depth-conditioned planning through the existing FollowTimedPath execution chain.
+
+implementation:
+  component_id: aerohub.planner.yopo-single
   manifest: deployment/airsim/demos/yopo_single/component.yaml
-  shared_process_group: yopo-planner
+  shared_runtime: yopo-planner
   coupled_capabilities: []
-usage:
-  mode: goal-topic-with-status-and-cancel-service
-  selection_phase: deployment
-  invocation_interface: geometry_msgs/msg/PoseStamped
-  switching_constraints: [complete-stop-before-changing-execution-provider, stop-before-replacing-worker]
+
 inputs:
-  - topic: '<namespace>/yopo/goal'
-    frame: '<vehicle>/odom fixed ENU'
-    state: 'fresh authority pose and twist; body twist requires exact matching pose stamp; bounded history synchronized to axial depth acquisition'
-    camera: '90x60-degree pinhole; co-located pitch-only optical extrinsic verified by TF'
+  - id: self_pose
+    capability_type: state/self/pose/3d
+  - id: self_twist
+    capability_type: state/self/twist/3d
+  - id: axial_depth
+    capability_type: sensor/camera/depth/axial-image
+  - id: depth_camera_calibration
+    capability_type: sensor/camera/depth/camera-info
+  - id: controller_status
+    capability_type: control/controller/status
+
 outputs:
-  - action: '<namespace>/follow_timed_path'
-    rolling_update: '<namespace>/follow_timed_path/_behavior/modify'
-    semantics: 'all PVA retained, same quintic derivatives, 20ms upstream yaw policy, acknowledged future handoff'
-preconditions:
-  - Airborne through a separately completed native TakeoffBehavior.
-  - Calibrated depth/CameraInfo/TF and fresh measured localization.
-  - Inference worker and ROS services ready; matching AS2 execution overlay loaded.
-resources:
-  reads: [depth-camera, localization, TF, YOPO-inference]
-  writes: [single-vehicle-FollowTimedPath-session]
-  conflicts: [other-motion-Behaviors-on-same-vehicle]
-  enforcement: 'one inference and one execution update in flight; timed/native FollowPath mutually exclusive in execution server; cross-Behavior motion arbitration beyond this Demo is not implemented'
+  - id: task_status
+    capability_type: task/yopo/status
+  - id: planning_events
+    capability_type: task/yopo/events
+
+interfaces:
+  - id: submit_goal
+    role: functional_operation
+    interaction: managed_task
+    protocol: ros2_topic
+    schema: geometry_msgs/msg/PoseStamped
+    parameter_schema: null
+  - id: cancel_task
+    role: functional_operation
+    interaction: request_response
+    protocol: ros2_service
+    schema: std_srvs/srv/Trigger
+    parameter_schema: null
+
 lifecycle:
-  startup: 'deploy on compute; workstation calls only ready capabilities'
-  readiness: 'yopo/status.ready plus fresh state and verified camera geometry'
-  feedback: 'yopo/status task_id, accepted/effective revision; yopo/events submitted curves and acknowledgments'
-  completion: 'actual distance<5m then stopped controller and speed<0.2m/s for1s within10s; task separately lands'
-  cancel_or_stop: 'Trigger yopo/cancel requests stop; await STOPPED; FAULT requires landing recovery'
-  failure: 'three consecutive failures, stale localization/input, clock reset, coverage exhaustion or uncertain execution -> stop'
-  recovery: 'task tries native Land even when cancel reports fault; confirm disarmed before cleanup'
-type_specific:
-  branch: plan_from_reference=True
-  model_profile: 'upstream velocity scaling 2m/s, 5s duration; no measured-mode equivalence claimed'
-  synchronization: '0.2s future handoff, 0.1s inference timeout, >=0.05s send reserve; timestamps never shifted after results'
-validation:
-  stage: see-demo-validation
-  evidence: [deployment/airsim/demos/yopo_single/validation.md]
-  limitations: [not-a-general-Mission-or-Tool-runtime, not-RoboPi-or-real-flight-acceptance, no-precision-final-position]
+  management: system_managed
+  operations: {start: null, status: null, stop: null}
+
+hardware_requirements:
+  - hardware_type: compute/cpu/x86-64
+  - hardware_type: compute/gpu/cuda
+  - hardware_type: sensor/camera/depth
+  - hardware_type: flight-controller/px4
+
+resource_access:
+  reads:
+    - sensor/depth-camera
+    - vehicle/self-state
+    - vehicle/controller-status
+  shared_writes:
+    - compute/gpu
+  exclusive_writes:
+    - vehicle/motion
+
+demo:
+  representations:
+    - id: planned_trajectory_events
+      stage: final
+      description: Submitted rolling curves and matching execution acknowledgements from the YOPO event stream.
+      interface: {protocol: ros2_topic, schema: std_msgs/msg/String}
+      renderer: trajectory_3d

@@ -1,41 +1,64 @@
-# 初版填写模板，不是 AS2 原生规范。null/空集合需要据实际情况填写或解释。
-schema_version: 0.1
-id: null
-name: null
-version: null
-type: null # tool | planner | behavior | state-estimator | perception | inference
-description: null
-component:
-  id: null
-  manifest: null
-  shared_process_group: null
+# Capability Card v1 template. Replace example values; keep empty lists explicit.
+schema_version: "1.0"
+id: navigation/example-tool
+version: "0.1.0"
+type: tool # capability | tool
+name: Example Tool
+description: Describe what the complete capability or Tool does.
+
+implementation:
+  component_id: example-component
+  manifest: deployment/example/component.yaml
+  shared_runtime: null
   coupled_capabilities: []
-usage:
-  mode: null # task-call | planning-call | execution-action | continuous-provider | query
-  selection_phase: null # deployment | runtime
-  invocation_interface: null
-  switching_constraints: []
-inputs: [] # 每项描述接口、消息/schema、坐标、时间、单位及必需条件
-outputs: [] # 同上；环境表示不强制统一为 OccupancyGrid
-preconditions: []
-resources:
-  reads: []
-  writes: []
-  conflicts: []
-  enforcement: null # 实际仲裁机制；尚未实现须直说
+
+# Data dependencies use exact capability_type matching. Their ROS topic contract is
+# defined centrally using assets/capability-types.yaml, not repeated here.
+inputs:
+  - id: self_pose
+    capability_type: state/self/pose/3d
+
+outputs:
+  - id: task_status
+    capability_type: task/example/status
+
+# Only operation interfaces belong here. Stream data uses inputs and outputs above.
+# Runtime topic/service/action names are supplied by deployment or instance data.
+interfaces:
+  - id: execute
+    role: functional_operation # functional_operation | lifecycle_operation
+    interaction: managed_task # request_response | managed_task
+    protocol: ros2_action # ros2_topic | ros2_service | ros2_action
+    schema: aerohub_msgs/action/ExampleTask
+    parameter_schema: null
+
 lifecycle:
-  startup: null
-  readiness: null
-  freshness: null
-  feedback: null
-  completion: null
-  cancel_or_stop: null
-  failure: null
-  recovery: null
-type_specific: {} # 如 representation、TF/reset、轨迹时序约束；按类型填写
-validation:
-  stage: unverified
-  scope: null
-  component_revision: null
-  evidence: []
-  limitations: []
+  management: agent_managed # system_managed | agent_managed | shared_managed
+  operations:
+    start: null
+    status: null
+    stop: null
+
+# Hardware requirements are distinct from functional inputs. Type definitions live
+# using assets/hardware-types.yaml; actual devices belong to deployment configuration.
+hardware_requirements:
+  - hardware_type: compute/gpu/cuda
+
+# Logical resource declarations support runtime arbitration. They do not implement it.
+resource_access:
+  reads:
+    - drone/self_state
+  shared_writes: []
+  exclusive_writes:
+    - drone/motion
+
+# Optional. Demo representations never participate in functional dependency matching.
+demo:
+  representations:
+    - id: internal_result
+      stage: intermediate # intermediate | final
+      description: Describe the representation that is useful to display.
+      interface:
+        protocol: ros2_topic
+        schema: sensor_msgs/msg/PointCloud2
+      renderer: point_cloud_3d

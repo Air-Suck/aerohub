@@ -1,17 +1,20 @@
 services:
   as2:
-    image: uav/pin-slam-as2:humble
+    image: "${ONBOARD_COMPUTER_IMAGE:-onboard_computer:v0.1.0}"
     environment:
       AS2_STATE_ESTIMATOR_PLUGIN: pin_slam
       AS2_STATE_ESTIMATOR_CONFIG_FILE: /config/pin-slam-estimator.yaml
       AS2_STATE_ESTIMATOR_LAUNCH_PACKAGE: uav_pin_slam
       AS2_STATE_ESTIMATOR_LAUNCH_FILE: pin_slam.launch.py
     volumes:
+      - "${PIN_SLAM_WORKSPACE:-../../log/workspaces/pin_slam}:/workspace:ro"
       - ../../src/state_estimator/pin_slam/plugin/config/estimator.yaml:/config/pin-slam-estimator.yaml:ro
       - ../airsim/as2/run.py:/opt/onboard_computer/run.py:ro
     command:
       - bash
       - -lc
       - >-
-        source /opt/pin_slam_as2_ws/install/setup.bash &&
+        source /opt/ros/humble/setup.bash &&
+        source /root/aerostack2_ws/install/setup.bash &&
+        source /workspace/ros/install/setup.bash &&
         exec python3 /opt/onboard_computer/run.py

@@ -1,8 +1,13 @@
 schema_version: 1
 
+deployment:
+  # This configuration is the later board-validation stage used by run_robopi.py.
+  stage: hybrid_board
+
 fleet:
   vehicle_count: 3
   board_vehicle_index: 0
+  coordinator_vehicle_index: 0
   name_prefix: drone
   airsim_name_prefix: Drone
   initial_spacing_m: 4.0
@@ -11,6 +16,20 @@ fleet:
 # fleet, coordination and airsim, runs the board UAV node on RoboPi, and runs the
 # task client in the PC ground container.
 nodes:
+  onboard_computer:
+    image: onboard_computer:v0.1.0
+    launch_command:
+      - bash
+      - -lc
+      - >-
+        docker run --rm --init --network host
+        --name aerohub-swarm-{vehicle}
+        -e COMPUTE_VEHICLE={vehicle}
+        -e AEROHUB_SWARM_CENTER={center_vehicle}
+        -v {output}/overlay:/run/aerohub-overlay:ro
+        {onboard_computer_image}
+        bash -lc 'source /run/aerohub-overlay/install/setup.bash &&
+        exec aerohub-swarm-worker --vehicle {vehicle} --center {center_vehicle}'
   board:
     launch_command:
       - bash
@@ -18,16 +37,6 @@ nodes:
       - >-
         ssh "$AEROHUB_BOARD_HOST"
         aerohub-swarm-worker --vehicle {vehicle} --center {center_vehicle}
-  pc:
-    launch_command:
-      - bash
-      - -lc
-      - >-
-        docker run --rm --network host
-        -e COMPUTE_VEHICLE={vehicle}
-        -e AEROHUB_SWARM_CENTER={center_vehicle}
-        uav/swarm-hybrid-compute:local
-
 coordination:
   mode: centralized
   centralized_cases:

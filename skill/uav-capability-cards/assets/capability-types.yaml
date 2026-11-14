@@ -1,0 +1,41 @@
+# Canonical data capability types. IDs are matched exactly by Card inputs and outputs.
+schema_version: "1.0"
+
+capability_types:
+  - id: state/self/pose/3d
+    name: Self 3D Pose
+    description: The vehicle's three-dimensional position and orientation.
+    transport:
+      protocol: ros2_topic
+      schema: geometry_msgs/msg/PoseStamped
+      qos:
+        reliability: reliable
+        durability: volatile
+        history: keep_last
+        depth: 10
+    semantics:
+      unit_system: SI
+      units:
+        position: m
+        orientation: unit_quaternion
+      coordinate_frame: local_world
+      axes: ENU
+      timestamp: measurement_time
+
+  - id: task/example/status
+    name: Example Task Status
+    description: The canonical status stream for the example task.
+    transport:
+      protocol: ros2_topic
+      schema: aerohub_msgs/msg/TaskStatus
+      qos:
+        reliability: reliable
+        durability: volatile
+        history: keep_last
+        depth: 10
+    semantics:
+      unit_system: none
+      units: {}
+      coordinate_frame: none
+      axes: none
+      timestamp: publication_time

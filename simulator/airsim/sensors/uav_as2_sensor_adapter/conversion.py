@@ -24,6 +24,29 @@ def extrinsic(config, optical=False):
             -float(config.get('Z', 0))), q
 
 
+def imu_payload(response):
+    """Convert AirSim FRD IMU samples to ROS FLU coordinates."""
+    orientation = response['orientation']
+    angular = response['angular_velocity']
+    acceleration = response['linear_acceleration']
+    values = [
+        orientation[key] for key in ('x_val', 'y_val', 'z_val', 'w_val')
+    ] + [angular[key] for key in ('x_val', 'y_val', 'z_val')] + [
+        acceleration[key] for key in ('x_val', 'y_val', 'z_val')
+    ]
+    if not all(math.isfinite(float(value)) for value in values):
+        raise ValueError('non-finite IMU sample')
+    quaternion = (float(values[0]), -float(values[1]), -float(values[2]),
+                  float(values[3]))
+    norm = math.sqrt(sum(value * value for value in quaternion))
+    if norm <= 0.0:
+        raise ValueError('invalid IMU orientation')
+    quaternion = tuple(value / norm for value in quaternion)
+    angular_flu = (float(values[4]), -float(values[5]), -float(values[6]))
+    acceleration_flu = (float(values[7]), -float(values[8]), -float(values[9]))
+    return quaternion, angular_flu, acceleration_flu
+
+
 def image_payload(response, image_type, color_order='rgb'):
     width, height = int(response['width']), int(response['height'])
     if width <= 0 or height <= 0:

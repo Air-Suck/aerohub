@@ -1,0 +1,61 @@
+schema_version: 0.1
+id: fast-livo2
+version: ros2-a713004-aerohub-0.2.0
+description: FAST-LIVO2 visual-inertial-lidar state estimation and registered point output
+source:
+  repository: https://github.com/SuperLDG/FASTLIVO2_ROS2.git
+  commit: a713004f0ba0624c8fb80d85c7047fe62523c6fb
+  submodule_path: src/state_estimator/fast_livo2/ros2_upstream
+  upstream_modified: false
+  license: GPL-2.0
+capabilities:
+  - state-estimator.fast-livo2
+  - perception.fast-livo2-registered-points
+cards:
+  - cards/state-estimator/fast-livo2.yaml
+  - cards/perception/fast-livo2-registered-points.yaml
+shared_process_group: fast-livo2
+environment:
+  required_shared_images: [flight_board:v0.1.0, onboard_computer:v0.1.0]
+  algorithm_workspace: deployment/fast_livo2/prepare_workspace.sh
+  execution_workspace: deployment/onboard_computer/prepare_execution_overlay.sh
+  prohibited_runtime: algorithm-specific Docker images and repository px4 source
+runtime:
+  roles:
+    simulator: visible AirSim host process
+    flight_board: image-embedded PX4 SITL and AirSim clock
+    compute: FAST-LIVO2, ROS 2 adapters and AS2 State Estimator plugin
+    workstation: orchestration, scoring and evidence collection
+  namespace: drone0
+  clock: AirSim /clock
+  input:
+    imu: AirSim RPC IMU converted from FRD to FLU
+    image: AirSim RGB optical frame
+    lidar: AirSim instantaneous XYZ scan without fabricated per-point time
+  output_state: /drone0/fast_livo2/odometry
+  output_map: /drone0/perception/fast_livo2/registered_points
+requirements:
+  sensors: synchronized IMU, RGB camera and LiDAR
+  platform: visible AirSim 1.8.1 plus image-embedded PX4 SITL
+  gpu: NVIDIA GPU available to the fixed compute environment
+lifecycle:
+  startup: preflight-ready PX4, sensors, algorithm, AS2 host, then mission
+  readiness: fresh algorithm odometry and nonempty registered points
+  stop: deselect state authority before stopping the shared algorithm process
+  failure: stale state or sensor loss triggers controlled recovery and PX4 landing
+  recovery: restart only while motion is stopped; restart starts a new local-map epoch
+authority:
+  state_and_tf: exactly one AS2 State Estimator provider per vehicle
+  shadow_gate: deployment/fast_livo2/validation.yaml
+validation:
+  stage: reproduced
+  scope: visible AirSim + PX4 SITL shadow, AS2 authority and required fault matrix
+  evidence:
+    - log/fast_livo2/shadow-formal-ca38fa8-20261113-01/result.json
+    - log/fast_livo2/authority-formal-ca38fa8-20261113-01/result.json
+    - log/fast_livo2/sensor-fault-formal-ca38fa8-20261113-02/result.json
+    - log/fast_livo2/algorithm-fault-formal-ca38fa8-20261113-01/result.json
+  limitations:
+    - AirSim 1.8.1 does not provide LiDAR per-point sample time.
+    - Registered points are not an occupancy map, ESDF, TSDF or complete persistent map.
+    - Real dataset and physical-flight validation are outside this acceptance scope.

@@ -1,0 +1,55 @@
+schema_version: "1.0"
+id: perception.fast-livo2-registered-points
+version: ros2-a713004-aerohub-0.2.0
+type: capability
+name: FAST-LIVO2 registered points
+description: Provides scan points registered by the shared FAST-LIVO2 process; this stream is not a free-space or collision map.
+
+implementation:
+  component_id: fast-livo2
+  manifest: deployment/fast_livo2/component.yaml
+  shared_runtime: fast-livo2
+  coupled_capabilities:
+    - state-estimator.fast-livo2
+
+inputs:
+  - id: imu
+    capability_type: sensor/imu/inertial/6dof
+  - id: rgb_image
+    capability_type: sensor/camera/rgb/image
+  - id: lidar_points
+    capability_type: sensor/lidar/point-cloud/3d
+
+outputs:
+  - id: registered_points
+    capability_type: perception/map/registered-points/3d
+
+interfaces: []
+
+lifecycle:
+  management: shared_managed
+  operations: {start: null, status: null, stop: null}
+
+hardware_requirements:
+  - hardware_type: compute/cpu/x86-64
+  - hardware_type: compute/gpu/cuda
+  - hardware_type: sensor/imu/6dof
+  - hardware_type: sensor/camera/rgb
+  - hardware_type: sensor/lidar/3d
+
+resource_access:
+  reads:
+    - sensor/imu
+    - sensor/front-rgb
+    - sensor/lidar
+  shared_writes:
+    - compute/gpu
+  exclusive_writes: []
+
+demo:
+  representations:
+    - id: registered_points
+      stage: intermediate
+      description: LiDAR scan points registered into the FAST-LIVO2 local world frame.
+      interface: {protocol: ros2_topic, schema: sensor_msgs/msg/PointCloud2}
+      renderer: point_cloud_3d

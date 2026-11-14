@@ -6,6 +6,6 @@
     max_age: 0.5
     # T_earth_livo: xyz + quaternion xyzw. Identity is a local-origin example,
     # not georeferencing and not a shared multi-vehicle world calibration.
-    earth_from_livo_world: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+    earth_from_livo_world: [0.0, 0.0, 0.0, 0.0, 0.0, 0.7071067811865476, 0.7071067811865476]
     # T_imu_base. Replace using measured installation extrinsics.
     imu_from_base: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]

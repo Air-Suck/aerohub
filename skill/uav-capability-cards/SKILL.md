@@ -1,37 +1,57 @@
 ---
 name: uav-capability-cards
-description: 为 Model Hub 外部能力分类并编写 cards 目录下的能力卡片，覆盖 Tool、规划、Behavior、状态估计和环境感知，而非仅为任务工具生成调用说明。
+description: 为 UAV 底层能力和 Agent Tool 创建或更新机器可读的功能卡片，并维护其精确匹配的数据能力类型与硬件类型契约。适用于 cards/ 下的新卡片、旧卡片迁移和卡片契约审查。
 ---
 
-# 能力分类与卡片编写
+# UAV 功能卡片
 
-## 分类先于填写
+## 使用前读取
 
-核查真实接口、组件清单和验证记录，不依据论文名称虚构能力。先判断能力类型与使用方式，两者分别填写：
+创建或修改 Card 前，完整读取：
 
-| 类型 | 常见使用方式 |
-| --- | --- |
-| tool | 请求、反馈、结果、取消的任务调用 |
-| planner | 目标与约束输入，计划输出 |
-| behavior | 执行 Goal 与生命周期 |
-| state-estimator | 部署时选择提供者，运行时持续输出自身状态 |
-| perception | 持续环境数据或查询服务 |
-| inference | 通过 ROS 请求模型推理，内部 worker 按模型隔离环境 |
+- [Card Schema 规范](references/card-schema.md)
+- [Card 模板](assets/capability.yaml)
+- 涉及新的数据能力路径时读取 [能力类型模板](assets/capability-types.yaml)
+- 涉及新的硬件要求路径时读取 [硬件类型模板](assets/hardware-types.yaml)
 
-Inference 卡片同时声明算法源码归属、推理模块、模型/权重版本、输入坐标和时间约束、内部 HTTP 与对外 ROS 的边界。候选状态输出不写成完整轨迹执行；CPU 合成验证与 GPU/平台验收分别标记。共享 runtime 不代表多个模型共享同一进程，卡片须按实际 worker 说明耦合关系。
+模板是 AeroHub Card Schema v1 的固定骨架，不是 AS2 官方格式。不要从旧卡片反推新字段。
 
-一个组件可提供多张能力卡片；共享算法进程时声明 coupling，不能让管理层误判它们可独立启停。能力可被选择不等于允许 Online Agent 随时切换；明确部署选择、运行查询或任务调用的权限和控制路径。
+## 先核查实现
 
-## 编写步骤
+核查源码、ROS 接口、launch、组件清单和验证记录，不依据论文、目录名或计划目标虚构能力。明确：
 
-1. 检查 `cards/` 中现有格式和分类，保持兼容。没有格式时使用 [卡片模板](assets/capability.yaml) 作为项目初版约定，不声称是 AS2 官方 schema。
-2. 卡片保存为 `cards/<类型>/<能力标识>.yaml`，一张卡片描述一个可选择的能力。组件 ID 与组件清单关联；公共安装信息引用清单，不复制易漂移内容。
-3. 描述输入输出 schema/消息、话题/服务/Action、坐标/时间、新鲜度、前置条件、资源和冲突、生命周期、健康、故障与恢复、适用范围和限制。未知字段明确 null 并说明，不用零冒充测得性能。
-4. 按类型补充：Tool/Behavior 的 feedback/result/cancel；Planner 的时间和协同约束；状态估计的频率、误差证据、TF/reset；Perception 的表示、覆盖、更新、查询与适用分辨率。
-5. 验证卡片与源码、launch 和清单相符；检查共享资源、能力 ID 引用、条件和证据一致。卡片声明资源不等于实现互斥，不能把建议能力标记为已部署。
+- 这是供其他能力依赖的 `capability`，还是可由上层 Agent 直接选择的 `tool`；
+- 数据输入和输出、操作接口、生命周期管理权限、硬件要求和逻辑资源访问；
+- 是否与其他 Card 共用进程、设备或启停边界；
+- 哪些中间或最终表示仅供 Demo 展示。
 
-## 交付与证据
+规划、Behavior、状态估计、感知、推理等是实现类别，不是 v1 的 Card `type`。它们既可能是底层 `capability`，也可能参与实现上层 `tool`。
 
-交付类型明确的卡片、对应组件引用、发现的缺字段及能力选择限制。验收阶段可标为未验证、构建、接口、合成冒烟、数据集、PC 仿真端到端或真机，但必须附具体范围和可访问证据；同一组件的不同能力允许不同状态。
+## 编写流程
 
-FAST-LIVO2 可有状态估计和配准点云两张卡片，关联同一组件/算法进程；不能把配准点云标成 ESDF，也不能把合成输入测试标为飞行闭环验证。记录位于 `skill/temp/<任务>/`，收尾完善 Skill。编写本 Skill 本身不意味着要立即生成各算法的实际卡片。
+1. 从 `assets/capability.yaml` 复制固定骨架；除可选 `demo` 外不得省略顶层字段。空内容使用 `[]` 或明确的 `null`。
+2. 使用稳定、唯一的层级 `id`，填写 Card Schema 版本和能力契约版本。`name`、`description` 只描述整个能力或 Tool。
+3. `inputs` 和 `outputs` 只引用已定义的 `capability_type`。数据路径完整精确匹配；不得用父子路径、相似名字或自然语言推断兼容。
+4. 若路径尚未定义，依据真实消息、单位、坐标、轴向、时间戳和 QoS，在 `cards/capability-types.yaml` 中新增定义；使用 `assets/capability-types.yaml` 的结构。不要在单张 Card 中私自解释路径。
+5. `interfaces` 只填写请求响应、长任务和生命周期等操作接口。引用真实 ROS Schema；具体 topic、service、action 地址留给部署配置或运行时实例。
+6. Card 只引用参数 Schema。Online Agent 生成调用参数值，不生成接口字段；运行时必须校验参数后再调用。
+7. `hardware_requirements` 只引用 `cards/hardware-types.yaml` 中的规范硬件类型。新的硬件路径先按 `assets/hardware-types.yaml` 的结构进入统一类型表；实际设备实例和动态状态不写入 Card。
+8. `resource_access` 声明读取、共享写入和独占写入的逻辑资源。它不实现锁、停止确认或控制权交接，不得声称 Card 已提供运行时安全保证。
+9. `demo` 只声明值得展示的中间表示和最终效果，不参与功能依赖匹配。展示数据若需被其他能力消费，必须同时成为正式 `outputs`。
+10. 核对共享运行时、耦合能力和生命周期权限。系统托管能力不能因存在启停实现就标为 Agent 可管理。
+11. 在仓库根目录运行 `python3 skill/uav-capability-cards/scripts/validate_cards.py .`；修复所有结构、引用和组件清单错误后再交付。
+
+## 静态边界
+
+Card v1 不包含动态就绪、健康、成功、停止完成、失败重试、资源释放或硬件在线判据。这些标准尚需结合实现和证据校准；不要填入任意阈值，也不要把旧模板字段带入 v1。
+
+验证阶段、源码提交、镜像摘要、overlay 和原始证据保存在组件清单、组件文档和 `skill/temp/` / `log/`，不复制到 Card。Card 中的 `implementation.manifest` 负责关联组件清单。
+
+## 兼容与交付
+
+新 Card 必须使用 v1 模板。修改旧 Schema Card 时，仅在用户任务涵盖迁移时迁移；不要顺手批量改写无关卡片。交付时说明：
+
+- 创建或迁移的 Card；
+- 新增或复用的能力类型与硬件类型；
+- 与真实接口、组件清单和共享运行时的核对结果；
+- 仍需运行时机制解决的缺口。

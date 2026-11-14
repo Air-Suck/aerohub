@@ -11,6 +11,8 @@ DEFAULT_CAMERA = {
     "altitude_m": 25.0,
     "fov_degrees": 90.0,
     "update_hz": 5.0,
+    "startup_delay_s": 3.0,
+    "primary_view": False,
 }
 
 
@@ -24,6 +26,11 @@ def camera_options(value: dict[str, Any] | None = None) -> dict[str, Any]:
         result[key] = float(result[key])
         if result[key] <= 0:
             raise ValueError(f"airsim.camera.{key} must be positive")
+    result["startup_delay_s"] = float(result["startup_delay_s"])
+    if result["startup_delay_s"] < 0:
+        raise ValueError("airsim.camera.startup_delay_s must be non-negative")
+    if not isinstance(result["primary_view"], bool):
+        raise ValueError("airsim.camera.primary_view must be boolean")
     return result
 
 
@@ -55,8 +62,28 @@ def apply_overhead_view(
         "Roll": 0.0,
         "Yaw": 0.0,
     }
-    result["ViewMode"] = "Manual"
+    result["ViewMode"] = "Fpv" if camera["primary_view"] else "Manual"
     result["CameraDirector"] = dict(camera_pose)
+    if camera["primary_view"]:
+        primary_name = next(iter(result["Vehicles"]))
+        primary = result["Vehicles"][primary_name]
+        yaw = float(primary.get("Yaw", 0.0))
+        delta_x = center_x - float(primary.get("X", 0.0))
+        delta_y = center_y - float(primary.get("Y", 0.0))
+        radians = math.radians(-yaw)
+        relative_x = math.cos(radians) * delta_x - math.sin(radians) * delta_y
+        relative_y = math.sin(radians) * delta_x + math.cos(radians) * delta_y
+        primary_camera = primary.setdefault("Cameras", {}).setdefault("0", {})
+        primary_camera.update(
+            {
+                "X": relative_x,
+                "Y": relative_y,
+                "Z": camera_pose["Z"] - float(primary.get("Z", 0.0)),
+                "Pitch": -90.0,
+                "Roll": 0.0,
+                "Yaw": -yaw,
+            }
+        )
     external = result.setdefault("ExternalCameras", {})
     camera_settings = external.setdefault(camera["name"], {})
     camera_settings.update(camera_pose)

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Exercise the locked DPV-SLAM model and all native CUDA extensions."""
 
+import argparse
 import json
 
 import numpy as np
@@ -13,6 +14,10 @@ from uav_dpv_slam_ros2.engine import DpvSlamEngine
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--config", required=True)
+    parser.add_argument("--network", required=True)
+    args = parser.parse_args()
     if not torch.cuda.is_available():
         raise RuntimeError("CUDA is not available")
     print(json.dumps({
@@ -21,7 +26,7 @@ def main():
         "gpu": torch.cuda.get_device_name(0),
         "extensions": [cuda_corr.__name__, cuda_ba.__name__, lietorch_backends.__name__],
     }))
-    engine = DpvSlamEngine("/opt/dpv_slam/default.yaml", "/opt/dpv_slam/dpvo.pth")
+    engine = DpvSlamEngine(args.config, args.network)
     generator = np.random.default_rng(7)
     base = generator.integers(0, 256, size=(240, 320, 3), dtype=np.uint8)
     results = []

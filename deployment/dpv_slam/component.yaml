@@ -5,21 +5,22 @@ description: Monocular DPV-SLAM global correction and sparse visual landmarks
 source:
   repository: https://github.com/princeton-vl/DPVO.git
   commit: 0ac95b656d1fda91c271d2a106460d19ad966fc7
+  submodule_path: src/state_estimator/dpv_slam/upstream
+  upstream_modified: false
   license: MIT
 capabilities: [state-estimator.dpv-slam-monocular, perception.dpv-slam-sparse-points]
 cards:
   - cards/state-estimator/dpv-slam-monocular.yaml
   - cards/perception/dpv-slam-sparse-points.yaml
 shared_process_group: dpv-slam-gpu
-images:
-  algorithm:
-    name: uav/dpv-slam:humble
-    dockerfile: deployment/dpv_slam/Dockerfile.algorithm
-    architectures: [linux/amd64]
-  as2_plugin:
-    name: uav/dpv-slam-as2:humble
-    dockerfile: deployment/dpv_slam/Dockerfile.as2
-    architectures: [linux/amd64]
+environment:
+  shared_image: onboard_computer:v0.1.0
+  architecture: linux/amd64
+  workspace_prepare: deployment/dpv_slam/prepare_workspace.sh
+  workspace_default: log/workspaces/dpv_slam
+  runtime_compose: deployment/dpv_slam/shared.compose.yaml
+  authority_compose: deployment/dpv_slam/authority.shared.compose.yaml
+  dependency_lock: deployment/dpv_slam/python-wheels.sha256
 runtime:
   roles:
     simulator: visible AirSim host process
@@ -47,4 +48,13 @@ lifecycle:
 validation:
   stage: reproduced
   gate: deployment/dpv_slam/validation.yaml
-  scope: Build, official TUM GPU evaluation, AirSim consumers, shadow, authority and fault tests passed.
+  scope: Locked build and GPU runtime, real AirSim RGB input, sparse-point consumption, truth-scored shadow, AS2 authority, RGB interruption and algorithm exit pass in the shared environment. Real flight remains out of scope.
+  evidence:
+    - log/dpv_slam/shared-workspace-20261111/build.log
+    - log/dpv_slam/shared-workspace-20261112/unit-and-gpu-smoke.log
+    - log/dpv_slam/shared-workspace-20261113-plugin-rebuild.log
+    - log/dpv_slam/shared-workspace-20261113-plugin-smoke.log
+    - log/dpv_slam/shadow-schema-0.2-current-frame-20261114-01
+    - log/dpv_slam/authority-schema-0.2-current-frame-20261114-01
+    - log/dpv_slam/sensor-fault-schema-0.2-final-20261114-01
+    - log/dpv_slam/algorithm-fault-schema-0.2-final-20261114-01
