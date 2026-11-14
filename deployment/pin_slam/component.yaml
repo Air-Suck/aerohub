@@ -51,31 +51,22 @@ authority:
   state_and_tf: exactly one selected AS2 State Estimator provider per vehicle
   map_frame: PIN-SLAM process owns pin_slam_map data; AS2 plugin publishes its configured alias
 validation:
-  stage: partial
+  stage: reproduced
   gate: deployment/pin_slam/validation.yaml
-  scope: The previous algorithm-specific-image deployment passed the listed matrix. The shared-image workspace migration must repeat the complete matrix before this component returns to reproduced.
+  scope: Shared onboard-computer image, visible AirSim + PX4 SITL, real LiDAR input, GPU PIN-SLAM, AS2 authority, canonical freshness, LiDAR interruption, and algorithm-process exit all passed the declared matrix.
   evidence:
-    - log/pin_slam/shared-workspace-hash-locked-root-build-20261113.log
-    - log/pin_slam/shared-workspace-20261113-unit.log
-    - log/pin_slam/shared-workspace-20261113-gpu-smoke.json
-    - log/pin_slam/shared-workspace-20261113-plugin-smoke.log
-    - log/pin_slam/static-20261110/image-inspect.json
-    - log/pin_slam/static-20261110/compose-expanded.yaml
-    - log/pin_slam/static-20261110/algorithm-static.log
-    - log/pin_slam/static-20261110/plugin-host.log
-    - log/pin_slam/static-20261110/plugin-probe.log
-    - log/pin_slam/gpu-smoke-20261110/result.json
-    - log/pin_slam/gpu-smoke-20261110/canonical-pose.txt
-    - log/pin_slam/gpu-smoke-20261110/nvidia-smi.txt
-    - log/pin_slam/gpu-smoke-20261110/SHA256SUMS
-    - log/pin_slam/plugin-dual-rate-20261110/plugin-probe.log
-    - log/pin_slam/airsim-authority-dual-rate-20261110/ground/rates.json
-    - log/pin_slam/airsim-authority-full-20261110/final-run/gate-report.json
-    - log/pin_slam/airsim-authority-full-20261110/airsim-visible-ground.png
-    - log/pin_slam/airsim-authority-full-20261110/SHA256SUMS
-    - log/pin_slam/airsim-authority-fault-20261110/fault-report.json
+    - log/pin_slam/shadow-shared-final-20261114-17/gate-report.json
+    - log/pin_slam/shadow-shared-final-20261114-17/result.json
+    - log/pin_slam/authority-20261114-02/gate-report.json
+    - log/pin_slam/authority-20261114-02/result.json
+    - log/pin_slam/authority-20261114-02/canonical-freshness.json
+    - log/pin_slam/sensor-fault-20261114-02/result.json
+    - log/pin_slam/sensor-fault-20261114-02/fault-injection.json
+    - log/pin_slam/sensor-fault-20261114-02/aerohub-pin-slam-as2.log
+    - log/pin_slam/algorithm-fault-20261114-01/result.json
+    - log/pin_slam/algorithm-fault-20261114-01/fault-injection.json
+    - log/pin_slam/algorithm-fault-20261114-01/aerohub-pin-slam-as2.log
   limitations:
-    - Shared-image workspace validation is pending; historical dedicated-image evidence does not validate the new deployment entry.
     - Neural-point anchors are not a collision map or the complete implicit model.
     - Current authority integration deliberately retains PX4 EKF local odometry for control; PIN-SLAM is the global correction source, not the sole inertial estimator.
     - AirSim LiDAR lacks per-point time, so deskew remains disabled.
