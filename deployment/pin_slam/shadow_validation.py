@@ -314,7 +314,13 @@ class ShadowRun:
             30, "platform flying state")
         self.airborne_started = time.monotonic()
 
-        for dx, dy in ((1.0, 0.0), (0.0, 1.0), (-1.0, 0.0), (0.0, -1.0)):
+        # Publish the fault marker before the watched stream is stopped. One
+        # short leg is enough to prove airborne motion without letting the
+        # injector wait behind a long multi-waypoint action sequence.
+        fault_waypoints = ((1.0, 0.0),) if self.scenario in (
+            "sensor_fault", "algorithm_fault") else (
+            (1.0, 0.0), (0.0, 1.0), (-1.0, 0.0), (0.0, -1.0))
+        for dx, dy in fault_waypoints:
             position = self.pose.pose.position
             goal = GoToWaypoint.Goal()
             goal.target_pose.header.frame_id = "earth"
