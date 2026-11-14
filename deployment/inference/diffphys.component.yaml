@@ -2,11 +2,11 @@ schema_version: '0.1'
 id: aerohub.inference.diffphys
 version: 0.1.0
 source:
-  upstream: src/planner/diffphys/upstream
+  upstream: src/tool/navigation/planner/diffphys/upstream
   revision: 271936190b5c2a5e760230e718fa6b167718a5bf
   license: null
   license_note: No explicit DiffPhys license found in inspected upstream/release directories.
-  release_artifacts: src/inference/models/diffphys/artifacts.json
+  release_artifacts: src/basic_function/inference/models/diffphys/artifacts.json
 provides:
 - inference.diffphys
 cards:
@@ -15,9 +15,9 @@ roles:
   compute: [diffphys-model-worker, diffphys-ros-adapter]
   workstation: [ROS-client]
 runtime:
-  model_environment: src/inference/models/diffphys/uv.lock
-  prepare: bash src/inference/models/diffphys/setup.sh --check-cuda
-  weights: src/inference/models/diffphys/artifacts/swarm/swarm.pth
+  model_environment: src/basic_function/inference/models/diffphys/uv.lock
+  prepare: bash src/basic_function/inference/models/diffphys/setup.sh --check-cuda
+  weights: src/basic_function/inference/models/diffphys/artifacts/swarm/swarm.pth
   platform: linux-x86_64
   prerequisites: [NVIDIA-compatible-driver, CUDA-capable-GPU, ROS-2-Humble, uv, official-validation-archive]
   worker: bash deployment/inference/start_diffphys.sh
@@ -32,5 +32,5 @@ resources:
   arbitration: one-inflight-per-worker-no-cross-model-arbiter
   hidden_state: caller-owned-per-vehicle-and-task
 validation:
-  evidence: src/inference/models/diffphys/validation.json
+  evidence: src/basic_function/inference/models/diffphys/validation.json
   limitations: [synthetic-input-only, no-Planner-or-Behavior, no-flight-validation]

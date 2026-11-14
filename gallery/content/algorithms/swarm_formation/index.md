@@ -87,7 +87,7 @@ media:
 | 输入与地图 | 注册点云、body twist 里程计 → 共享 ENU / GridMap / ESDF | `native/plan_manage/launch/seven_planners.launch.py`；`native/plan_env/` |
 | 聚合与执行 | 各机 PolyTraj → 采样 PVA → 公共协调 / 执行 | `native/plan_manage/scripts/ros2_proxy.py`、`ros2_adapter/bridge/`、公共 `follow_path_client.py` |
 
-表中 `native/` 位于 `src/planner/swarm_formation/ros2_adapter/`。地图输入从当前 AirSim LiDAR 经真实 TF 注册接入，不再只描述历史 `obs_num=0` 仿真地图。旧 ROS 1 七机代理链仍保留，但不是当前 Humble 进程边界。
+表中 `native/` 位于 `src/tool/navigation/planner/swarm_formation/ros2_adapter/`。地图输入从当前 AirSim LiDAR 经真实 TF 注册接入，不再只描述历史 `obs_num=0` 仿真地图。旧 ROS 1 七机代理链仍保留，但不是当前 Humble 进程边界。
 
 ### 车辆、时间与部署差异
 
@@ -114,7 +114,7 @@ media:
 
 ### 文档入口
 
-- [组件说明](https://github.com/Air-Suck/aerohub/blob/main/src/planner/swarm_formation/README.md)
+- [组件说明](https://github.com/Air-Suck/aerohub/blob/main/src/tool/navigation/planner/swarm_formation/README.md)
 - [混合部署与角色矩阵](https://github.com/Air-Suck/aerohub/blob/main/deployment/airsim/demos/swarm_open_field/README.md)
 - [共享机群配置](https://github.com/Air-Suck/aerohub/blob/main/deployment/swarm/configs/swarm_open_field.yaml)
 

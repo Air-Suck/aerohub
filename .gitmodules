@@ -11,47 +11,47 @@
 	path = simulator/gazebo
 	url = https://github.com/aerostack2/project_gazebo.git
 [submodule "cat_ora"]
-	path = src/planner/cat_ora/upstream
+	path = src/tool/navigation/planner/cat_ora/upstream
 	url = https://github.com/ctu-mrs/catora.git
 [submodule "swarm_formation"]
-	path = src/planner/swarm_formation/upstream
+	path = src/tool/navigation/planner/swarm_formation/upstream
 	url = https://github.com/ZJU-FAST-Lab/Swarm-Formation.git
 [submodule "px4_msgs"]
 	path = as2/px4_msgs
 	url = https://github.com/PX4/px4_msgs.git
 [submodule "src/state_estimator/fast_livo2/upstream"]
-	path = src/state_estimator/fast_livo2/upstream
+	path = src/basic_function/state_estimator/fast_livo2/upstream
 	url = https://github.com/hku-mars/FAST-LIVO2.git
 
 [submodule "super"]
-	path = src/planner/super/upstream
+	path = src/tool/navigation/planner/super/upstream
 	url = https://github.com/Popc0rn7/SUPER-sim.git
 [submodule "ipc"]
-	path = src/planner/ipc/upstream
+	path = src/tool/navigation/planner/ipc/upstream
 	url = https://github.com/hku-mars/IPC.git
 [submodule "src/state_estimator/pin_slam/upstream"]
-	path = src/state_estimator/pin_slam/upstream
+	path = src/basic_function/state_estimator/pin_slam/upstream
 	url = https://github.com/PRBonn/PIN_SLAM.git
 [submodule "src/planner/yopo/upstream"]
-	path = src/planner/yopo/upstream
+	path = src/tool/navigation/planner/yopo/upstream
 	url = https://github.com/TJU-Aerial-Robotics/YOPO.git
 [submodule "src/planner/diffphys/upstream"]
-	path = src/planner/diffphys/upstream
+	path = src/tool/navigation/planner/diffphys/upstream
 	url = https://github.com/HenryHuYu/DiffPhysDrone.git
 
 [submodule "src/state_estimator/dpv_slam/upstream"]
-	path = src/state_estimator/dpv_slam/upstream
+	path = src/basic_function/state_estimator/dpv_slam/upstream
 	url = https://github.com/princeton-vl/DPVO.git
 [submodule "src/state_estimator/fast_livo2/ros2_upstream"]
-	path = src/state_estimator/fast_livo2/ros2_upstream
+	path = src/basic_function/state_estimator/fast_livo2/ros2_upstream
 	url = https://github.com/SuperLDG/FASTLIVO2_ROS2.git
 [submodule "src/state_estimator/fast_livo2/dependencies/livox_ros_driver2"]
-	path = src/state_estimator/fast_livo2/dependencies/livox_ros_driver2
+	path = src/basic_function/state_estimator/fast_livo2/dependencies/livox_ros_driver2
 	url = https://github.com/Livox-SDK/livox_ros_driver2.git
 [submodule "src/state_estimator/fast_livo2/dependencies/rpg_vikit"]
-	path = src/state_estimator/fast_livo2/dependencies/rpg_vikit
+	path = src/basic_function/state_estimator/fast_livo2/dependencies/rpg_vikit
 	url = https://github.com/SuperLDG/rpg_vikit.git
 	branch = ros2
 [submodule "src/state_estimator/fast_livo2/dependencies/sophus"]
-	path = src/state_estimator/fast_livo2/dependencies/sophus
+	path = src/basic_function/state_estimator/fast_livo2/dependencies/sophus
 	url = https://github.com/strasdat/Sophus.git

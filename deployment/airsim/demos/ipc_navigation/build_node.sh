@@ -12,7 +12,7 @@ docker run --rm --network none --entrypoint bash \
  source /control/install/setup.bash
  cd /deps
  CMAKE_PREFIX_PATH=/deps/install:$CMAKE_PREFIX_PATH MAKEFLAGS=-j2 colcon build \
- --base-paths /repo/src/planner/ipc/ros2_adapter/native --merge-install \
+ --base-paths /repo/src/tool/navigation/planner/ipc/ros2_adapter/native --merge-install \
  --install-base ros-install --build-base ros-build --parallel-workers 1 \
  --cmake-args -DCMAKE_BUILD_TYPE=Release
  cd ros-build/ipc_native_core

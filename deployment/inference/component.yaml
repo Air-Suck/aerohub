@@ -2,10 +2,10 @@ schema_version: '0.1'
 id: aerohub.inference.yopo
 version: 0.1.0
 source:
-  upstream: src/planner/yopo/upstream
+  upstream: src/tool/navigation/planner/yopo/upstream
   revision: bd8a7f91953cfef9f1aa9a48d7ff0ab7bceee132
   license: MIT
-  integration: src/inference
+  integration: src/basic_function/inference
 provides:
 - inference.yopo
 cards:
@@ -17,10 +17,10 @@ roles:
   workstation:
   - ROS-client
 runtime:
-  model_environment: src/inference/models/yopo/uv.lock
-  prepare: bash src/inference/models/yopo/setup.sh
-  weights: src/inference/models/yopo/artifacts/epoch50.pth
-  weights_checksum: src/inference/models/yopo/weights.sha256
+  model_environment: src/basic_function/inference/models/yopo/uv.lock
+  prepare: bash src/basic_function/inference/models/yopo/setup.sh
+  weights: src/basic_function/inference/models/yopo/artifacts/epoch50.pth
+  weights_checksum: src/basic_function/inference/models/yopo/weights.sha256
   platform: linux-x86_64
   prerequisites:
   - NVIDIA-compatible-driver

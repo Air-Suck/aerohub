@@ -6,8 +6,8 @@ from pathlib import Path
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[3]
-UPSTREAM = ROOT / "src/planner/yopo/upstream/YOPO"
-MODEL = ROOT / "src/inference/models/yopo"
+UPSTREAM = ROOT / "src/tool/navigation/planner/yopo/upstream/YOPO"
+MODEL = ROOT / "src/basic_function/inference/models/yopo"
 
 if (UPSTREAM / "policy/state_transform.py").is_file():
     sys.path.insert(0, str(UPSTREAM))

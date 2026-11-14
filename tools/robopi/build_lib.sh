@@ -20,20 +20,20 @@ import hashlib, json, shutil, sys, os, subprocess
 from pathlib import Path
 root, work = map(Path, sys.argv[1:3])
 component=sys.argv[3]
-packages={'uav_planner_interfaces':'src/planner/interfaces', 'uav_planner_framework':'src/planner/framework',
+packages={'uav_planner_interfaces':'src/tool/navigation/interfaces', 'uav_planner_framework':'src/tool/navigation/framework',
           'uav_as2_setpoint_adapter':'src/behavior/legacy_setpoint'}
 if component in ('all','catora'):
- packages.update(mrs_formation_reshaping='src/planner/cat_ora/ros2_adapter/native',uav_cat_ora_adapter='src/planner/cat_ora/ros2_adapter/bridge')
+ packages.update(mrs_formation_reshaping='src/tool/navigation/planner/cat_ora/ros2_adapter/native',uav_cat_ora_adapter='src/tool/navigation/planner/cat_ora/ros2_adapter/bridge')
 if component in ('all','swarm-formation'):
- for directory in (root/'src/planner/swarm_formation/ros2_adapter/native').iterdir():
+ for directory in (root/'src/tool/navigation/planner/swarm_formation/ros2_adapter/native').iterdir():
   if (directory/'package.xml').exists():
    import xml.etree.ElementTree as ET
    packages[ET.parse(directory/'package.xml').getroot().findtext('name')]=str(directory.relative_to(root))
- packages['uav_swarm_formation_adapter']='src/planner/swarm_formation/ros2_adapter/bridge'
- packages['as2_navigation_inputs']='src/perception/navigation_inputs'
+ packages['uav_swarm_formation_adapter']='src/tool/navigation/planner/swarm_formation/ros2_adapter/bridge'
+ packages['as2_navigation_inputs']='src/basic_function/perception/navigation_inputs'
 if component == 'super':
  packages.pop('uav_as2_setpoint_adapter')
- packages.update(super_planner='src/planner/super/ros2_adapter/native/super_planner',rog_map='src/planner/super/ros2_adapter/native/rog_map',mars_quadrotor_msgs='src/planner/super/ros2_adapter/native/mars_uav_sim/mars_quadrotor_msgs',uav_super_adapter='src/planner/super/ros2_adapter/bridge',as2_navigation_inputs='src/perception/navigation_inputs')
+ packages.update(super_planner='src/tool/navigation/planner/super/ros2_adapter/native/super_planner',rog_map='src/tool/navigation/planner/super/ros2_adapter/native/rog_map',mars_quadrotor_msgs='src/tool/navigation/planner/super/ros2_adapter/native/mars_uav_sim/mars_quadrotor_msgs',uav_super_adapter='src/tool/navigation/planner/super/ros2_adapter/bridge',as2_navigation_inputs='src/basic_function/perception/navigation_inputs')
 manifest={}
 stale_paths=[]
 for name,relative in packages.items():

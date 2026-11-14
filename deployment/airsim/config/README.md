@@ -33,4 +33,4 @@ library 的注册不代表它支持所有场景。场景启动配置与 library 
 | [dds/](dds/README.md) | 公共 DDS UDP 配置 |
 | [airsim/](../../../simulator/airsim/config/README.md) | 场景 profile、PX4 与传感器 settings |
 
-现有 Planner 任务与部署参数仍在 `src/planner/framework/examples/`，注册表引用它们。
+现有 Planner 任务与部署参数仍在 `src/tool/navigation/framework/examples/`，注册表引用它们。

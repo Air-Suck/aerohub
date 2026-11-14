@@ -14,7 +14,7 @@ set -u
 
 ros2 run uav_planner_framework planner_framework_node \
   --ros-args \
-  -p registry_root:="$workspace/src/planner/framework/registry" \
+  -p registry_root:="$workspace/src/tool/navigation/framework/registry" \
   -p resolved_dir:="$resolved_dir" >/tmp/uav_as2_adapter_framework.log 2>&1 &
 framework_pid=$!
 python3 "$workspace/src/behavior/legacy_setpoint/scripts/mock_as2.py" \
@@ -32,7 +32,7 @@ ros2 service list | grep -qx /planner/control
 response=$(timeout 10 ros2 service call \
   /planner/control \
   uav_planner_interfaces/srv/ControlPlanner \
-  "{command: 0, task_config_path: '$workspace/src/planner/framework/examples/cat_ora_four.yaml', deployment_config_path: '$workspace/src/planner/framework/examples/deployment_four.yaml'}")
+  "{command: 0, task_config_path: '$workspace/src/tool/navigation/framework/examples/cat_ora_four.yaml', deployment_config_path: '$workspace/src/tool/navigation/framework/examples/deployment_four.yaml'}")
 grep -q 'accepted=True' <<<"$response"
 task_id=$(grep -oE "task_id='[^']+'" <<<"$response" | head -n1 | cut -d"'" -f2)
 resolved_config="$resolved_dir/$task_id.yaml"

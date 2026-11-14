@@ -52,10 +52,10 @@ def main():
     relay = None
     scene_started = False
     hashes = {str(path.relative_to(ROOT)): hashlib.sha256(path.read_bytes()).hexdigest()
-        for directory in (ROOT/'src/planner/gcopter/ros2_adapter', ROOT/'deployment/gcopter')
+        for directory in (ROOT/'src/tool/navigation/planner/gcopter/ros2_adapter', ROOT/'deployment/gcopter')
         for path in directory.rglob('*') if path.is_file() and '__pycache__' not in path.parts}
     (out/'source-manifest.json').write_text(json.dumps({'source_hashes': hashes,
-        'upstream': subprocess.check_output(['git', '-C', str(ROOT/'src/planner/gcopter/upstream'), 'rev-parse', 'HEAD'], text=True).strip(),
+        'upstream': subprocess.check_output(['git', '-C', str(ROOT/'src/tool/navigation/planner/gcopter/upstream'), 'rev-parse', 'HEAD'], text=True).strip(),
         'image_ids': {name: subprocess.check_output(['docker', 'image', 'inspect', '--format', '{{.Id}}', name], text=True).strip()
                       for name in ('flight_board:v0.1.0', 'uav/apps-super-forest:onboard-v0.1.1', 'osrf/ros:humble-desktop-full-jammy')},
         'overlay': 'log/gcopter/install',

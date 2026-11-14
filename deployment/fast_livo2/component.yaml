@@ -5,7 +5,7 @@ description: FAST-LIVO2 visual-inertial-lidar state estimation and registered po
 source:
   repository: https://github.com/SuperLDG/FASTLIVO2_ROS2.git
   commit: a713004f0ba0624c8fb80d85c7047fe62523c6fb
-  submodule_path: src/state_estimator/fast_livo2/ros2_upstream
+  submodule_path: src/basic_function/state_estimator/fast_livo2/ros2_upstream
   upstream_modified: false
   license: GPL-2.0
 capabilities:

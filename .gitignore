@@ -95,7 +95,7 @@ rosbag2_*/
 .aws/
 .venv/
 /artifacts/
-/src/inference/models/*/artifacts/
+/src/basic_function/inference/models/*/artifacts/
 /deployment/dpv_slam/models/
 /deployment/dpv_slam/wheelhouse/
 /config/inference.local.yaml
@@ -108,4 +108,4 @@ rosbag2_*/
 # Gallery dependency and generated content
 /gallery/node_modules/
 /gallery/.astro/
-/src/inference/models/*/houmo/artifacts/
+/src/basic_function/inference/models/*/houmo/artifacts/

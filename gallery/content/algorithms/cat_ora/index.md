@@ -81,12 +81,12 @@ Demo 画面来自[作者公开素材](https://arxiv.org/html/2412.00603v2/fig/in
 
 | 模块 | 输入 → 输出 | 职责与实现位置 |
 | --- | --- | --- |
-| CAT-ORA 规划核心 | 初始构型、目标构型、速度与加速度约束 → 逐机轨迹采样点 | 上游服务 `/mrs_formation_reshaping/get_reshaping_trajectories`；源码位置 `src/planner/cat_ora/upstream/` |
-| ROS 1 proxy | TCP/逐行 JSON → ROS 1 服务调用 → 轨迹数组 | `src/planner/cat_ora/ros1_proxy/ros1_proxy.py`，保留独立 ROS 1 进程与原生服务接口 |
-| ROS 2 adapter | 四机位姿、目标和轨迹数组 → `TimedTrajectorySegment` | `src/planner/cat_ora/ros2_adapter/bridge/uav_cat_ora_adapter/node.py`，负责坐标、车辆归属、时间与统一消息封装 |
-| 共享机群协调 | 经校验的机群轨迹段 → 每架飞机的 `FollowTimedPath.Goal` | `src/planner/framework/uav_planner_framework/follow_path_client.py`，维护 Action 接受、结果、更新、取消与机群失败收口 |
+| CAT-ORA 规划核心 | 初始构型、目标构型、速度与加速度约束 → 逐机轨迹采样点 | 上游服务 `/mrs_formation_reshaping/get_reshaping_trajectories`；源码位置 `src/tool/navigation/planner/cat_ora/upstream/` |
+| ROS 1 proxy | TCP/逐行 JSON → ROS 1 服务调用 → 轨迹数组 | `src/tool/navigation/planner/cat_ora/ros1_proxy/ros1_proxy.py`，保留独立 ROS 1 进程与原生服务接口 |
+| ROS 2 adapter | 四机位姿、目标和轨迹数组 → `TimedTrajectorySegment` | `src/tool/navigation/planner/cat_ora/ros2_adapter/bridge/uav_cat_ora_adapter/node.py`，负责坐标、车辆归属、时间与统一消息封装 |
+| 共享机群协调 | 经校验的机群轨迹段 → 每架飞机的 `FollowTimedPath.Goal` | `src/tool/navigation/framework/uav_planner_framework/follow_path_client.py`，维护 Action 接受、结果、更新、取消与机群失败收口 |
 
-框架的 Registry、任务配置与轨迹校验也归入图中的 Tool 职责区域，共用代码保留在 `src/planner/framework/`，不复制进 CAT-ORA。这里按职责拆分，并不把这些模块描述成四个独立可替换的公共 API。
+框架的 Registry、任务配置与轨迹校验也归入图中的 Tool 职责区域，共用代码保留在 `src/tool/navigation/framework/`，不复制进 CAT-ORA。这里按职责拆分，并不把这些模块描述成四个独立可替换的公共 API。
 
 本节的接口细节以 ROS 1 proxy 接入链为例；主图仅表达能力职责。当前目录还保留 `ros2_adapter/native/` 的原生 Humble 移植实现，与统一输出适配包 `bridge/` 并列；AirSim 部署显式选择构建链，不能从 Registry 的 Noetic 镜像字段推断所有部署的运行环境。规划核心在图中作为服务黑盒，其输入输出来自代理服务字段及适配代码。
 
@@ -113,7 +113,7 @@ Behavior 内采样时间化轨迹，再输出 Motion Reference，由 AS2 控制�
 
 ### 四机如何协同
 
-示例配置为 `src/planner/framework/examples/cat_ora_four_px4.yaml`，部署映射来自同目录的 `deployment_four_px4.yaml`。
+示例配置为 `src/tool/navigation/framework/examples/cat_ora_four_px4.yaml`，部署映射来自同目录的 `deployment_four_px4.yaml`。
 
 | 车辆 | Behavior 执行实例 | Goal 坐标系 | 配置中的目标（机群 NED，米） |
 | --- | --- | --- | --- |
@@ -142,7 +142,7 @@ Manifest 声明 1–16 机是配置能力范围；本页四机展示不代表所
 
 | 核查内容 | 本地依据 |
 | --- | --- |
-| 上游来源与锁定版本 | `.gitmodules`、`src/planner/cat_ora/upstream` gitlink：`4bc41f593eebde65dd74108a97e80430a145dfa0` |
+| 上游来源与锁定版本 | `.gitmodules`、`src/tool/navigation/planner/cat_ora/upstream` gitlink：`4bc41f593eebde65dd74108a97e80430a145dfa0` |
 | AS2 基线 | `as2/aerostack2` 使用 AeroHub fork gitlink：`f387e0d733a5102808508bcbec1b9eca2c29d1f0`；AirSim 构建直接使用该锁定源码 |
 | 服务字段与坐标/时间转换 | `ros1_proxy.py` 的 `generate()`；adapter 的 `_try_generate()`、`_message()` |
 | 车辆对应、Action 名称、失败收口 | `FleetFollowPathClient` 与 `make_goal()` |

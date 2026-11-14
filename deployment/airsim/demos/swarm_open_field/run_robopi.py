@@ -74,7 +74,7 @@ def main():
         for source,target in [('deployment/airsim/demos/catora_open_field/mission.py','common/flight_mission.py'),('deployment/airsim/demos/catora_open_field/stop_board.py','stop_board.py'),
             ('deployment/airsim/demos/catora_open_field/hybrid/metrics.py','metrics.py'),('deployment/airsim/as2/run.py','run_as2.py'),('deployment/airsim/as2/selected_behaviors.launch.py','selected_behaviors.launch.py'),
             ('deployment/airsim/as2/scoped_tf.launch.py','scoped_tf.launch.py'),('simulator/airsim/sensors/uav_as2_sensor_adapter/rpc.py','airsim_rpc.py'),
-            ('deployment/airsim/config/as2/config.yaml','config.yaml'),('deployment/airsim/config/as2/pid_speed_controller.yaml','pid.yaml'),('src/planner/swarm_formation/ros2_adapter/native/plan_manage/scripts/ros2_proxy.py','ros2_proxy.py')]:archive.add(ROOT/source,arcname=target)
+            ('deployment/airsim/config/as2/config.yaml','config.yaml'),('deployment/airsim/config/as2/pid_speed_controller.yaml','pid.yaml'),('src/tool/navigation/planner/swarm_formation/ros2_adapter/native/plan_manage/scripts/ros2_proxy.py','ros2_proxy.py')]:archive.add(ROOT/source,arcname=target)
         archive.add(paths['board_fleet'],arcname='fleet.yaml');archive.add(out/'board-dds.xml',arcname='dds.xml');archive.add(vendor/'msgpack',arcname='msgpack')
     hdc('file','send',str(out/'app.tar.gz'),remote+'/app.tar.gz')
     digest=hashlib.sha256((out/'app.tar.gz').read_bytes()).hexdigest()

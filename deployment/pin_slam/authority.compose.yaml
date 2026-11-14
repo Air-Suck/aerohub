@@ -8,7 +8,7 @@ services:
       AS2_STATE_ESTIMATOR_LAUNCH_FILE: pin_slam.launch.py
     volumes:
       - "${PIN_SLAM_WORKSPACE:-../../log/workspaces/pin_slam}:/workspace:ro"
-      - ../../src/state_estimator/pin_slam/plugin/config/estimator.yaml:/config/pin-slam-estimator.yaml:ro
+      - ../../src/basic_function/state_estimator/pin_slam/plugin/config/estimator.yaml:/config/pin-slam-estimator.yaml:ro
       - ../airsim/as2/run.py:/opt/onboard_computer/run.py:ro
     command:
       - bash

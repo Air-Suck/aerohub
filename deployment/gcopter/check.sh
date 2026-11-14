@@ -18,5 +18,5 @@ GCOPTER_NODE_PID=$!
 ros2 run uav_gcopter_adapter gcopter_adapter --ros-args -r __ns:=/drone0 > log/gcopter/ros-check/adapter.log 2>&1 &
 GCOPTER_ADAPTER_PID=$!
 trap '\''kill "$GCOPTER_NODE_PID" "$GCOPTER_ADAPTER_PID" 2>/dev/null || true; wait "$GCOPTER_NODE_PID" "$GCOPTER_ADAPTER_PID" 2>/dev/null || true'\'' EXIT
-python3 src/planner/gcopter/ros2_adapter/native/tests/ros_check.py | tee log/gcopter/ros-check/result.json
+python3 src/tool/navigation/planner/gcopter/ros2_adapter/native/tests/ros_check.py | tee log/gcopter/ros-check/result.json
 '

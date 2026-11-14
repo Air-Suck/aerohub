@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parents[4]
 APP = Path(__file__).resolve().parent
 PREFIX = "aerohub-swarm-field-"
 NATIVE_PARAMETERS = (
-    ROOT / "src/planner/swarm_formation/ros2_adapter/native/plan_manage/config/humble.yaml"
+    ROOT / "src/tool/navigation/planner/swarm_formation/ros2_adapter/native/plan_manage/config/humble.yaml"
 )
 # seven_planners.launch.py, setDesiredFormation and the Swarm adapter all reject other sizes.
 MIN_VEHICLES = 3

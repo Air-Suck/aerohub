@@ -43,9 +43,9 @@ TRUTH = ROOT / "deployment/pin_slam/airsim_truth_bridge.py"
 FRESHNESS = ROOT / "deployment/state_estimator/canonical_freshness.py"
 GATE = ROOT / "deployment/pin_slam/gate_result.py"
 GATE_CONFIG = ROOT / "deployment/pin_slam/validation.yaml"
-ESTIMATOR_CONFIG = ROOT / "src/state_estimator/pin_slam/plugin/config/estimator.yaml"
+ESTIMATOR_CONFIG = ROOT / "src/basic_function/state_estimator/pin_slam/plugin/config/estimator.yaml"
 ALGORITHM_CONFIG = ROOT / "deployment/pin_slam/airsim.yaml"
-UPSTREAM_ROOT = ROOT / "src/state_estimator/pin_slam/upstream"
+UPSTREAM_ROOT = ROOT / "src/basic_function/state_estimator/pin_slam/upstream"
 
 
 def execute(command, **kwargs):
@@ -123,7 +123,7 @@ def validate_inputs():
 
 def source_manifest(output, scenario):
     paths = [ROOT / "deployment/pin_slam", ROOT / "deployment/flight_board",
-             ROOT / "deployment/airsim/as2", ROOT / "src/state_estimator/pin_slam",
+             ROOT / "deployment/airsim/as2", ROOT / "src/basic_function/state_estimator/pin_slam",
              ROOT / "simulator/airsim/sensors"]
     files = []
     for path in paths:
@@ -322,8 +322,8 @@ def main():
             "-r __ns:=/drone0 --params-file /config/algorithm.yaml")
         algorithm_env = dict(
             common,
-            PIN_SLAM_ROOT="/repo/src/state_estimator/pin_slam/upstream",
-            PYTHONPATH="/repo/src/state_estimator/pin_slam/upstream",
+            PIN_SLAM_ROOT="/repo/src/basic_function/state_estimator/pin_slam/upstream",
+            PYTHONPATH="/repo/src/basic_function/state_estimator/pin_slam/upstream",
         )
         run_detached(PREFIX + "algorithm", ONBOARD, algorithm_env,
                      [(ROOT, "/repo", "ro"), (PIN_WORKSPACE, "/pin", "ro"),

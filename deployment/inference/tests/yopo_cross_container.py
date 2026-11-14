@@ -30,7 +30,7 @@ def main():
     (OUT/'ground_ws').mkdir(exist_ok=True)
     build = ['docker','run','--rm','--network','none','-v',str(ROOT)+':/repo',
              '-w','/repo/log/yopo-single/ground_ws','--entrypoint','bash',GROUND,'-lc',
-             'source /opt/ros/humble/setup.bash && colcon build --base-paths /repo/src/inference/interfaces --packages-select uav_inference_interfaces --event-handlers console_direct+']
+             'source /opt/ros/humble/setup.bash && colcon build --base-paths /repo/src/basic_function/inference/interfaces --packages-select uav_inference_interfaces --event-handlers console_direct+']
     (report/'ground-build.txt').write_text(run(build))
     created = False
     try:

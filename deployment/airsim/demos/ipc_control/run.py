@@ -139,7 +139,7 @@ def main():
         'use_sim_time':True,'cmd_freq':100.,'info_freq':50.,'external_odom':False,
         'fmu_prefix':'/drone0','target_system_id':73,'max_thrust':15.,'min_thrust':.15}}}))
     hashes = {str(f.relative_to(ROOT)):hashlib.sha256(f.read_bytes()).hexdigest()
-        for directory in [APP,ROOT/'src/behavior/follow_reference'] + ([ROOT/'deployment/airsim/demos/attitude_control'] if args.attitude else []) + ([ROOT/'deployment/airsim/demos/diffphys_forest',ROOT/'src/planner/diffphys/ros2_adapter',ROOT/'simulator/airsim/sensors',ROOT/'src/inference/ros2_adapter'] if args.diffphys else []) for f in directory.rglob('*')
+        for directory in [APP,ROOT/'src/behavior/follow_reference'] + ([ROOT/'deployment/airsim/demos/attitude_control'] if args.attitude else []) + ([ROOT/'deployment/airsim/demos/diffphys_forest',ROOT/'src/tool/navigation/planner/diffphys/ros2_adapter',ROOT/'simulator/airsim/sensors',ROOT/'src/basic_function/inference/ros2_adapter'] if args.diffphys else []) for f in directory.rglob('*')
         if f.is_file() and '__pycache__' not in f.parts}
     (out/'manifest.json').write_text(json.dumps({'source_sha256':hashes,'domain':182,
         'clock_rate_hz_requested':args.clock_rate_hz,
@@ -149,7 +149,7 @@ def main():
                       'hold_wall_seconds':5}),'motion_api':'AS2/PX4 only; AirSim RPC for scoring'},indent=2)+'\n')
     if args.native:
         native_sources = {str(f.relative_to(ROOT)):hashlib.sha256(f.read_bytes()).hexdigest()
-            for directory in [ROOT/'src/planner/ipc/ros2_adapter/native',ROOT/'deployment/airsim/demos/ipc_navigation']
+            for directory in [ROOT/'src/tool/navigation/planner/ipc/ros2_adapter/native',ROOT/'deployment/airsim/demos/ipc_navigation']
             for f in directory.rglob('*') if f.is_file() and '__pycache__' not in f.parts}
         runtime_files=[ROOT/'log/ipc/native-deps/ros-install/lib/ipc_native_core/ipc_node',
             workspace/'install/lib/libfollow_reference_acro_plugin.so',

@@ -59,9 +59,9 @@
 
 算法图的核查依据：
 
-- CAT-ORA：`src/planner/cat_ora/ros2_adapter/native/include/mrs_formation_reshaping/catora.hpp` 的 `catora_assignment`，以及 `src/formation_reshaper.cpp` 的目标分配与共同时间轨迹生成逻辑。核心展示上游的分配与避碰机制；正文另行说明当前接入的固定车辆目标约束。
-- SUPER：`src/planner/super/ros2_adapter/native/super_planner/src/super_core/super_planner.cpp` 的 `generateExpTraj`、`generateBackupTrajectory` 与提交轨迹逻辑。将讨论中的“多备选”具体落实为探索与安全备份的衔接；当前四方入口对照 `deployment/airsim/demos/super_forest/README.md` 修正过时描述。
-- YOPO：`src/planner/yopo/README.md`、`ros2_adapter/uav_yopo_planner/core.py`、`src/inference/models/yopo/README.md` 与模型处理代码。区分网络候选终端 PVA/cost、选优、五次曲线重建和基础执行。
+- CAT-ORA：`src/tool/navigation/planner/cat_ora/ros2_adapter/native/include/mrs_formation_reshaping/catora.hpp` 的 `catora_assignment`，以及 `src/formation_reshaper.cpp` 的目标分配与共同时间轨迹生成逻辑。核心展示上游的分配与避碰机制；正文另行说明当前接入的固定车辆目标约束。
+- SUPER：`src/tool/navigation/planner/super/ros2_adapter/native/super_planner/src/super_core/super_planner.cpp` 的 `generateExpTraj`、`generateBackupTrajectory` 与提交轨迹逻辑。将讨论中的“多备选”具体落实为探索与安全备份的衔接；当前四方入口对照 `deployment/airsim/demos/super_forest/README.md` 修正过时描述。
+- YOPO：`src/tool/navigation/planner/yopo/README.md`、`ros2_adapter/uav_yopo_planner/core.py`、`src/basic_function/inference/models/yopo/README.md` 与模型处理代码。区分网络候选终端 PVA/cost、选优、五次曲线重建和基础执行。
 
 检查覆盖：
 

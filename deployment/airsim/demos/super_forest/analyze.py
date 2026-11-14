@@ -6,7 +6,7 @@ import math
 from pathlib import Path
 import sys
 ROOT=Path(__file__).resolve().parents[4]
-sys.path.insert(0,str(ROOT/'src/planner/super/ros2_adapter/bridge'))
+sys.path.insert(0,str(ROOT/'src/tool/navigation/planner/super/ros2_adapter/bridge'))
 from uav_super_adapter.polynomial import Polynomial
 
 

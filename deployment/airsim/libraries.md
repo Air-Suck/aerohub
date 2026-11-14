@@ -4,7 +4,7 @@
 ROS 适配、代理、测试及部署文件放在同一个目录：
 
 ```text
-src/planner/
+src/tool/navigation/planner/
 ├── cat_ora/
 │   ├── upstream/             # 锁定的上游源码子模块
 │   ├── ros1_proxy/           # ROS 1 兼容代理
@@ -23,9 +23,9 @@ ROS 1 原始源码位于两个算法的 `upstream/` 子模块，代理位于各�
 构建时显式选择所需包，避免 ROS 1 与 ROS 2 包混入同一 colcon 工作区。
 
 CAT-ORA 已提取上游源码并迁移当前使用的轨迹服务，见
-[迁移边界与验证](../../src/planner/cat_ora/ros2_adapter/native/README.md)；Swarm-Formation 已迁移原生规划依赖闭包，
-见[迁移边界与验证](../../src/planner/swarm_formation/README.md)。公共任务契约、Planner Registry 和
-任务配置仍在 `src/planner/interfaces/`、`src/planner/framework/`；公共 AS2 能力
+[迁移边界与验证](../../src/tool/navigation/planner/cat_ora/ros2_adapter/native/README.md)；Swarm-Formation 已迁移原生规划依赖闭包，
+见[迁移边界与验证](../../src/tool/navigation/planner/swarm_formation/README.md)。公共任务契约、Planner Registry 和
+任务配置仍在 `src/tool/navigation/interfaces/`、`src/tool/navigation/framework/`；公共 AS2 能力
 不归属某个算法库。
 
 独立算法部署文件位于 `deployment/<name>_humble/compose.yaml`，构建上下文

@@ -17,12 +17,12 @@ class SelectionTest(unittest.TestCase):
         self.workspace = tempfile.TemporaryDirectory()
         self.addCleanup(self.workspace.cleanup)
         self.root = Path(self.workspace.name)
-        model = self.root / "src/inference/models/example"
+        model = self.root / "src/basic_function/inference/models/example"
         model.mkdir(parents=True)
         for filename in ("README.md", "setup.sh", "pyproject.toml", "uv.lock"):
             (model / filename).touch()
-        manifest = self.root / "src/inference/manifest.json"
-        manifest.write_text('{"schema_version":1,"models":{"example":{"directory":"src/inference/models/example","description":"test fixture"}}}')
+        manifest = self.root / "src/basic_function/inference/manifest.json"
+        manifest.write_text('{"schema_version":1,"models":{"example":{"directory":"src/basic_function/inference/models/example","description":"test fixture"}}}')
         for name, value in (("REPO", self.root), ("MANIFEST", manifest)):
             mock = patch.object(selection, name, value)
             mock.start()
@@ -50,7 +50,7 @@ class SelectionTest(unittest.TestCase):
         with patch.object(selection.subprocess, "run") as execute:
             self.assertEqual(self.run_config(["example"], "--check-cuda"), 0)
             execute.assert_called_once_with(
-                ["bash", str(selection.REPO / "src/inference/models/example/setup.sh"), "--check-cuda"],
+                ["bash", str(selection.REPO / "src/basic_function/inference/models/example/setup.sh"), "--check-cuda"],
                 cwd=str(selection.REPO), check=True,
             )
 

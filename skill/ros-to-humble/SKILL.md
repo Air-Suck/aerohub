@@ -25,7 +25,7 @@ description: 将 ROS 1 包或算法服务迁移到 ROS 2 Humble，梳理运行�
 - 将 ROS 1 私有 topic 映射为 ROS 2 的 `~/...`，统一参数键从 `/` 到 `.` 的映射并核对实际值。对照发布者与当前模式订阅的真实路径，不能只照抄 launch 文件名或注释。
 - 将 latched 目标发布转为 `TRANSIENT_LOCAL`，同时检查订阅端 QoS 和启动发现时序。图像同步订阅要与实际传感器 QoS 兼容。用真实消息确认目标送达，而不只检查节点存在。
 - 更新真实部署 Dockerfile、启动脚本和注册表。旧 ROS 1 包留作对照时加 `COLCON_IGNORE`，避免同名包参与 colcon 发现。
-- 本仓库的 ROS 1 对照快照、旧代理和部署归档在 `src/planner/<name>/upstream/`；活动 Humble 实现在 `src/planner/<name>/ros2_adapter/native/`。移动归档时一并更新基线脚本、Docker COPY 和文档引用，保留原版本与许可证。
+- 本仓库的 ROS 1 对照快照、旧代理和部署归档在 `src/tool/navigation/planner/<name>/upstream/`；活动 Humble 实现在 `src/tool/navigation/planner/<name>/ros2_adapter/native/`。移动归档时一并更新基线脚本、Docker COPY 和文档引用，保留原版本与许可证。
 
 完成条件：在真实 Humble 环境构建成功，生成的接口可被调用，运行路径不再依赖 roscore、roslaunch 或 ROS 1 代理。
 
