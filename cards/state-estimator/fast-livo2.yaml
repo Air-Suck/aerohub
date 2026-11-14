@@ -1,0 +1,59 @@
+schema_version: "1.0"
+id: state-estimator.fast-livo2
+version: ros2-a713004-aerohub-0.2.0
+type: capability
+name: FAST-LIVO2 state estimate
+description: Provides canonical AS2 pose and body twist from the shared visual-inertial-LiDAR FAST-LIVO2 process.
+
+implementation:
+  component_id: fast-livo2
+  manifest: deployment/fast_livo2/component.yaml
+  shared_runtime: fast-livo2
+  coupled_capabilities:
+    - perception.fast-livo2-registered-points
+
+inputs:
+  - id: imu
+    capability_type: sensor/imu/inertial/6dof
+  - id: rgb_image
+    capability_type: sensor/camera/rgb/image
+  - id: lidar_points
+    capability_type: sensor/lidar/point-cloud/3d
+
+outputs:
+  - id: canonical_pose
+    capability_type: state/self/pose/3d
+  - id: canonical_twist
+    capability_type: state/self/twist/3d
+
+interfaces: []
+
+lifecycle:
+  management: shared_managed
+  operations: {start: null, status: null, stop: null}
+
+hardware_requirements:
+  - hardware_type: compute/cpu/x86-64
+  - hardware_type: compute/gpu/cuda
+  - hardware_type: sensor/imu/6dof
+  - hardware_type: sensor/camera/rgb
+  - hardware_type: sensor/lidar/3d
+
+resource_access:
+  reads:
+    - sensor/imu
+    - sensor/front-rgb
+    - sensor/lidar
+  shared_writes:
+    - compute/gpu
+  exclusive_writes:
+    - vehicle/self-state
+    - vehicle/tf
+
+demo:
+  representations:
+    - id: canonical_pose
+      stage: final
+      description: Canonical vehicle pose produced through the AS2 State Estimator host.
+      interface: {protocol: ros2_topic, schema: geometry_msgs/msg/PoseStamped}
+      renderer: pose_3d

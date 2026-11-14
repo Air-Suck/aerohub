@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate and resolve a mixed RoboPi/PC swarm topology."""
+"""Validate and resolve PC-simulation or hybrid-board swarm topologies."""
 from __future__ import annotations
 
 import argparse
@@ -55,15 +55,31 @@ def validate_config(config: dict[str, Any]) -> None:
     for key in ("name_prefix", "airsim_name_prefix"):
         if not isinstance(fleet.get(key), str) or not fleet[key]:
             raise ConfigError(f"fleet.{key} must be a nonempty string")
+    coordinator_index = fleet.get("coordinator_vehicle_index", 0)
+    if not isinstance(coordinator_index, int) or not 0 <= coordinator_index < count:
+        raise ConfigError("fleet.coordinator_vehicle_index must select one configured vehicle")
+
+    deployment = _mapping(config.get("deployment"), "deployment")
+    stage = deployment.get("stage")
+    if stage not in ("pc_simulation", "hybrid_board"):
+        raise ConfigError("deployment.stage must be pc_simulation or hybrid_board")
     board_index = fleet.get("board_vehicle_index")
-    if not isinstance(board_index, int) or not 0 <= board_index < count:
-        raise ConfigError("fleet.board_vehicle_index must select one configured vehicle")
+    if stage == "hybrid_board":
+        if not isinstance(board_index, int) or not 0 <= board_index < count:
+            raise ConfigError(
+                "fleet.board_vehicle_index must select one configured vehicle in hybrid_board"
+            )
+        if count < 2:
+            raise ConfigError("hybrid_board requires at least two vehicles")
 
     nodes = _mapping(config.get("nodes"), "nodes")
-    board = _mapping(nodes.get("board"), "nodes.board")
-    pc = _mapping(nodes.get("pc"), "nodes.pc")
-    _command(board.get("launch_command"), "nodes.board.launch_command")
-    _command(pc.get("launch_command"), "nodes.pc.launch_command")
+    onboard = _mapping(nodes.get("onboard_computer"), "nodes.onboard_computer")
+    if not isinstance(onboard.get("image"), str) or not onboard["image"]:
+        raise ConfigError("nodes.onboard_computer.image must be a nonempty string")
+    _command(onboard.get("launch_command"), "nodes.onboard_computer.launch_command")
+    if stage == "hybrid_board":
+        board = _mapping(nodes.get("board"), "nodes.board")
+        _command(board.get("launch_command"), "nodes.board.launch_command")
 
     coordination = _mapping(config.get("coordination"), "coordination")
     mode = coordination.get("mode")
@@ -71,13 +87,15 @@ def validate_config(config: dict[str, Any]) -> None:
         raise ConfigError("coordination.mode must be centralized or decentralized")
     if mode == "centralized":
         cases = coordination.get("centralized_cases")
-        required = {"board_center", "board_worker"}
-        if not isinstance(cases, list) or set(cases) != required or len(cases) != 2:
+        required = (
+            {"board_center", "board_worker"}
+            if stage == "hybrid_board"
+            else {"onboard_center"}
+        )
+        if not isinstance(cases, list) or set(cases) != required or len(cases) != len(required):
             raise ConfigError(
-                "centralized systems must test exactly board_center and board_worker"
+                f"{stage} centralized systems must test exactly {sorted(required)}"
             )
-        if count < 2:
-            raise ConfigError("board_worker requires at least one PC vehicle")
 
     ground = _mapping(config.get("ground_station"), "ground_station")
     if ground.get("placement") != "pc":
@@ -134,40 +152,63 @@ def resolve_topology(config: dict[str, Any]) -> dict[str, Any]:
     validate_config(config)
     fleet = config["fleet"]
     count = fleet["vehicle_count"]
-    board_index = fleet["board_vehicle_index"]
+    stage = config["deployment"]["stage"]
+    board_index = fleet.get("board_vehicle_index") if stage == "hybrid_board" else None
+    coordinator_index = fleet.get("coordinator_vehicle_index", 0)
     ports = config["airsim"]["ports"]
     positions = _formation_positions(count, float(fleet.get("initial_spacing_m", 4.0)))
     vehicles = []
     for index in range(count):
-        placement = "board" if index == board_index else "pc"
+        placement = (
+            "physical_board"
+            if stage == "hybrid_board" and index == board_index
+            else "onboard_computer_container"
+        )
         vehicles.append(
             {
                 "index": index,
                 "name": f"{fleet['name_prefix']}{index}",
                 "airsim_name": f"{fleet['airsim_name_prefix']}{index}",
                 "placement": placement,
-                "supervisor": "remote_launcher" if placement == "board" else "independent_thread",
+                "supervisor": (
+                    "remote_launcher"
+                    if placement == "physical_board"
+                    else "independent_thread"
+                ),
                 "initial_xy_m": list(positions[index]),
                 "px4_instance": ports["px4_instance_base"] + index,
                 "px4_system_id": ports["px4_system_id_base"] + index,
                 "xrce_agent_port": ports["xrce_agent_base"] + index,
             }
         )
-    board = vehicles[board_index]
-    pc_vehicles = [vehicle for vehicle in vehicles if vehicle["placement"] == "pc"]
+    board = vehicles[board_index] if board_index is not None else None
+    onboard_vehicles = [
+        vehicle
+        for vehicle in vehicles
+        if vehicle["placement"] == "onboard_computer_container"
+    ]
     if config["coordination"]["mode"] == "centralized":
-        scenarios = [
-            {
-                "name": "board_center",
-                "center_vehicle": board["name"],
-                "board_role": "center",
-            },
-            {
-                "name": "board_worker",
-                "center_vehicle": pc_vehicles[0]["name"],
-                "board_role": "worker",
-            },
-        ]
+        if stage == "hybrid_board":
+            scenarios = [
+                {
+                    "name": "board_center",
+                    "center_vehicle": board["name"],
+                    "board_role": "center",
+                },
+                {
+                    "name": "board_worker",
+                    "center_vehicle": onboard_vehicles[0]["name"],
+                    "board_role": "worker",
+                },
+            ]
+        else:
+            scenarios = [
+                {
+                    "name": "onboard_center",
+                    "center_vehicle": vehicles[coordinator_index]["name"],
+                    "board_role": None,
+                }
+            ]
     else:
         scenarios = [
             {
@@ -178,9 +219,13 @@ def resolve_topology(config: dict[str, Any]) -> dict[str, Any]:
         ]
     return {
         "schema_version": 1,
+        "deployment_stage": stage,
+        "onboard_computer_image": config["nodes"]["onboard_computer"]["image"],
         "vehicle_count": count,
         "board_vehicle": board,
-        "pc_vehicles": pc_vehicles,
+        "onboard_computer_vehicles": onboard_vehicles,
+        # Compatibility alias for the existing hybrid-board demo.
+        "pc_vehicles": onboard_vehicles,
         "vehicles": vehicles,
         "coordination_mode": config["coordination"]["mode"],
         "scenarios": scenarios,
@@ -189,9 +234,9 @@ def resolve_topology(config: dict[str, Any]) -> dict[str, Any]:
             "placement": "pc",
         },
         "invariants": {
-            "board_vehicle_count": 1,
-            "pc_vehicle_count": count - 1,
-            "pc_supervisor": "one independent thread per vehicle",
+            "board_vehicle_count": 1 if stage == "hybrid_board" else 0,
+            "onboard_computer_vehicle_count": len(onboard_vehicles),
+            "onboard_computer_supervisor": "one independent thread per container",
         },
     }
 
@@ -252,6 +297,7 @@ def command_context(
         "center_vehicle": scenario["center_vehicle"] or "",
         "scenario": scenario["name"],
         "vehicle_count": str(topology["vehicle_count"]),
+        "onboard_computer_image": topology["onboard_computer_image"],
         "output": str(output),
     }
 

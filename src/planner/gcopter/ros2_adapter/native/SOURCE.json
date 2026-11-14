@@ -1,0 +1,19 @@
+{
+  "repository": "https://github.com/ZJU-FAST-Lab/GCOPTER",
+  "revision": "e0444f6d47b84f972ced91746b05feb36ce1fd4f",
+  "source": "src/planner/gcopter/upstream/gcopter/include/gcopter",
+  "license": "MIT",
+  "ownership": "locked submodule is sole algorithm source; wrapper is repository-owned",
+  "local_mapping": "private copied ROG-Map sources from SUPER native adapter; see vendor/rog_map/PROVENANCE.md; LGPL-3.0-or-later and bundled notices retained",
+  "local_planning": "repository-owned known-free reachable-goal frontend, FIRI corridor via optimizeRoute, unchanged GCOPTER/MINCO optimizer, rolling future-PVA handoff into FollowTimedPath",
+  "compatibility_patch": "CMake generates sfc_gen.hpp with null pointer for empty valid_pc; upstream tree unchanged",
+  "semantic_adaptations": [
+    "reject approximate route endpoints",
+    "bound OMPL edge validity spacing to half a voxel instead of 1% of map extent",
+    "validate configuration, finite inputs and bounded memory",
+    "shrink FIRI polytopes by voxel half-diagonal to protect occupied voxel volumes",
+    "search with one additional voxel of clearance so shrunken corridor seeds remain away from collision surfaces; collision map and postcheck unchanged",
+    "post-check occupancy and velocity every 1ms; reject failed plan without stale output",
+    "separate uncommitted local ENU plan from validated stationary future execution commitment"
+  ]
+}

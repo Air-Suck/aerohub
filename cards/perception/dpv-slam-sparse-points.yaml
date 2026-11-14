@@ -1,39 +1,52 @@
-schema_version: 0.1
+schema_version: "1.0"
 id: perception.dpv-slam-sparse-points
-name: DPV-SLAM sparse visual landmarks
 version: upstream-0ac95b6-aerohub-0.1.0
-type: perception
-description: Metric-aligned sparse patch landmarks from the shared DPV-SLAM process
-component:
-  id: dpv-slam
+type: capability
+name: DPV-SLAM sparse visual landmarks
+description: Provides metric-aligned sparse visual patch landmarks from the shared DPV-SLAM process; it does not provide dense geometry or collision-free space.
+
+implementation:
+  component_id: dpv-slam
   manifest: deployment/dpv_slam/component.yaml
-  shared_process_group: dpv-slam-gpu
-  coupled_capabilities: [state-estimator.dpv-slam-monocular]
-usage:
-  mode: continuous-provider
-  selection_phase: deployment
-  invocation_interface: /<namespace>/dpv_slam/sparse_points
+  shared_runtime: dpv-slam-gpu
+  coupled_capabilities:
+    - state-estimator.dpv-slam-monocular
+
 inputs:
-  - interface: DPV-SLAM internal patch graph
-    schema: learned sparse visual landmarks
+  - id: rgb_image
+    capability_type: sensor/camera/rgb/image
+  - id: camera_calibration
+    capability_type: sensor/camera/rgb/camera-info
+  - id: metric_local_odometry
+    capability_type: state/local/odometry/3d
+
 outputs:
-  - interface: /<namespace>/dpv_slam/sparse_points
-    schema: sensor_msgs/msg/PointCloud2 XYZ float32
-    frame: dpv_slam_map
-    representation: sparse patch landmarks, not free space or a dense map
-resources:
-  reads: [drone0.front-rgb, dpv-slam-gpu.patch-graph]
-  writes: [drone0.perception.dpv-slam-sparse-points]
-  conflicts: [shared DPV-SLAM GPU lifecycle]
+  - id: sparse_landmarks
+    capability_type: perception/map/sparse-visual-landmarks/3d
+
+interfaces: []
+
 lifecycle:
-  readiness: nonempty output after visual initialization and metric alignment
-  failure: no new map is published while tracking/input is unavailable
-  recovery: restart creates a new epoch and coupled state/map reset
-type_specific:
-  representation: sparse learned visual patch landmarks
-  query: no occupancy, ESDF, mesh or collision query interface
-  reset: coupled to the DPV-SLAM state process
-validation:
-  stage: reproduced
-  limitations:
-    - A navigation consumer requires an explicit validated conversion.
+  management: shared_managed
+  operations: {start: null, status: null, stop: null}
+
+hardware_requirements:
+  - hardware_type: compute/cpu/x86-64
+  - hardware_type: compute/gpu/cuda
+  - hardware_type: sensor/camera/rgb
+
+resource_access:
+  reads:
+    - sensor/front-rgb
+    - vehicle/local-odometry
+  shared_writes:
+    - compute/gpu
+  exclusive_writes: []
+
+demo:
+  representations:
+    - id: sparse_landmarks
+      stage: intermediate
+      description: Sparse metric visual patch landmarks maintained by DPV-SLAM.
+      interface: {protocol: ros2_topic, schema: sensor_msgs/msg/PointCloud2}
+      renderer: point_cloud_3d

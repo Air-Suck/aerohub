@@ -1,0 +1,14 @@
+### DPVO AirSim runtime profile ###
+
+# Use upstream's fast profile plus its official evaluation backend threshold.
+PATCHES_PER_FRAME: 48
+REMOVAL_WINDOW: 16
+OPTIMIZATION_WINDOW: 7
+PATCH_LIFETIME: 11
+
+KEYFRAME_THRESH: 15.0
+BACKEND_THRESH: 18.0
+MOTION_MODEL: 'DAMPED_LINEAR'
+MOTION_DAMPING: 0.5
+MIXED_PRECISION: True
+CENTROID_SEL_STRAT: 'RANDOM'

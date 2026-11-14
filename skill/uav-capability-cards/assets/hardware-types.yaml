@@ -1,0 +1,12 @@
+# Canonical hardware requirement types. IDs are matched exactly by Cards and hardware
+# inventory/configuration. This file does not describe actual device instances.
+schema_version: "1.0"
+
+hardware_types:
+  - id: compute/gpu/cuda
+    name: CUDA-capable GPU
+    description: A compute device providing a compatible NVIDIA CUDA runtime.
+
+  - id: sensor/lidar/point_cloud/3d
+    name: 3D LiDAR
+    description: A physical LiDAR device capable of producing three-dimensional point-cloud measurements.

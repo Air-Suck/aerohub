@@ -2,6 +2,13 @@
   "binary_resource": "airsim_nh",
   "project": "AirSimNH",
   "settings": "settings.json",
+  "overhead_view": {
+    "name": "swarm_overhead",
+    "altitude_m": 25,
+    "fov_degrees": 90,
+    "update_hz": 5,
+    "primary_view": true
+  },
   "args": [
     "-RenderOffscreen",
     "-vulkan",

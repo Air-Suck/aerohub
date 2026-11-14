@@ -1,0 +1,30 @@
+schema_version: "1.0"
+
+hardware_types:
+  - id: compute/cpu/x86-64
+    name: x86-64 compute host
+    description: A Linux x86-64 compute environment compatible with the component's locked dependencies.
+
+  - id: compute/gpu/cuda
+    name: CUDA-capable GPU
+    description: An NVIDIA GPU with a compatible CUDA runtime; capacity constraints remain component-specific.
+
+  - id: sensor/imu/6dof
+    name: Six-axis IMU
+    description: A calibrated physical or simulated IMU providing angular velocity and linear acceleration.
+
+  - id: sensor/camera/rgb
+    name: RGB camera
+    description: A calibrated RGB camera with known intrinsics, extrinsics, frame convention, and sampling timestamps.
+
+  - id: sensor/camera/depth
+    name: Depth camera
+    description: A calibrated camera capable of providing axial depth images with known geometry and timestamps.
+
+  - id: sensor/lidar/3d
+    name: 3D LiDAR
+    description: A metrically calibrated 3D LiDAR with a known base-to-sensor transform and sampling timestamps.
+
+  - id: flight-controller/px4
+    name: PX4 flight controller
+    description: A physical or SITL PX4 flight controller connected through the project's AS2 platform integration.

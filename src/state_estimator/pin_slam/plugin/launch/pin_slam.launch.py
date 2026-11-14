@@ -10,8 +10,14 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument("namespace", default_value="drone0"),
         DeclareLaunchArgument("use_sim_time", default_value="true"),
+        DeclareLaunchArgument("plugin_name", default_value="pin_slam"),
         DeclareLaunchArgument(
             "config_file",
+            default_value=PathJoinSubstitution([
+                FindPackageShare("uav_pin_slam"), "config", "estimator.yaml"]),
+        ),
+        DeclareLaunchArgument(
+            "plugin_config_file",
             default_value=PathJoinSubstitution([
                 FindPackageShare("uav_pin_slam"), "config", "estimator.yaml"]),
         ),
@@ -22,8 +28,9 @@ def generate_launch_description():
             name="state_estimator",
             parameters=[
                 LaunchConfiguration("config_file"),
+                LaunchConfiguration("plugin_config_file"),
                 {
-                    "plugin_name": "pin_slam",
+                    "plugin_name": LaunchConfiguration("plugin_name"),
                     "use_sim_time": ParameterValue(
                         LaunchConfiguration("use_sim_time"), value_type=bool),
                 },

@@ -8,14 +8,14 @@ from uav_pin_slam_ros2.contracts import PointCloudContract
 from uav_pin_slam_ros2.node import PinSlamNode
 
 
-def result(x, *, tracking_ok=True, loop_corrected=False, frame=0):
+def result(x, *, tracking_ok=True, loop_corrected=False, frame=0, neural_points=None):
     pose = np.eye(4)
     pose[0, 3] = x
     return SimpleNamespace(
         pose=pose,
         tracking_ok=tracking_ok,
         loop_corrected=loop_corrected,
-        neural_points=None,
+        neural_points=neural_points,
         processed_frame=frame,
     )
 
@@ -37,10 +37,11 @@ def cloud(second):
 class Engine:
     def __init__(self, results):
         self.results = iter(results)
+        self.publish_map_requests = []
 
-    def process(self, _message, _map_max_points):
+    def process(self, _message, _map_max_points, *, publish_map=True):
+        self.publish_map_requests.append(publish_map)
         return next(self.results)
-
 
 class Harness:
     _on_cloud = PinSlamNode._on_cloud
@@ -49,18 +50,23 @@ class Harness:
     def __init__(self, results):
         self._engine = Engine(results)
         self._map_max_points = 100
+        self._map_publish_every_n_frames = 2
+        self._processed_input_count = 0
         self._contract = PointCloudContract("drone0/Lidar")
         self._lock = threading.Lock()
         self._previous_pose = None
         self._previous_stamp_ns = None
         self.states = []
         self.statuses = []
+        self.events = []
 
-    def _publish_map(self, _message, _points):
-        pass
+    def _publish_map(self, _message, points):
+        if points is not None:
+            self.events.append("map")
 
     def _publish_state(self, _message, pose, twist):
         self.states.append((pose.copy(), twist))
+        self.events.append("state")
 
     def _status(self, level, message, **values):
         self.statuses.append((level, message, values))
@@ -101,3 +107,18 @@ def test_tracking_recovery_requires_new_consecutive_samples():
     assert len(harness.states) == 1
     np.testing.assert_allclose(harness.states[0][1].linear, [1.0, 0.0, 0.0])
     assert any(status[1] == "tracking_lost" for status in harness.statuses)
+
+
+def test_map_snapshot_is_requested_at_configured_interval():
+    harness = Harness([
+        result(0.0, frame=0, neural_points=np.ones((1, 3))),
+        result(1.0, frame=1),
+        result(2.0, frame=2, neural_points=np.ones((1, 3))),
+    ])
+
+    harness._on_cloud(cloud(1))
+    harness._on_cloud(cloud(2))
+    harness._on_cloud(cloud(3))
+
+    assert harness._engine.publish_map_requests == [True, False, True]
+    assert harness.events == ["state", "state", "map"]

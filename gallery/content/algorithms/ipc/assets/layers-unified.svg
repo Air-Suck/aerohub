@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="850" viewBox="0 0 1400 850" role="img" aria-labelledby="title desc">
+<title id="title">IPC / Aerohub 能力关系</title><desc id="desc">Tool侧Demo提供目标和执行协调，Behavior管理控制流会话，Function负责联合求解和基础输入平台。</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10z" fill="#716b60"/></marker></defs>
+<rect width="1400" height="850" rx="12" fill="#fcfaf7"/>
+<g font-family="Arial, Noto Sans CJK SC, sans-serif" fill="#242522">
+<text x="32" y="38" font-size="22" fill="#242522" font-weight="600">IPC / Aerohub 能力关系</text>
+<rect x="25" y="65" width="1350" height="155" rx="8" fill="none" stroke="#d8d3cc"/><text x="45" y="95" font-size="17" fill="#62605c" font-weight="600">TOOL</text><rect x="25" y="245" width="1350" height="175" rx="8" fill="none" stroke="#d8d3cc"/><text x="45" y="275" font-size="17" fill="#62605c" font-weight="600">BEHAVIOR</text><rect x="25" y="445" width="1350" height="260" rx="8" fill="none" stroke="#d8d3cc"/><text x="45" y="475" font-size="17" fill="#62605c" font-weight="600">FUNCTION</text><rect x="245" y="90" width="960" height="110" rx="8" fill="#e4eee6" stroke="#8fa693"/>
+<text x="263" y="124" font-size="23" fill="#242522" font-weight="600">导航目标与执行协调（Demo 侧）</text>
+<text x="263" y="156" font-size="18" fill="#62605c">目标 / yaw / 速度约束 → 就绪检查 → Behavior 调用 → 到达判定 / 取消交接</text><rect x="245" y="290" width="335" height="105" rx="8" fill="#e8edf1" stroke="#9aaab7"/>
+<text x="263" y="324" font-size="23" fill="#242522" font-weight="600">起飞 / 降落</text>
+<text x="263" y="356" font-size="18" fill="#62605c">复用原生基础 Behavior</text><rect x="835" y="280" width="370" height="125" rx="8" fill="#e8edf1" stroke="#9aaab7"/>
+<text x="853" y="314" font-size="23" fill="#242522" font-weight="600">外部控制流跟随</text>
+<text x="853" y="346" font-size="18" fill="#62605c">FollowReference 扩展插件</text>
+<text x="853" y="373" font-size="18" fill="#62605c">会话版本 / 时效 / 失败保持</text><rect x="245" y="520" width="260" height="125" rx="8" fill="#e8edf1" stroke="#9aaab7"/>
+<text x="263" y="554" font-size="23" fill="#242522" font-weight="600">自身状态与注册点云</text>
+<text x="263" y="586" font-size="18" fill="#62605c">AS2 状态 / TF / 时间</text>
+<text x="263" y="613" font-size="18" fill="#62605c">输入适配与注册</text><rect x="560" y="520" width="305" height="125" rx="8" fill="#e4eee6" stroke="#8fa693"/>
+<text x="578" y="554" font-size="23" fill="#242522" font-weight="600">IPC 联合规划控制</text>
+<text x="578" y="586" font-size="18" fill="#62605c">局部地图 / A* / SFC / MPC</text>
+<text x="578" y="613" font-size="18" fill="#62605c">控制转换 / 求解健康</text><rect x="990" y="530" width="350" height="105" rx="8" fill="#e8edf1" stroke="#9aaab7"/>
+<text x="1008" y="564" font-size="23" fill="#242522" font-weight="600">运动控制与平台</text>
+<text x="1008" y="596" font-size="18" fill="#62605c">匹配 AS2 overlay → PX4</text><path d="M410 200 V290" fill="none" stroke="#716b60" stroke-width="2" marker-end="url(#arrow)"/><path d="M1020 200 V280" fill="none" stroke="#716b60" stroke-width="2" marker-end="url(#arrow)"/><path d="M505 582 H560" fill="none" stroke="#716b60" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arrow)"/><path d="M865 560 H915 V430 H1110 V405" fill="none" stroke="#716b60" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arrow)"/><path d="M835 315 H735 V520" fill="none" stroke="#716b60" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arrow)"/><text x="745" y="431" font-size="17" fill="#62605c">目标 / 会话</text><path d="M1205 345 H1350 V495 H1165 V530" fill="none" stroke="#716b60" stroke-width="2" marker-end="url(#arrow)"/><path d="M245 575 H12 V165 H245" fill="none" stroke="#716b60" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arrow)"/><path d="M375 645 V685 H1165 V635" fill="none" stroke="#716b60" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arrow)"/><text x="32" y="750" font-size="17" fill="#62605c">绿色：算法及专属接入；蓝灰：公共复用。实线：执行调用 / 参考下发；虚线：状态、目标会话与结果数据。</text><text x="32" y="785" font-size="17" fill="#62605c">Tool 侧职责已有 Demo 实现基础，不等于已发布通用 Tool API；真值、碰撞与评分检查属于仿真验收。</text><text x="32" y="820" font-size="17" fill="#62605c">单机 drone0；分层不表示拆分算法进程。当前任务与算力共置 PC，平台边界为 PX4 SITL / AirSim。</text>
+</g></svg>

@@ -20,9 +20,9 @@ class Probe(Node):
             Odometry, "dpv_slam/odometry", qos_profile_sensor_data)
         self.local_publisher = self.create_publisher(
             Odometry, "sensor_measurements/odom", qos_profile_sensor_data)
-        self.create_subscription(
+        self.pose_subscription = self.create_subscription(
             PoseStamped, "self_localization/pose", self._pose, 10)
-        self.create_subscription(
+        self.twist_subscription = self.create_subscription(
             TwistStamped, "self_localization/twist", self._twist, 10)
 
     def _pose(self, message):
@@ -66,10 +66,24 @@ def spin_for(probe, seconds):
         rclpy.spin_once(probe, timeout_sec=0.01)
 
 
+def wait_for_graph(probe, seconds=10.0):
+    deadline = time.monotonic() + seconds
+    while time.monotonic() < deadline:
+        if (
+            probe.pin_publisher.get_subscription_count() > 0
+            and probe.local_publisher.get_subscription_count() > 0
+            and probe.count_publishers("self_localization/pose") > 0
+            and probe.count_publishers("self_localization/twist") > 0
+        ):
+            return
+        rclpy.spin_once(probe, timeout_sec=0.05)
+    raise RuntimeError("timed out waiting for the plugin ROS graph")
+
+
 def main():
     rclpy.init()
     probe = Probe()
-    spin_for(probe, 1.0)
+    wait_for_graph(probe)
 
     # The paired samples define map->odom = +3 m.
     for index in range(20):
@@ -77,6 +91,8 @@ def main():
         probe.publish_local(2.0 + index * 0.001, stamp)
         probe.publish_visual(5.0 + index * 0.001, stamp)
         spin_for(probe, 0.03)
+
+    spin_for(probe, 2.0)
 
     if probe.pose is None or probe.twist is None:
         print("missing canonical AS2 pose or twist", file=sys.stderr)

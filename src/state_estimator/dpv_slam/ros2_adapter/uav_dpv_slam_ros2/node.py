@@ -50,10 +50,12 @@ class DpvSlamNode(Node):
             self.declare_parameter(name, default)
         self.declare_parameter("alignment_window", 120)
         self.declare_parameter("alignment_freeze_samples", 30)
+        self.declare_parameter("random_seed", 1234)
         self.declare_parameter("map_max_points", 20000)
         self._engine = DpvSlamEngine(
             self.get_parameter("config_path").value,
-            self.get_parameter("network_path").value)
+            self.get_parameter("network_path").value,
+            self.get_parameter("random_seed").value)
         self._expected_frame = self.get_parameter("expected_camera_frame").value
         self._map_frame = self.get_parameter("map_frame").value
         self._camera_frame = self.get_parameter("camera_frame").value
@@ -217,7 +219,8 @@ class DpvSlamNode(Node):
                 result.stamp_ns, 1_000_000_000)
             self._publish_state(message, pose)
             self._publish_points(message, alignment, result.points)
-            self._status(DiagnosticStatus.OK, "tracking", frames=result.frame_count,
+            self._status(DiagnosticStatus.OK, "tracking",
+                         source_stamp_ns=result.stamp_ns, frames=result.frame_count,
                          scale=alignment.scale, alignment_rmse=alignment.rmse,
                          sparse_points=0 if result.points is None else len(result.points))
         except Exception as error:

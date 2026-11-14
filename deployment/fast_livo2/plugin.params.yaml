@@ -1,0 +1,10 @@
+/**:
+  ros__parameters:
+    plugin_name: fast_livo2
+    publish_hz: 0.0
+    input_world_frame: camera_init
+    input_body_frame: fast_livo_imu
+    max_age: 0.5
+    earth_from_livo_world: [0.0, 0.0, 0.0, 0.0, 0.0, 0.7071067811865476, 0.7071067811865476]
+    imu_from_base: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+    cloud_frame: drone0/livo_world

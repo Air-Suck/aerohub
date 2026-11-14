@@ -1,0 +1,20 @@
+{
+  "background": "#fcfaf7",
+  "foreground": "#242522",
+  "muted": "#62605c",
+  "line": "#716b60",
+  "frame": "#d8d3cc",
+  "algorithm": {"fill": "#e4eee6", "stroke": "#8fa693"},
+  "reused": {"fill": "#e8edf1", "stroke": "#9aaab7"},
+  "external": {"fill": "#f3f0ea", "stroke": "#c9c1b5"},
+  "io": {"fill": "#f5e3e1", "stroke": "#b96c67", "title": "#943f3d"},
+  "font": "Arial, Noto Sans CJK SC, sans-serif",
+  "titleSize": 22,
+  "nodeTitleSize": 23,
+  "bodySize": 18,
+  "annotationSize": 17,
+  "nodeRadius": 8,
+  "canvasRadius": 12,
+  "lineWidth": 2,
+  "dash": "6 5"
+}

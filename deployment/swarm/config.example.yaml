@@ -1,34 +1,45 @@
 schema_version: 1
 
+deployment:
+  # Early development runs every UAV compute node in an onboard-computer container.
+  stage: pc_simulation
+
 fleet:
   vehicle_count: 3
-  board_vehicle_index: 0
+  coordinator_vehicle_index: 0
   name_prefix: drone
   airsim_name_prefix: Drone
   initial_spacing_m: 4.0
 
 nodes:
+  onboard_computer:
+    # Each UAV gets its own onboard-computer container, process and supervisor thread.
+    image: onboard_computer:v0.1.0
+    launch_command:
+      - bash
+      - -lc
+      - >-
+        docker run --rm --init --network host
+        --name aerohub-swarm-{vehicle}
+        -e AEROHUB_SWARM_VEHICLE={vehicle}
+        -e AEROHUB_SWARM_CENTER={center_vehicle}
+        -v {output}/overlay:/run/aerohub-overlay:ro
+        {onboard_computer_image}
+        bash -lc 'source /run/aerohub-overlay/install/setup.bash &&
+        exec aerohub-onboard-node --vehicle {vehicle} --center {center_vehicle}'
   board:
-    # The PC supervisor invokes this command; the UAV process itself runs on RoboPi.
+    # Used only after deployment.stage is changed to hybrid_board.
     launch_command:
       - bash
       - -lc
       - >-
         ssh "$AEROHUB_BOARD_HOST"
         aerohub-board-node --vehicle {vehicle} --center {center_vehicle}
-  pc:
-    # Each PC UAV gets its own supervisor thread and process.
-    launch_command:
-      - bash
-      - -lc
-      - >-
-        aerohub-pc-node --vehicle {vehicle} --center {center_vehicle}
 
 coordination:
   mode: centralized
   centralized_cases:
-    - board_center
-    - board_worker
+    - onboard_center
 
 ground_station:
   required: true

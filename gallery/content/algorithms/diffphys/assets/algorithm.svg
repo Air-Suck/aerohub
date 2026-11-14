@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1570" height="525" viewBox="0 0 1570 525" role="img" aria-labelledby="title desc">
+<title id="title">DiffPhys / 可微物理训练的时序视觉策略</title><desc id="desc">当前高速策略接入结构，训练与运行边界分开。</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10z" fill="#716b60"/></marker></defs>
+<rect width="1570" height="525" rx="12" fill="#fcfaf7"/>
+<g font-family="Arial, Noto Sans CJK SC, sans-serif" fill="#242522">
+<text x="32" y="38" font-size="22" fill="#242522" font-weight="600">DiffPhys / 可微物理训练的时序视觉策略</text>
+<rect x="25" y="90" width="245" height="105" rx="8" fill="#f5e3e1" stroke="#b96c67"/>
+<text x="43" y="124" font-size="23" fill="#943f3d" font-weight="600">输入 / 深度观测</text>
+<text x="43" y="156" font-size="18" fill="#62605c">单路深度图 / 采样时刻</text><rect x="25" y="240" width="245" height="135" rx="8" fill="#f5e3e1" stroke="#b96c67"/>
+<text x="43" y="274" font-size="23" fill="#943f3d" font-weight="600">输入 / 状态与目标</text>
+<text x="43" y="306" font-size="18" fill="#62605c">速度 / 姿态 / 目标方向</text>
+<text x="43" y="333" font-size="18" fill="#62605c">目标速度 / 安全余量</text><rect x="320" y="90" width="260" height="105" rx="8" fill="#e4eee6" stroke="#8fa693"/>
+<text x="338" y="124" font-size="23" fill="#242522" font-weight="600">深度编码</text>
+<text x="338" y="156" font-size="18" fill="#62605c">逆深度 / 池化 / CNN</text><rect x="320" y="240" width="260" height="135" rx="8" fill="#e4eee6" stroke="#8fa693"/>
+<text x="338" y="274" font-size="23" fill="#242522" font-weight="600">观测编码</text>
+<text x="338" y="306" font-size="18" fill="#62605c">水平航向基 / 状态投影</text>
+<text x="338" y="333" font-size="18" fill="#62605c">高速版保留实际姿态</text><rect x="640" y="155" width="260" height="135" rx="8" fill="#e4eee6" stroke="#8fa693"/>
+<text x="658" y="189" font-size="23" fill="#242522" font-weight="600">时序策略</text>
+<text x="658" y="221" font-size="18" fill="#62605c">特征融合 / GRU 192</text>
+<text x="658" y="248" font-size="18" fill="#62605c">每任务显式隐状态</text><rect x="960" y="145" width="275" height="155" rx="8" fill="#e4eee6" stroke="#8fa693"/>
+<text x="978" y="179" font-size="23" fill="#242522" font-weight="600">动作解码</text>
+<text x="978" y="211" font-size="18" fill="#62605c">六维 action → 两组三维量</text>
+<text x="978" y="238" font-size="18" fill="#62605c">坐标还原 / 重力与推力映射</text>
+<text x="978" y="265" font-size="18" fill="#62605c">持续航向 / 指令倾角约束</text><rect x="1295" y="90" width="245" height="105" rx="8" fill="#f5e3e1" stroke="#b96c67"/>
+<text x="1313" y="124" font-size="23" fill="#943f3d" font-weight="600">输出 / 姿态</text>
+<text x="1313" y="156" font-size="18" fill="#62605c">固定世界系四元数</text><rect x="1295" y="275" width="245" height="105" rx="8" fill="#f5e3e1" stroke="#b96c67"/>
+<text x="1313" y="309" font-size="23" fill="#943f3d" font-weight="600">输出 / 推力</text>
+<text x="1313" y="341" font-size="18" fill="#62605c">牛顿 / 同一控制帧</text><path d="M270 142 H320" fill="none" stroke="#716b60" stroke-width="2" marker-end="url(#arrow)"/><path d="M270 305 H320" fill="none" stroke="#716b60" stroke-width="2" marker-end="url(#arrow)"/><path d="M580 142 H610 V195 H640" fill="none" stroke="#716b60" stroke-width="2" marker-end="url(#arrow)"/><path d="M580 305 H610 V250 H640" fill="none" stroke="#716b60" stroke-width="2" marker-end="url(#arrow)"/><path d="M900 220 H960" fill="none" stroke="#716b60" stroke-width="2" marker-end="url(#arrow)"/><path d="M1235 190 H1260 V142 H1295" fill="none" stroke="#716b60" stroke-width="2" marker-end="url(#arrow)"/><path d="M1235 260 H1260 V327 H1295" fill="none" stroke="#716b60" stroke-width="2" marker-end="url(#arrow)"/><path d="M770 290 V390 H610 V270 H640" fill="none" stroke="#716b60" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arrow)"/><text x="660" y="418" font-size="17" fill="#62605c">h_next 仅在结果有效时提交；新会话重置</text><text x="32" y="465" font-size="17" fill="#62605c">可微物理用于离线训练：经动力学回传目标推进、避障与平滑损失；本项目只部署已训练策略。</text><text x="32" y="495" font-size="17" fill="#62605c">红色：整体输入 / 输出；绿色：策略与解码。网络返回 action + h_next，不输出路径或时间化轨迹。</text>
+</g></svg>

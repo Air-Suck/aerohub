@@ -16,7 +16,19 @@
       "Sensors": {
         "Barometer": {"SensorType": 1, "Enabled": true},
         "imu": {"SensorType": 2, "Enabled": true, "UpdateFrequency": 200},
-        "gps": {"SensorType": 3, "Enabled": true},
+        "gps": {
+          "SensorType": 3,
+          "Enabled": true,
+          "UpdateFrequency": 50,
+          "StartupDelay": 0,
+          "UpdateLatency": 0,
+          "EphInitial": 0.5,
+          "EphFinal": 0.1,
+          "EphTimeConstant": 0.1,
+          "EpvInitial": 0.5,
+          "EpvFinal": 0.1,
+          "EpvTimeConstant": 0.1
+        },
         "magnetometer": {"SensorType": 4, "Enabled": true},
         "Lidar": {
           "SensorType": 6,
@@ -29,7 +41,7 @@
           "HorizontalFOVEnd": 180,
           "VerticalFOVUpper": 20,
           "VerticalFOVLower": -25,
-          "X": 0, "Y": 0, "Z": 0,
+          "X": 0, "Y": 0, "Z": -0.5,
           "Roll": 0, "Pitch": 0, "Yaw": 0,
           "DrawDebugPoints": false,
           "DataFrame": "SensorLocalFrame"

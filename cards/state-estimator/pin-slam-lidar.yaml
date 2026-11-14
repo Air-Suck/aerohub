@@ -1,79 +1,54 @@
-schema_version: 0.1
+schema_version: "1.0"
 id: state-estimator.pin-slam-lidar
-name: PIN-SLAM LiDAR state estimate
 version: upstream-e2b7fbf-aerohub-0.1.0
-type: state-estimator
-description: PIN-SLAM global correction composed with high-rate PX4 local pose and body twist
-component:
-  id: pin-slam
-  manifest: deployment/pin_slam/component.yaml
-  shared_process_group: pin-slam-gpu
-  coupled_capabilities: [perception.pin-slam-neural-points]
-usage:
-  mode: continuous-provider
-  selection_phase: deployment
-  invocation_interface: AS2 state_estimator plugin_name=pin_slam
-  switching_constraints:
-    - Switch only while motion tasks are stopped and the previous state/TF provider is inactive.
-inputs:
-  - interface: /<namespace>/sensor_measurements/Lidar/points
-    schema: sensor_msgs/msg/PointCloud2 XYZ float32
-    frame: <namespace>/Lidar, FLU
-    time: AirSim LiDAR sample time in the shared /clock domain
-    units: metres
-  - interface: /<namespace>/sensor_measurements/odom
-    schema: nav_msgs/msg/Odometry
-    frame: namespaced AS2 odom to base_link
-    time: PX4 local state sample time in the shared /clock domain
-    units: metres and seconds
-outputs:
-  - interface: /<namespace>/self_localization/pose
-    schema: geometry_msgs/msg/PoseStamped
-    frame: AS2 earth frame
-    time: preserved input sample time
-  - interface: /<namespace>/self_localization/twist
-    schema: geometry_msgs/msg/TwistStamped
-    frame: AS2 base frame
-    time: preserved input sample time
-preconditions:
-  - LiDAR frames are monotonic, nonempty, metrically scaled, and match the configured frame.
-  - sensor_from_base is valid for the selected vehicle.
-  - A shadow accuracy gate has passed before authority is enabled.
-resources:
-  reads: [drone0.lidar, drone0.clock]
-  writes: [drone0.state, drone0.tf]
-  conflicts: [other state or TF authority for the same vehicle]
-  enforcement: deployment selection plus AS2 plugin ownership; no hot-switch arbiter implemented
-lifecycle:
-  startup: platform LiDAR before algorithm; algorithm before AS2 plugin selection
-  readiness: fresh PX4 local pose/twist, at least one time-paired PIN-SLAM correction, and fresh diagnostics
-  freshness: plugin rejects stale, non-monotonic or unpaired global samples; duplicate local stamps are ignored and unique local samples drive canonical output
-  feedback: diagnostic_msgs status from the algorithm and AS2 output freshness
-  completion: continuous provider; no task completion
-  cancel_or_stop: deselect authority, stop plugin host, then stop shared algorithm process
-  failure: tracking loss or invalid PIN-SLAM input freezes global correction while fresh PX4 local state remains available for controlled landing
-  recovery: restart outside active motion; new process means a new local-map epoch
-type_specific:
-  modality: lidar
-  tf: AS2 host owns earth/map/odom/base; PIN-SLAM updates map-to-odom and PX4 local state updates odom-to-base
-  reset: no seamless reset or map-frame continuity guarantee
-  loop_closure: global correction can change at PIN-SLAM rate while local odometry stays continuous at control rate
-validation:
-  stage: reproduced
-  gate: deployment/pin_slam/validation.yaml
-  scope: Native dual-rate plugin, real GPU odometry, 42 Hz canonical state, full visible AirSim authority flight and controlled landing after algorithm exit are verified.
-  component_revision: e2b7fbf328e5fac1d638e217d70a69cbe9f30a52
-  evidence:
-    - log/pin_slam/static-20261110/plugin-host.log
-    - log/pin_slam/static-20261110/plugin-probe.log
-    - log/pin_slam/gpu-smoke-20261110/result.json
-    - log/pin_slam/gpu-smoke-20261110/canonical-pose.txt
-    - log/pin_slam/plugin-dual-rate-20261110/plugin-probe.log
-    - log/pin_slam/airsim-authority-dual-rate-20261110/ground/rates.json
-    - log/pin_slam/airsim-authority-full-20261110/final-run/gate-report.json
-    - log/pin_slam/airsim-authority-fault-20261110/fault-report.json
-  limitations:
-    - AirSim 1.8.1 LiDAR has no per-point time and deskew is disabled.
-    - Upstream PIN-SLAM finite-difference twist remains diagnostic; canonical control twist comes from PX4 local odometry.
-    - Global correction loss does not detect or replace failure of the PX4 local estimator.
+type: capability
+name: PIN-SLAM LiDAR state estimate
+description: Provides canonical AS2 pose and twist by composing PIN-SLAM global correction with high-rate PX4 local odometry.
 
+implementation:
+  component_id: pin-slam
+  manifest: deployment/pin_slam/component.yaml
+  shared_runtime: pin-slam-gpu
+  coupled_capabilities:
+    - perception.pin-slam-neural-points
+
+inputs:
+  - id: lidar_points
+    capability_type: sensor/lidar/point-cloud/3d
+  - id: local_odometry
+    capability_type: state/local/odometry/3d
+
+outputs:
+  - id: canonical_pose
+    capability_type: state/self/pose/3d
+  - id: canonical_twist
+    capability_type: state/self/twist/3d
+
+interfaces: []
+
+lifecycle:
+  management: shared_managed
+  operations: {start: null, status: null, stop: null}
+
+hardware_requirements:
+  - hardware_type: compute/cpu/x86-64
+  - hardware_type: compute/gpu/cuda
+  - hardware_type: sensor/lidar/3d
+
+resource_access:
+  reads:
+    - sensor/lidar
+    - vehicle/local-odometry
+  shared_writes:
+    - compute/gpu
+  exclusive_writes:
+    - vehicle/self-state
+    - vehicle/tf
+
+demo:
+  representations:
+    - id: canonical_pose
+      stage: final
+      description: Canonical vehicle pose after PIN-SLAM global correction and PX4 local-state composition.
+      interface: {protocol: ros2_topic, schema: geometry_msgs/msg/PoseStamped}
+      renderer: pose_3d

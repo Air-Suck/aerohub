@@ -4,20 +4,20 @@
 
 ## 1. 部署模型
 
-一份 YAML 配置是车辆数量和部署关系的权威来源：
+一份 YAML 配置是车辆数量和部署阶段的权威来源。基础设施明确区分两个阶段：
 
 ```text
-RoboPi    1 个 UAV compute node
-PC        N-1 个 UAV process/container
-          每个 PC UAV 由一个独立 Python 线程监管
-          1 个 ground station / task client
-AirSim    N 个由同一配置生成的车辆
+pc_simulation（前期）   N 个 onboard-computer Docker，每机一个
+hybrid_board（上板期）  1 个真实算力板 + N-1 个 onboard-computer Docker
+工作站                  1 个 ground station / task client
+AirSim                  N 个由同一配置生成的车辆
 ```
 
+- `deployment.stage` 选择 `pc_simulation` 或 `hybrid_board`；默认模板使用前者。
 - `fleet.vehicle_count` 决定机群规模。
-- `fleet.board_vehicle_index` 选择唯一运行在 RoboPi 上的 UAV。
-- 其余 UAV 各自拥有独立的 PC 监管线程和进程或容器。
-- `board_center` 表示板端 UAV 是中心；`board_worker` 表示一台 PC UAV 是中心。
+- `pc_simulation` 中全部 UAV 各自运行一个独立的 onboard-computer 容器，由独立线程监管。
+- `hybrid_board` 中 `fleet.board_vehicle_index` 选择唯一运行在真实算力板上的 UAV，其余 UAV 保持独立 onboard-computer 容器。
+- `board_center` 与 `board_worker` 仅属于上板期双角色验收；前期集中式拓扑使用 `onboard_center`。
 - 地面站和外部计算固定在 PC。PC 上的远程 launcher 不改变板端进程的归属。
 
 ## 2. 目录
@@ -61,23 +61,26 @@ export AIRSIM_RENDER_MODE=windowed
 ```yaml
 fleet:
   vehicle_count: 3
-  board_vehicle_index: 0
+  coordinator_vehicle_index: 0
   initial_spacing_m: 4.0
+
+deployment:
+  stage: pc_simulation
 
 coordination:
   mode: centralized
-  centralized_cases: [board_center, board_worker]
+  centralized_cases: [onboard_center]
 
 ground_station:
   required: true
   placement: pc
 ```
 
-`nodes.*.launch_command` 与 `ground_station.launch_command` 供通用编排器使用，可引用：
+`nodes.onboard_computer.image` 必须指向项目规定的共享 onboard-computer 镜像；算法和 Adapter 通过宿主工作区 overlay 挂载并显式 source，不为每架无人机构建算法专用镜像。`nodes.onboard_computer.launch_command` 与 `ground_station.launch_command` 供通用编排器使用，可引用：
 
 ```text
 {vehicle} {vehicle_index} {airsim_vehicle} {center_vehicle}
-{scenario} {vehicle_count} {output}
+{scenario} {vehicle_count} {onboard_computer_image} {output}
 ```
 
 `airsim.ports` 的 base 值按车辆索引递增。不同应用必须避免与已有 AirSim、PX4、XRCE Agent 和 ROS Domain 冲突。
@@ -96,7 +99,7 @@ python3 -m deployment.swarm.topology render-settings \
   --output log/swarm-infra/settings.json
 ```
 
-`plan` 必须显示恰好一个 `board_vehicle`、`N-1` 个 `pc_vehicles`、两个中心角色和位于 PC 的 ground station。
+默认 `plan` 必须显示 `board_vehicle=null`、N 个 `onboard_computer_vehicles` 和位于 PC 的 ground station。切换为 `hybrid_board` 后，必须显示恰好一个 `board_vehicle`、N-1 个 `onboard_computer_vehicles` 及两个板端角色场景。
 
 ## 5. 通用进程编排
 
@@ -105,8 +108,8 @@ python3 -m deployment.swarm.topology render-settings \
 ```bash
 python3 -m deployment.swarm.orchestrator run \
   --config deployment/swarm/config.example.yaml \
-  --scenario board_center \
-  --output log/swarm-infra/board-center
+  --scenario onboard_center \
+  --output log/swarm-infra/onboard-center
 
 python3 -m deployment.swarm.orchestrator run-matrix \
   --config deployment/swarm/config.example.yaml \
@@ -115,9 +118,9 @@ python3 -m deployment.swarm.orchestrator run-matrix \
 
 `report.json` 和 `matrix-report.json` 证明启动拓扑、线程/进程独立性及冒烟窗口，不证明算法效果或飞行动力学。
 
-## 6. Swarm-Formation 真实 Demo
+## 6. Swarm-Formation 上板期 Demo
 
-真实入口位于 `deployment/airsim/demos/swarm_open_field/`，使用 AirSim + PX4 SITL + AS2，把一个 UAV compute node 部署到 RoboPi，其余节点部署到 PC。
+真实入口位于 `deployment/airsim/demos/swarm_open_field/`，使用 AirSim + PX4 SITL + AS2。该入口显式使用 `hybrid_board` 配置：一个 UAV compute node 部署到真实算力板，其余节点各自在 PC 的 onboard-computer Docker 中运行。前期纯 PC 验证必须先使用 `pc_simulation`，不能把上板期拓扑当作默认开发拓扑。
 
 ### 6.1 构建
 
@@ -192,7 +195,7 @@ python3 deployment/airsim/demos/swarm_open_field/run_robopi.py \
   --output log/swarm-infra/custom-flight
 ```
 
-共享拓扑可以生成任意正整数规模，但当前 Swarm-Formation 原生算法仅支持连续命名的 `drone0..droneN-1`，且 `N` 必须在 3 到 7 之间。配置生成成功不代表某个算法支持该规模。
+共享拓扑可以生成任意正整数规模，但当前 Swarm-Formation 原生算法仅支持连续命名的 `drone0..droneN-1`，且 `N` 必须在 3 到 7 之间。调整数量时，前期会产生 N 个 onboard-computer 容器；上板期会产生 N-1 个容器和一个真实算力板节点。配置生成成功不代表某个算法支持该规模。
 
 ## 8. AirSim 顶视图
 
@@ -201,9 +204,11 @@ AirSim manager 会为单机和多机加入 `swarm_overhead` 外部相机：
 - 初始位置在全部无人机初始坐标质心正上方；
 - Pitch 为 -90 度；
 - AirSim 启动后通过 MessagePack RPC 持续跟踪实时质心；
-- `manager.py status` 只有场景和跟踪器都存活才返回成功。
+- swarm 场景设置 `primary_view: true`，主窗口使用首架 UAV 的 FPV 观察相机；跟踪器把世界坐标中的质心顶视位姿转换为相对该 UAV 的相机位姿，因此主画面随质心连续移动。外部相机同时更新，用于保存无 UI 遮挡的图像证据；
+- 跟踪器将更新次数、最新质心、相机位置、最大质心位移和 RPC 错误写入 `overhead-view-state.json`；
+- `manager.py status` 只有场景、跟踪进程和新鲜的结构化相机更新都正常时才返回成功，进程存活本身不足以通过。
 
-验收不能只检查 settings JSON，应保留真实窗口或 1024×1024 相机图片、跟踪器日志和最终 `state.json`。
+验收不能只检查 settings JSON，应保留真实主窗口、1024×1024 外部相机图片、`overhead-view-state.json`、跟踪器日志和最终 `state.json`。动态飞行验收还必须证明 `update_count` 持续增加且 `max_centroid_displacement_m` 大于场景预声明阈值。
 
 ## 9. 测试与证据
 

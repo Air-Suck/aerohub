@@ -1,28 +1,60 @@
 ---
 title: CAT-ORA
 summary: 面向多机器人三维队形变换。CAT-ORA 联合考虑目标分配与机间避碰，生成满足速度、加速度约束的轨迹，减少整队完成形状切换所需的时间。
+keywords:
+- 多机协同
+- 队形变换
+- 目标分配
+- 机间避碰
+- 共同时间参数化
 category: planner
 source: https://github.com/ctu-mrs/catora
 revision: 4bc41f593eebde65dd74108a97e80430a145dfa0
 demo:
   image: content/algorithms/cat_ora/assets/demo-cover.jpg
   alt: CAT-ORA 作者论文中的实机队形变换，点击观看官方视频
-  caption: 作者论文 Figure 1 的实机队形变换；不代表本项目四机复现结果。
+  caption: 作者公开的多机队形变换画面。
   source: https://arxiv.org/html/2412.00603v2#S1.F1
   video: https://www.youtube.com/watch?v=FOCyGhxazMI
 integration: integrated
 validation: unverified
+showcase:
+  headline: 队形切换，联合决定目标分配与机间避碰
+  highlights:
+  - title: 分配与运动一起考虑
+    text: 同时处理每台机器人去哪个目标点，以及变换过程中的机间冲突，而不是先分配再独立飞行。
+  - title: 整队共同完成
+    text: 按速度和加速度约束生成共同完成时长的轨迹；本项目另有固定车辆与目标对应约束。
+  sourceNote: 主视频仅核实到上游 README 的 YouTube 入口；现有封面为早期收录的作者 Figure 1，本轮未新增论文素材。
 ---
 
-## 在 Aerohub 中如何接入
+## 算法核心
 
-![CAT-ORA 在 Tool、Behavior、Function 三层中的接入、调用与依赖](./assets/layers.svg)
+<div class="diagram-scroll" tabindex="0" role="region" aria-label="CAT-ORA 算法核心图，可横向滚动">
 
-- **Tool**：集中式规划、proxy 和 Adapter 生成统一机群轨迹，公共协调器管理逐机请求。
-- **Behavior**：复用扩展 FollowPath `×4`，按共同执行时间接收完整逐机轨迹。
-- **Function**：复用状态估计和运动控制各 `×4`；当前展示链路未接入环境地图。
+![CAT-ORA：输入机器人位置、目标队形与运动约束，经核心求解输出多机轨迹；红色标明输入输出，按从左到右阅读](./assets/algorithm-io.svg)
 
-架构图对应 ROS 1 proxy 四机配置。上游可以重新分配目标，本接入要求固定车辆与目标的对应关系；通用 Navigation Tool 尚未实现。
+</div>
+
+## 在 Aerohub 中如何结合
+
+<div class="diagram-scroll" tabindex="0" role="region" aria-label="CAT-ORA 三层架构图，可横向滚动">
+
+![CAT-ORA 在 Tool、Behavior、Function 三层中的能力及调用关系](./assets/layers.svg)
+
+</div>
+
+- **Tool**：多机队形规划与调用协调，保留车辆目标归属和共同执行时间；是 Navigation Tool 的实现基础。
+- **Behavior**：复用时间化路径跟随 `×4`，执行每机完整轨迹。
+- **Function**：复用自身状态和运动控制 `×4`；当前展示链路未接入环境地图。
+
+上方核心图描述算法的目标分配能力；本项目接入另有固定车辆—目标对应约束，不能将两者视为相同调用契约。三层图按四机能力关系展示，通用 Tool 尚未实现。
+
+## 案例
+
+<!-- 按展示约定保留案例位置，内容暂留空。 -->
+
+## 补充信息
 
 <details>
 <summary>接入细节与验证记录</summary>
@@ -56,7 +88,7 @@ Demo 画面来自[作者公开素材](https://arxiv.org/html/2412.00603v2/fig/in
 
 框架的 Registry、任务配置与轨迹校验也归入图中的 Tool 职责区域，共用代码保留在 `src/planner/framework/`，不复制进 CAT-ORA。这里按职责拆分，并不把这些模块描述成四个独立可替换的公共 API。
 
-图中展示的是 ROS 1 proxy 接入链。当前目录还保留 `ros2_adapter/native/` 的原生 Humble 移植实现，与统一输出适配包 `bridge/` 并列；AirSim 部署显式选择构建链，不能从 Registry 的 Noetic 镜像字段推断所有部署的运行环境。规划核心在图中作为服务黑盒，其输入输出来自代理服务字段及适配代码。
+本节的接口细节以 ROS 1 proxy 接入链为例；主图仅表达能力职责。当前目录还保留 `ros2_adapter/native/` 的原生 Humble 移植实现，与统一输出适配包 `bridge/` 并列；AirSim 部署显式选择构建链，不能从 Registry 的 Noetic 镜像字段推断所有部署的运行环境。规划核心在图中作为服务黑盒，其输入输出来自代理服务字段及适配代码。
 
 ### Behavior：实际调用的基础执行能力
 
@@ -77,7 +109,7 @@ Behavior 内采样时间化轨迹，再输出 Motion Reference，由 AS2 控制�
 
 扩展 FollowPath 和 Motion Controller 也直接消费所需状态。Behavior 将轨迹采样为运动参考，Controller 根据参考与当前状态产生平台控制指令。状态数据无须经 Tool 转发给控制器。
 
-图中 ExtendedFollowPath、State Estimator 和 Motion Controller 均用 `×4` 聚合表示四个车辆实例，实际仍按 namespace 隔离。当前展示链路未接入 Perception & Mapping，图中以虚线标注；本接入没有新增地图、点云或感知算法。PX4 与 AS2 平台适配属于更下方的平台边界，在图外注明。
+图中时间化路径跟随、自身状态和运动控制均用 `×4` 聚合表示四个车辆实例，实际仍按 namespace 隔离。当前展示链路未接入 Perception & Mapping，图中以浅灰节点标注；本接入没有新增地图、点云或感知算法。PX4 与 AS2 平台适配属于更下方的平台边界，在图外注明。
 
 ### 四机如何协同
 

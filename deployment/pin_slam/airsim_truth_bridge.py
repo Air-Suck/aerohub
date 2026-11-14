@@ -7,7 +7,7 @@ import rclpy
 from geometry_msgs.msg import PoseStamped
 from rclpy.node import Node
 
-from airsim_rpc import Rpc
+from uav_as2_sensor_adapter.rpc import Rpc
 
 
 class TruthBridge(Node):
@@ -28,6 +28,10 @@ class TruthBridge(Node):
             PoseStamped, "/pin_slam/validation/airsim_truth", 20)
         self.last_stamp = 0
         self.create_timer(period, self.publish_truth)
+
+    def destroy_node(self):
+        self.rpc.close()
+        return super().destroy_node()
 
     def publish_truth(self):
         try:

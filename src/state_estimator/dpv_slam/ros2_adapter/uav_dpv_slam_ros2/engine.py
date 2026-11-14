@@ -12,6 +12,29 @@ def keyframe_stamp(input_stamps, keyframe_indices, keyframe_count):
     return int(input_stamps[input_index])
 
 
+def seed_torch(torch_module, seed):
+    if isinstance(seed, bool) or not isinstance(seed, int) or seed < 0:
+        raise ValueError("random seed must be a non-negative integer")
+    torch_module.manual_seed(seed)
+    return seed
+
+
+def resolve_pose(index, keyframes, deltas, active=None):
+    """Recover one input-frame pose using DPVO's terminate-time delta chain."""
+    if index in keyframes:
+        return keyframes[index]
+    active = set() if active is None else active
+    if index in active:
+        raise ValueError("DPVO pose delta chain contains a cycle")
+    if index not in deltas:
+        raise ValueError("DPVO pose delta chain is incomplete")
+    active.add(index)
+    parent, transform = deltas[index]
+    pose = transform * resolve_pose(int(parent), keyframes, deltas, active)
+    active.remove(index)
+    return pose
+
+
 @dataclass(frozen=True)
 class EngineResult:
     pose: object
@@ -22,11 +45,12 @@ class EngineResult:
 
 
 class DpvSlamEngine:
-    def __init__(self, config_path, network_path):
+    def __init__(self, config_path, network_path, random_seed=1234):
         import torch
         from dpvo.config import cfg as default_cfg
         from dpvo.dpvo import DPVO
 
+        seed_torch(torch, random_seed)
         self._torch = torch
         self._dpvo_type = DPVO
         self._config = default_cfg.clone()
@@ -52,10 +76,15 @@ class DpvSlamEngine:
             self._slam(float(stamp_ns) * 1.0e-9, tensor, camera)
         if not self._slam.is_initialized or self._slam.n < 1:
             return EngineResult(None, None, False, self._slam.counter, int(stamp_ns))
-        result_stamp_ns = keyframe_stamp(
-            self._input_stamps, self._slam.pg.tstamps_, self._slam.n)
         from dpvo.lietorch import SE3
-        pose = SE3(self._slam.pg.poses_[self._slam.n - 1]).inv().data.detach().cpu().numpy()
+        keyframes = {
+            int(self._slam.pg.tstamps_[index].item()):
+            SE3(self._slam.pg.poses_[index])
+            for index in range(self._slam.n)
+        }
+        current = resolve_pose(
+            self._slam.counter - 1, keyframes, self._slam.pg.delta)
+        pose = current.inv().data.detach().cpu().numpy()
         matrix = np.eye(4, dtype=np.float64)
         x, y, z, w = pose[3:7]
         matrix[:3, :3] = np.array([
@@ -65,4 +94,4 @@ class DpvSlamEngine:
         matrix[:3, 3] = pose[:3]
         points = self._slam.pg.points_[:self._slam.m].detach().cpu().numpy().copy()
         points = points[np.isfinite(points).all(axis=1)]
-        return EngineResult(matrix, points, True, self._slam.counter, result_stamp_ns)
+        return EngineResult(matrix, points, True, self._slam.counter, int(stamp_ns))

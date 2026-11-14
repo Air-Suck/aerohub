@@ -2,12 +2,39 @@ services:
   drone0:
     environment:
       ROS_DOMAIN_ID: "${DPV_SLAM_DOMAIN:-82}"
-      FLIGHT_BOARD_CAMERAS: "1"
-      FLIGHT_BOARD_CAMERA_RATE_HZ: "15.0"
+      FLIGHT_BOARD_SENSORS: "0"
       AIRSIM_SETTINGS: /config/dpv-slam-settings.json
       AIRSIM_RPC_PORT: "45471"
     volumes:
       - ../dpv_slam/airsim-settings.json:/config/dpv-slam-settings.json:ro
+  sensors:
+    image: "${FLIGHT_BOARD_IMAGE:-flight_board:v0.1.0}"
+    pull_policy: never
+    init: true
+    network_mode: host
+    environment:
+      ROS_DOMAIN_ID: "${DPV_SLAM_DOMAIN:-82}"
+    volumes:
+      - "${AIRSIM_SENSOR_WORKSPACE:?set AIRSIM_SENSOR_WORKSPACE to the prepared absolute path}:/sensor-overlay:ro"
+      - ../dpv_slam/airsim-settings.json:/config/dpv-slam-settings.json:ro
+    entrypoint: ["/bin/bash", "-lc"]
+    command:
+      - >-
+        source /opt/ros/humble/setup.bash &&
+        source /opt/platform_sensors/install/setup.bash &&
+        source /sensor-overlay/install/setup.bash &&
+        exec ros2 run uav_as2_sensor_adapter airsim_sensor_node --ros-args
+        -p use_sim_time:=true
+        -p settings_file:=/config/dpv-slam-settings.json
+        -p vehicle_name:=PX4
+        -p vehicle_namespace:=drone0
+        -p rpc_host:=127.0.0.1
+        -p rpc_port:=45471
+        -p camera_rate_hz:=15.0
+        -p camera_parallelism:=4
+        -p imu_rate_hz:=100.0
+        -p lidar_rate_hz:=10.0
+    stop_grace_period: 10s
   clock:
     environment:
       ROS_DOMAIN_ID: "${DPV_SLAM_DOMAIN:-82}"
